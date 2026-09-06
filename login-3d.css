@@ -1,0 +1,78 @@
+/* Login 3D lúdico — Cantinho da Isa */
+#loginView.center-screen{
+  perspective:1200px;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 14% 18%,rgba(255,204,229,.78),transparent 25%),
+    radial-gradient(circle at 86% 16%,rgba(211,194,255,.78),transparent 28%),
+    radial-gradient(circle at 78% 86%,rgba(210,236,255,.80),transparent 25%),
+    linear-gradient(145deg,#fff8fc 0%,#f5efff 52%,#eef8ff 100%);
+}
+#loginView .login-card{
+  width:min(500px,92vw);
+  padding:34px 36px 36px;
+  border-radius:42px;
+  overflow:visible;
+  transform-style:preserve-3d;
+  background:linear-gradient(145deg,rgba(255,255,255,.97),rgba(249,243,255,.88));
+  border:1px solid rgba(255,255,255,.98);
+  box-shadow:0 34px 70px rgba(92,62,124,.22),0 12px 0 rgba(198,176,226,.18),0 4px 0 #fff inset;
+  position:relative;
+}
+#loginView .login-card::after{
+  content:"";position:absolute;left:8%;right:8%;bottom:-28px;height:34px;border-radius:50%;
+  background:rgba(103,78,125,.16);filter:blur(18px);z-index:-1;
+}
+#loginView .login-card h1{
+  text-align:center;margin:14px 0 4px;font-size:clamp(2rem,5vw,2.65rem);color:#5f5369;text-shadow:0 2px 0 #fff;
+}
+#loginView .login-card>p.muted{
+  text-align:center!important;margin:0 0 26px!important;font-weight:800;color:#8c7d96;letter-spacing:.01em;
+}
+/* transforma o emoji original em uma cartinha 3D sem depender de imagem */
+#loginView .brand-bubble{
+  width:190px;height:142px;margin:-6px auto 6px;position:relative;display:block!important;
+  background:none!important;box-shadow:none!important;transform:none!important;border-radius:0!important;font-size:0!important;
+}
+#loginView .brand-bubble::before{
+  content:"";position:absolute;left:31px;top:42px;width:128px;height:82px;border-radius:20px;
+  background:linear-gradient(145deg,#f7c9df 0%,#eab5d3 52%,#d79bc2 100%);
+  box-shadow:13px 17px 22px rgba(119,79,112,.22),inset 5px 6px 9px rgba(255,255,255,.78),inset -7px -8px 10px rgba(173,103,146,.12);
+  transform:rotateX(3deg) rotateZ(-2deg);
+}
+#loginView .brand-bubble::after{
+  content:"";position:absolute;left:44px;top:22px;width:102px;height:72px;border-radius:16px 16px 8px 8px;
+  background:linear-gradient(145deg,#fffdfd,#f7f0ff 58%,#eadfff);
+  box-shadow:0 10px 18px rgba(100,74,120,.14),inset 3px 3px 6px #fff;
+  transform:rotate(-3deg);
+}
+#loginView .brand-bubble{filter:drop-shadow(0 12px 10px rgba(105,78,120,.08))}
+#loginView .brand-bubble span{display:none!important}
+#loginView .brand-bubble + h1::before{
+  content:"💗";position:absolute;transform:translate(38px,-46px) rotate(-9deg);font-size:30px;
+  filter:drop-shadow(0 6px 5px rgba(132,83,118,.20));z-index:5;
+}
+#loginView .brand-bubble + h1::after{
+  content:"🦋";position:absolute;transform:translate(70px,-105px) rotate(10deg);font-size:27px;
+  filter:drop-shadow(0 7px 6px rgba(91,83,132,.18));z-index:5;
+}
+#loginView input{
+  min-height:52px;border:1px solid rgba(229,217,238,.94);background:linear-gradient(145deg,#fff,#fbf8ff);
+  box-shadow:inset 3px 4px 8px rgba(127,102,146,.07),0 7px 14px rgba(96,71,118,.08);border-radius:18px;
+}
+#loginView .password-wrap .icon-btn{
+  width:52px;height:52px;border-radius:18px;background:linear-gradient(145deg,#fff,#eee5fa);
+  box-shadow:0 9px 16px rgba(101,75,122,.13),inset 2px 3px 5px #fff;transition:.15s ease;
+}
+#loginView .password-wrap .icon-btn:hover{transform:translateY(-2px)}
+#loginView .primary-btn{
+  min-height:52px;border-radius:19px;background:linear-gradient(145deg,#c9b2ff,#edabd0 60%,#ffcbdc);
+  box-shadow:0 13px 0 #ac90dc,0 22px 28px rgba(148,100,154,.23),inset 3px 4px 5px rgba(255,255,255,.45);
+  transform:translateY(-3px);transition:.14s ease;
+}
+#loginView .primary-btn:hover{transform:translateY(-5px)}
+#loginView .primary-btn:active{transform:translateY(5px);box-shadow:0 5px 0 #ac90dc,0 10px 15px rgba(148,100,154,.18),inset 3px 4px 5px rgba(255,255,255,.35)}
+@media(max-width:560px){
+  #loginView .login-card{padding:28px 24px 30px;border-radius:34px}
+  #loginView .brand-bubble{transform:scale(.9)!important;margin-bottom:-2px}
+}
