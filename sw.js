@@ -1,11 +1,7 @@
-const CACHE='cantinho-isa-v9';
-const ASSETS=['./','./index.html','./styles.css','./theme-3d.css','./login-3d.css','./app-3d.css','./heart-polish.css','./study.css','./study.js','./study-calculator.js','./app.js','./config.js','./manifest.webmanifest','./icon.svg','./chunk-00.txt','./chunk-01.txt','./chunk-02.txt','./chunk-03.txt','./chunk-04.txt','./chunk-05.txt','./chunk-06.txt','./chunk-07.txt','./chunk-08.txt','./chunk-09.txt'];
+const CACHE='cantinho-isa-v10';
+const ASSETS=['./','./index.html','./styles.css','./theme-3d.css','./login-3d.css','./app-3d.css','./heart-polish.css','./study.css','./study.js','./study-calculator.js','./study-document.css','./study-document.js','./app.js','./config.js','./manifest.webmanifest','./icon.svg','./chunk-00.txt','./chunk-01.txt','./chunk-02.txt','./chunk-03.txt','./chunk-04.txt','./chunk-05.txt','./chunk-06.txt','./chunk-07.txt','./chunk-08.txt','./chunk-09.txt'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
-self.addEventListener('fetch',e=>{
-  if(e.request.method!=='GET')return;
-  const u=new URL(e.request.url);if(u.origin!==location.origin)return;
-  e.respondWith(fetch(e.request,{cache:'no-store'}).then(res=>{const copy=res.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return res}).catch(()=>caches.match(e.request).then(r=>r||caches.match('./index.html'))));
-});
+self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;const u=new URL(e.request.url);if(u.origin!==location.origin)return;e.respondWith(fetch(e.request,{cache:'no-store'}).then(res=>{const copy=res.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return res}).catch(()=>caches.match(e.request).then(r=>r||caches.match('./index.html'))))});
 self.addEventListener('push',e=>{let d={};try{d=e.data?.json()||{}}catch{};const url=d?.data?.url||'./';e.waitUntil(self.registration.showNotification(d.title||'Cantinho da Isa 💕',{body:d.body||'Chegou mensagem',icon:'icon.svg',badge:'icon.svg',tag:d.tag||'cantinho-isa',renotify:true,data:{url}}))});
 self.addEventListener('notificationclick',e=>{e.notification.close();const url=e.notification.data?.url||'./';e.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(list=>{for(const c of list){if('focus'in c){c.navigate(url);return c.focus()}}return clients.openWindow(url)}))});
