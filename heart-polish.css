@@ -1,0 +1,128 @@
+/* Cantinho da Isa — acabamento aprovado: corações translúcidos, sem emojis decorativos */
+
+/* Título do login: rosa-lilás cheio, legível e com volume suave */
+#loginView .login-card h1{
+  font-family:"Arial Rounded MT Bold","Trebuchet MS","Segoe UI",system-ui,sans-serif!important;
+  font-weight:900!important;
+  letter-spacing:-.045em!important;
+  background:linear-gradient(90deg,#f58fc9 0%,#eb92cf 38%,#c29ef7 67%,#927ff0 100%)!important;
+  -webkit-background-clip:text!important;
+  background-clip:text!important;
+  -webkit-text-fill-color:transparent!important;
+  color:transparent!important;
+  -webkit-text-stroke:0!important;
+  text-shadow:none!important;
+  filter:drop-shadow(0 6px 0 rgba(197,132,199,.20)) drop-shadow(0 12px 13px rgba(144,105,176,.16))!important;
+}
+
+/* Corações translúcidos também DENTRO do card de login */
+#loginView .login-card{isolation:isolate!important;overflow:hidden!important}
+#loginView .login-card::before{
+  content:"♥"!important;
+  position:absolute!important;
+  inset:auto!important;
+  left:22px!important;
+  top:22px!important;
+  width:auto!important;
+  height:auto!important;
+  border:0!important;
+  border-radius:0!important;
+  font-family:Georgia,"Times New Roman",serif!important;
+  font-size:74px!important;
+  line-height:1!important;
+  color:rgba(247,181,218,.16)!important;
+  background:none!important;
+  box-shadow:none!important;
+  text-shadow:
+    390px 22px 0 rgba(196,174,249,.16),
+    25px 330px 0 rgba(190,216,252,.13),
+    380px 350px 0 rgba(244,186,217,.13)!important;
+  transform:rotate(-10deg)!important;
+  pointer-events:none!important;
+  z-index:0!important;
+}
+#loginView .login-card>*{position:relative;z-index:1}
+
+/* Corações externos do login ficam suaves, sem outros símbolos */
+#loginView::before,#loginView::after{
+  font-family:Georgia,"Times New Roman",serif!important;
+  filter:drop-shadow(0 18px 24px rgba(113,86,139,.10))!important;
+}
+
+/* Remove todos os decorativos antigos sem função */
+.sidebar::after{content:"♥"!important;font-family:Georgia,"Times New Roman",serif!important;color:rgba(203,181,248,.20)!important;font-size:96px!important;opacity:1!important;right:18px!important;bottom:14px!important;transform:rotate(-12deg)!important;filter:drop-shadow(0 13px 18px rgba(108,83,132,.08))!important}
+.content::before,.content::after{
+  font-family:Georgia,"Times New Roman",serif!important;
+  pointer-events:none!important;
+  z-index:0!important;
+  line-height:1!important;
+}
+.content::before{
+  content:"♥"!important;
+  right:38px!important;
+  top:38px!important;
+  font-size:132px!important;
+  color:rgba(203,184,248,.16)!important;
+  opacity:1!important;
+  text-shadow:-980px 510px 0 rgba(189,218,251,.12)!important;
+  transform:rotate(9deg)!important;
+}
+.content::after{
+  content:"♥"!important;
+  left:42px!important;
+  bottom:34px!important;
+  font-size:105px!important;
+  color:rgba(247,183,217,.14)!important;
+  opacity:1!important;
+  text-shadow:920px -520px 0 rgba(215,193,251,.11)!important;
+  transform:rotate(-12deg)!important;
+}
+.content>*{position:relative;z-index:1}
+
+/* Estado inicial interno: só coração translúcido, sem casinha/envelope/brilhos/borboleta */
+.empty-state::before{
+  content:"♥"!important;
+  display:block!important;
+  font-family:Georgia,"Times New Roman",serif!important;
+  font-size:92px!important;
+  letter-spacing:0!important;
+  color:rgba(221,196,251,.26)!important;
+  opacity:1!important;
+  margin:0 0 8px!important;
+  filter:drop-shadow(0 11px 15px rgba(107,82,132,.08))!important;
+}
+.empty-state .big-emoji{display:none!important}
+
+/* Corações leves dentro das áreas internas */
+.messages,.panel-pad,.calendar-shell-3d,.supervision-info{position:relative!important;isolation:isolate!important;overflow:hidden}
+.messages::before,.panel-pad::before,.calendar-shell-3d::before,.supervision-info::before{
+  content:"♥";
+  position:absolute;
+  font-family:Georgia,"Times New Roman",serif;
+  line-height:1;
+  pointer-events:none;
+  z-index:-1;
+}
+.messages::before{
+  right:5%;top:9%;font-size:86px;color:rgba(218,194,249,.12);transform:rotate(8deg);
+  text-shadow:-720px 390px 0 rgba(190,218,250,.10);
+}
+.panel-pad::before{
+  right:5%;top:6%;font-size:105px;color:rgba(245,184,218,.10);transform:rotate(10deg);
+  text-shadow:-820px 500px 0 rgba(204,185,248,.09);
+}
+.calendar-shell-3d::before{
+  right:3%;bottom:5%;font-size:78px;color:rgba(198,178,246,.11);transform:rotate(-8deg);
+}
+.supervision-info::before{
+  right:18px;bottom:-20px;font-size:76px;color:rgba(244,177,216,.12);transform:rotate(11deg);
+}
+
+/* Mantém os elementos funcionais acima dos corações */
+.messages>* ,.panel-pad>* ,.calendar-shell-3d>* ,.supervision-info>*{position:relative;z-index:1}
+
+@media(max-width:850px){
+  #loginView .login-card::before{font-size:58px!important;text-shadow:285px 18px 0 rgba(196,174,249,.14),20px 300px 0 rgba(190,216,252,.11)!important}
+  .content::before{font-size:90px!important;right:18px!important;top:24px!important}
+  .content::after{font-size:76px!important;left:18px!important;bottom:20px!important}
+}
