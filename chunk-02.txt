@@ -12,6 +12,15 @@ function subscribeChat(id){
 function sendTyping(typing=true){if(!chatChannel||!activeConversation)return;chatChannel.send({type:'broadcast',event:'typing',payload:{memberId:me.id,typing}}).catch(()=>{});if(typing){clearTimeout(typingTimer);typingTimer=setTimeout(()=>sendTyping(false),1300)}}
 function renderTyping(){const now=Date.now();for(const [id,t] of typingMembers)if(now-t>2500)typingMembers.delete(id);const ids=[...typingMembers.keys()];if(!ids.length){$('typingLine').textContent='';return}if(activeConversation?.type==='direct'){const other=memberById(ids[0]);$('typingLine').innerHTML=`<span class="typing-dots">${esc(relationFor(other))} está digitando</span>`;return}const names=ids.map(id=>memberById(id)?.display_name).filter(Boolean);const txt=names.length===1?`${names[0]} está digitando`:names.length===2?`${names[0]} e ${names[1]} estão digitando`:`${names[0]} e outras pessoas estão digitando`;$('typingLine').innerHTML=`<span class="typing-dots">${esc(txt)}</span>`}
 
-async function chatAction(action,payload={}){const {data,error}=await supabase.functions.invoke('chat-actions',{body:{action,...payload}});if(error)throw new Error(data?.error||error.message||'Erro no chat');if(data?.error)throw new Error(data.error);return data}
+async function chatAction(action,payload={}){
+  const {data,error}=await supabase.functions.invoke('chat-actions',{body:{action,...payload}});
+  if(error){
+    let detail=data?.error||error.message||'Erro no chat';
+    try{if(error.context?.clone){const body=await error.context.clone().json();detail=body?.error||detail}}catch{}
+    throw new Error(detail);
+  }
+  if(data?.error)throw new Error(data.error);
+  return data;
+}
 async function markRead(conversationId){try{await chatAction('mark_read',{conversationId});if(isParent())await supabase.from('parental_alerts').update({read_at:new Date().toISOString()}).eq('target_member_id',me.id).eq('conversation_id',conversationId).is('read_at',null)}catch{} }
 async function pinMessage(messageId){try{const r=await chatAction('pin_message',{conversationId:activeConversation.id,messageId});activeConversation.pinned_message_id=r.pinnedMessageId||null;renderPinnedBar();toast(r.pinnedMessageId?'Mensagem fixada 📌':'Destaque removid

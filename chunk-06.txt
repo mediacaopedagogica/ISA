@@ -33,6 +33,6 @@ $('mobileBackBtn').onclick=()=>{activeConversation=null;$('chatPanel').classList
 document.querySelectorAll('.nav-btn').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab))
 
 const profileInfo=$('myName')?.parentElement;profileInfo?.querySelectorAll('small').forEach(s=>s.classList.add('hidden'))
-if(!document.querySelector('link[href^="app-3d.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href='app-3d.css?v=7';document.head.appendChild(l)}
-if(!document.querySelector('link[href^="heart-polish.css"]')){const h=document.createElement('link');h.rel='stylesheet';h.href='heart-polish.css?v=7';document.head.appendChild(h)}
+if(!document.querySelector('link[href^="app-3d.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href='app-3d.css?v=33';document.head.appendChild(l)}
+if(!document.querySelector('link[href^="heart-polish.css"]')){const h=document.createElement('link');h.rel='stylesheet';h.href='heart-polish.css?v=33';document.head.appendChild(h)}
 buildSetup();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(console.warn);const {data:{session}}=await supabase.auth.getSession();session?boot():showView('loginView')

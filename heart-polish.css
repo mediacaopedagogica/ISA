@@ -126,3 +126,13 @@
   .content::before{font-size:90px!important;right:18px!important;top:24px!important}
   .content::after{font-size:76px!important;left:18px!important;bottom:20px!important}
 }
+
+
+/* v33 stability fixes */
+.content{min-height:0!important}
+.panel-pad{overflow-y:auto!important;overflow-x:hidden!important;padding-bottom:max(72px,env(safe-area-inset-bottom))!important;scrollbar-gutter:stable}
+#supervisionPanel,#parentsPanel,#calendarPanel{overscroll-behavior:contain}
+.supervision-list,.permissions-table,.alerts-list,.calendar-day-details{padding-bottom:28px!important}
+.read-receipt{display:block;margin-top:3px;font-size:10px;text-align:right;color:#9b8ca4;font-weight:700}
+.read-receipt.read{color:#7a5fc8}
+@media(max-width:850px){.panel-pad{height:calc(100dvh - 220px)!important;padding-bottom:max(84px,env(safe-area-inset-bottom))!important}}

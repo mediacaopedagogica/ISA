@@ -10,11 +10,18 @@ function refreshPresenceUI(){
   }
 }
 async function upsertPresence(online){
-  if(!me)return;
+  if(!me)return false;
   const stamp=new Date().toISOString(),device=navigator.userAgent.includes('Mobile')?'Celular':'Computador';
   presenceMap[me.id]={...(presenceMap[me.id]||{}),member_id:me.id,online,last_seen_at:stamp,device_label:device};
   refreshPresenceUI();
-  await supabase.from('presence_state').upsert({member_id:me.id,online,last_seen_at:stamp,device_label:device},{onConflict:'member_id'}).catch(()=>{});
+  try{
+    const {data,error}=await supabase.functions.invoke('presence-actions',{body:{online,deviceLabel:device}});
+    if(error||data?.error){console.warn('Falha ao registrar presença',data?.error||error?.message);return false}
+    const seen=data?.lastSeenAt||stamp;
+    presenceMap[me.id]={...(presenceMap[me.id]||{}),member_id:me.id,online,last_seen_at:seen,device_label:device};
+    refreshPresenceUI();
+    return true;
+  }catch(error){console.warn('Falha ao registrar presença',error);return false}
 }
 function startHeartbeat(){
   clearInterval(heartbeat);
@@ -23,9 +30,9 @@ function startHeartbeat(){
   window.addEventListener('pagehide',()=>upsertPresence(false));
 }
 function bindGlobalRealtime(){if(globalChannel)supabase.removeChannel(globalChannel);globalChannel=supabase.channel(`family-ui-${me.id}`).on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},async payload=>{if(!conversations.some(c=>c.id===payload.new.conversation_id))return;await loadConversations();if(activeConversation?.id===payload.new.conversation_id){await markRead(activeConversation.id);await loadMessages(activeConversation.id);renderTimeline()}}).on('postgres_changes',{event:'*',schema:'public',table:'family_calendar'},()=>loadCalendar()).on('postgres_changes',{event:'INSERT',schema:'public',table:'parental_alerts',filter:`target_member_id=eq.${me.id}`},async payload=>{await loadAlerts();playPing();if(document.visibilityState==='visible'&&Notification.permission==='granted')new Notification(payload.new.title||'Nosso Cantinho',{body:payload.new.body||'Chegou mensagem',icon:'icon.svg'})}).subscribe()}
-function playPing(){if(!['child','super_admin','super_parent'].includes(me?.role))return;try{const c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.frequency.value=660;g.gain.value=.05;o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.16)}catch{}}
+function playPing(){if(!me)return;try{const c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.frequency.value=660;g.gain.value=.05;o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.16)}catch{}}
 
-function renderNotifyBanner(){const allowed=['child','super_admin','super_parent'].includes(me.role)&&('serviceWorker'in navigator)&&('PushManager'in window)&&('Notification'in window);$('notifyBanner').classList.toggle('hidden',!allowed||Notification.permission==='granted')}
+function renderNotifyBanner(){const allowed=!!me&&('serviceWorker'in navigator)&&('PushManager'in window)&&('Notification'in window);$('notifyBanner').classList.toggle('hidden',!allowed||Notification.permission==='granted')}
 function urlBase64ToUint8Array(base64String){const pad='='.repeat((4-base64String.length%4)%4),base64=(base64String+pad).replace(/-/g,'+').replace(/_/g,'/'),raw=atob(base64),out=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out}
 async function enablePush(){try{const perm=await Notification.requestPermission();if(perm!=='granted')return toast('Notificações não foram autorizadas.');const reg=await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(CONFIG.VAPID_PUBLIC_KEY)});const j=sub.toJSON();const {error}=await supabase.from('push_devices').upsert({member_id:me.id,platform:'web',endpoint:j.endpoint,p256dh:j.keys?.p256dh,auth_key:j.keys?.auth,device_name:navigator.userAgent.includes('Mobile')?'Celular':'Computador',enabled:true,child_message_alarm:true,updated_at:new Date().toISOString()},{onConflict:'member_id,endpoint'});if(error)throw error;$('notifyBanner').classList.add('hidden');toast('Notificações ativadas 🔔')}catch(e){console.error(e);toast('Não foi possível ativar as notificações neste navegador.')}}
 

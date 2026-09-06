@@ -66,11 +66,23 @@ async function openChat(id,fromSupervision=false){
   if(!supervision)await markRead(id);await Promise.all([loadMessages(id),loadPolls(id)]);renderTimeline();subscribeChat(id);await loadConversations()
 }
 
+function messageReadReceipt(m){
+  if(m.sender_id!==me.id)return '';
+  const conv=conversations.find(c=>c.id===m.conversation_id)||activeConversation;
+  if(!conv)return '';
+  const others=(conv.conversation_members||[]).filter(x=>x.member_id!==me.id);
+  if(!others.length)return '';
+  const read=others.filter(x=>x.last_read_at&&new Date(x.last_read_at)>=new Date(m.sent_at));
+  if(conv.type==='direct')return read.length?'<span class="read-receipt read">✓✓ Leu sua mensagem</span>':'<span class="read-receipt">✓ Enviada</span>';
+  return read.length?`<span class="read-receipt read">✓✓ Lida por ${read.length}</span>`:'<span class="read-receipt">✓ Enviada</span>';
+}
 function messageHtml(m){
   const sender=memberById(m.sender_id),mine=m.sender_id===me.id;let content='';
   if(m.kind==='photo')content=m.media_deleted_at||!m.media_ref?'<div class="photo-expired">📷 Esta foto temporária já expirou.</div>':`<div class="photo-loading" data-photo-path="${esc(m.media_ref)}">Carregando foto…</div>`
   else content=`<div>${esc(m.body||'')}</div>`
-  return `<div class="message-row ${mine?'mine':''}" id="msg-${m.id}"><div class="bubble ${mine?'own-message-clickable':''}" ${mine?`data-own-message="${m.id}" title="Clique para editar ou cancelar o envio"`:''}>${!mine?`<span class="sender">${esc(sender?.display_name||'Família')}</span>`:''}${content}<span class="meta">${m.edited_at?'<span class="edit-mark">editada • </span>':''}${fmtTime(m.sent_at)}</span></div><button class="pin-btn" data-pin="${m.id}" title="Fixar mensagem">📌</button></div>`
+  const receipt=mine?messageReadReceipt(m):'';
+  const canPin=!activeSupervisionMode&&isConversationMember(activeConversation);
+  return `<div class="message-row ${mine?'mine':''}" id="msg-${m.id}"><div class="bubble ${mine?'own-message-clickable':''}" ${mine?`data-own-message="${m.id}" title="Clique para editar ou cancelar o envio"`:''}>${!mine?`<span class="sender">${esc(sender?.display_name||'Família')}</span>`:''}${content}<span class="meta">${m.edited_at?'<span class="edit-mark">editada • </span>':''}${fmtTime(m.sent_at)}</span>${receipt}</div>${canPin?`<button class="pin-btn" data-pin="${m.id}" title="Fixar mensagem">📌</button>`:''}</div>`
 }
 function renderTimeline(){
   const items=[...activeMessages.map(x=>({...x,_type:'message',_time:x.sent_at})),...activePolls.map(x=>({...x,_type:'poll',_time:x.created_at}))].sort((a,b)=>new Date(a._time)-new Date(b._time));let lastDay='';const html=[]

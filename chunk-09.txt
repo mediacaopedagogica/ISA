@@ -32,7 +32,11 @@ async function bindGlobalRealtime(){
     }
   }
 })
-  .on('postgres_changes',{event:'*',schema:'public',table:'conversation_members'},()=>loadConversations())
+  .on('postgres_changes',{event:'*',schema:'public',table:'conversation_members'},async()=>{
+    const activeId=activeConversation?.id;
+    await loadConversations();
+    if(activeId){activeConversation=conversations.find(c=>c.id===activeId)||activeConversation;if($('chatPanel')&&!$('chatPanel').classList.contains('hidden'))renderTimeline()}
+  })
   .on('postgres_changes',{event:'*',schema:'public',table:'conversations'},()=>loadConversations())
   .on('postgres_changes',{event:'*',schema:'public',table:'family_calendar'},()=>loadCalendar())
   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'family_members'},async()=>{await loadFamily();await hydrateAvatarElements()})
@@ -42,7 +46,7 @@ async function bindGlobalRealtime(){
     if(payload.eventType==='DELETE')delete presenceMap[row.member_id];else presenceMap[row.member_id]=payload.new;
     refreshPresenceUI();
   })
-  .on('postgres_changes',{event:'INSERT',schema:'public',table:'parental_alerts',filter:`target_member_id=eq.${me.id}`},async payload=>{await loadAlerts();playPing();if(document.visibilityState==='visible'&&Notification.permission==='granted')new Notification(payload.new.title||'Cantinho da Isa',{body:payload.new.body||'Chegou mensagem',icon:'icon.svg'})}).subscribe()
+  .on('postgres_changes',{event:'INSERT',schema:'public',table:'parental_alerts',filter:`target_member_id=eq.${me.id}`},async payload=>{await loadAlerts();playPing();if(document.visibilityState!=='visible'&&Notification.permission==='granted')new Notification(payload.new.title||'Cantinho da Isa',{body:payload.new.body||'Chegou mensagem',icon:'icon.svg'})}).subscribe()
 }
 
 async function boot(){
@@ -52,7 +56,7 @@ async function boot(){
   switchTab('chats');if($('chatList'))$('chatList').innerHTML='<p class="muted" style="padding:12px">Carregando conversas…</p>';
   supabase.realtime.setAuth().catch(()=>{});
   await Promise.all([loadFamily(),loadConversations()]);
-  hydrateAvatarElements().catch(()=>{});upsertPresence(true).catch(()=>{});startHeartbeat();bindGlobalRealtime();renderNotifyBanner();renderBirthdayHero();
+  hydrateAvatarElements().catch(()=>{});upsertPresence(true).catch(()=>{});startHeartbeat();bindGlobalRealtime();renderNotifyBanner();if('Notification'in window&&Notification.permission==='granted')enablePush();renderBirthdayHero();
   Promise.allSettled([loadCalendar(),loadAlerts()]).catch(()=>{});
   const wanted=new URLSearchParams(location.search).get('conversation');if(wanted&&conversations.some(c=>c.id===wanted)&&isConversationMember(conversations.find(c=>c.id===wanted)))openChat(wanted,false)
 }
