@@ -7,12 +7,11 @@ const $=id=>document.getElementById(id)
 let me=null,groups=[],scope='private',note=null,saveTimer=null,noteChannel=null,calculatorReady=false
 
 function esc(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
-function css(){if(document.querySelector('link[href^="study.css"]'))return;const l=document.createElement('link');l.rel='stylesheet';l.href='study.css?v=1';document.head.appendChild(l)}
-function toast(text){const t=$('toast');if(!t)return;t.textContent=text;t.classList.remove('hidden');setTimeout(()=>t.classList.add('hidden'),1800)}
+function css(){if(document.querySelector('link[href^="study.css"]'))return;const l=document.createElement('link');l.rel='stylesheet';l.href='study.css?v=36';document.head.appendChild(l)}
+function toast(text){const t=$('toast')||document.getElementById('friendToast');if(!t)return;t.textContent=text;t.classList.remove('hidden');setTimeout(()=>t.classList.add('hidden'),1800)}
 
 function mount(){
-  css();const nav=document.querySelector('.nav-tabs'),content=document.querySelector('.content');if(!nav||!content)return
-  if(!$('studyNav')){const b=document.createElement('button');b.id='studyNav';b.className='nav-btn';b.dataset.tab='study';b.innerHTML='✏️ <span>Estudos</span>';nav.insertBefore(b,$('supervisionNav')||$('parentsNav'))}
+  css();const content=document.querySelector('.content')||document.querySelector('.friend-main');if(!content)return
   if(!$('studyPanel')){const p=document.createElement('section');p.id='studyPanel';p.className='hidden';p.innerHTML=`
     <div class="study-head"><div><h2>Mesa de Estudos</h2><p>Use individualmente ou compartilhe com um grupo.</p></div><select id="studyScope" class="study-scope"><option value="private">Só meu</option></select></div>
     <div id="studyHome"><div class="study-home-grid"><button class="study-tool-card" id="openCalculatorTool" type="button"><span class="tool-symbol">🧮</span><strong>Calculadora + Caderno</strong><small>Calculadora visual normal ou científica e caderno digital lado a lado.</small></button></div></div>
@@ -35,21 +34,25 @@ function mount(){
         <section class="notebook-3d"><header class="notebook-head"><div><strong id="notebookTitle">Meu caderno</strong><small>Digite ou envie resultados da calculadora.</small></div><span id="notebookStatus" class="notebook-status">Carregando…</span></header><textarea id="studyNotebook" class="notebook-paper" placeholder="Comece suas anotações aqui..."></textarea><footer class="notebook-actions"><span class="grow-note">Salvamento automático</span><button id="saveNotebookBtn" type="button">Salvar agora</button><button id="clearNotebookBtn" type="button">Limpar página</button></footer></section>
       </div>
     </div>`;content.appendChild(p)}
-  bind()
+  bind();window.__ISA_OPEN_STUDY__=show
 }
 
 function bind(){
-  $('studyNav')?.addEventListener('click',show)
-  document.querySelectorAll('.nav-btn:not(#studyNav)').forEach(b=>b.addEventListener('click',()=>$('studyPanel')?.classList.add('hidden')))
+  document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>$('studyPanel')?.classList.add('hidden')))
   $('openCalculatorTool')?.addEventListener('click',openCalculator);$('studyBackBtn')?.addEventListener('click',()=>{$('studyCalculator').classList.add('hidden');$('studyHome').classList.remove('hidden')})
   $('studyScope')?.addEventListener('change',async e=>{scope=e.target.value;await loadNote()});$('studyNotebook')?.addEventListener('input',scheduleSave);$('saveNotebookBtn')?.addEventListener('click',()=>saveNote(true));$('clearNotebookBtn')?.addEventListener('click',()=>{if(confirm('Limpar esta página do caderno?')){$('studyNotebook').value='';saveNote(true)}})
 }
-function show(){['chatPanel','familyPanel','calendarPanel','supervisionPanel','parentsPanel','emptyState'].forEach(id=>$(id)?.classList.add('hidden'));$('studyPanel')?.classList.remove('hidden');document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.id==='studyNav'));identity().then(loadNote).catch(e=>{console.error(e);toast('Entre na conta para usar Estudos.')})}
+async function show(scopeHint){
+  ['chatPanel','familyPanel','calendarPanel','supervisionPanel','parentsPanel','emptyState','friendThread','friendEmpty'].forEach(id=>$(id)?.classList.add('hidden'))
+  $('studyPanel')?.classList.remove('hidden');document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'))
+  try{await identity();const hint=scopeHint||window.__ISA_STUDY_SCOPE_HINT__;if(hint&&hint!=='private'&&groups.some(g=>g.id===hint))scope=hint;else if(hint==='private')scope='private';const sel=$('studyScope');if(sel){sel.value=scope}await loadNote()}catch(e){console.error(e);toast('Não foi possível abrir Estudos.')}
+}
 function openCalculator(){ $('studyHome').classList.add('hidden');$('studyCalculator').classList.remove('hidden');if(!calculatorReady){initStudyCalculator({onSendResult:sendResult});calculatorReady=true}identity().then(loadNote).catch(console.error)}
 
 async function identity(){
   if(me)return me;const {data:{user}}=await db.auth.getUser();if(!user)throw new Error('Sem sessão')
-  const {data,error}=await db.from('family_members').select('id,family_id,display_name,role').eq('auth_user_id',user.id).eq('active',true).single();if(error||!data)throw error||new Error('Perfil não encontrado');me=data
+  const {data,error}=await db.from('family_members').select('id,family_id,display_name,role,relationship_label').eq('auth_user_id',user.id).eq('active',true).single();if(error||!data)throw error||new Error('Perfil não encontrado');me=data
+  const allowed=me.role==='child'||String(me.relationship_label||'').trim().toLowerCase()==='amiga da isa';if(!allowed)throw new Error('Estudos é exclusivo da Isa e amigas autorizadas')
   const {data:cm}=await db.from('conversation_members').select('conversation_id').eq('member_id',me.id);const ids=[...new Set((cm||[]).map(x=>x.conversation_id))]
   if(ids.length){const {data:g}=await db.from('conversations').select('id,title,type,updated_at').in('id',ids).eq('type','group').order('updated_at',{ascending:false});groups=g||[]}
   const sel=$('studyScope');if(sel){sel.innerHTML='<option value="private">Só meu</option>'+groups.map(g=>`<option value="${g.id}">Grupo • ${esc(g.title||'Sem nome')}</option>`).join('');if(![...sel.options].some(o=>o.value===scope))scope='private';sel.value=scope}return me
