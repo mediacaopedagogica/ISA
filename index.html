@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#cdb8ff">
+  <meta name="description" content="Cantinho da Isa — chat privado da família">
+  <title>Cantinho da Isa 💕</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="theme-3d.css">
+</head>
+<body>
+<div id="app">
+  <section id="loginView" class="screen center-screen">
+    <div class="login-card glass">
+      <div class="brand-bubble">🏡💕</div>
+      <h1>Cantinho da Isa</h1>
+      <p class="muted">Um cantinho para estar pertinho da família.</p>
+      <label>Login</label>
+      <input id="loginUsername" autocomplete="username" placeholder="Ex.: Mãe">
+      <label>Senha</label>
+      <div class="password-wrap">
+        <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Sua senha">
+        <button id="togglePassword" class="icon-btn" type="button" aria-label="Mostrar senha">👁️</button>
+      </div>
+      <button id="loginBtn" class="primary-btn">Entrar 💗</button>
+      <button id="openSetupBtn" class="text-btn hidden" tabindex="-1" aria-hidden="true">Primeiro acesso da família</button>
+      <p id="loginMsg" class="status-text"></p>
+    </div>
+  </section>
+
+  <section id="setupView" class="screen center-screen hidden" aria-hidden="true">
+    <div class="setup-card glass">
+      <div class="setup-head"><div><h2>Ativar a família 🌷</h2><p class="muted">Essa etapa já foi concluída.</p></div><button id="closeSetupBtn" class="icon-btn">✕</button></div>
+      <label>Código de ativação</label>
+      <input id="setupCode" type="password" placeholder="Código de ativação">
+      <div id="setupAccounts" class="setup-grid"></div>
+      <button id="setupFamilyBtn" class="primary-btn">Ativar acessos</button>
+      <p id="setupMsg" class="status-text"></p>
+    </div>
+  </section>
+
+  <section id="mainView" class="screen app-shell hidden">
+    <aside class="sidebar glass">
+      <div class="profile-mini">
+        <button id="myAvatarBtn" class="avatar pastel-avatar profile-avatar-btn" type="button" title="Alterar foto de perfil" aria-label="Alterar foto de perfil">
+          <span id="myAvatar">🙂</span><span class="avatar-camera">📷</span>
+        </button>
+        <input id="profileAvatarInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+        <div class="grow"><small class="muted">Você está como</small><strong id="myName">Família</strong><small id="myRole">online</small></div>
+        <button id="logoutBtn" class="tiny-btn profile-exit-btn" title="Sair da conta">Sair</button>
+      </div>
+      <nav class="nav-tabs">
+        <button class="nav-btn active" data-tab="chats">💬 <span>Conversas</span></button>
+        <button class="nav-btn" data-tab="calendar">📅 <span>Calendário</span></button>
+        <button class="nav-btn hidden" data-tab="supervision" id="supervisionNav">👀 <span>Supervisão</span></button>
+        <button class="nav-btn" data-tab="parents" id="parentsNav">🛡️ <span>Super Pais</span></button>
+      </nav>
+      <div class="chat-list-head"><strong>Conversas</strong><button id="newGroupBtn" class="tiny-btn">＋ Grupo</button></div>
+      <div id="chatList" class="chat-list"></div>
+    </aside>
+
+    <main class="content glass">
+      <section id="birthdayHero" class="birthday-hero hidden" aria-live="polite"></section>
+      <section id="notifyBanner" class="notify-banner hidden"><div>🔔 <strong>Ative as notificações</strong><small>Isa, Keise e Alan podem receber alertas de novas mensagens.</small></div><button id="enableNotificationsBtn" class="soft-btn">Ativar</button></section>
+
+      <section id="emptyState" class="empty-state"><div class="big-emoji">🏡</div><h2>Bem-vinda ao Cantinho da Isa</h2><p>Escolha uma conversa ou crie um grupo.</p></section>
+
+      <section id="chatPanel" class="chat-panel hidden">
+        <header class="chat-header">
+          <button id="mobileBackBtn" class="icon-btn mobile-only">←</button>
+          <div class="avatar pastel-avatar" id="chatAvatar">💬</div>
+          <div class="grow"><h3 id="chatTitle">Conversa</h3><small id="chatSubtitle">Família</small></div>
+        </header>
+        <div id="supervisionNotice" class="supervision-notice hidden">👀 <strong>Modo Supervisão</strong><span>Você está acompanhando esta conversa da Isa em modo somente leitura.</span></div>
+        <button id="pinnedBar" class="pinned-bar hidden" type="button"></button>
+        <div id="messages" class="messages"></div>
+        <div id="typingLine" class="typing-line"></div>
+        <footer id="composer" class="composer">
+          <div class="group-plus-wrap">
+            <button class="icon-btn hidden" id="groupPlusBtn" title="Mais opções">＋</button>
+            <div id="groupPlusMenu" class="plus-menu hidden">
+              <button type="button" data-group-action="poll">📊 Criar enquete</button>
+              <button type="button" data-group-action="photo">📷 Enviar foto</button>
+            </div>
+          </div>
+          <button class="icon-btn" id="photoBtn" title="Enviar foto">📷</button>
+          <input id="photoInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+          <div class="emoji-wrap">
+            <button class="icon-btn" id="emojiBtn" title="Emojis">😊</button>
+            <div id="emojiPicker" class="emoji-picker hidden">
+              <input id="emojiSearch" type="search" placeholder="Buscar emoji...">
+              <div id="emojiTabs" class="emoji-tabs"></div>
+              <div id="emojiGrid" class="emoji-grid"></div>
+            </div>
+          </div>
+          <textarea id="messageInput" rows="1" placeholder="Digite uma mensagem..."></textarea>
+          <button id="sendBtn" class="send-btn">➤</button>
+        </footer>
+      </section>
+
+      <section id="familyPanel" class="panel-pad hidden"><div id="familyGrid" class="family-grid"></div></section>
+
+      <section id="calendarPanel" class="panel-pad hidden calendar-panel">
+        <div class="panel-title calendar-panel-title">
+          <div><h2>Meu Calendário 📅</h2><p class="muted">Seus eventos e os eventos que compartilharam com você.</p></div>
+          <button id="newEventBtn" class="soft-btn">＋ Evento</button>
+        </div>
+        <div id="birthdayStrip" class="birthday-strip hidden"></div>
+        <div class="calendar-shell-3d">
+          <div class="calendar-toolbar">
+            <button id="calendarPrevBtn" class="calendar-round-btn" type="button">‹</button>
+            <div class="calendar-selects">
+              <select id="calendarMonthSelect" aria-label="Mês"></select>
+              <select id="calendarYearSelect" aria-label="Ano"></select>
+            </div>
+            <button id="calendarTodayBtn" class="calendar-today-btn" type="button">Hoje</button>
+            <button id="calendarNextBtn" class="calendar-round-btn" type="button">›</button>
+          </div>
+          <div class="calendar-weekdays" aria-hidden="true"><span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span></div>
+          <div id="calendarGrid" class="calendar-grid-real"></div>
+        </div>
+        <div id="calendarDayDetails" class="calendar-day-details"></div>
+        <div id="calendarList" class="calendar-list hidden"></div>
+      </section>
+
+      <section id="supervisionPanel" class="panel-pad hidden">
+        <div class="panel-title supervision-title"><div><h2>Supervisão da Isa 👀💜</h2><p class="muted">Acompanhe de forma transparente as conversas que envolvem a Isa.</p></div></div>
+        <div class="supervision-info">🛡️ <div><strong>Conta supervisionada</strong><p>Aqui aparecem somente as conversas da Isa permitidas para esta conta. Conversas entre adultos continuam privadas.</p></div></div>
+        <div id="supervisionList" class="supervision-list"></div>
+      </section>
+
+      <section id="parentsPanel" class="panel-pad hidden">
+        <div class="panel-title"><div><h2>Central Super Pais 🛡️</h2><p class="muted">Acessos, permissões e configurações do Cantinho da Isa.</p></div><button id="newMemberBtn" class="soft-btn">＋ Familiar</button></div>
+        <div class="parent-cards"><article class="parent-stat"><span>🔔</span><strong id="alertCount">0</strong><small>alertas</small></article><article class="parent-stat"><span>👥</span><strong id="memberCount">0</strong><small>familiares</small></article><article class="parent-stat"><span>🟢</span><strong id="onlineCount">0</strong><small>online</small></article></div>
+        <h3>Gerenciar familiares</h3><div id="permissionsTable" class="permissions-table"></div>
+        <h3>Alertas recentes</h3><div id="alertsList" class="alerts-list"></div>
+      </section>
+    </main>
+  </section>
+</div>
+
+<dialog id="simpleDialog"><form method="dialog" class="dialog-card"><button class="dialog-close" value="cancel">✕</button><div id="dialogContent"></div></form></dialog>
+<div id="toast" class="toast hidden"></div>
+<script type="module" src="app.js"></script>
+</body>
+</html>
