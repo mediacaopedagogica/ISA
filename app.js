@@ -1,5 +1,6 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 import { CONFIG } from './config.js'
+import './realtime-presence.js'
 import './study.js'
 import './study-document.js'
 import './retention-notice.js'
