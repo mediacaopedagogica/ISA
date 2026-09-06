@@ -18,81 +18,80 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Corrigir presença e notificações
-        shell: python
+      - name: Patch source
         run: |
+          python - <<'PY'
           from pathlib import Path
 
-          p = Path('chunk-00.txt')
-          s = p.read_text(encoding='utf-8')
-          s2 = s.replace("Date.now()-new Date(p.last_seen_at).getTime()<95000", "Date.now()-new Date(p.last_seen_at).getTime()<50000")
-          if s2 == s:
-              raise SystemExit('Não encontrei limite antigo de presença em chunk-00')
-          p.write_text(s2, encoding='utf-8')
-
-          p = Path('chunk-05.txt')
-          s = p.read_text(encoding='utf-8')
-          old = """async function upsertPresence(online){if(!me)return;await supabase.from('presence_state').upsert({member_id:me.id,online,last_seen_at:new Date().toISOString(),device_label:navigator.userAgent.includes('Mobile')?'Celular':'Computador'},{onConflict:'member_id'}).catch(()=>{})}
-function startHeartbeat(){clearInterval(heartbeat);heartbeat=setInterval(()=>{if(document.visibilityState==='visible')upsertPresence(true)},30000);document.addEventListener('visibilitychange',()=>upsertPresence(document.visibilityState==='visible'));window.addEventListener('pagehide',()=>upsertPresence(false))}"""
-          new = """function refreshPresenceUI(){
-  if(!me)return;
-  if($('onlineCount'))$('onlineCount').textContent=family.filter(x=>x.active&&isOnline(x.id)).length;
-  if(typeof renderChatList==='function')renderChatList();
-  if(activeConversation?.type==='direct'){
-    const other=directOther(activeConversation);
-    if(other&&$('chatSubtitle'))$('chatSubtitle').textContent=isOnline(other.id)?'Online':'Offline';
-  }
-}
-async function upsertPresence(online){
-  if(!me)return;
-  const stamp=new Date().toISOString(),device=navigator.userAgent.includes('Mobile')?'Celular':'Computador';
-  presenceMap[me.id]={...(presenceMap[me.id]||{}),member_id:me.id,online,last_seen_at:stamp,device_label:device};
-  refreshPresenceUI();
-  await supabase.from('presence_state').upsert({member_id:me.id,online,last_seen_at:stamp,device_label:device},{onConflict:'member_id'}).catch(()=>{});
-}
-function startHeartbeat(){
-  clearInterval(heartbeat);
-  heartbeat=setInterval(()=>{if(document.visibilityState==='visible')upsertPresence(true);refreshPresenceUI()},15000);
-  document.addEventListener('visibilitychange',()=>upsertPresence(document.visibilityState==='visible'));
-  window.addEventListener('pagehide',()=>upsertPresence(false));
-}"""
+          p=Path('chunk-00.txt')
+          s=p.read_text(encoding='utf-8')
+          old="Date.now()-new Date(p.last_seen_at).getTime()<95000"
           if old not in s:
-              raise SystemExit('Não encontrei bloco de presença antigo em chunk-05')
-          p.write_text(s.replace(old,new), encoding='utf-8')
+              raise SystemExit('presence timeout pattern not found')
+          p.write_text(s.replace(old,"Date.now()-new Date(p.last_seen_at).getTime()<50000"),encoding='utf-8')
 
-          p = Path('chunk-09.txt')
-          s = p.read_text(encoding='utf-8')
-          oldmsg = """  .on('postgres_changes',{event:'*',schema:'public',table:'messages'},async payload=>{await loadConversations();if(activeConversation?.id===(payload.new?.conversation_id||payload.old?.conversation_id)){await loadMessages(activeConversation.id);renderTimeline()}})"""
-          newmsg = """  .on('postgres_changes',{event:'*',schema:'public',table:'messages'},async payload=>{
-    const convId=payload.new?.conversation_id||payload.old?.conversation_id;
-    await loadConversations();
-    if(activeConversation?.id===convId){await loadMessages(activeConversation.id);renderTimeline()}
-    const conv=conversations.find(c=>c.id===convId);
-    if(payload.eventType==='INSERT'&&payload.new?.sender_id!==me.id&&conv&&isConversationMember(conv)){
-      playPing();
-      if('Notification' in window&&Notification.permission==='granted'&&document.visibilityState!=='visible'){
-        new Notification('Cantinho da Isa',{body:'Chegou uma nova mensagem',icon:'icon.svg',tag:`message-${convId}`});
-      }
-    }
-  })"""
+          p=Path('chunk-05.txt')
+          s=p.read_text(encoding='utf-8')
+          old="async function upsertPresence(online){if(!me)return;await supabase.from('presence_state').upsert({member_id:me.id,online,last_seen_at:new Date().toISOString(),device_label:navigator.userAgent.includes('Mobile')?'Celular':'Computador'},{onConflict:'member_id'}).catch(()=>{})}\nfunction startHeartbeat(){clearInterval(heartbeat);heartbeat=setInterval(()=>{if(document.visibilityState==='visible')upsertPresence(true)},30000);document.addEventListener('visibilitychange',()=>upsertPresence(document.visibilityState==='visible'));window.addEventListener('pagehide',()=>upsertPresence(false))}"
+          new="""function refreshPresenceUI(){
+            if(!me)return;
+            if($('onlineCount'))$('onlineCount').textContent=family.filter(x=>x.active&&isOnline(x.id)).length;
+            if(typeof renderChatList==='function')renderChatList();
+            if(activeConversation?.type==='direct'){
+              const other=directOther(activeConversation);
+              if(other&&$('chatSubtitle'))$('chatSubtitle').textContent=isOnline(other.id)?'Online':'Offline';
+            }
+          }
+          async function upsertPresence(online){
+            if(!me)return;
+            const stamp=new Date().toISOString(),device=navigator.userAgent.includes('Mobile')?'Celular':'Computador';
+            presenceMap[me.id]={...(presenceMap[me.id]||{}),member_id:me.id,online,last_seen_at:stamp,device_label:device};
+            refreshPresenceUI();
+            await supabase.from('presence_state').upsert({member_id:me.id,online,last_seen_at:stamp,device_label:device},{onConflict:'member_id'}).catch(()=>{});
+          }
+          function startHeartbeat(){
+            clearInterval(heartbeat);
+            heartbeat=setInterval(()=>{if(document.visibilityState==='visible')upsertPresence(true);refreshPresenceUI()},15000);
+            document.addEventListener('visibilitychange',()=>upsertPresence(document.visibilityState==='visible'));
+            window.addEventListener('pagehide',()=>upsertPresence(false));
+          }"""
+          if old not in s:
+              raise SystemExit('presence block not found')
+          p.write_text(s.replace(old,new),encoding='utf-8')
+
+          p=Path('chunk-09.txt')
+          s=p.read_text(encoding='utf-8')
+          oldmsg="  .on('postgres_changes',{event:'*',schema:'public',table:'messages'},async payload=>{await loadConversations();if(activeConversation?.id===(payload.new?.conversation_id||payload.old?.conversation_id)){await loadMessages(activeConversation.id);renderTimeline()}})"
+          newmsg="""  .on('postgres_changes',{event:'*',schema:'public',table:'messages'},async payload=>{
+            const convId=payload.new?.conversation_id||payload.old?.conversation_id;
+            await loadConversations();
+            if(activeConversation?.id===convId){await loadMessages(activeConversation.id);renderTimeline()}
+            const conv=conversations.find(c=>c.id===convId);
+            if(payload.eventType==='INSERT'&&payload.new?.sender_id!==me.id&&conv&&isConversationMember(conv)){
+              playPing();
+              if('Notification' in window&&Notification.permission==='granted'&&document.visibilityState!=='visible'){
+                new Notification('Cantinho da Isa',{body:'Chegou uma nova mensagem',icon:'icon.svg',tag:`message-${convId}`});
+              }
+            }
+          })"""
           if oldmsg not in s:
-              raise SystemExit('Não encontrei listener antigo de mensagens em chunk-09')
+              raise SystemExit('message listener pattern not found')
           s=s.replace(oldmsg,newmsg)
-          marker="""  .on('postgres_changes',{event:'UPDATE',schema:'public',table:'family_members'},async()=>{await loadFamily();await hydrateAvatarElements()})
-"""
+          marker="  .on('postgres_changes',{event:'UPDATE',schema:'public',table:'family_members'},async()=>{await loadFamily();await hydrateAvatarElements()})\n"
           insert="""  .on('postgres_changes',{event:'UPDATE',schema:'public',table:'family_members'},async()=>{await loadFamily();await hydrateAvatarElements()})
-  .on('postgres_changes',{event:'*',schema:'public',table:'presence_state'},payload=>{
-    const row=payload.new?.member_id?payload.new:payload.old;
-    if(!row?.member_id||!family.some(x=>x.id===row.member_id))return;
-    if(payload.eventType==='DELETE')delete presenceMap[row.member_id];else presenceMap[row.member_id]=payload.new;
-    refreshPresenceUI();
-  })
-"""
+            .on('postgres_changes',{event:'*',schema:'public',table:'presence_state'},payload=>{
+              const row=payload.new?.member_id?payload.new:payload.old;
+              if(!row?.member_id||!family.some(x=>x.id===row.member_id))return;
+              if(payload.eventType==='DELETE')delete presenceMap[row.member_id];else presenceMap[row.member_id]=payload.new;
+              refreshPresenceUI();
+            })
+          """
           if marker not in s:
-              raise SystemExit('Não encontrei ponto de inserção do presence_state em chunk-09')
-          p.write_text(s.replace(marker,insert), encoding='utf-8')
+              raise SystemExit('presence listener insertion point not found')
+          p.write_text(s.replace(marker,insert),encoding='utf-8')
+          PY
 
-      - name: Empacotar v32 sem CDN
+      - name: Build v32 locally
         run: |
           npm init -y >/dev/null 2>&1
           npm install --no-save @supabase/supabase-js@2 esbuild@0.25.9
@@ -118,16 +117,18 @@ function startHeartbeat(){
           grep -q "table:'presence_state'" app-v32.js
           grep -q 'refreshPresenceUI' app-v32.js
 
-      - name: Apontar site para v32
-        shell: python
+      - name: Switch live page to v32
         run: |
+          python - <<'PY'
           from pathlib import Path
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-          s=s.replace('./app-v31.js?v=31','./app-v32.js?v=32')
-          p.write_text(s,encoding='utf-8')
+          if './app-v31.js?v=31' not in s:
+              raise SystemExit('v31 script reference not found')
+          p.write_text(s.replace('./app-v31.js?v=31','./app-v32.js?v=32'),encoding='utf-8')
+          PY
 
-      - name: Publicar v32
+      - name: Commit v32
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
