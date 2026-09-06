@@ -1,4 +1,5 @@
 var activeSupervisionMode=false
+function isExternalFriend(m){return (m?.relationship_label||'').trim().toLowerCase()==='amiga da isa'}
 
 function conversationHasChild(conv){
   const child=family.find(x=>x.role==='child');
@@ -36,8 +37,8 @@ async function loadFamily(){
   $('supervisionNav')?.classList.toggle('hidden',!isParent())
   $('parentsNav')?.classList.toggle('hidden',!isParent())
   $('newMemberBtn')?.classList.toggle('hidden',!isSuperAdmin())
-  $('memberCount').textContent=family.filter(x=>x.active).length;$('onlineCount').textContent=family.filter(x=>isOnline(x.id)).length
-  renderAdminMembers();renderBirthdays();renderChatList();renderSupervisionList()
+  $('memberCount').textContent=family.filter(x=>x.active&&!isExternalFriend(x)).length;$('onlineCount').textContent=family.filter(x=>isOnline(x.id)).length
+  renderAdminMembers();renderBirthdays();renderChatList();renderSupervisionList();if(isSuperAdmin())loadExternalFriendAccesses().catch(console.warn)
 }
 
 async function loadConversations(){

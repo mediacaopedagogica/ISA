@@ -39,7 +39,9 @@ async function openChat(id){
 }
 
 function canSendPhoto(conv){
-  if(!me?.can_send_photo)return false
+  if(!me||!conv)return false
+  if(conv.type==='group')return me.role==='child'?true:!!me.can_send_photo
+  if(!me.can_send_photo)return false
   const ids=(conv.conversation_members||[]).map(x=>x.member_id),child=ids.map(memberById).find(x=>x?.role==='child');if(!child)return true
   if(me.role==='child')return !ids.map(memberById).filter(x=>x&&x.id!==me.id&&x.role!=='child').some(a=>!cpFor(me.id,a.id)?.allow_photo)
   return !!cpFor(child.id,me.id)?.allow_photo

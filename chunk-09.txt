@@ -49,14 +49,60 @@ async function bindGlobalRealtime(){
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'parental_alerts',filter:`target_member_id=eq.${me.id}`},async payload=>{await loadAlerts();playPing();if(document.visibilityState!=='visible'&&Notification.permission==='granted')new Notification(payload.new.title||'Cantinho da Isa',{body:payload.new.body||'Chegou mensagem',icon:'icon.svg'})}).subscribe()
 }
 
+
+let externalFriendAccesses=[]
+function externalFriendUrl(token){const base=new URL('./amiga.html',location.href);base.hash='acesso='+encodeURIComponent(token);return base.href}
+async function copyExternalFriendLink(token){
+  const url=externalFriendUrl(token)
+  try{await navigator.clipboard.writeText(url);toast('Link copiado 💜')}
+  catch{const t=document.createElement('textarea');t.value=url;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();toast('Link copiado 💜')}
+}
+function ensureExternalFriendManager(){
+  if(!isSuperAdmin()||!$('parentsPanel'))return null
+  let wrap=$('externalFriendsManager');if(wrap)return wrap
+  wrap=document.createElement('section');wrap.id='externalFriendsManager';wrap.className='external-friends-manager'
+  wrap.innerHTML=`<div class="external-friends-head"><div><h3>Acessos externos da Isa 🌷</h3><p>Crie um link pessoal para cada amiga. Não usa login nem senha e pode ser revogado a qualquer momento.</p></div></div><div class="external-friend-create"><input id="externalFriendName" maxlength="60" placeholder="Nome da amiga"><button id="createExternalFriendBtn" class="soft-btn" type="button">＋ Criar acesso</button></div><div class="external-friend-safety">🔒 Cada link identifica uma única amiga. No privado, ela conversa somente com a Isa e apenas por texto. Fotos ficam disponíveis somente nos grupos criados pela Isa para atividades e trabalhos.</div><div id="externalFriendsList" class="external-friends-list"></div>`
+  const alertHeading=[...$('parentsPanel').querySelectorAll('h3')].find(h=>/Alertas recentes/i.test(h.textContent||''))
+  if(alertHeading)alertHeading.before(wrap);else $('parentsPanel').appendChild(wrap)
+  $('createExternalFriendBtn').onclick=createExternalFriendAccess
+  $('externalFriendName').addEventListener('keydown',e=>{if(e.key==='Enter')createExternalFriendAccess()})
+  return wrap
+}
+async function loadExternalFriendAccesses(){
+  const wrap=ensureExternalFriendManager();if(!wrap)return
+  const box=$('externalFriendsList');box.innerHTML='<p class="muted">Carregando acessos…</p>'
+  const {data,error}=await supabase.rpc('external_friend_list')
+  if(error){box.innerHTML='<p class="muted">Não foi possível carregar os acessos externos.</p>';throw error}
+  externalFriendAccesses=Array.isArray(data)?data:[]
+  box.innerHTML=externalFriendAccesses.map(x=>`<article class="external-friend-card ${x.active?'':'revoked'}"><div class="external-friend-avatar">🌷</div><div class="external-friend-info"><strong>${esc(x.name)}</strong><small>${x.active?'Link ativo':'Link revogado'}${x.lastUsedAt?' • usado recentemente':''}</small></div><div class="external-friend-actions">${x.active?`<button type="button" class="mini-action" data-ext-copy="${x.memberId}">Copiar link</button>`:''}<button type="button" class="mini-action" data-ext-new="${x.memberId}">${x.active?'Novo link':'Reativar'}</button>${x.active?`<button type="button" class="mini-action warn" data-ext-revoke="${x.memberId}">Revogar</button>`:''}</div></article>`).join('')||'<p class="muted">Nenhum acesso externo criado.</p>'
+  document.querySelectorAll('[data-ext-copy]').forEach(b=>b.onclick=()=>{const x=externalFriendAccesses.find(v=>v.memberId===b.dataset.extCopy);if(x?.token)copyExternalFriendLink(x.token)})
+  document.querySelectorAll('[data-ext-new]').forEach(b=>b.onclick=()=>regenerateExternalFriend(b.dataset.extNew))
+  document.querySelectorAll('[data-ext-revoke]').forEach(b=>b.onclick=()=>revokeExternalFriend(b.dataset.extRevoke))
+}
+async function createExternalFriendAccess(){
+  const input=$('externalFriendName'),name=input?.value.trim();if(!name)return toast('Digite o nome da amiga.')
+  const btn=$('createExternalFriendBtn');btn.disabled=true
+  try{const {data,error}=await supabase.rpc('external_friend_create',{p_name:name});if(error)throw error;input.value='';await Promise.all([loadFamily(),loadConversations(),loadExternalFriendAccesses()]);if(data?.token)await copyExternalFriendLink(data.token);toast(`Acesso de ${name} criado 💜`)}
+  catch(e){toast(e.message||'Não foi possível criar o acesso.')}finally{btn.disabled=false}
+}
+async function regenerateExternalFriend(memberId){
+  const x=externalFriendAccesses.find(v=>v.memberId===memberId);if(!x)return
+  if(x.active&&!confirm(`Gerar um novo link para ${x.name}? O link atual deixará de funcionar.`))return
+  try{const {data,error}=await supabase.rpc('external_friend_regenerate',{p_member_id:memberId});if(error)throw error;await Promise.all([loadFamily(),loadConversations(),loadExternalFriendAccesses()]);if(data?.token)await copyExternalFriendLink(data.token);toast(`Novo link de ${x.name} pronto`)}catch(e){toast(e.message||'Não foi possível gerar outro link.')}
+}
+async function revokeExternalFriend(memberId){
+  const x=externalFriendAccesses.find(v=>v.memberId===memberId);if(!x||!confirm(`Revogar o acesso de ${x.name}? O link deixará de funcionar imediatamente.`))return
+  try{const {error}=await supabase.rpc('external_friend_revoke',{p_member_id:memberId});if(error)throw error;await Promise.all([loadFamily(),loadConversations(),loadExternalFriendAccesses()]);toast(`Acesso de ${x.name} revogado`)}catch(e){toast(e.message||'Não foi possível revogar.')}
+}
+
 async function boot(){
   const {data:{user}}=await supabase.auth.getUser();if(!user){showView('loginView');return}
   const {data:member,error}=await supabase.from('family_members').select('*').eq('auth_user_id',user.id).eq('active',true).single();if(error||!member){await supabase.auth.signOut();showView('loginView');return setStatus('loginMsg','Perfil familiar não encontrado.')}
-  me=member;document.title='Cantinho da Isa 💕';showView('mainView');$('myName').textContent=me.display_name;$('myRole').textContent=friendlyRoleLabel(me.role);$('parentsNav').classList.toggle('hidden',!isParent());$('supervisionNav')?.classList.toggle('hidden',!isParent());
+  me=member;document.title='Cantinho da Isa 💕';showView('mainView');$('myName').textContent=me.display_name;$('myRole').textContent=friendlyRoleLabel(me.role);$('parentsNav').classList.toggle('hidden',!isParent());$('supervisionNav')?.classList.toggle('hidden',!isParent());$('newGroupBtn')?.classList.toggle('hidden',me.role!=='child');
   switchTab('chats');if($('chatList'))$('chatList').innerHTML='<p class="muted" style="padding:12px">Carregando conversas…</p>';
   supabase.realtime.setAuth().catch(()=>{});
   await Promise.all([loadFamily(),loadConversations()]);
-  hydrateAvatarElements().catch(()=>{});upsertPresence(true).catch(()=>{});startHeartbeat();bindGlobalRealtime();renderNotifyBanner();if('Notification'in window&&Notification.permission==='granted')enablePush();renderBirthdayHero();
+  hydrateAvatarElements().catch(()=>{});upsertPresence(true).catch(()=>{});startHeartbeat();bindGlobalRealtime();renderNotifyBanner();if('Notification'in window&&Notification.permission==='granted')enablePush();renderBirthdayHero();if(isSuperAdmin())loadExternalFriendAccesses().catch(console.warn);
   Promise.allSettled([loadCalendar(),loadAlerts()]).catch(()=>{});
   const wanted=new URLSearchParams(location.search).get('conversation');if(wanted&&conversations.some(c=>c.id===wanted)&&isConversationMember(conversations.find(c=>c.id===wanted)))openChat(wanted,false)
 }
