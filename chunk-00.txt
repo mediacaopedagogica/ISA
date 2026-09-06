@@ -1,0 +1,69 @@
+const supabase = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY, {
+  auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
+})
+const $=id=>document.getElementById(id)
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+const views=['loginView','setupView','mainView']
+let me=null,family=[],contactPermissions=[],conversations=[],activeConversation=null,activeMessages=[],activePolls=[],presenceMap={},globalChannel=null,chatChannel=null,typingTimer=null,typingMembers=new Map(),heartbeat=null
+const photoObjectUrls=[]
+
+const EMOJIS={
+  'Recentes':[],
+  'Carinhas':['😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😍','🥰','😘','😋','😎','🤓','🥳','🤗','🤔','🫡','😴','😢','😭','😤','😡','😱','🤯','🥹','😌'],
+  'Corações':['❤️','🩷','🧡','💛','💚','🩵','💙','💜','🤎','🖤','🤍','💖','💗','💓','💞','💕','💘','💝','❣️','❤️‍🔥','❤️‍🩹','🫶'],
+  'Família':['👩','👨','👧','👦','👵','👴','👶','🧒','👨‍👩‍👧','👨‍👩‍👧‍👦','🙌','👏','👋','👍','🙏','💪'],
+  'Animais':['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐸','🐵','🐥','🦄','🐢','🐬','🐳','🦋','🐞'],
+  'Comida':['🍎','🍓','🍉','🍇','🍌','🍍','🥭','🍒','🥕','🌽','🍕','🍔','🍟','🍿','🍪','🍩','🍰','🧁','🍫','🍬','🥤','☕'],
+  'Festa':['🎉','🎊','🎈','🎂','🎁','🎀','✨','🌟','⭐','💫','🎆','🎵','🎶','🎨','🏆','⚽','🎮'],
+  'Natureza':['🌞','🌝','🌙','☀️','🌤️','🌈','☁️','❄️','🔥','💧','🌊','🌸','🌷','🌹','🌻','🌼','🌿','🍀','🌳'],
+  'Objetos':['📱','💻','⌨️','🖥️','📷','📸','⏰','🔔','💡','📚','✏️','📝','🎒','🧸','🪄','🔑','🏠','🚗','✈️'],
+  'Símbolos':['✅','❌','⚠️','❗','❓','‼️','💯','♻️','🔒','🔓','🛡️','🔔','📌','💬','💭','➡️','⬅️','⬆️','⬇️','➕','➖']
+}
+const EMOJI_NAMES={'😀':'feliz sorriso','😂':'risada','😊':'feliz fofo','🥰':'amor carinho','😍':'apaixonado','😭':'chorando triste','🥳':'festa aniversario','❤️':'coracao amor','🩷':'coracao rosa','💙':'coracao azul','💜':'coracao roxo','🫶':'carinho','👵':'avo vo','👨':'pai homem','👩':'mae mulher','👧':'menina filha','🎂':'bolo aniversario','🎉':'festa parabens','🌈':'arco iris','🌷':'flor','🔔':'notificacao','📌':'fixar'}
+let emojiCategory='Carinhas'
+
+function internalEmail(username){return `${username.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'.').replace(/^\.|\.$/g,'')}@nosso-cantinho.local`}
+function showView(id){views.forEach(v=>$(v).classList.toggle('hidden',v!==id))}
+function setStatus(id,text,ok=false){const el=$(id);el.textContent=text;el.style.color=ok?'#3d9968':'#a15472'}
+function toast(text){const t=$('toast');t.textContent=text;t.classList.remove('hidden');clearTimeout(t._tm);t._tm=setTimeout(()=>t.classList.add('hidden'),2800)}
+function roleLabel(role){return ({super_admin:'Mãe • Super Admin',super_parent:'Pai • Super Pais',trusted_adult:'Adulto de confiança',text_only:'Família • texto',child:'Perfil infantil'})[role]||role}
+function isParent(){return ['super_admin','super_parent'].includes(me?.role)}
+function isSuperAdmin(){return me?.role==='super_admin'}
+function fmtTime(ts){return new Intl.DateTimeFormat('pt-BR',{hour:'2-digit',minute:'2-digit'}).format(new Date(ts))}
+function fmtDate(ts){return new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(ts))}
+function memberById(id){return family.find(x=>x.id===id)}
+function isOnline(memberId){const p=presenceMap[memberId];return !!(p?.online && Date.now()-new Date(p.last_seen_at).getTime()<95000)}
+function cpFor(childId,adultId){return contactPermissions.find(x=>x.child_id===childId&&x.adult_id===adultId&&x.active)}
+function relationFor(other){
+  if(!other)return 'Família'
+  if(me?.role==='child'){
+    const r=(other.relationship_label||'').toLowerCase()
+    const map={'mãe':'Sua mãe','mae':'Sua mãe','pai':'Seu pai','avó':'Sua avó','avo':'Sua avó','vó':'Sua avó','vo':'Sua avó','avô':'Seu avô','tia':'Sua tia','tio':'Seu tio','prima':'Sua prima','primo':'Seu primo'}
+    return map[r]||other.relationship_label||other.display_name
+  }
+  if(other.role==='child')return other.display_name
+  return other.relationship_label||other.display_name
+}
+function directOther(conv){const ids=(conv.conversation_members||[]).map(x=>x.member_id);if(ids.includes(me?.id))return memberById(ids.find(id=>id!==me.id));const adults=ids.map(memberById).filter(Boolean);return adults.find(x=>x.role!=='child')||adults[0]}
+function convTitle(conv){if(conv.type==='group')return conv.title||'Grupo';const other=directOther(conv);if((conv.conversation_members||[]).some(x=>x.member_id===me?.id))return other?.display_name||conv.title||'Conversa';return conv.title||'Conversa supervisionada'}
+function convSubtitle(conv){if(conv.type==='group')return `${(conv.conversation_members||[]).length} familiares`;const other=directOther(conv);return relationFor(other)}
+function openDialog(html){$('dialogContent').innerHTML=html;$('simpleDialog').showModal()}
+function closeDialog(){$('simpleDialog').close()}
+
+async function login(){
+  const username=$('loginUsername').value.trim(),password=$('loginPassword').value
+  if(!username||!password)return setStatus('loginMsg','Digite login e senha.')
+  setStatus('loginMsg','Entrando...')
+  const {error}=await supabase.auth.signInWithPassword({email:internalEmail(username),password})
+  if(error)return setStatus('loginMsg','Não foi possível entrar. Confira login e senha.')
+  await boot()
+}
+
+async function boot(){
+  const {data:{user}}=await supabase.auth.getUser();if(!user){showView('loginView');return}
+  const {data:member,error}=await supabase.from('family_members').select('*').eq('auth_user_id',user.id).eq('active',true).single()
+  if(error||!member){await supabase.auth.signOut();showView('loginView');return setStatus('loginMsg','Perfil familiar não encontrado.')}
+  me=member;showView('mainView');$('myName').textContent=me.display_name;$('myRole').textContent=roleLabel(me.role);$('parentsNav').classList.toggle('hidden',!isParent())
+  await supabase.realtime.setAuth().catch(()=>{})
+  await Promise.all([loadFamily(),loadConversations(),loadCalendar(),loadAlerts()])
+  await upsertPresence(true);startHeartbeat();bindGlobalRealtime();renderN

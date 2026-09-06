@@ -1,0 +1,97 @@
+var activeSupervisionMode=false
+
+function conversationHasChild(conv){
+  const child=family.find(x=>x.role==='child');
+  return !!child&&(conv.conversation_members||[]).some(x=>x.member_id===child.id)
+}
+function isConversationMember(conv){return !!me&&(conv.conversation_members||[]).some(x=>x.member_id===me.id)}
+function supervisedTitle(conv){
+  if(conv.type==='group')return `Grupo • ${conv.title||'Família'}`
+  const members=(conv.conversation_members||[]).map(x=>memberById(x.member_id)).filter(Boolean)
+  const child=members.find(x=>x.role==='child')
+  const other=members.find(x=>x.role!=='child')
+  if(child&&other)return `${child.display_name} ↔ ${other.display_name}`
+  return conv.title||'Conversa da Isa'
+}
+function convTitle(conv){
+  if(conv.type==='group')return conv.title||'Grupo'
+  const other=directOther(conv)
+  if(me?.role==='child'&&other)return `${other.display_name} · ${relationFor(other)}`
+  if(isConversationMember(conv))return other?.display_name||conv.title||'Conversa'
+  return supervisedTitle(conv)
+}
+function convSubtitle(conv){
+  if(conv.type==='group')return `${(conv.conversation_members||[]).length} familiares`
+  const other=directOther(conv)
+  if(me?.role==='child')return relationFor(other)
+  if(other)return isOnline(other.id)?'Online':'Offline'
+  return 'Conversa'
+}
+
+async function loadFamily(){
+  const {data}=await supabase.from('family_members').select('*').order('display_name');family=(data||[]).filter(x=>isParent()||x.active)
+  const {data:cps}=await supabase.from('contact_permissions').select('*');contactPermissions=cps||[]
+  const ids=family.map(x=>x.id);const {data:presence}=ids.length?await supabase.from('presence_state').select('*').in('member_id',ids):{data:[]};presenceMap=Object.fromEntries((presence||[]).map(p=>[p.member_id,p]))
+  if($('familyGrid'))$('familyGrid').innerHTML=''
+  $('supervisionNav')?.classList.toggle('hidden',!isParent())
+  $('parentsNav')?.classList.toggle('hidden',!isParent())
+  $('newMemberBtn')?.classList.toggle('hidden',!isSuperAdmin())
+  $('memberCount').textContent=family.filter(x=>x.active).length;$('onlineCount').textContent=family.filter(x=>isOnline(x.id)).length
+  renderAdminMembers();renderBirthdays();renderChatList();renderSupervisionList()
+}
+
+async function loadConversations(){
+  const {data,error}=await supabase.from('conversations').select('id,type,title,created_by,pinned_message_id,created_at,updated_at,conversation_members(member_id,last_read_at,joined_at)').order('updated_at',{ascending:false})
+  if(error){console.error(error);return}
+  conversations=data||[]
+  const ids=conversations.map(c=>c.id),latestMap={}
+  if(ids.length){const {data:recent}=await supabase.from('messages').select('id,conversation_id,sender_id,body,kind,sent_at').in('conversation_id',ids).is('deleted_at',null).order('sent_at',{ascending:false}).limit(500);for(const m of recent||[])if(!latestMap[m.conversation_id])latestMap[m.conversation_id]=m}
+  const supervisorUnread={}
+  if(isParent()){const {data:alerts}=await supabase.from('parental_alerts').select('conversation_id').eq('target_member_id',me.id).is('read_at',null);for(const a of alerts||[])if(a.conversation_id)supervisorUnread[a.conversation_id]=true}
+  for(const c of conversations){
+    const mine=(c.conversation_members||[]).find(x=>x.member_id===me.id),latest=latestMap[c.id]
+    c._latest=latest;c._isMember=!!mine;c._supervisorUnread=!!supervisorUnread[c.id]
+    c._unread=!!(mine&&latest&&latest.sender_id!==me.id&&(!mine.last_read_at||new Date(latest.sent_at)>new Date(mine.last_read_at)))
+  }
+  renderChatList();renderSupervisionList()
+}
+
+function renderChatList(){
+  if(!$('chatList'))return
+  const own=conversations.filter(isConversationMember)
+  $('chatList').innerHTML=own.map(c=>{const title=convTitle(c),sub=convSubtitle(c),preview=c._latest?(c._latest.kind==='photo'?'📷 Foto':c._latest.body||'Nova mensagem'):sub;return `<button class="chat-item ${activeConversation?.id===c.id&&!activeSupervisionMode?'active':''}" data-conv="${c.id}"><div class="avatar pastel-avatar">${c.type==='group'?'👨‍👩‍👧':'💌'}</div><div class="grow"><strong>${esc(title)} ${c._unread?'<span class="unread-star">★</span>':''}</strong><small>${esc(preview)}</small></div></button>`}).join('')||'<p class="muted" style="padding:12px">Nenhuma conversa ainda.</p>'
+  document.querySelectorAll('[data-conv]').forEach(b=>b.addEventListener('click',()=>openChat(b.dataset.conv,false)))
+}
+
+function renderSupervisionList(){
+  if(!$('supervisionList'))return
+  if(!isParent()){$('supervisionList').innerHTML='';return}
+  const childConvs=conversations.filter(conversationHasChild)
+  $('supervisionList').innerHTML=childConvs.map(c=>{const preview=c._latest?(c._latest.kind==='photo'?'📷 Foto':c._latest.body||'Nova mensagem'):'Ainda sem mensagens';return `<button class="supervision-card" data-supervise="${c.id}"><div class="supervision-avatar">👀</div><div class="grow"><strong>${esc(supervisedTitle(c))} ${c._supervisorUnread?'<span class="unread-star">★</span>':''}</strong><small>${esc(preview)}</small></div><span class="supervision-arrow">›</span></button>`}).join('')||'<div class="supervision-empty">💜<strong>Nenhuma conversa da Isa disponível.</strong><span>Quando ela conversar com um familiar autorizado, aparecerá aqui.</span></div>'
+  document.querySelectorAll('[data-supervise]').forEach(b=>b.onclick=()=>openChat(b.dataset.supervise,true))
+}
+
+async function openChat(id,fromSupervision=false){
+  activeConversation=conversations.find(c=>c.id===id);if(!activeConversation)return
+  activeSupervisionMode=!!fromSupervision
+  document.querySelectorAll('[data-conv]').forEach(x=>x.classList.toggle('active',!activeSupervisionMode&&x.dataset.conv===id))
+  hidePanels();$('emptyState').classList.add('hidden');$('chatPanel').classList.remove('hidden')
+  const supervision=activeSupervisionMode&&isParent()&&conversationHasChild(activeConversation)
+  $('chatTitle').textContent=supervision?supervisedTitle(activeConversation):convTitle(activeConversation)
+  $('chatSubtitle').textContent=supervision?'Supervisão da Isa • somente leitura':convSubtitle(activeConversation)
+  $('chatAvatar').textContent=supervision?'👀':activeConversation.type==='group'?'👨‍👩‍👧':'💌'
+  $('supervisionNotice')?.classList.toggle('hidden',!supervision)
+  $('composer')?.classList.toggle('hidden',supervision)
+  const isGroup=activeConversation.type==='group';$('groupPlusBtn').classList.toggle('hidden',supervision||!isGroup);$('photoBtn').classList.toggle('hidden',supervision||isGroup||!canSendPhoto(activeConversation));$('messageInput').disabled=supervision
+  if(!supervision)await markRead(id)
+  await Promise.all([loadMessages(id),loadPolls(id)]);renderTimeline();subscribeChat(id);await loadConversations()
+}
+
+function hidePanels(){['chatPanel','familyPanel','calendarPanel','supervisionPanel','parentsPanel'].forEach(id=>$(id)?.classList.add('hidden'))}
+function switchTab(tab){
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));hidePanels();$('emptyState').classList.add('hidden')
+  if(tab==='chats'){activeSupervisionMode=false;$('supervisionNotice')?.classList.add('hidden');if(activeConversation&&isConversationMember(activeConversation))$('chatPanel').classList.remove('hidden');else $('emptyState').classList.remove('hidden')}
+  if(tab==='calendar')$('calendarPanel').classList.remove('hidden')
+  if(tab==='supervision'&&isParent()){activeSupervisionMode=true;renderSupervisionList();$('supervisionPanel').classList.remove('hidden')}
+  if(tab==='parents'&&isParent())$('parentsPanel').classList.remove('hidden')
+}

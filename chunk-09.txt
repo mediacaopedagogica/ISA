@@ -1,0 +1,45 @@
+function renderBirthdayHero(){
+  if(!me)return;const next=family.filter(m=>m.id!==me.id).map(m=>({m,b:birthdayInfo(m)})).filter(x=>x.b&&[0,1,2,3,4,5,6,7].includes(x.b.days)).sort((a,b)=>a.b.days-b.b.days)[0];if(!next)return $('birthdayHero').classList.add('hidden');const today=next.b.days===0;let title,text
+  if(me.role==='child'){const rel=relationFor(next.m).toLowerCase();title=today?`🎂 Hoje é aniversário ${rel.replace(/^sua|^seu/i,'d')}!`:`🎀 O aniversário ${rel.replace(/^sua|^seu/i,'d')} está chegando!`;text=today?'Mande feliz aniversário e uma mensagem muito especial 💕':`Faltam ${next.b.days} dia${next.b.days===1?'':'s'}.`}
+  else{title=today?`🎂 Hoje é aniversário de ${next.m.display_name}!`:`🎀 Aniversário de ${next.m.display_name} chegando`;text=today?'Que tal mandar uma mensagem especial? 💕':`Faltam ${next.b.days} dia${next.b.days===1?'':'s'}.`}
+  $('birthdayHero').innerHTML=`<div class="birthday-hero-icon">${today?'🎂':'🎀'}</div><div><h3>${esc(title)}</h3><p>${esc(text)}</p></div><button class="birthday-message-btn" data-bday-member="${next.m.id}">💖 Mandar mensagem</button>`;$('birthdayHero').classList.remove('hidden');document.querySelector('[data-bday-member]').onclick=()=>openBirthdayChat(next.m)
+}
+
+function openNewGroup(){
+  const child=family.find(x=>x.role==='child'&&x.active);let candidates=[]
+  if(me.role==='child')candidates=family.filter(x=>x.active&&x.id!==me.id&&cpFor(me.id,x.id)?.allow_text)
+  else if(['trusted_adult','text_only'].includes(me.role))candidates=family.filter(x=>x.active&&x.id!==me.id&&(x.role==='child'||['trusted_adult','text_only'].includes(x.role)))
+  else candidates=family.filter(x=>x.active&&x.id!==me.id)
+  openDialog(`<h3>Novo grupo 💕</h3><p class="muted">Todo grupo do Cantinho da Isa inclui a Isa.</p><label>Nome do grupo</label><input id="groupName" placeholder="Ex.: Meninas da família"><div class="check-list">${candidates.map(m=>`<label class="check-line"><input type="checkbox" data-group-member="${m.id}" ${m.role==='child'&&me.role!=='child'?'checked disabled':''}> ${esc(m.display_name)}${me.role==='child'?` • ${esc(relationFor(m))}`:''}</label>`).join('')}</div><button type="button" id="createGroupBtn" class="primary-btn">Criar grupo</button><p id="dialogMsg" class="status-text"></p>`)
+  $('createGroupBtn').onclick=async()=>{const title=$('groupName').value.trim(),memberIds=[...document.querySelectorAll('[data-group-member]:checked')].map(x=>x.dataset.groupMember);if(title.length<2)return setStatus('dialogMsg','Dê um nome ao grupo.');if(me.role!=='child'&&child&&!memberIds.includes(child.id))memberIds.push(child.id);try{$('createGroupBtn').disabled=true;const r=await chatAction('create_group',{title,memberIds});closeDialog();await loadConversations();await openChat(r.conversationId,false)}catch(e){setStatus('dialogMsg',e.message)}finally{$('createGroupBtn').disabled=false}}
+}
+function openNewMember(){
+  if(!isSuperAdmin())return toast('Somente a Keise cria novos acessos.');openDialog(`<h3>Novo familiar 🌷</h3><p class="muted">O novo acesso terá conversa individual somente com a Isa. Depois você pode ajustar permissões.</p><div class="dialog-grid"><label>Login<input id="nmUser" placeholder="Ex.: Tio Carlos"></label><label>Nome exibido<input id="nmDisplay" placeholder="Carlos"></label><label>Parentesco<input id="nmRelation" placeholder="Tio, prima..."></label><label>Tipo<select id="nmRole"><option value="text_only">Família</option><option value="trusted_adult">Adulto de confiança</option></select></label><label>Dia aniversário<input id="nmDay" type="number" min="1" max="31"></label><label>Mês<input id="nmMonth" type="number" min="1" max="12"></label><label>Ano (opcional)<input id="nmYear" type="number" min="1900" max="2100"></label><label>Senha inicial<input id="nmPass" type="password"></label></div><label class="check-line"><input id="nmPhoto" type="checkbox"> Pode enviar e receber fotos com a Isa</label><button type="button" id="createMemberBtn" class="primary-btn">Criar acesso</button><p id="dialogMsg" class="status-text"></p>`)
+  $('createMemberBtn').onclick=async()=>{const username=$('nmUser').value.trim(),password=$('nmPass').value;if(username.length<2||password.length<8)return setStatus('dialogMsg','Informe login e senha de pelo menos 8 caracteres.');const n=id=>$(id).value?Number($(id).value):null;try{$('createMemberBtn').disabled=true;await adminAction('create_user',{username,password,displayName:$('nmDisplay').value.trim()||username,relationshipLabel:$('nmRelation').value.trim()||'Família',role:$('nmRole').value,birthDay:n('nmDay'),birthMonth:n('nmMonth'),birthYear:n('nmYear'),permissions:{text:true,photo:$('nmPhoto').checked,poll:false,calendar:true}});closeDialog();await Promise.all([loadFamily(),loadConversations()]);toast('Novo acesso criado 💕')}catch(e){setStatus('dialogMsg',e.message)}finally{$('createMemberBtn').disabled=false}}
+}
+
+async function bindGlobalRealtime(){
+  if(globalChannel)supabase.removeChannel(globalChannel);globalChannel=supabase.channel(`family-ui-${me.id}`)
+  .on('postgres_changes',{event:'*',schema:'public',table:'messages'},async payload=>{await loadConversations();if(activeConversation?.id===(payload.new?.conversation_id||payload.old?.conversation_id)){await loadMessages(activeConversation.id);renderTimeline()}})
+  .on('postgres_changes',{event:'*',schema:'public',table:'conversation_members'},()=>loadConversations())
+  .on('postgres_changes',{event:'*',schema:'public',table:'conversations'},()=>loadConversations())
+  .on('postgres_changes',{event:'*',schema:'public',table:'family_calendar'},()=>loadCalendar())
+  .on('postgres_changes',{event:'UPDATE',schema:'public',table:'family_members'},async()=>{await loadFamily();await hydrateAvatarElements()})
+  .on('postgres_changes',{event:'INSERT',schema:'public',table:'parental_alerts',filter:`target_member_id=eq.${me.id}`},async payload=>{await loadAlerts();playPing();if(document.visibilityState==='visible'&&Notification.permission==='granted')new Notification(payload.new.title||'Cantinho da Isa',{body:payload.new.body||'Chegou mensagem',icon:'icon.svg'})}).subscribe()
+}
+
+async function boot(){
+  const {data:{user}}=await supabase.auth.getUser();if(!user){showView('loginView');return}
+  const {data:member,error}=await supabase.from('family_members').select('*').eq('auth_user_id',user.id).eq('active',true).single();if(error||!member){await supabase.auth.signOut();showView('loginView');return setStatus('loginMsg','Perfil familiar não encontrado.')}
+  me=member;document.title='Cantinho da Isa 💕';showView('mainView');$('myName').textContent=me.display_name;$('myRole').textContent=friendlyRoleLabel(me.role);$('parentsNav').classList.toggle('hidden',!isParent());$('supervisionNav')?.classList.toggle('hidden',!isParent());await supabase.realtime.setAuth().catch(()=>{})
+  await Promise.all([loadFamily(),loadConversations(),loadCalendar(),loadAlerts()]);await hydrateAvatarElements();await upsertPresence(true);startHeartbeat();bindGlobalRealtime();renderNotifyBanner();renderBirthdayHero();switchTab('chats')
+  const wanted=new URLSearchParams(location.search).get('conversation');if(wanted&&conversations.some(c=>c.id===wanted)&&isConversationMember(conversations.find(c=>c.id===wanted)))openChat(wanted,false)
+}
+
+if($('myAvatarBtn'))$('myAvatarBtn').onclick=()=>$('profileAvatarInput').click()
+if($('profileAvatarInput'))$('profileAvatarInput').onchange=e=>{const f=e.target.files?.[0];if(f)uploadMyAvatar(f);e.target.value=''}
+if($('calendarPrevBtn'))$('calendarPrevBtn').onclick=()=>{calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()-1,1);renderCalendarMonth()}
+if($('calendarNextBtn'))$('calendarNextBtn').onclick=()=>{calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()+1,1);renderCalendarMonth()}
+if($('calendarTodayBtn'))$('calendarTodayBtn').onclick=()=>{const n=new Date();calendarCursor=new Date(n.getFullYear(),n.getMonth(),1);calendarSelectedDate=new Date(n.getFullYear(),n.getMonth(),n.getDate());renderCalendarMonth()}
+if($('calendarMonthSelect'))$('calendarMonthSelect').onchange=e=>{calendarCursor=new Date(calendarCursor.getFullYear(),Number(e.target.value),1);renderCalendarMonth()}
+if($('calendarYearSelect'))$('calendarYearSelect').onchange=e=>{calendarCursor=new Date(Number(e.target.value),calendarCursor.getMonth(),1);renderCalendarMonth()}

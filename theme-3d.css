@@ -1,0 +1,142 @@
+/* Tema 3D pastel inspirado no mockup aprovado */
+:root{
+  --nc-lilac:#d9c6ff;
+  --nc-lilac-strong:#b99df6;
+  --nc-pink:#ffd2e5;
+  --nc-pink-strong:#f4a7c8;
+  --nc-blue:#d9ecff;
+  --nc-mint:#dff7e9;
+  --nc-yellow:#fff0b9;
+  --nc-peach:#ffe2cd;
+  --nc-ink:#5c5066;
+  --nc-shadow:0 16px 34px rgba(106,78,135,.18),0 3px 0 rgba(255,255,255,.95) inset;
+  --nc-deep-shadow:0 22px 60px rgba(91,64,124,.22);
+}
+body{
+  background:
+    radial-gradient(circle at 8% 8%,rgba(255,210,229,.95),transparent 26%),
+    radial-gradient(circle at 92% 12%,rgba(217,198,255,.95),transparent 30%),
+    radial-gradient(circle at 18% 92%,rgba(217,236,255,.92),transparent 26%),
+    linear-gradient(135deg,#fff8fc 0%,#f5efff 48%,#eef8ff 100%);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+body::before,body::after{
+  content:"";position:fixed;z-index:-1;filter:blur(.2px);pointer-events:none;opacity:.65
+}
+body::before{width:180px;height:180px;border-radius:45% 55% 52% 48%;background:linear-gradient(145deg,#fff7bb,#ffd5e8);right:-45px;top:12vh;box-shadow:0 28px 60px rgba(169,126,151,.18)}
+body::after{width:130px;height:90px;border-radius:60px;background:linear-gradient(145deg,#fff,#e9ddff);left:-35px;bottom:7vh;box-shadow:0 22px 40px rgba(124,101,153,.16)}
+.glass{
+  background:linear-gradient(145deg,rgba(255,255,255,.92),rgba(255,255,255,.72));
+  border:1px solid rgba(255,255,255,.98);
+  box-shadow:var(--nc-deep-shadow),0 2px 0 rgba(255,255,255,.95) inset;
+  backdrop-filter:blur(20px) saturate(1.1);
+}
+.login-card,.setup-card{border-radius:38px;position:relative;overflow:hidden}
+.login-card::before,.setup-card::before{content:"✨";position:absolute;right:22px;top:18px;font-size:28px;opacity:.75}
+.brand-bubble{
+  border-radius:34px;background:linear-gradient(145deg,#fff3b9,#ffcfe3 45%,#d9c7ff 80%);
+  box-shadow:0 18px 28px rgba(150,108,166,.22),0 4px 0 rgba(255,255,255,.7) inset;
+  transform:rotate(-2deg)
+}
+h1,h2,h3{letter-spacing:-.03em}
+.primary-btn,.send-btn{
+  background:linear-gradient(145deg,#c6afff,#f1a9c9 62%,#ffcfdb);
+  box-shadow:0 12px 22px rgba(184,117,162,.27),0 3px 0 rgba(255,255,255,.4) inset;
+  transform:translateY(0);transition:.18s ease
+}
+.primary-btn:hover,.send-btn:hover,.soft-btn:hover,.tiny-btn:hover,.nav-btn:hover{transform:translateY(-2px)}
+.primary-btn:active,.send-btn:active,.soft-btn:active,.tiny-btn:active{transform:translateY(1px)}
+.soft-btn,.tiny-btn{
+  background:linear-gradient(145deg,#fff,#e9ddff);
+  box-shadow:0 8px 18px rgba(108,81,139,.12),0 2px 0 #fff inset
+}
+.app-shell{gap:22px;padding:22px;position:relative}
+.sidebar,.content{border-radius:34px;border:1px solid rgba(255,255,255,.95)}
+.sidebar{background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(249,243,255,.82));position:relative}
+.sidebar::before{content:"💜";position:absolute;right:15px;bottom:10px;opacity:.08;font-size:82px;pointer-events:none}
+.profile-mini{margin:10px;border:0;border-radius:25px;background:linear-gradient(145deg,#fff8fc,#f0e9ff);box-shadow:var(--nc-shadow);padding:13px}
+.profile-avatar-btn{position:relative;border:0;padding:0;overflow:visible;box-shadow:0 10px 18px rgba(125,94,147,.18),0 2px 0 #fff inset}
+.profile-avatar-btn>span:first-child{width:100%;height:100%;display:grid;place-items:center;overflow:hidden;border-radius:18px}
+.profile-avatar-btn img,.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.avatar-camera{position:absolute!important;width:22px!important;height:22px!important;right:-5px;bottom:-5px;background:#fff;border-radius:50%!important;display:grid!important;place-items:center!important;font-size:11px!important;box-shadow:0 5px 10px rgba(90,65,112,.2);border:2px solid #fff!important}
+.profile-exit-btn{background:linear-gradient(145deg,#fff,#ffddea);color:#8b5b72}
+.nav-tabs{margin:0 8px;grid-template-columns:repeat(4,1fr);background:rgba(255,255,255,.48);border-radius:22px}
+.nav-btn{transition:.18s ease;color:#715f7d}
+.nav-btn.active{background:linear-gradient(145deg,#eadfff,#ddecff);box-shadow:0 9px 18px rgba(100,78,132,.13),0 2px 0 #fff inset}
+.chat-list-head{margin:9px 10px 3px;padding:8px 5px}
+.chat-item{
+  border:1px solid rgba(255,255,255,.8);background:linear-gradient(145deg,rgba(255,255,255,.9),rgba(251,246,255,.75));
+  box-shadow:0 7px 16px rgba(92,72,111,.07);margin:7px 0;padding:12px;border-radius:23px;transition:.18s ease
+}
+.chat-item:hover,.chat-item.active{background:linear-gradient(145deg,#fff,#f0e8ff);transform:translateY(-2px);box-shadow:0 13px 24px rgba(92,72,111,.13)}
+.chat-item .avatar,.chat-header .avatar{border-radius:20px;background:linear-gradient(145deg,#fff1b9,#ffd5e7 52%,#ddd0ff);box-shadow:0 8px 16px rgba(128,93,137,.14)}
+.unread-star{color:#ec3e5d;text-shadow:0 2px 0 #fff,0 0 8px rgba(236,62,93,.3)}
+.content{background:linear-gradient(145deg,rgba(255,255,255,.86),rgba(248,244,255,.76));overflow:hidden}
+.empty-state{position:relative}
+.empty-state::before{content:"☁️  ✨  💕";display:block;font-size:30px;letter-spacing:14px;margin-bottom:8px;opacity:.75}
+.big-emoji{filter:drop-shadow(0 12px 18px rgba(129,95,141,.18))}
+.chat-header{margin:10px 12px 0;border:0;border-radius:23px;background:linear-gradient(145deg,#fff,#f2ebff);box-shadow:var(--nc-shadow)}
+.messages{
+  margin:10px 12px;border-radius:24px;
+  background:
+    radial-gradient(circle at 8% 12%,rgba(255,220,235,.33),transparent 28%),
+    radial-gradient(circle at 92% 90%,rgba(218,235,255,.32),transparent 26%),
+    linear-gradient(rgba(255,255,255,.75),rgba(255,255,255,.62));
+}
+.bubble{border:1px solid rgba(255,255,255,.92);box-shadow:0 10px 22px rgba(89,66,107,.11),0 2px 0 #fff inset;border-radius:22px 22px 22px 8px;padding:11px 14px}
+.mine .bubble{background:linear-gradient(145deg,#efe2ff,#ffdce9);border-radius:22px 22px 8px 22px}
+.bubble .meta{font-size:10.5px;opacity:.78}
+.date-divider{display:flex;align-items:center;gap:10px;margin:15px 0;color:#8c7896;font-size:.75rem;font-weight:800}
+.date-divider::before,.date-divider::after{content:"";height:1px;background:linear-gradient(90deg,transparent,#dfd2e8,transparent);flex:1}
+.supervision-notice{margin:10px 14px 0;padding:11px 14px;border-radius:18px;background:linear-gradient(145deg,#fff1be,#ffe0ed 55%,#e9ddff);box-shadow:0 9px 19px rgba(120,88,130,.12);display:flex;gap:8px;align-items:center;font-size:.83rem}
+.supervision-notice span{color:#7f6d87}
+.composer{margin:0 12px 12px;border:0;border-radius:22px;background:linear-gradient(145deg,#fff,#f4edff);box-shadow:0 10px 22px rgba(94,70,111,.1)}
+.icon-btn{background:linear-gradient(145deg,#fff,#eee6f8);box-shadow:0 6px 12px rgba(100,76,118,.09),0 2px 0 #fff inset}
+.birthday-hero{border:1px solid rgba(255,255,255,.96);box-shadow:0 18px 34px rgba(159,111,150,.18),0 3px 0 #fff inset}
+.notify-banner{box-shadow:0 10px 24px rgba(102,89,125,.12);border:1px solid rgba(255,255,255,.95)}
+.panel-pad{background:radial-gradient(circle at 90% 8%,rgba(255,220,235,.36),transparent 28%),linear-gradient(145deg,rgba(255,255,255,.55),rgba(246,240,255,.4))}
+.parent-stat,.member-admin-card,.alert-item{box-shadow:var(--nc-shadow);border:1px solid rgba(255,255,255,.95)}
+.supervision-info{display:flex;gap:12px;align-items:flex-start;padding:15px;border-radius:22px;background:linear-gradient(145deg,#fff4c8,#ffe2ed 55%,#e9e0ff);box-shadow:var(--nc-shadow);margin:14px 0 18px}
+.supervision-info p{margin:3px 0 0;color:#806f89;font-size:.85rem}
+.supervision-list{display:grid;gap:10px}
+.supervision-card{width:100%;display:flex;align-items:center;gap:12px;border:1px solid rgba(255,255,255,.95);border-radius:23px;padding:13px;background:linear-gradient(145deg,#fff,#f3ebff);box-shadow:var(--nc-shadow);text-align:left}
+.supervision-card small{display:block;color:#8a788f;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.supervision-avatar{width:48px;height:48px;display:grid;place-items:center;border-radius:18px;background:linear-gradient(145deg,#fff4b9,#ffd7e8);font-size:22px;box-shadow:0 8px 15px rgba(130,98,135,.12)}
+.supervision-arrow{font-size:30px;color:#a390b0}
+.supervision-empty{display:grid;place-items:center;text-align:center;padding:44px 20px;border-radius:26px;background:rgba(255,255,255,.66);box-shadow:var(--nc-shadow);gap:5px;font-size:24px}
+.supervision-empty strong,.supervision-empty span{font-size:.9rem}
+.supervision-empty span{color:#8a788f}
+/* Calendário real */
+.calendar-panel{padding:22px}
+.calendar-panel-title{margin-bottom:14px}
+.calendar-shell-3d{border-radius:30px;padding:14px;background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(244,237,255,.86));box-shadow:var(--nc-deep-shadow),0 3px 0 #fff inset;border:1px solid rgba(255,255,255,.95)}
+.calendar-toolbar{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:8px;margin-bottom:12px}
+.calendar-selects{display:flex;gap:8px;justify-content:center}
+.calendar-selects select{width:auto;min-width:125px;padding:9px 12px;border-radius:15px;background:linear-gradient(145deg,#fff,#f4ecff);box-shadow:0 5px 11px rgba(91,69,112,.08);font-weight:800}
+.calendar-round-btn,.calendar-today-btn{border:0;border-radius:15px;background:linear-gradient(145deg,#fff,#e8ddff);box-shadow:0 7px 14px rgba(95,72,116,.11),0 2px 0 #fff inset;font-weight:900}
+.calendar-round-btn{width:42px;height:42px;font-size:25px}.calendar-today-btn{padding:10px 13px}
+.calendar-weekdays,.calendar-grid-real{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.calendar-weekdays{padding:5px 3px 8px;text-align:center;color:#8f7b98;font-size:.75rem;font-weight:900}
+.calendar-day{min-height:92px;border:1px solid rgba(236,224,242,.92);border-radius:18px;background:linear-gradient(145deg,#fff,#fbf8fd);padding:8px;position:relative;text-align:left;overflow:hidden;transition:.16s ease}
+.calendar-day:hover{transform:translateY(-2px);box-shadow:0 9px 18px rgba(93,71,111,.12)}
+.calendar-day.outside{opacity:.36}.calendar-day.today{background:linear-gradient(145deg,#fff4be,#ffe0eb)}.calendar-day.selected{outline:3px solid rgba(185,157,246,.35);background:linear-gradient(145deg,#f1e8ff,#e8f3ff)}
+.calendar-day-number{font-weight:900;font-size:.84rem;display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%}
+.calendar-day.today .calendar-day-number{background:#fff;box-shadow:0 5px 10px rgba(126,93,128,.12)}
+.calendar-events-mini{display:grid;gap:3px;margin-top:5px}
+.calendar-mini-event{display:block;padding:4px 6px;border-radius:8px;background:linear-gradient(145deg,#eadfff,#ffdfea);font-size:.62rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#675573;font-weight:800}
+.calendar-more{font-size:.6rem;color:#8d7b95;margin-top:2px}
+.calendar-day-details{margin-top:14px;display:grid;gap:8px}
+.calendar-detail-head{display:flex;align-items:center;justify-content:space-between;padding:0 4px}
+.calendar-detail-card{padding:13px 14px;border-radius:20px;background:linear-gradient(145deg,#fff,#f6efff);box-shadow:var(--nc-shadow);border:1px solid rgba(255,255,255,.94)}
+.calendar-detail-card p{margin:5px 0;color:#7e6c87}.calendar-detail-card small{color:#8d7d94}.calendar-delete-btn{border:0;background:#ffe0e8;color:#9f556d;border-radius:10px;padding:6px 8px;font-size:.72rem;font-weight:800;float:right}
+.calendar-empty-day{padding:18px;border-radius:18px;background:rgba(255,255,255,.58);color:#8c7b93;text-align:center}
+.visibility-picker{display:grid;gap:8px;margin:10px 0}.visibility-option{display:flex;gap:8px;align-items:center;padding:10px;border-radius:14px;background:#fff7fb;font-weight:800}.visibility-option input{width:auto;margin:0}.event-people{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
+/* Avatar */
+.avatar-slot{overflow:hidden}.avatar-slot img{width:100%;height:100%;object-fit:cover}
+/* Responsivo */
+@media(max-width:850px){
+  .app-shell{padding:0}.sidebar,.content{box-shadow:none}.profile-mini{margin:6px}.nav-tabs{grid-template-columns:repeat(4,1fr)}
+  .calendar-panel{padding:10px}.calendar-shell-3d{padding:8px;border-radius:22px}.calendar-toolbar{grid-template-columns:auto 1fr auto}.calendar-today-btn{display:none}.calendar-selects{gap:5px}.calendar-selects select{min-width:0;width:50%;padding:8px;font-size:.78rem}
+  .calendar-weekdays,.calendar-grid-real{gap:3px}.calendar-weekdays{font-size:.62rem}.calendar-day{min-height:64px;border-radius:12px;padding:5px}.calendar-day-number{width:23px;height:23px;font-size:.72rem}.calendar-mini-event{font-size:0;padding:3px;height:7px;border-radius:999px}.calendar-mini-event::after{content:""}.calendar-more{font-size:.52rem}.event-people{grid-template-columns:1fr}
+}

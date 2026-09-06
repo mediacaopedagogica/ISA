@@ -1,0 +1,60 @@
+otifyBanner();renderBirthdayHero();switchTab('chats')
+  const wanted=new URLSearchParams(location.search).get('conversation');if(wanted&&conversations.some(c=>c.id===wanted))openChat(wanted)
+}
+
+async function loadFamily(){
+  const {data}=await supabase.from('family_members').select('*').order('display_name');family=(data||[]).filter(x=>isParent()||x.active)
+  const {data:cps}=await supabase.from('contact_permissions').select('*');contactPermissions=cps||[]
+  const ids=family.map(x=>x.id);const {data:presence}=ids.length?await supabase.from('presence_state').select('*').in('member_id',ids):{data:[]};presenceMap=Object.fromEntries((presence||[]).map(p=>[p.member_id,p]))
+  $('familyGrid').innerHTML=family.map(m=>`<article class="family-card"><div class="avatar pastel-avatar">${m.role==='child'?'🌈':m.relationship_label==='Avó'?'👵':'🙂'}</div><h3>${esc(m.display_name)}</h3><p>${esc(m.relationship_label||'Família')}</p><small><i class="presence-dot ${isOnline(m.id)?'online':''}"></i>${isOnline(m.id)?'Online':'Offline'}${m.active?'':' • acesso pausado'}</small></article>`).join('')
+  $('memberCount').textContent=family.filter(x=>x.active).length;$('onlineCount').textContent=family.filter(x=>isOnline(x.id)).length;renderAdminMembers();renderBirthdays()
+}
+
+async function loadConversations(){
+  const {data,error}=await supabase.from('conversations').select('id,type,title,created_by,pinned_message_id,created_at,updated_at,conversation_members(member_id,last_read_at,joined_at)').order('updated_at',{ascending:false})
+  if(error){console.error(error);return}
+  conversations=data||[]
+  const ids=conversations.map(c=>c.id),latestMap={}
+  if(ids.length){const {data:recent}=await supabase.from('messages').select('id,conversation_id,sender_id,body,kind,sent_at').in('conversation_id',ids).is('deleted_at',null).order('sent_at',{ascending:false}).limit(500);for(const m of recent||[])if(!latestMap[m.conversation_id])latestMap[m.conversation_id]=m}
+  const supervisorUnread={}
+  if(isParent()){const {data:alerts}=await supabase.from('parental_alerts').select('conversation_id').eq('target_member_id',me.id).is('read_at',null);for(const a of alerts||[])if(a.conversation_id)supervisorUnread[a.conversation_id]=true}
+  for(const c of conversations){
+    const mine=(c.conversation_members||[]).find(x=>x.member_id===me.id),latest=latestMap[c.id]
+    c._latest=latest;c._unread=!!(mine&&latest&&latest.sender_id!==me.id&&(!mine.last_read_at||new Date(latest.sent_at)>new Date(mine.last_read_at)))||!!supervisorUnread[c.id]
+  }
+  renderChatList()
+}
+
+function renderChatList(){
+  $('chatList').innerHTML=conversations.map(c=>{const title=convTitle(c),sub=convSubtitle(c),preview=c._latest?(c._latest.kind==='photo'?'📷 Foto':c._latest.body||'Nova mensagem'):sub;return `<button class="chat-item ${activeConversation?.id===c.id?'active':''}" data-conv="${c.id}"><div class="avatar pastel-avatar">${c.type==='group'?'👨‍👩‍👧':'💬'}</div><div class="grow"><strong>${esc(title)} ${c._unread?'<span class="unread-star">★</span>':''}</strong><small>${esc(preview)}</small></div></button>`}).join('')||'<p class="muted" style="padding:12px">Nenhuma conversa ainda.</p>'
+  document.querySelectorAll('[data-conv]').forEach(b=>b.addEventListener('click',()=>openChat(b.dataset.conv)))
+}
+
+async function openChat(id){
+  activeConversation=conversations.find(c=>c.id===id);if(!activeConversation)return
+  document.querySelectorAll('[data-conv]').forEach(x=>x.classList.toggle('active',x.dataset.conv===id));hidePanels();$('emptyState').classList.add('hidden');$('chatPanel').classList.remove('hidden')
+  $('chatTitle').textContent=convTitle(activeConversation);$('chatSubtitle').textContent=convSubtitle(activeConversation);$('chatAvatar').textContent=activeConversation.type==='group'?'👨‍👩‍👧':'💬'
+  const isGroup=activeConversation.type==='group';$('groupPlusBtn').classList.toggle('hidden',!isGroup);$('photoBtn').classList.toggle('hidden',isGroup||!canSendPhoto(activeConversation));$('messageInput').disabled=false
+  await markRead(id);await Promise.all([loadMessages(id),loadPolls(id)]);renderTimeline();subscribeChat(id);await loadConversations()
+}
+
+function canSendPhoto(conv){
+  if(!me?.can_send_photo)return false
+  const ids=(conv.conversation_members||[]).map(x=>x.member_id),child=ids.map(memberById).find(x=>x?.role==='child');if(!child)return true
+  if(me.role==='child')return !ids.map(memberById).filter(x=>x&&x.id!==me.id&&x.role!=='child').some(a=>!cpFor(me.id,a.id)?.allow_photo)
+  return !!cpFor(child.id,me.id)?.allow_photo
+}
+
+async function loadMessages(id){
+  photoObjectUrls.splice(0).forEach(u=>URL.revokeObjectURL(u));const {data,error}=await supabase.from('messages').select('*').eq('conversation_id',id).is('deleted_at',null).order('sent_at',{ascending:true}).limit(600);if(error){console.error(error);return}activeMessages=data||[]
+}
+async function loadPolls(id){const {data,error}=await supabase.from('polls').select('id,conversation_id,created_by,question,multiple_choice,created_at,closes_at,poll_options(id,label,sort_order),poll_votes(option_id,member_id)').eq('conversation_id',id).order('created_at');activePolls=error?[]:data||[]}
+
+function renderTimeline(){
+  const items=[...activeMessages.map(x=>({...x,_type:'message',_time:x.sent_at})),...activePolls.map(x=>({...x,_type:'poll',_time:x.created_at}))].sort((a,b)=>new Date(a._time)-new Date(b._time))
+  $('messages').innerHTML=items.map(item=>item._type==='poll'?pollHtml(item):messageHtml(item)).join('')||'<div class="empty-state" style="height:auto;padding:50px 10px"><div class="big-emoji" style="font-size:45px">💌</div><p>Comece a conversa.</p></div>'
+  document.querySelectorAll('[data-pin]').forEach(b=>b.addEventListener('click',()=>pinMessage(b.dataset.pin)))
+  document.querySelectorAll('[data-vote]').forEach(b=>b.addEventListener('click',()=>votePoll(b.dataset.poll,b.dataset.vote)))
+  hydratePhotos();renderPinnedBar();requestAnimationFrame(()=>$('messages').scrollTop=$('messages').scrollHeight)
+}
+function 

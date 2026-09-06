@@ -1,0 +1,11 @@
+{
+  "name":"Cantinho da Isa",
+  "short_name":"Cantinho da Isa",
+  "start_url":"./",
+  "scope":"./",
+  "display":"standalone",
+  "background_color":"#fff7fb",
+  "theme_color":"#cdb8ff",
+  "description":"Chat privado da Isa com a família",
+  "icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}

@@ -1,0 +1,122 @@
+let calendarEvents=[]
+let calendarCursor=new Date(new Date().getFullYear(),new Date().getMonth(),1)
+let calendarSelectedDate=new Date(new Date().getFullYear(),new Date().getMonth(),new Date().getDate())
+const avatarUrlCache=new Map()
+
+function friendlyRoleLabel(role){
+  return ({super_admin:'Mãe da Isa',super_parent:'Pai da Isa',trusted_adult:'Família da Isa',text_only:'Família da Isa',child:'Cantinho da Isa'})[role]||'Família'
+}
+function localDayKey(ts){const d=new Date(ts);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function dayLabelLocal(ts){
+  const d=new Date(ts),now=new Date();const today=new Date(now.getFullYear(),now.getMonth(),now.getDate()),day=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+  const diff=Math.round((today-day)/86400000);if(diff===0)return 'Hoje';if(diff===1)return 'Ontem';
+  return new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'long',year:'numeric'}).format(d)
+}
+function defaultAvatar(member){
+  if(!member)return '💌';if(member.role==='child')return '🌈';const r=(member.relationship_label||'').toLowerCase();if(r.includes('avó')||r.includes('vó'))return '👵';if(r.includes('pai'))return '👨';if(r.includes('mãe')||r.includes('mae'))return '👩';if(r.includes('tia'))return '🌷';return '🙂'
+}
+function avatarBox(member,extra='avatar pastel-avatar'){
+  return `<div class="${extra}" data-avatar-id="${member?.id||''}">${defaultAvatar(member)}</div>`
+}
+async function avatarUrl(member){
+  if(!member?.avatar_ref)return null
+  const cached=avatarUrlCache.get(member.id);if(cached?.ref===member.avatar_ref)return cached.url
+  if(cached?.url)URL.revokeObjectURL(cached.url)
+  const {data,error}=await supabase.storage.from('profile-avatars').download(member.avatar_ref);if(error)return null
+  const url=URL.createObjectURL(data);avatarUrlCache.set(member.id,{ref:member.avatar_ref,url});return url
+}
+async function hydrateAvatarElements(){
+  for(const el of document.querySelectorAll('[data-avatar-id]')){
+    const member=memberById(el.dataset.avatarId);if(!member?.avatar_ref)continue
+    const url=await avatarUrl(member);if(!url||!el.isConnected)continue
+    el.innerHTML=`<img src="${url}" alt="Foto de ${esc(member.display_name)}">`
+  }
+  if(me){const my=memberById(me.id)||me;const el=$('myAvatar');if(el){const url=await avatarUrl(my);el.innerHTML=url?`<img src="${url}" alt="Minha foto">`:defaultAvatar(my)}}
+}
+async function uploadMyAvatar(file){
+  if(!file||!me)return;if(file.size>5*1024*1024)return toast('Use uma foto de até 5 MB.')
+  const ext=(file.name.split('.').pop()||'jpg').replace(/[^a-z0-9]/gi,'').toLowerCase();const path=`${me.family_id}/${me.id}/avatar-${crypto.randomUUID()}.${ext}`
+  toast('Salvando sua foto…');const {error:upErr}=await supabase.storage.from('profile-avatars').upload(path,file,{contentType:file.type,upsert:false});if(upErr)return toast('Não foi possível salvar a foto.')
+  const {data,error}=await supabase.functions.invoke('profile-actions',{body:{action:'set_avatar',avatarRef:path}});if(error||data?.error){await supabase.storage.from('profile-avatars').remove([path]);return toast(data?.error||'Não foi possível atualizar o perfil.')}
+  if(data?.oldRef&&data.oldRef!==path)await supabase.storage.from('profile-avatars').remove([data.oldRef]).catch(()=>{})
+  me.avatar_ref=path;const f=family.find(x=>x.id===me.id);if(f)f.avatar_ref=path;const cached=avatarUrlCache.get(me.id);if(cached?.url)URL.revokeObjectURL(cached.url);avatarUrlCache.delete(me.id)
+  await hydrateAvatarElements();renderChatList();renderSupervisionList();toast('Foto de perfil atualizada 💕')
+}
+
+function renderChatList(){
+  if(!$('chatList'))return
+  const own=conversations.filter(isConversationMember)
+  $('chatList').innerHTML=own.map(c=>{const title=convTitle(c),sub=convSubtitle(c),preview=c._latest?(c._latest.kind==='photo'?'📷 Foto':c._latest.body||'Nova mensagem'):sub;const other=c.type==='direct'?directOther(c):null;return `<button class="chat-item ${activeConversation?.id===c.id&&!activeSupervisionMode?'active':''}" data-conv="${c.id}">${c.type==='group'?'<div class="avatar pastel-avatar">👨‍👩‍👧</div>':avatarBox(other)}<div class="grow"><strong>${esc(title)} ${c._unread?'<span class="unread-star">★</span>':''}</strong><small>${esc(preview)}</small></div></button>`}).join('')||'<p class="muted" style="padding:12px">Nenhuma conversa ainda.</p>'
+  document.querySelectorAll('[data-conv]').forEach(b=>b.addEventListener('click',()=>openChat(b.dataset.conv,false)));hydrateAvatarElements()
+}
+function renderSupervisionList(){
+  if(!$('supervisionList'))return;if(!isParent()){$('supervisionList').innerHTML='';return}
+  const childConvs=conversations.filter(conversationHasChild)
+  $('supervisionList').innerHTML=childConvs.map(c=>{const preview=c._latest?(c._latest.kind==='photo'?'📷 Foto':c._latest.body||'Nova mensagem'):'Ainda sem mensagens';return `<button class="supervision-card" data-supervise="${c.id}"><div class="supervision-avatar">👀</div><div class="grow"><strong>${esc(supervisedTitle(c))} ${c._supervisorUnread?'<span class="unread-star">★</span>':''}</strong><small>${esc(preview)}</small></div><span class="supervision-arrow">›</span></button>`}).join('')||'<div class="supervision-empty">💜<strong>Nenhuma conversa da Isa disponível.</strong><span>Quando ela conversar com um familiar autorizado, aparecerá aqui.</span></div>'
+  document.querySelectorAll('[data-supervise]').forEach(b=>b.onclick=()=>openChat(b.dataset.supervise,true))
+}
+async function openChat(id,fromSupervision=false){
+  activeConversation=conversations.find(c=>c.id===id);if(!activeConversation)return;activeSupervisionMode=!!fromSupervision
+  document.querySelectorAll('[data-conv]').forEach(x=>x.classList.toggle('active',!activeSupervisionMode&&x.dataset.conv===id));hidePanels();$('emptyState').classList.add('hidden');$('chatPanel').classList.remove('hidden')
+  const supervision=activeSupervisionMode&&isParent()&&conversationHasChild(activeConversation),other=activeConversation.type==='direct'?directOther(activeConversation):null
+  $('chatTitle').textContent=supervision?supervisedTitle(activeConversation):convTitle(activeConversation);$('chatSubtitle').textContent=supervision?'Supervisão da Isa • somente leitura':convSubtitle(activeConversation)
+  const av=$('chatAvatar');if(supervision){av.removeAttribute('data-avatar-id');av.innerHTML='👀'}else if(activeConversation.type==='group'){av.removeAttribute('data-avatar-id');av.innerHTML='👨‍👩‍👧'}else{av.dataset.avatarId=other?.id||'';av.innerHTML=defaultAvatar(other);hydrateAvatarElements()}
+  $('supervisionNotice')?.classList.toggle('hidden',!supervision);$('composer')?.classList.toggle('hidden',supervision)
+  const isGroup=activeConversation.type==='group';$('groupPlusBtn').classList.toggle('hidden',supervision||!isGroup);$('photoBtn').classList.toggle('hidden',supervision||isGroup||!canSendPhoto(activeConversation));$('messageInput').disabled=supervision
+  if(!supervision)await markRead(id);await Promise.all([loadMessages(id),loadPolls(id)]);renderTimeline();subscribeChat(id);await loadConversations()
+}
+
+function messageHtml(m){
+  const sender=memberById(m.sender_id),mine=m.sender_id===me.id;let content='';
+  if(m.kind==='photo')content=m.media_deleted_at||!m.media_ref?'<div class="photo-expired">📷 Esta foto temporária já expirou.</div>':`<div class="photo-loading" data-photo-path="${esc(m.media_ref)}">Carregando foto…</div>`
+  else content=`<div>${esc(m.body||'')}</div>`
+  return `<div class="message-row ${mine?'mine':''}" id="msg-${m.id}"><div class="bubble ${mine?'own-message-clickable':''}" ${mine?`data-own-message="${m.id}" title="Clique para editar ou cancelar o envio"`:''}>${!mine?`<span class="sender">${esc(sender?.display_name||'Família')}</span>`:''}${content}<span class="meta">${m.edited_at?'<span class="edit-mark">editada • </span>':''}${fmtTime(m.sent_at)}</span></div><button class="pin-btn" data-pin="${m.id}" title="Fixar mensagem">📌</button></div>`
+}
+function renderTimeline(){
+  const items=[...activeMessages.map(x=>({...x,_type:'message',_time:x.sent_at})),...activePolls.map(x=>({...x,_type:'poll',_time:x.created_at}))].sort((a,b)=>new Date(a._time)-new Date(b._time));let lastDay='';const html=[]
+  for(const item of items){const key=localDayKey(item._time);if(key!==lastDay){html.push(`<div class="date-divider"><span>${esc(dayLabelLocal(item._time))}</span></div>`);lastDay=key}html.push(item._type==='poll'?pollHtml(item):messageHtml(item))}
+  $('messages').innerHTML=html.join('')||'<div class="empty-state" style="height:auto;padding:50px 10px"><div class="big-emoji" style="font-size:45px">💌</div><p>Comece a conversa.</p></div>'
+  document.querySelectorAll('[data-pin]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();pinMessage(b.dataset.pin)}));document.querySelectorAll('[data-vote]').forEach(b=>b.addEventListener('click',()=>votePoll(b.dataset.poll,b.dataset.vote)));document.querySelectorAll('[data-own-message]').forEach(b=>b.addEventListener('click',()=>openOwnMessageActions(b.dataset.ownMessage)))
+  hydratePhotos();renderPinnedBar();requestAnimationFrame(()=>$('messages').scrollTop=$('messages').scrollHeight)
+}
+function openOwnMessageActions(id){
+  if(activeSupervisionMode)return;const m=activeMessages.find(x=>x.id===id&&x.sender_id===me.id);if(!m)return
+  openDialog(`<h3>Mensagem 💬</h3><p class="muted">O que você deseja fazer?</p>${m.kind==='text'?'<button type="button" id="editOwnMessageBtn" class="primary-btn">✏️ Editar mensagem</button>':''}<button type="button" id="cancelOwnMessageBtn" class="soft-btn danger-soft" style="width:100%;margin-top:10px">↩️ Cancelar envio</button>`)
+  if(m.kind==='text')$('editOwnMessageBtn').onclick=()=>openEditMessageDialog(m)
+  $('cancelOwnMessageBtn').onclick=()=>cancelOwnMessage(m)
+}
+function openEditMessageDialog(m){
+  openDialog(`<h3>Editar mensagem ✏️</h3><textarea id="editMessageText" rows="5" maxlength="5000">${esc(m.body||'')}</textarea><button type="button" id="saveEditedMessageBtn" class="primary-btn">Salvar alteração</button><p id="dialogMsg" class="status-text"></p>`)
+  $('saveEditedMessageBtn').onclick=async()=>{const body=$('editMessageText').value.trim();if(!body)return setStatus('dialogMsg','A mensagem não pode ficar vazia.');try{await chatAction('edit_message',{messageId:m.id,body});closeDialog();await loadMessages(activeConversation.id);renderTimeline();await loadConversations();toast('Mensagem editada')}catch(e){setStatus('dialogMsg',e.message)}}
+}
+async function cancelOwnMessage(m){
+  if(!confirm('Cancelar o envio desta mensagem para todos?'))return;try{await chatAction('cancel_message',{messageId:m.id});closeDialog();await loadMessages(activeConversation.id);renderTimeline();await loadConversations();toast('Envio cancelado')}catch(e){toast(e.message)}
+}
+
+async function loadCalendar(){
+  const {data,error}=await supabase.from('family_calendar').select('*').order('starts_at',{ascending:true});calendarEvents=error?[]:data||[];renderBirthdays();renderCalendarMonth()
+}
+function renderBirthdays(){if($('birthdayStrip')){$('birthdayStrip').innerHTML='';$('birthdayStrip').classList.add('hidden')}}
+function fillCalendarSelectors(){
+  const months=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];const ms=$('calendarMonthSelect'),ys=$('calendarYearSelect');if(!ms||!ys)return
+  ms.innerHTML=months.map((m,i)=>`<option value="${i}" ${i===calendarCursor.getMonth()?'selected':''}>${m}</option>`).join('');const y=calendarCursor.getFullYear();ys.innerHTML=Array.from({length:15},(_,i)=>y-7+i).map(v=>`<option value="${v}" ${v===y?'selected':''}>${v}</option>`).join('')
+}
+function eventLocalDay(e){const d=new Date(e.starts_at);return new Date(d.getFullYear(),d.getMonth(),d.getDate())}
+function sameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate()}
+function renderCalendarMonth(){
+  const grid=$('calendarGrid');if(!grid)return;fillCalendarSelectors();const y=calendarCursor.getFullYear(),m=calendarCursor.getMonth(),first=new Date(y,m,1),start=new Date(y,m,1-first.getDay()),today=new Date();today.setHours(0,0,0,0);const cells=[]
+  for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const events=calendarEvents.filter(e=>sameDay(eventLocalDay(e),d));const cls=['calendar-day'];if(d.getMonth()!==m)cls.push('outside');if(sameDay(d,today))cls.push('today');if(sameDay(d,calendarSelectedDate))cls.push('selected');cells.push(`<button type="button" class="${cls.join(' ')}" data-calendar-day="${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}"><span class="calendar-day-number">${d.getDate()}</span><span class="calendar-events-mini">${events.slice(0,2).map(e=>`<span class="calendar-mini-event">${esc(e.title)}</span>`).join('')}${events.length>2?`<span class="calendar-more">+${events.length-2}</span>`:''}</span></button>`)}
+  grid.innerHTML=cells.join('');document.querySelectorAll('[data-calendar-day]').forEach(b=>b.onclick=()=>{const [yy,mm,dd]=b.dataset.calendarDay.split('-').map(Number);calendarSelectedDate=new Date(yy,mm-1,dd);if(calendarSelectedDate.getMonth()!==calendarCursor.getMonth()||calendarSelectedDate.getFullYear()!==calendarCursor.getFullYear())calendarCursor=new Date(yy,mm-1,1);renderCalendarMonth()});renderSelectedCalendarDay()
+}
+function renderSelectedCalendarDay(){
+  const box=$('calendarDayDetails');if(!box)return;const events=calendarEvents.filter(e=>sameDay(eventLocalDay(e),calendarSelectedDate));const label=new Intl.DateTimeFormat('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}).format(calendarSelectedDate)
+  box.innerHTML=`<div class="calendar-detail-head"><strong>${esc(label)}</strong><button class="tiny-btn" id="addEventForDayBtn">＋ Evento</button></div>${events.map(e=>`<article class="calendar-detail-card">${e.created_by===me.id?`<button class="calendar-delete-btn" data-delete-event="${e.id}">Excluir</button>`:''}<strong>${esc(e.title)}</strong><p>${esc(e.description||'')}</p><small>${e.all_day?'Dia inteiro':fmtTime(e.starts_at)} • ${e.visibility_member_ids===null?'Compartilhado com todos':e.visibility_member_ids?.length?'Compartilhado':'Só para mim'}</small></article>`).join('')||'<div class="calendar-empty-day">Nenhum evento neste dia.</div>'}`
+  $('addEventForDayBtn').onclick=()=>openEventDialog(calendarSelectedDate);document.querySelectorAll('[data-delete-event]').forEach(b=>b.onclick=()=>deleteCalendarEvent(b.dataset.deleteEvent))
+}
+function openEventDialog(defaultDate=calendarSelectedDate){
+  const date=`${defaultDate.getFullYear()}-${String(defaultDate.getMonth()+1).padStart(2,'0')}-${String(defaultDate.getDate()).padStart(2,'0')}`;const others=family.filter(x=>x.active&&x.id!==me.id)
+  openDialog(`<h3>Novo evento 📅</h3><label>Título</label><input id="eventTitle" placeholder="Ex.: Dentista"><label>Descrição</label><textarea id="eventDesc" rows="3"></textarea><div class="dialog-grid"><label>Data<input id="eventDate" type="date" value="${date}"></label><label>Hora<input id="eventTime" type="time" value="12:00"></label></div><label class="check-line"><input id="eventAllDay" type="checkbox"> Dia inteiro</label><h4>Quem pode ver?</h4><div class="visibility-picker"><label class="visibility-option"><input type="radio" name="eventVisibility" value="private" checked> 🔒 Só eu</label><label class="visibility-option"><input type="radio" name="eventVisibility" value="all"> 👨‍👩‍👧 Todos da família</label><label class="visibility-option"><input type="radio" name="eventVisibility" value="selected"> 💕 Escolher pessoas</label></div><div id="eventPeople" class="check-list hidden">${others.map(x=>`<label class="check-line"><input type="checkbox" data-event-person="${x.id}"> ${esc(x.display_name)}${me.role==='child'?` • ${esc(relationFor(x))}`:''}</label>`).join('')}</div><button type="button" id="saveEventBtn" class="primary-btn">Salvar evento</button><p id="dialogMsg" class="status-text"></p>`)
+  document.querySelectorAll('[name="eventVisibility"]').forEach(r=>r.onchange=()=>$('eventPeople').classList.toggle('hidden',document.querySelector('[name="eventVisibility"]:checked').value!=='selected'))
+  $('saveEventBtn').onclick=async()=>{const title=$('eventTitle').value.trim(),d=$('eventDate').value,time=$('eventTime').value||'12:00';if(!title||!d)return setStatus('dialogMsg','Informe título e data.');const mode=document.querySelector('[name="eventVisibility"]:checked').value;let visibilityMemberIds=null;if(mode==='private')visibilityMemberIds=[];if(mode==='selected')visibilityMemberIds=[...document.querySelectorAll('[data-event-person]:checked')].map(x=>x.dataset.eventPerson);try{$('saveEventBtn').disabled=true;await chatAction('create_event',{title,description:$('eventDesc').value.trim(),startsAt:new Date(`${d}T${time}:00`).toISOString(),allDay:$('eventAllDay').checked,visibilityMemberIds});closeDialog();await loadCalendar();toast('Evento salvo 📅')}catch(e){setStatus('dialogMsg',e.message)}finally{$('saveEventBtn').disabled=false}}
+}
+async function deleteCalendarEvent(id){if(!confirm('Excluir este evento?'))return;const {error}=await supabase.from('family_calendar').delete().eq('id',id).eq('created_by',me.id);if(error)return toast('Não foi possível excluir.');await loadCalendar();toast('Evento excluído')}

@@ -1,0 +1,21 @@
+ectionStart=i.selectionEnd=s+e.length;i.focus();rememberEmoji(e)}
+function toggleEmoji(){const p=$('emojiPicker');p.classList.toggle('hidden');if(!p.classList.contains('hidden'))renderEmoji()}
+
+function hidePanels(){['chatPanel','familyPanel','calendarPanel','parentsPanel'].forEach(id=>$(id).classList.add('hidden'))}
+function switchTab(tab){document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));hidePanels();$('emptyState').classList.add('hidden');if(tab==='chats'){if(activeConversation)$('chatPanel').classList.remove('hidden');else $('emptyState').classList.remove('hidden')}if(tab==='family')$('familyPanel').classList.remove('hidden');if(tab==='calendar')$('calendarPanel').classList.remove('hidden');if(tab==='parents'&&isParent())$('parentsPanel').classList.remove('hidden')}
+
+function buildSetup(){const defs=[['Mãe','Super Admin'],['Pai','Super Pais'],['Evalda','Avó'],['Paloma','Tia'],['Isa','Perfil infantil']];$('setupAccounts').innerHTML=defs.map(([u,r])=>`<div class="setup-person"><strong>${u} • ${r}</strong><label>Senha</label><input type="password" data-setup-user="${u}" placeholder="Defina a senha deste acesso"><small class="muted">A senha vai direto para o sistema de autenticação.</small></div>`).join('')}
+async function setupFamily(){const accounts=[...document.querySelectorAll('[data-setup-user]')].map(i=>({username:i.dataset.setupUser,password:i.value}));if(accounts.some(a=>a.password.length<8))return setStatus('setupMsg','Use senha de pelo menos 8 caracteres em todos os perfis.');setStatus('setupMsg','Ativando acessos...');const {data,error}=await supabase.functions.invoke('bootstrap-family',{body:{setupCode:$('setupCode').value,accounts}});if(error||data?.error)return setStatus('setupMsg',data?.error||'Não foi possível ativar.');setStatus('setupMsg','Acessos ativados! Agora entre com seu login.',true);setTimeout(()=>showView('loginView'),900)}
+
+$('loginBtn').onclick=login;$('loginPassword').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('togglePassword').onclick=()=>{$('loginPassword').type=$('loginPassword').type==='password'?'text':'password'}
+$('openSetupBtn').onclick=()=>showView('setupView');$('closeSetupBtn').onclick=()=>showView('loginView');$('setupFamilyBtn').onclick=setupFamily
+$('logoutBtn').onclick=async()=>{await upsertPresence(false);await supabase.auth.signOut();location.href='./'}
+$('sendBtn').onclick=sendMessage;$('messageInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}});$('messageInput').addEventListener('input',()=>sendTyping(true))
+$('photoBtn').onclick=()=>$('photoInput').click();$('photoInput').onchange=e=>{const f=e.target.files?.[0];if(f)sendPhoto(f);e.target.value=''}
+$('emojiBtn').onclick=e=>{e.stopPropagation();toggleEmoji()};$('emojiSearch').oninput=renderEmoji;document.addEventListener('click',e=>{if(!e.target.closest('.emoji-wrap'))$('emojiPicker').classList.add('hidden');if(!e.target.closest('.group-plus-wrap'))$('groupPlusMenu').classList.add('hidden')})
+$('groupPlusBtn').onclick=e=>{e.stopPropagation();$('groupPlusMenu').classList.toggle('hidden')};document.querySelectorAll('[data-group-action]').forEach(b=>b.onclick=()=>{if(b.dataset.groupAction==='poll')openPollDialog();else if(b.dataset.groupAction==='photo'){$('photoInput').click()}$('groupPlusMenu').classList.add('hidden')})
+$('newGroupBtn').onclick=openNewGroup;$('newEventBtn').onclick=openEventDialog;$('newMemberBtn').onclick=openNewMember;$('enableNotificationsBtn').onclick=enablePush
+$('mobileBackBtn').onclick=()=>{activeConversation=null;$('chatPanel').classList.add('hidden');$('emptyState').classList.remove('hidden');renderChatList()}
+document.querySelectorAll('.nav-btn').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab))
+
+buildSetup();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(console.warn);const {data:{session}}=await supabase.auth.getSession();session?boot():showView('loginView')
