@@ -1,0 +1,34 @@
+name: Importar Cantinho da Isa
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/import-cantinho.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  importar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do repositório ISA
+        uses: actions/checkout@v4
+
+      - name: Baixar projeto atual
+        run: |
+          git clone --depth=1 https://github.com/mediacaopedagogica/Cantinho-da-Keise.git /tmp/origem
+
+      - name: Copiar Cantinho da Isa para a raiz
+        run: |
+          cp -a /tmp/origem/docs/nosso-cantinho/. .
+
+      - name: Commit da migração
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app.js chunk-*.txt config.js icon.svg index.html manifest.webmanifest styles.css sw.js theme-3d.css
+          git diff --cached --quiet || git commit -m "Migra Cantinho da Isa para repositório ISA"
+          git push
