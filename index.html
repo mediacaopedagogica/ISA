@@ -6,7 +6,6 @@
   <meta name="theme-color" content="#cdb8ff">
   <meta name="description" content="Cantinho da Isa — chat privado da família">
   <title>Cantinho da Isa 💕</title>
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://srazofmrxzwqcavnhplq.supabase.co" crossorigin>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -180,6 +179,22 @@
   }
 })();
 </script>
-<script type="module" src="./main-v30.mjs?v=30"></script>
+<script defer src="./app-v31.js?v=31"></script>
+<script>
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    if(window.__ISA_SCRIPT_LOADED__) return;
+    const msg=document.getElementById('loginMsg');
+    if(msg){
+      msg.textContent='O aplicativo não conseguiu carregar. Clique em Recarregar.';
+      msg.style.color='#a15472';
+      const b=document.createElement('button');
+      b.type='button';b.className='soft-btn';b.textContent='Recarregar';
+      b.style.marginTop='10px';b.onclick=()=>location.reload();
+      msg.after(b);
+    }
+  },3500);
+});
+</script>
 </body>
 </html>
