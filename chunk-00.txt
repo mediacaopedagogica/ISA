@@ -32,7 +32,7 @@ function isSuperAdmin(){return me?.role==='super_admin'}
 function fmtTime(ts){return new Intl.DateTimeFormat('pt-BR',{hour:'2-digit',minute:'2-digit'}).format(new Date(ts))}
 function fmtDate(ts){return new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(ts))}
 function memberById(id){return family.find(x=>x.id===id)}
-function isOnline(memberId){const p=presenceMap[memberId];return !!(p?.online && Date.now()-new Date(p.last_seen_at).getTime()<95000)}
+function isOnline(memberId){const p=presenceMap[memberId];return !!(p?.online && Date.now()-new Date(p.last_seen_at).getTime()<50000)}
 function cpFor(childId,adultId){return contactPermissions.find(x=>x.child_id===childId&&x.adult_id===adultId&&x.active)}
 function relationFor(other){
   if(!other)return 'Família'

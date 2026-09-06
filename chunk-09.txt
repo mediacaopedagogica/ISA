@@ -20,11 +20,28 @@ function openNewMember(){
 
 async function bindGlobalRealtime(){
   if(globalChannel)supabase.removeChannel(globalChannel);globalChannel=supabase.channel(`family-ui-${me.id}`)
-  .on('postgres_changes',{event:'*',schema:'public',table:'messages'},async payload=>{await loadConversations();if(activeConversation?.id===(payload.new?.conversation_id||payload.old?.conversation_id)){await loadMessages(activeConversation.id);renderTimeline()}})
+  .on('postgres_changes',{event:'*',schema:'public',table:'messages'},async payload=>{
+  const convId=payload.new?.conversation_id||payload.old?.conversation_id;
+  await loadConversations();
+  if(activeConversation?.id===convId){await loadMessages(activeConversation.id);renderTimeline()}
+  const conv=conversations.find(c=>c.id===convId);
+  if(payload.eventType==='INSERT'&&payload.new?.sender_id!==me.id&&conv&&isConversationMember(conv)){
+    playPing();
+    if('Notification' in window&&Notification.permission==='granted'&&document.visibilityState!=='visible'){
+      new Notification('Cantinho da Isa',{body:'Chegou uma nova mensagem',icon:'icon.svg',tag:`message-${convId}`});
+    }
+  }
+})
   .on('postgres_changes',{event:'*',schema:'public',table:'conversation_members'},()=>loadConversations())
   .on('postgres_changes',{event:'*',schema:'public',table:'conversations'},()=>loadConversations())
   .on('postgres_changes',{event:'*',schema:'public',table:'family_calendar'},()=>loadCalendar())
   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'family_members'},async()=>{await loadFamily();await hydrateAvatarElements()})
+  .on('postgres_changes',{event:'*',schema:'public',table:'presence_state'},payload=>{
+    const row=payload.new?.member_id?payload.new:payload.old;
+    if(!row?.member_id||!family.some(x=>x.id===row.member_id))return;
+    if(payload.eventType==='DELETE')delete presenceMap[row.member_id];else presenceMap[row.member_id]=payload.new;
+    refreshPresenceUI();
+  })
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'parental_alerts',filter:`target_member_id=eq.${me.id}`},async payload=>{await loadAlerts();playPing();if(document.visibilityState==='visible'&&Notification.permission==='granted')new Notification(payload.new.title||'Cantinho da Isa',{body:payload.new.body||'Chegou mensagem',icon:'icon.svg'})}).subscribe()
 }
 
