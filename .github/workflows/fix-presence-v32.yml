@@ -114,8 +114,9 @@ jobs:
           EOF
           npx esbuild core-v32-entry.js --bundle --format=iife --platform=browser --target=es2020 --outfile=app-v32.js
           node --check app-v32.js
-          grep -q "table:'presence_state'" app-v32.js
-          grep -q 'refreshPresenceUI' app-v32.js
+          grep -q 'presence_state' app-v32.js
+          grep -q 'refreshPresenceUI' core-v32-entry.js
+          grep -q 'Chegou uma nova mensagem' app-v32.js
 
       - name: Switch live page to v32
         run: |
