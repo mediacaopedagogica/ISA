@@ -1,0 +1,44 @@
+name: Switch live app to v31
+
+on:
+  push:
+    paths:
+      - '.github/workflows/switch-v31-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  switch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Trocar núcleo publicado
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>\n','')
+          old='<script type="module" src="./main-v30.mjs?v=30"></script>'
+          new='''<script defer src="./app-v31.js?v=31"></script>\n<script>\nwindow.addEventListener('load',()=>{\n  setTimeout(()=>{\n    if(window.__ISA_SCRIPT_LOADED__) return;\n    const msg=document.getElementById('loginMsg');\n    if(msg){\n      msg.textContent='O aplicativo não conseguiu carregar. Clique em Recarregar.';\n      msg.style.color='#a15472';\n      const b=document.createElement('button');\n      b.type='button';b.className='soft-btn';b.textContent='Recarregar';\n      b.style.marginTop='10px';b.onclick=()=>location.reload();\n      msg.after(b);\n    }\n  },3500);\n});\n</script>'''
+          if old not in s:
+              raise SystemExit('script v30 não encontrado no index')
+          s=s.replace(old,new)
+          p.write_text(s,encoding='utf-8')
+      - name: Validar troca
+        run: |
+          grep -q 'app-v31.js?v=31' index.html
+          ! grep -q 'main-v30.mjs?v=30' index.html
+          test -s app-v31.js
+          node --check app-v31.js
+      - name: Publicar alteração
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Use self-contained app v31 for live login'
+          git push
