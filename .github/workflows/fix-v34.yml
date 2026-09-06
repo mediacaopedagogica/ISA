@@ -1,0 +1,57 @@
+name: Fix live read receipts v34
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-v34.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch source
+        run: python scripts/patch-v34.py
+
+      - name: Build v34
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install --no-save @supabase/supabase-js@2 esbuild@0.25.9
+          cat > core-v34-entry.js <<'EOF'
+          import { createClient } from '@supabase/supabase-js'
+          import { CONFIG } from './config.js'
+          window.__ISA_SCRIPT_LOADED__ = true;
+          async function __isaCore34(){
+          window.__ISA_CORE_STARTED__ = true;
+          EOF
+          cat chunk-00.txt chunk-01.txt chunk-02.txt chunk-03.txt chunk-04.txt chunk-05.txt chunk-06.txt chunk-07.txt chunk-08.txt chunk-09.txt >> core-v34-entry.js
+          cat >> core-v34-entry.js <<'EOF'
+          }
+          __isaCore34().then(()=>{window.__ISA_APP_READY__=true;}).catch(error=>{
+            console.error('Falha ao iniciar Cantinho da Isa:',error);
+            window.__ISA_APP_ERROR__=String(error?.message||error||'Erro desconhecido');
+            const msg=document.getElementById('loginMsg');
+            if(msg){msg.textContent='O aplicativo não conseguiu iniciar. Recarregue a página.';msg.style.color='#a15472';}
+          });
+          EOF
+          npx esbuild core-v34-entry.js --bundle --format=iife --platform=browser --target=es2020 --outfile=app-v34.js
+          node --check app-v34.js
+          grep -q 'Leu sua mensagem' app-v34.js
+          grep -q 'markRead(convId)' app-v34.js
+          grep -q 'presence-actions' app-v34.js
+
+      - name: Commit v34
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add chunk-09.txt index.html app-v34.js
+          git commit -m 'Mark active chats read in realtime v34'
+          git push
