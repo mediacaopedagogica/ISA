@@ -1,0 +1,82 @@
+name: Auditoria e bundle do núcleo
+
+on:
+  push:
+    paths:
+      - '.github/workflows/bundle-core-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gerar núcleo único
+        shell: bash
+        run: |
+          cat > main-v30.mjs <<'EOF'
+          import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+          import { CONFIG } from './config.js'
+          EOF
+          cat chunk-00.txt chunk-01.txt chunk-02.txt chunk-03.txt chunk-04.txt chunk-05.txt chunk-06.txt chunk-07.txt chunk-08.txt chunk-09.txt >> main-v30.mjs
+          cat >> main-v30.mjs <<'EOF'
+
+          // Ferramentas extras carregam somente depois que o núcleo já iniciou.
+          const __isaOptionalModules30 = [
+            './ui-fixes.js?v=30',
+            './realtime-presence.js?v=30',
+            './calendar-enhanced.js?v=30',
+            './study.js?v=30',
+            './study-document.js?v=30',
+            './study-document-collab.js?v=30',
+            './retention-notice.js?v=30',
+            './study-randomizer.js?v=30',
+            './study-flashcards.js?v=30',
+            './study-flashcards-delete.js?v=30',
+            './study-ideas.js?v=30',
+            './study-mindmap.js?v=30',
+            './study-periodic.js?v=30',
+            './study-material-manager.js?v=30',
+            './study-timer.js?v=30'
+          ];
+          const __loadIsaOptional30 = () => Promise.allSettled(
+            __isaOptionalModules30.map(p => import(p).catch(err => {
+              console.error('Módulo opcional não carregou:', p, err);
+              return null;
+            }))
+          );
+          if ('requestIdleCallback' in window) requestIdleCallback(__loadIsaOptional30, { timeout: 2500 });
+          else setTimeout(__loadIsaOptional30, 1200);
+          EOF
+
+      - name: Auditar sintaxe JavaScript
+        run: node --check main-v30.mjs
+
+      - name: Conferir arquivos essenciais
+        shell: bash
+        run: |
+          test -s index.html
+          test -s config.js
+          test -s styles.css
+          test -s main-v30.mjs
+          for f in chunk-{00..09}.txt; do test -s "$f"; done
+
+      - name: Gravar bundle validado
+        shell: bash
+        run: |
+          git config user.name 'mediacaopedagogica'
+          git config user.email 'keisepamela.mediadorapedagogica@gmail.com'
+          git add main-v30.mjs
+          if git diff --cached --quiet; then
+            echo 'Bundle já está atualizado.'
+            exit 0
+          fi
+          git commit -m 'Generate validated single-file core v30'
+          git push
