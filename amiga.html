@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#cdb8ff">
   <title>Cantinho da Isa • Acesso externo</title>
   <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="amiga.css?v=1">
+  <link rel="stylesheet" href="amiga.css?v=2">
 </head>
 <body>
   <main id="friendApp" class="friend-page">
@@ -48,6 +48,8 @@
           </header>
           <div id="friendMessages" class="friend-messages"></div>
           <div class="friend-composer">
+            <button id="friendPhotoBtn" class="emoji-btn hidden" type="button" title="Enviar imagem para atividade">📷</button>
+            <input id="friendPhotoInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
             <button id="friendEmojiBtn" class="emoji-btn" type="button" title="Emojis">😊</button>
             <div id="friendEmojiBar" class="emoji-bar hidden">
               <button type="button">😊</button><button type="button">😂</button><button type="button">🥰</button><button type="button">😍</button><button type="button">💜</button><button type="button">💕</button><button type="button">✨</button><button type="button">📚</button><button type="button">✏️</button><button type="button">✅</button>
@@ -60,6 +62,6 @@
     </section>
   </main>
   <div id="friendToast" class="friend-toast hidden"></div>
-  <script type="module" src="./amiga.js?v=1"></script>
+  <script type="module" src="./amiga.js?v=2"></script>
 </body>
 </html>
