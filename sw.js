@@ -1,4 +1,4 @@
-const CACHE='cantinho-isa-v6';
+const CACHE='cantinho-isa-v7';
 const ASSETS=['./','./index.html','./styles.css','./theme-3d.css','./login-3d.css','./app-3d.css','./app.js','./config.js','./manifest.webmanifest','./icon.svg','./chunk-00.txt','./chunk-01.txt','./chunk-02.txt','./chunk-03.txt','./chunk-04.txt','./chunk-05.txt','./chunk-06.txt','./chunk-07.txt','./chunk-08.txt','./chunk-09.txt'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
