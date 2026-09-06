@@ -1,0 +1,70 @@
+name: Build local app v31
+
+on:
+  push:
+    paths:
+      - '.github/workflows/build-app-v31.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Preparar bundler
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install --no-save @supabase/supabase-js@2 esbuild@0.25.9
+
+      - name: Gerar entrada v31
+        shell: bash
+        run: |
+          cat > core-v31-entry.js <<'EOF'
+          import { createClient } from '@supabase/supabase-js'
+          import { CONFIG } from './config.js'
+          window.__ISA_SCRIPT_LOADED__ = true;
+          async function __isaCore31(){
+          window.__ISA_CORE_STARTED__ = true;
+          EOF
+          cat chunk-00.txt chunk-01.txt chunk-02.txt chunk-03.txt chunk-04.txt chunk-05.txt chunk-06.txt chunk-07.txt chunk-08.txt chunk-09.txt >> core-v31-entry.js
+          cat >> core-v31-entry.js <<'EOF'
+          }
+          __isaCore31().then(()=>{
+            window.__ISA_APP_READY__ = true;
+          }).catch(error=>{
+            console.error('Falha ao iniciar Cantinho da Isa:', error);
+            window.__ISA_APP_ERROR__ = String(error?.message || error || 'Erro desconhecido');
+            const msg=document.getElementById('loginMsg');
+            if(msg){msg.textContent='O aplicativo não conseguiu iniciar. Recarregue a página.';msg.style.color='#a15472';}
+          });
+          EOF
+
+      - name: Empacotar Supabase localmente
+        run: npx esbuild core-v31-entry.js --bundle --format=iife --platform=browser --target=es2020 --outfile=app-v31.js
+
+      - name: Validar JavaScript final
+        run: |
+          test -s app-v31.js
+          node --check app-v31.js
+          grep -q '__ISA_SCRIPT_LOADED__' app-v31.js
+          grep -q 'signInWithPassword' app-v31.js
+
+      - name: Gravar build validado
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app-v31.js
+          if git diff --cached --quiet; then
+            echo 'Build v31 já está atualizado.'
+            exit 0
+          fi
+          git commit -m 'Build self-contained app v31'
+          git push
