@@ -24,9 +24,12 @@ jobs:
           cat > main-v30.mjs <<'EOF'
           import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
           import { CONFIG } from './config.js'
+          async function __isaCore30(){
           EOF
           cat chunk-00.txt chunk-01.txt chunk-02.txt chunk-03.txt chunk-04.txt chunk-05.txt chunk-06.txt chunk-07.txt chunk-08.txt chunk-09.txt >> main-v30.mjs
           cat >> main-v30.mjs <<'EOF'
+          }
+          await __isaCore30();
 
           // Ferramentas extras carregam somente depois que o núcleo já iniciou.
           const __isaOptionalModules30 = [
@@ -58,6 +61,19 @@ jobs:
 
       - name: Auditar sintaxe JavaScript
         run: node --check main-v30.mjs
+
+      - name: Mapear funções duplicadas do legado
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import re
+          from collections import Counter
+          text=''.join(open(f'chunk-{i:02d}.txt',encoding='utf-8').read() for i in range(10))
+          names=re.findall(r'\b(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(',text)
+          dup=[(n,c) for n,c in Counter(names).items() if c>1]
+          print('Funções duplicadas encontradas:')
+          for n,c in sorted(dup): print(f' - {n}: {c}x')
+          PY
 
       - name: Conferir arquivos essenciais
         shell: bash
