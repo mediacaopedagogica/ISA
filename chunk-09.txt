@@ -31,8 +31,12 @@ async function bindGlobalRealtime(){
 async function boot(){
   const {data:{user}}=await supabase.auth.getUser();if(!user){showView('loginView');return}
   const {data:member,error}=await supabase.from('family_members').select('*').eq('auth_user_id',user.id).eq('active',true).single();if(error||!member){await supabase.auth.signOut();showView('loginView');return setStatus('loginMsg','Perfil familiar não encontrado.')}
-  me=member;document.title='Cantinho da Isa 💕';showView('mainView');$('myName').textContent=me.display_name;$('myRole').textContent=friendlyRoleLabel(me.role);$('parentsNav').classList.toggle('hidden',!isParent());$('supervisionNav')?.classList.toggle('hidden',!isParent());await supabase.realtime.setAuth().catch(()=>{})
-  await Promise.all([loadFamily(),loadConversations(),loadCalendar(),loadAlerts()]);await hydrateAvatarElements();await upsertPresence(true);startHeartbeat();bindGlobalRealtime();renderNotifyBanner();renderBirthdayHero();switchTab('chats')
+  me=member;document.title='Cantinho da Isa 💕';showView('mainView');$('myName').textContent=me.display_name;$('myRole').textContent=friendlyRoleLabel(me.role);$('parentsNav').classList.toggle('hidden',!isParent());$('supervisionNav')?.classList.toggle('hidden',!isParent());
+  switchTab('chats');if($('chatList'))$('chatList').innerHTML='<p class="muted" style="padding:12px">Carregando conversas…</p>';
+  supabase.realtime.setAuth().catch(()=>{});
+  await Promise.all([loadFamily(),loadConversations()]);
+  hydrateAvatarElements().catch(()=>{});upsertPresence(true).catch(()=>{});startHeartbeat();bindGlobalRealtime();renderNotifyBanner();renderBirthdayHero();
+  Promise.allSettled([loadCalendar(),loadAlerts()]).catch(()=>{});
   const wanted=new URLSearchParams(location.search).get('conversation');if(wanted&&conversations.some(c=>c.id===wanted)&&isConversationMember(conversations.find(c=>c.id===wanted)))openChat(wanted,false)
 }
 
