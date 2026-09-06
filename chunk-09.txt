@@ -23,7 +23,7 @@ async function bindGlobalRealtime(){
   .on('postgres_changes',{event:'*',schema:'public',table:'messages'},async payload=>{
   const convId=payload.new?.conversation_id||payload.old?.conversation_id;
   await loadConversations();
-  if(activeConversation?.id===convId){await loadMessages(activeConversation.id);renderTimeline()}
+  if(activeConversation?.id===convId){if(!activeSupervisionMode)await markRead(convId);await loadMessages(activeConversation.id);renderTimeline()}
   const conv=conversations.find(c=>c.id===convId);
   if(payload.eventType==='INSERT'&&payload.new?.sender_id!==me.id&&conv&&isConversationMember(conv)){
     playPing();
