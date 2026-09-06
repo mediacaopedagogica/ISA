@@ -1,21 +1,36 @@
 ectionStart=i.selectionEnd=s+e.length;i.focus();rememberEmoji(e)}
-function toggleEmoji(){const p=$('emojiPicker');p.classList.toggle('hidden');if(!p.classList.contains('hidden'))renderEmoji()}
+function openEmoji(){const p=$('emojiPicker');if(!p)return;p.classList.remove('hidden');renderEmoji();$('emojiSearch')?.focus()}
+function closeEmoji(){const p=$('emojiPicker');if(p)p.classList.add('hidden')}
 
-function hidePanels(){['chatPanel','familyPanel','calendarPanel','parentsPanel'].forEach(id=>$(id).classList.add('hidden'))}
-function switchTab(tab){document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));hidePanels();$('emptyState').classList.add('hidden');if(tab==='chats'){if(activeConversation)$('chatPanel').classList.remove('hidden');else $('emptyState').classList.remove('hidden')}if(tab==='family')$('familyPanel').classList.remove('hidden');if(tab==='calendar')$('calendarPanel').classList.remove('hidden');if(tab==='parents'&&isParent())$('parentsPanel').classList.remove('hidden')}
+function hidePanels(){['chatPanel','familyPanel','calendarPanel','supervisionPanel','parentsPanel'].forEach(id=>$(id)?.classList.add('hidden'))}
+function switchTab(tab){document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));hidePanels();$('emptyState')?.classList.add('hidden');if(tab==='chats'){if(activeConversation)$('chatPanel')?.classList.remove('hidden');else $('emptyState')?.classList.remove('hidden')}if(tab==='family')$('familyPanel')?.classList.remove('hidden');if(tab==='calendar'){$('calendarPanel')?.classList.remove('hidden');if(typeof renderCalendarMonth==='function')renderCalendarMonth()}if(tab==='supervision'&&isParent()){$('supervisionPanel')?.classList.remove('hidden');if(typeof renderSupervisionList==='function')renderSupervisionList()}if(tab==='parents'&&isParent())$('parentsPanel')?.classList.remove('hidden')}
 
 function buildSetup(){const defs=[['Mãe','Super Admin'],['Pai','Super Pais'],['Evalda','Avó'],['Paloma','Tia'],['Isa','Perfil infantil']];$('setupAccounts').innerHTML=defs.map(([u,r])=>`<div class="setup-person"><strong>${u} • ${r}</strong><label>Senha</label><input type="password" data-setup-user="${u}" placeholder="Defina a senha deste acesso"><small class="muted">A senha vai direto para o sistema de autenticação.</small></div>`).join('')}
 async function setupFamily(){const accounts=[...document.querySelectorAll('[data-setup-user]')].map(i=>({username:i.dataset.setupUser,password:i.value}));if(accounts.some(a=>a.password.length<8))return setStatus('setupMsg','Use senha de pelo menos 8 caracteres em todos os perfis.');setStatus('setupMsg','Ativando acessos...');const {data,error}=await supabase.functions.invoke('bootstrap-family',{body:{setupCode:$('setupCode').value,accounts}});if(error||data?.error)return setStatus('setupMsg',data?.error||'Não foi possível ativar.');setStatus('setupMsg','Acessos ativados! Agora entre com seu login.',true);setTimeout(()=>showView('loginView'),900)}
 
-$('loginBtn').onclick=login;$('loginPassword').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('togglePassword').onclick=()=>{$('loginPassword').type=$('loginPassword').type==='password'?'text':'password'}
+async function logoutNow(){
+  const btn=$('logoutBtn');if(btn){btn.disabled=true;btn.textContent='Saindo…'}
+  try{if(heartbeat)clearInterval(heartbeat)}catch{}
+  try{await Promise.race([upsertPresence(false),new Promise(r=>setTimeout(r,500))])}catch{}
+  try{await supabase.auth.signOut()}catch(e){console.warn('Falha ao encerrar sessão no servidor',e)}
+  try{const ref=new URL(CONFIG.SUPABASE_URL).hostname.split('.')[0],key=`sb-${ref}-auth-token`;localStorage.removeItem(key);sessionStorage.removeItem(key)}catch{}
+  location.replace('./?sair='+Date.now())
+}
+
+$('loginBtn').onclick=login;$('loginPassword').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('togglePassword').onclick=()=>{const i=$('loginPassword'),show=i.type==='password';i.type=show?'text':'password';$('togglePassword').textContent=show?'🙈':'👁️';$('togglePassword').title=show?'Ocultar senha':'Mostrar senha';$('togglePassword').setAttribute('aria-label',show?'Ocultar senha':'Mostrar senha');i.focus()}
 $('openSetupBtn').onclick=()=>showView('setupView');$('closeSetupBtn').onclick=()=>showView('loginView');$('setupFamilyBtn').onclick=setupFamily
-$('logoutBtn').onclick=async()=>{await upsertPresence(false);await supabase.auth.signOut();location.href='./'}
+$('logoutBtn').onclick=logoutNow
 $('sendBtn').onclick=sendMessage;$('messageInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}});$('messageInput').addEventListener('input',()=>sendTyping(true))
 $('photoBtn').onclick=()=>$('photoInput').click();$('photoInput').onchange=e=>{const f=e.target.files?.[0];if(f)sendPhoto(f);e.target.value=''}
-$('emojiBtn').onclick=e=>{e.stopPropagation();toggleEmoji()};$('emojiSearch').oninput=renderEmoji;document.addEventListener('click',e=>{if(!e.target.closest('.emoji-wrap'))$('emojiPicker').classList.add('hidden');if(!e.target.closest('.group-plus-wrap'))$('groupPlusMenu').classList.add('hidden')})
+
+const picker=$('emojiPicker');
+if(picker&&!$('emojiCloseBtn')){const head=document.createElement('div');head.className='emoji-picker-head';head.innerHTML='<strong>Emojis</strong><button type="button" id="emojiCloseBtn" class="emoji-close-btn" aria-label="Fechar emojis">✕</button>';picker.prepend(head)}
+$('emojiPicker')?.addEventListener('click',e=>e.stopPropagation());$('emojiBtn').onclick=e=>{e.stopPropagation();openEmoji()};$('emojiCloseBtn')?.addEventListener('click',e=>{e.stopPropagation();closeEmoji()});$('emojiSearch').oninput=renderEmoji
+document.addEventListener('click',e=>{if(!e.target.closest('.group-plus-wrap'))$('groupPlusMenu')?.classList.add('hidden')})
 $('groupPlusBtn').onclick=e=>{e.stopPropagation();$('groupPlusMenu').classList.toggle('hidden')};document.querySelectorAll('[data-group-action]').forEach(b=>b.onclick=()=>{if(b.dataset.groupAction==='poll')openPollDialog();else if(b.dataset.groupAction==='photo'){$('photoInput').click()}$('groupPlusMenu').classList.add('hidden')})
 $('newGroupBtn').onclick=openNewGroup;$('newEventBtn').onclick=openEventDialog;$('newMemberBtn').onclick=openNewMember;$('enableNotificationsBtn').onclick=enablePush
 $('mobileBackBtn').onclick=()=>{activeConversation=null;$('chatPanel').classList.add('hidden');$('emptyState').classList.remove('hidden');renderChatList()}
 document.querySelectorAll('.nav-btn').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab))
 
+if(!document.querySelector('link[href="app-3d.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href='app-3d.css?v=4';document.head.appendChild(l)}
 buildSetup();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(console.warn);const {data:{session}}=await supabase.auth.getSession();session?boot():showView('loginView')
