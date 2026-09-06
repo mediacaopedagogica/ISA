@@ -10,12 +10,13 @@
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="theme-3d.css">
+  <link rel="stylesheet" href="login-3d.css">
 </head>
 <body>
 <div id="app">
   <section id="loginView" class="screen center-screen">
     <div class="login-card glass">
-      <div class="brand-bubble">🏡💕</div>
+      <div class="brand-bubble" aria-hidden="true">💌</div>
       <h1>Cantinho da Isa</h1>
       <p class="muted">Família e amigos(as)</p>
       <label>Login</label>
@@ -23,7 +24,7 @@
       <label>Senha</label>
       <div class="password-wrap">
         <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Sua senha">
-        <button id="togglePassword" class="icon-btn" type="button" aria-label="Mostrar senha">👁️</button>
+        <button id="togglePassword" class="icon-btn" type="button" aria-label="Mostrar senha" title="Mostrar senha">👁️</button>
       </div>
       <button id="loginBtn" class="primary-btn">Entrar 💗</button>
       <button id="openSetupBtn" class="text-btn hidden" tabindex="-1" aria-hidden="true">Primeiro acesso da família</button>
@@ -144,6 +145,22 @@
 
 <dialog id="simpleDialog"><form method="dialog" class="dialog-card"><button class="dialog-close" value="cancel">✕</button><div id="dialogContent"></div></form></dialog>
 <div id="toast" class="toast hidden"></div>
+<script>
+(function(){
+  const btn=document.getElementById('togglePassword');
+  const input=document.getElementById('loginPassword');
+  if(btn&&input){
+    btn.onclick=()=>{
+      const show=input.type==='password';
+      input.type=show?'text':'password';
+      btn.textContent=show?'🙈':'👁️';
+      btn.setAttribute('aria-label',show?'Ocultar senha':'Mostrar senha');
+      btn.title=show?'Ocultar senha':'Mostrar senha';
+      input.focus();
+    };
+  }
+})();
+</script>
 <script type="module" src="app.js"></script>
 </body>
 </html>
