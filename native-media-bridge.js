@@ -1,4 +1,4 @@
-import { capturePhoto, recordAudio } from './media-capture.js?v=1'
+import { capturePhoto, recordAudio } from './media-capture.js?v=2'
 
 const $=id=>document.getElementById(id)
 function toast(text){const t=$('toast')||$('friendToast');if(!t)return alert(text);t.textContent=text;t.classList.remove('hidden');clearTimeout(t._native);t._native=setTimeout(()=>t.classList.add('hidden'),2600)}
