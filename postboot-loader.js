@@ -19,7 +19,7 @@ const paths=dedicatedMobile?[
 ]:[
   './mobile-responsive-v2.js?v=15-android-touch',
   './notifications-v2.js?v=9-stable',
-  './extras-loader.js?v=20-mobile-games'
+  './extras-loader.js?v=21-notebook-games-fit'
 ]
 const results=await Promise.allSettled(paths.map(loadWithRetry))
 window.__ISA_EXTRAS_READY__=true
