@@ -25,7 +25,7 @@ async function loadGroupTools(){
 
 async function loadChatExtras(){
   await loadOnce('family-media','./family-media-menu.js?v=4')
-  await loadOnce('native-media','./native-media-bridge.js?v=3')
+  await loadOnce('native-media','./native-media-bridge.js?v=4')
   await loadOnce('links','./link-preview.js?v=3')
   if(isIsa())await loadOnce('isa-tools','./isa-tools.js?v=3')
 }
