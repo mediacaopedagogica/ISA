@@ -38,6 +38,8 @@ on:
       - 'paloma-studies-advanced.js'
       - 'paloma-studies-advanced-mobile.js'
       - 'paloma-studies-advanced.css'
+      - 'paloma-study-desk.js'
+      - 'paloma-study-desk.css'
       - '.github/workflows/validate-cantinho-extras.yml'
   workflow_dispatch:
 
@@ -75,6 +77,7 @@ jobs:
           node --check paloma-studies.js
           node --check paloma-studies-advanced.js
           node --check paloma-studies-advanced-mobile.js
+          node --check paloma-study-desk.js
 
       - name: Proteger recursos aprovados
         run: |
@@ -142,7 +145,21 @@ jobs:
           grep -q 'PDF / Imprimir ABNT' paloma-studies-advanced.js
           grep -q 'ABNT NBR 14724:2024' paloma-studies-advanced.js
 
+          grep -q 'paloma-study-desk.css' acesso.html
+          grep -q 'paloma-study-desk.js?v=1' acesso.html
+          grep -q 'paloma-study-desk.css' acesso-mobile.html
+          grep -q 'paloma-study-desk.js?v=1' acesso-mobile.html
+          grep -q 'paloma_study_desk_load' paloma-study-desk.js
+          grep -q 'paloma_study_desk_save' paloma-study-desk.js
+          grep -q 'Mesa de Estudos da Paloma' paloma-study-desk.js
+          grep -q 'Quadro de Estudos' paloma-study-desk.js
+          grep -q 'Marcadores de Estudo' paloma-study-desk.js
+          grep -q 'Cálculos & Anotações' paloma-study-desk.js
+          grep -q 'psd-calc-layout' paloma-study-desk.css
+          grep -q '@media(max-width:700px)' paloma-study-desk.css
+
           test -s app-3d.css
           test -s heart-polish.css
           test -s paloma-studies.css
           test -s paloma-studies-advanced.css
+          test -s paloma-study-desk.css
