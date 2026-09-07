@@ -16,9 +16,7 @@
     s.id=id;s.type='module';s.src=src;s.async=true
     document.body.appendChild(s)
   }
-  function showLogin(){
-    document.getElementById('loginView')?.classList.remove('hidden')
-  }
+  function showLogin(){document.getElementById('loginView')?.classList.remove('hidden')}
   function personalOverlay(text='Entrando no seu Cantinho…'){
     let el=document.getElementById('personalBootOverlay')
     if(!el){
@@ -53,7 +51,9 @@
 
   const params=new URLSearchParams(location.search)
   const hash=new URLSearchParams(location.hash.replace(/^#/,''))
-  const personal=params.get('entry')==='personal-v43'
+  const profileRaw=(params.get('perfil')||'').trim()
+  const profileName=['Keise','Alan','Isa'].find(n=>n.toLowerCase()===profileRaw.toLowerCase())||''
+  const personal=!!profileName
   const accessToken=hash.get('access_token')||''
   const refreshToken=hash.get('refresh_token')||''
 
@@ -67,73 +67,57 @@
         if(main&&!main.classList.contains('hidden')){overlay.remove();observer.disconnect();return}
         if(login&&!login.classList.contains('hidden')){
           login.classList.add('hidden')
-          fail('A sessão foi criada, mas o perfil não abriu corretamente. Tente novamente.',true)
+          fail('A sessão não abriu corretamente. Tente novamente.',true)
           observer.disconnect()
         }
       }
       const observer=new MutationObserver(watch)
       if(main)observer.observe(main,{attributes:true,attributeFilter:['class']})
       if(login)observer.observe(login,{attributes:true,attributeFilter:['class']})
-      setTimeout(()=>{
-        if(main?.classList.contains('hidden'))personalOverlay('Ainda carregando…')
-      },5000)
-    }else{
-      showLogin()
-    }
+      setTimeout(()=>{if(main?.classList.contains('hidden'))personalOverlay('Ainda carregando…')},5000)
+    }else showLogin()
 
     try{
-      const r=await fetch('./app-v34.js?v=34-hotfix-44',{cache:'no-store'})
+      const r=await fetch('./app-v34.js?v=34-hotfix-45',{cache:'no-store'})
       if(!r.ok)throw new Error('Não foi possível carregar o núcleo do Cantinho.')
       let source=await r.text()
       const marker='\n  __isaCore34().then(() => {'
       const markerAt=source.lastIndexOf(marker)
-      if(markerAt<0)throw new Error('Núcleo incompatível com a correção de inicialização.')
+      if(markerAt<0)throw new Error('Núcleo incompatível com a inicialização.')
       const closeAt=source.lastIndexOf('\n  }',markerAt)
-      if(closeAt<0)throw new Error('Não foi possível localizar a inicialização do aplicativo.')
+      if(closeAt<0)throw new Error('Não foi possível iniciar o aplicativo.')
       source=source.slice(0,closeAt)+'\n    await boot();'+source.slice(closeAt)
-
       const blobUrl=URL.createObjectURL(new Blob([source],{type:'text/javascript'}))
       const core=document.createElement('script')
-      core.id='isaCoreV34Restored'
-      core.src=blobUrl
-      core.async=false
+      core.id='isaCoreV34Restored';core.src=blobUrl;core.async=false
       core.onload=()=>{
         URL.revokeObjectURL(blobUrl)
         module('isaMobileJsRestore','./mobile-responsive-v2.js?v=7-restore')
         module('isaNotificationsRestore','./notifications-v2.js?v=5-restore')
         module('isaExtrasRestore','./extras-loader.js?v=14-restore')
       }
-      core.onerror=()=>{
-        URL.revokeObjectURL(blobUrl)
-        fail('Não foi possível carregar o núcleo do Cantinho. Recarregue a página.',personalMode)
-      }
+      core.onerror=()=>{URL.revokeObjectURL(blobUrl);fail('Não foi possível carregar o núcleo do Cantinho.',personalMode)}
       document.body.appendChild(core)
-    }catch(e){
-      fail(e?.message||'Não foi possível iniciar o Cantinho.',personalMode)
-    }
+    }catch(e){fail(e?.message||'Não foi possível iniciar o Cantinho.',personalMode)}
   }
 
   ;(async()=>{
-    if(!personal){loadPatchedCore(false);return}
-    personalOverlay('Confirmando sua sessão…')
-    if(!accessToken||!refreshToken){
-      fail('A chave da sessão não chegou completa ao aplicativo.',true)
-      return
-    }
+    if(!personal){await loadPatchedCore(false);return}
+    personalOverlay(`Abrindo como ${profileName}…`)
     try{
       const [{createClient},{CONFIG}]=await Promise.all([
         import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'),
         import('./config.js')
       ])
       const sb=createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}})
-      const {error}=await sb.auth.setSession({access_token:accessToken,refresh_token:refreshToken})
-      if(error)throw error
+      if(accessToken&&refreshToken){
+        const {error}=await sb.auth.setSession({access_token:accessToken,refresh_token:refreshToken})
+        if(error)throw error
+      }
       const {data:{user},error:userError}=await sb.auth.getUser()
-      if(userError||!user)throw userError||new Error('Sessão sem usuário')
-      history.replaceState(null,'','./?entry=personal-v43')
+      if(userError||!user)throw userError||new Error('Sessão não encontrada')
+      history.replaceState(null,'',`./?perfil=${encodeURIComponent(profileName)}`)
       await loadPatchedCore(true)
-    }catch(e){
-      fail(e?.message||'Não foi possível confirmar sua sessão.',true)
-    }
+    }catch(e){fail(e?.message||'Não foi possível confirmar sua sessão.',true)}
   })()
 })()
