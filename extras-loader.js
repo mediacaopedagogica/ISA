@@ -7,6 +7,12 @@ function loadOnce(key,path){
   loaded.set(key,p)
   return p
 }
+function loadMobilePlatform(){
+  if(!document.querySelector('link[data-isa-mobile-v1]')){
+    const l=document.createElement('link');l.rel='stylesheet';l.href='./mobile-responsive-v1.css?v=1';l.dataset.isaMobileV1='1';document.head.appendChild(l)
+  }
+  return loadOnce('mobile-responsive','./mobile-responsive-v1.js?v=1')
+}
 
 function mainReady(){
   const main=$('mainView')
@@ -56,6 +62,7 @@ function wire(){
 }
 
 function start(){
+  loadMobilePlatform().catch(()=>{})
   if(wire())return
   const main=$('mainView')
   if(main){const obs=new MutationObserver(()=>{if(wire())obs.disconnect()});obs.observe(main,{attributes:true,attributeFilter:['class']})}
