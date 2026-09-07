@@ -54,12 +54,13 @@ async function start(){
      throw new Error(verifyError?.message||'Não foi possível confirmar a sessão.');
    }
 
-   const {data:sessionData,error:sessionError}=await supabase.auth.getSession();
-   if(sessionError||!sessionData?.session?.user){
-     throw new Error(sessionError?.message||'A sessão não ficou salva neste aparelho.');
-   }
-
-   location.replace('./?entry=personal-v42');
+   const session=new URLSearchParams();
+   session.set('access_token',verified.session.access_token);
+   session.set('refresh_token',verified.session.refresh_token);
+   session.set('expires_in',String(verified.session.expires_in||3600));
+   session.set('token_type',verified.session.token_type||'bearer');
+   session.set('type','magiclink');
+   location.replace(`./?entry=personal-v43#${session.toString()}`);
  }catch(e){fail(e?.name==='AbortError'?'A conexão demorou demais. Tente novamente.':(e?.message||'Não foi possível acessar.'))}
 }
 $('retry').onclick=start;start();
