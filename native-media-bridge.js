@@ -15,16 +15,18 @@ async function nativeRecorderForFamily(menu){
   try{const result=await recordAudio();if(!result?.file)return;const input=$('familyAudioInput');if(!input){toast('O gravador ainda está iniciando. Tente novamente.');return}input.dataset.nativeDuration=String(result.durationMs||'');if(!assignFile(input,result.file))toast('Não foi possível preparar o áudio para envio.')}catch(e){toast(e.message||'Não foi possível iniciar o gravador.')}
 }
 function patchFamily(){
-  const menu=$('groupPlusMenu');if(!menu)return
+  const menu=$('groupPlusMenu');if(!menu)return false
   const camera=menu.querySelector('[data-family-media="camera"]'),record=menu.querySelector('[data-family-media="record"]')
   if(camera&&camera.dataset.native!=='1'){camera.dataset.native='1';camera.textContent='📷 Tirar foto';camera.onclick=e=>{e.stopPropagation();nativeCameraForFamily(menu)}}
   if(record&&record.dataset.native!=='1'){record.dataset.native='1';record.textContent='🎙️ Gravar áudio';record.onclick=e=>{e.stopPropagation();nativeRecorderForFamily(menu)}}
+  return !!camera&&!!record
 }
 function patchFriend(){
-  const media=window.__FRIEND_MEDIA__;if(!media||media.__nativeCapture)return
+  const media=window.__FRIEND_MEDIA__;if(!media||media.__nativeCapture)return false
   media.__nativeCapture=true
   media.takePhoto=async()=>{try{const file=await capturePhoto();if(file)await media.sendPhoto(file)}catch(e){toast(e.message||'Não foi possível abrir a câmera.')}}
   media.startRecording=async()=>{if(media.isFriend?.())return toast('Áudio fica disponível somente para a família.');try{const result=await recordAudio();if(result?.file)await media.sendAudio(result.file,result.durationMs)}catch(e){toast(e.message||'Não foi possível iniciar o gravador.')}}
+  return true
 }
 function patch(){patchFamily();patchFriend()}
-const obs=new MutationObserver(patch);obs.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});window.addEventListener('load',()=>setTimeout(patch,300));setInterval(patch,1200);patch()
+patch();setTimeout(patch,180);setTimeout(patch,700);setTimeout(patch,1800)
