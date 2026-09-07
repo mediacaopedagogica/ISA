@@ -59,6 +59,17 @@
     </section>
   </main>
   <div id="friendToast" class="friend-toast hidden"></div>
+  <script>
+    const pausedObserver=new MutationObserver(()=>{
+      const err=document.getElementById('friendGateError');
+      if(!err||!/temporariamente indisponível/i.test(err.textContent||''))return;
+      document.getElementById('friendGateTitle').textContent='Acesso temporariamente indisponível';
+      document.getElementById('friendGateText').textContent='Seu acesso ao chat para trabalhos escolares está temporariamente indisponível.';
+      document.getElementById('friendEnterBtn').classList.add('hidden');
+      err.textContent='';
+    });
+    pausedObserver.observe(document.getElementById('friendGateError'),{childList:true,characterData:true,subtree:true});
+  </script>
   <script type="module" src="./amiga.js?v=2"></script>
 </body>
 </html>
