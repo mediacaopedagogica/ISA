@@ -48,10 +48,13 @@ async function enterPortal(){
   catch(e){$('friendGateError').textContent=e.message}finally{$('friendEnterBtn').disabled=false}
 }
 async function refreshConversations(){try{await bootstrap(true);renderConversationList()}catch{}}
+function refreshCallActionsNow(){
+  const fire=()=>document.dispatchEvent(new Event('visibilitychange'))
+  fire();setTimeout(fire,180);setTimeout(fire,650)
+}
 async function openConversation(id){
   const c=conversations.find(x=>x.id===id);if(!c)return;activeConversation=c;window.__FRIEND_ACTIVE_CONV_TYPE__=c.type
-  $('friendEmpty').classList.add('hidden');$('friendThread').classList.remove('hidden');$('friendChat').classList.add('thread-open');$('friendThreadTitle').textContent=c.title||'Isa';$('friendThreadSubtitle').textContent=c.type==='group'?'Grupo criado pela Isa':'Conversa direta com a Isa';renderConversationList();await loadMessages(true)
-  setTimeout(()=>window.dispatchEvent(new Event('focus')),100)
+  $('friendEmpty').classList.add('hidden');$('friendThread').classList.remove('hidden');$('friendChat').classList.add('thread-open');$('friendThreadTitle').textContent=c.title||'Isa';$('friendThreadSubtitle').textContent=c.type==='group'?'Grupo criado pela Isa':'Conversa direta com a Isa';renderConversationList();refreshCallActionsNow();await loadMessages(true)
 }
 async function getMediaUrl(messageId){const cached=mediaCache.get(messageId);if(cached&&cached.until>Date.now())return cached.url;const data=await mediaJson({action:'signed_url',token,messageId});mediaCache.set(messageId,{url:data.url,until:Date.now()+240000});return data.url}
 async function hydrateMedia(){
