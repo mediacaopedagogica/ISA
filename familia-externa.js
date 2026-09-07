@@ -15,7 +15,7 @@ async function rpc(name,args={},opts={}){
 async function mediaJson(payload){
   const r=await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/friend-media`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${CONFIG.SUPABASE_KEY}`,'Content-Type':'application/json'},body:JSON.stringify(payload),cache:'no-store'})
   let data=null;try{data=await r.json()}catch{}
-  if(!r.ok)throw new Error(data?.error||'Não foi possível carregar a imagem.')
+  if(!r.ok)throw new Error(data?.error||'Não foi possível carregar a mídia.')
   return data
 }
 async function uploadImage(file){
@@ -62,12 +62,25 @@ async function hydrateMedia(){
     if(node.dataset.loaded==='1')continue;const id=node.dataset.familyPhoto
     try{const url=await getMediaUrl(id);node.innerHTML=`<img class="friend-photo" src="${url}" alt="Imagem enviada">`;node.dataset.loaded='1'}catch{node.innerHTML='<div class="friend-photo-note">📷 Imagem expirada.</div>';node.dataset.loaded='1'}
   }
+  for(const node of [...document.querySelectorAll('[data-family-audio]')]){
+    if(node.dataset.loaded==='1')continue;const id=node.dataset.familyAudio
+    try{
+      const url=await getMediaUrl(id),audio=document.createElement('audio');audio.controls=true;audio.preload='metadata';audio.src=url;audio.className='friend-audio';audio.style.width='min(360px,100%)';audio.style.maxWidth='100%';audio.setAttribute('controlsList','nodownload');node.innerHTML='';node.appendChild(audio);audio.load();node.dataset.loaded='1'
+    }catch{node.innerHTML='<div class="friend-photo-note">🎙️ Áudio expirado.</div>';node.dataset.loaded='1'}
+  }
 }
 async function loadMessages(forceScroll=false){
   if(!activeConversation)return
   try{
     const list=await rpc('friend_portal_messages',{p_token:token,p_conversation_id:activeConversation.id}),box=$('friendMessages'),atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<90
-    box.innerHTML=(list||[]).map(m=>{const mine=m.senderId===person.id,read=mine?(Number(m.readCount||0)>0?'✓✓ Lida':'✓ Enviada'):'';let content=m.kind==='photo'?`<div class="friend-photo-wrap" data-family-photo="${m.id}"><div class="friend-photo-note">📷 Carregando imagem…</div></div>`:`<div>${esc(m.body||'')}</div>`;return `<div class="friend-msg ${mine?'mine':''}"><div class="friend-bubble">${!mine?`<span class="friend-sender">${esc(m.senderName)}</span>`:''}${content}<span class="friend-meta">${fmtTime(m.sentAt)}</span>${read?`<span class="friend-read">${read}</span>`:''}</div></div>`}).join('')||'<div class="friend-empty" style="height:auto;padding:40px"><p>Comece a conversa 💕</p></div>'
+    box.innerHTML=(list||[]).map(m=>{
+      const mine=m.senderId===person.id,read=mine?(Number(m.readCount||0)>0?'✓✓ Lida':'✓ Enviada'):''
+      let content
+      if(m.kind==='photo')content=`<div class="friend-photo-wrap" data-family-photo="${m.id}"><div class="friend-photo-note">📷 Carregando imagem…</div></div>`
+      else if(m.kind==='audio')content=`<div class="friend-audio-wrap" data-family-audio="${m.id}"><div class="friend-photo-note">🎙️ Carregando áudio…</div></div>`
+      else content=`<div>${esc(m.body||'')}</div>`
+      return `<div class="friend-msg ${mine?'mine':''}"><div class="friend-bubble">${!mine?`<span class="friend-sender">${esc(m.senderName)}</span>`:''}${content}<span class="friend-meta">${fmtTime(m.sentAt)}</span>${read?`<span class="friend-read">${read}</span>`:''}</div></div>`
+    }).join('')||'<div class="friend-empty" style="height:auto;padding:40px"><p>Comece a conversa 💕</p></div>'
     hydrateMedia();if(forceScroll||atBottom)requestAnimationFrame(()=>box.scrollTop=box.scrollHeight)
   }catch(e){toast(e.message)}
 }
