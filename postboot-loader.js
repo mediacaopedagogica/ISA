@@ -10,7 +10,12 @@ async function loadWithRetry(path){
   }
 }
 
-const paths=[
+const dedicatedMobile=new URLSearchParams(location.search).get('mobile')==='1'
+const paths=dedicatedMobile?[
+  './mobile-native.js?v=1',
+  './notifications-v2.js?v=9-stable',
+  './extras-loader.js?v=14-mobile-native'
+]:[
   './mobile-responsive-v2.js?v=15-android-touch',
   './notifications-v2.js?v=9-stable',
   './extras-loader.js?v=13-noloop'
