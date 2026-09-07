@@ -7,10 +7,16 @@ on:
       - 'extras-loader.js'
       - 'mobile-responsive-v1.js'
       - 'mobile-responsive-v1.css'
+      - 'mobile-responsive-v2.js'
+      - 'mobile-responsive-v2.css'
+      - 'mobile-reference-v4.css'
+      - 'notifications-v2.js'
       - 'group-controls.js'
       - 'profile-mascot.js'
       - 'diario.js'
       - 'diario-cover-logic.js'
+      - 'diario-inner-v3.js'
+      - 'diario-inner-v3.css'
       - 'isa-tools.js'
       - 'diary-parent.js'
       - 'paused-friends-filter.js'
@@ -39,10 +45,13 @@ jobs:
         run: |
           node --check extras-loader.js
           node --check mobile-responsive-v1.js
+          node --check mobile-responsive-v2.js
+          node --check notifications-v2.js
           node --check group-controls.js
           node --check profile-mascot.js
           node --check diario.js
           node --check diario-cover-logic.js
+          node --check diario-inner-v3.js
           node --check isa-tools.js
           node --check diary-parent.js
           node --check paused-friends-filter.js
