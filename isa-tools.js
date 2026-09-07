@@ -9,7 +9,7 @@ function ensureStudyBundle(){
   studyLoading=new Promise((resolve,reject)=>{
     const existing=document.querySelector('script[data-study-bundle]')
     if(existing){waitStudyReady().then(resolve,reject);return}
-    const s=document.createElement('script');s.src='./study-bundle-v36.js?v=37';s.async=true;s.dataset.studyBundle='1'
+    const s=document.createElement('script');s.src='./study-bundle-v36.js?v=38';s.async=true;s.dataset.studyBundle='1'
     s.onload=()=>waitStudyReady().then(resolve,reject)
     s.onerror=()=>reject(new Error('Não foi possível carregar Estudos.'))
     document.body.appendChild(s)
