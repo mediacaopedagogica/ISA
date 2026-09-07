@@ -16,7 +16,7 @@ async function loadProfile(){await loadOnce('profile','./profile-mascot.js?v=2')
 async function loadGroupTools(){await loadOnce('groups','./group-controls.js?v=3')}
 async function loadCalls(){await loadOnce('calls','./call-manager.js?v=2')}
 async function loadPausedFriends(){await loadOnce('paused-friends','./paused-friends-filter.js?v=1')}
-async function loadIsaTools(){if(isIsa())await loadOnce('isa-tools','./isa-tools.js?v=4')}
+async function loadIsaTools(){if(isIsa())await loadOnce('isa-tools','./isa-tools.js?v=5')}
 async function loadChatExtras(){
   await loadOnce('family-media','./family-media-menu-v2.js?v=2')
   await loadOnce('links','./link-preview.js?v=3')
