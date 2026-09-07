@@ -4,15 +4,15 @@ on:
   push:
     branches: [main]
     paths:
+      - 'index.html'
       - 'extras-loader.js'
-      - 'mobile-responsive-v1.js'
-      - 'mobile-responsive-v1.css'
       - 'mobile-responsive-v2.js'
       - 'mobile-responsive-v2.css'
-      - 'mobile-reference-v4.css'
       - 'notifications-v2.js'
       - 'group-controls.js'
       - 'profile-mascot.js'
+      - 'conversation-pins.js'
+      - 'diario.html'
       - 'diario.js'
       - 'diario-cover-logic.js'
       - 'diario-inner-v3.js'
@@ -20,48 +20,85 @@ on:
       - 'isa-tools.js'
       - 'diary-parent.js'
       - 'paused-friends-filter.js'
-      - 'family-media-menu.js'
       - 'family-media-menu-v2.js'
       - 'calendar-alarm.js'
-      - 'amiga.js'
-      - 'amiga-ui-enhanced.js'
-      - 'external-access-controls.js'
       - 'media-capture.js'
-      - 'native-media-bridge.js'
       - 'link-preview.js'
       - 'call-manager.js'
+      - 'app-3d.css'
+      - 'heart-polish.css'
       - '.github/workflows/validate-cantinho-extras.yml'
   workflow_dispatch:
 
 jobs:
-  syntax:
+  syntax-and-baseline:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+
       - name: Verificar sintaxe JavaScript
         run: |
           node --check extras-loader.js
-          node --check mobile-responsive-v1.js
           node --check mobile-responsive-v2.js
           node --check notifications-v2.js
           node --check group-controls.js
           node --check profile-mascot.js
+          node --check conversation-pins.js
           node --check diario.js
           node --check diario-cover-logic.js
           node --check diario-inner-v3.js
           node --check isa-tools.js
           node --check diary-parent.js
           node --check paused-friends-filter.js
-          node --check family-media-menu.js
           node --check family-media-menu-v2.js
           node --check calendar-alarm.js
-          node --check amiga.js
-          node --check amiga-ui-enhanced.js
-          node --check external-access-controls.js
           node --check media-capture.js
-          node --check native-media-bridge.js
           node --check link-preview.js
           node --check call-manager.js
+
+      - name: Proteger recursos aprovados
+        run: |
+          # Núcleo e módulos precisam continuar ligados no app principal.
+          grep -q 'app-v34.js' index.html
+          grep -q 'mobile-responsive-v2.js' index.html
+          grep -q 'notifications-v2.js' index.html
+          grep -q 'extras-loader.js' index.html
+
+          # Perfil com foto OU mascote.
+          grep -q 'profile-mascot.js' extras-loader.js
+          grep -q 'Escolha uma foto ou um mascote' profile-mascot.js
+          grep -q 'profileAvatarInput' profile-mascot.js
+
+          # Fixação individual por estrela/coração.
+          grep -q 'conversation-pins.js' extras-loader.js
+          grep -q "marker==='heart'?'💜':'⭐'" conversation-pins.js
+          grep -q 'conversation_pins' conversation-pins.js
+
+          # Áudio, foto, chamada de voz e videochamada próprias.
+          grep -q 'family-media-menu-v2.js' extras-loader.js
+          grep -q 'recordAudio' family-media-menu-v2.js
+          grep -q 'Gravar áudio' family-media-menu-v2.js
+          grep -q 'call-manager.js' extras-loader.js
+          grep -q 'RTCPeerConnection' call-manager.js
+          grep -q 'Chamada de voz' call-manager.js
+          grep -q 'Videochamada' call-manager.js
+
+          # Navegação: Isa = Chat/Calendário/Estudos/Diário; Keise/Alan = Chat/Calendário/Supervisão/Super Pais.
+          grep -q 'studyNav' isa-tools.js
+          grep -q 'diaryNav' isa-tools.js
+          grep -q "who()==='isa'" mobile-responsive-v2.js
+          grep -q "who()==='keise'||who()==='alan'" mobile-responsive-v2.js
+          grep -q 'grid-template-columns:repeat(4' mobile-responsive-v2.css
+
+          # Diário 3D interno precisa permanecer completo.
+          grep -q 'diario-inner-v3.css' diario.html
+          grep -q 'diario-inner-v3.js' diario.html
+          grep -q 'Meu Diário' diario.html
+          grep -q 'Post-its' diario.html
+
+          # Aparência 3D/pastel aprovada.
+          test -s app-3d.css
+          test -s heart-polish.css
