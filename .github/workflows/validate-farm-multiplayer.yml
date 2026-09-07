@@ -1,0 +1,45 @@
+name: Validar Fazendinha Multiplayer
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'jogos/fazendinha-multiplayer.html'
+      - 'jogos/fazendinha-multiplayer.css'
+      - 'jogos/fazendinha-multiplayer.js'
+      - 'games-menu-farm.js'
+      - 'extras-loader.js'
+      - 'acesso.html'
+      - 'acesso-mobile.html'
+      - '.github/workflows/validate-farm-multiplayer.yml'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Verificar sintaxe
+        run: |
+          node --check jogos/fazendinha-multiplayer.js
+          node --check games-menu-farm.js
+          node --check extras-loader.js
+      - name: Verificar integração
+        run: |
+          test -s jogos/fazendinha-multiplayer.html
+          test -s jogos/fazendinha-multiplayer.css
+          test -s jogos/fazendinha-multiplayer.js
+          test -s games-menu-farm.js
+          grep -q 'Fazendinha da Isa' jogos/fazendinha-multiplayer.html
+          grep -q 'farm_game_bootstrap' jogos/fazendinha-multiplayer.js
+          grep -q 'farm_game_snapshot' jogos/fazendinha-multiplayer.js
+          grep -q 'farm_game_action' jogos/fazendinha-multiplayer.js
+          grep -q 'RTCPeerConnection' jogos/fazendinha-multiplayer.js
+          grep -q 'getUserMedia' jogos/fazendinha-multiplayer.js
+          grep -q 'games-menu-farm.js?v=1' acesso.html
+          grep -q 'games-menu-farm.js?v=1' acesso-mobile.html
+          grep -q "loadOnce('farm-game','./games-menu-farm.js?v=1')" extras-loader.js
+          grep -q 'data-game=.farm' games-menu-farm.js
