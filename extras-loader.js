@@ -29,7 +29,7 @@ async function loadCoreExtras(){
   if(!dedicatedMobile)jobs.push(loadOnce('calls','./call-manager.js?v=4-stable'))
   if(isIsa()){
     jobs.push(loadOnce('isa-tools','./isa-tools.js?v=9-study-fix'))
-    jobs.push(loadOnce('games','./games-menu.js?v=1-bricks'))
+    jobs.push(loadOnce('games','./games-menu.js?v=2-three-games'))
   }
   const result=await Promise.allSettled(jobs)
   result.forEach((r,i)=>{if(r.status==='rejected')console.warn('Módulo extra não carregou',i,r.reason)})
