@@ -3,6 +3,7 @@ import { capturePhoto, recordAudio } from './media-capture.js?v=3'
 
 const $=id=>document.getElementById(id)
 let me=null,audioHydrateBusy=false,audioHydrateTimer=null
+const dedicatedMobile=new URLSearchParams(location.search).get('mobile')==='1'
 
 function sessionToken(){
   try{
@@ -59,6 +60,14 @@ async function sendNativePhoto(){
   try{const file=await capturePhoto();if(file)await uploadMedia(file,'photo',{maxMb:10})}catch(e){toast(e.message||'Não foi possível tirar a foto.')}
 }
 function chooseImage(){const i=$('photoInput');if(!i)return;i.removeAttribute('capture');i.setAttribute('accept','image/jpeg,image/png,image/webp,image/gif');i.click()}
+function bindMobileCameraButton(){
+  if(!dedicatedMobile)return
+  const photo=$('photoBtn');if(!photo)return
+  photo.style.removeProperty('display');photo.title='Tirar foto'
+  if(photo.dataset.mobileCameraBound==='1')return
+  photo.dataset.mobileCameraBound='1'
+  photo.addEventListener('click',async e=>{e.preventDefault();e.stopImmediatePropagation();await sendNativePhoto()},true)
+}
 async function startNativeRecording(){
   const id=activeConv();if(!id)return
   if(await conversationHasFriend(id))return toast('Áudio fica disponível somente nas conversas da família.')
@@ -83,9 +92,13 @@ function scheduleHydrate(delay=220){clearTimeout(audioHydrateTimer);audioHydrate
 function ensureMenu(){
   if(!isChatOpen()||isSupervision())return
   const plus=$('groupPlusBtn'),menu=$('groupPlusMenu'),photo=$('photoBtn');if(!plus||!menu)return
-  plus.classList.remove('hidden');if(photo)photo.style.display='none';menu.querySelector('[data-group-action="photo"]')?.classList.add('hidden')
+  plus.classList.remove('hidden')
+  if(dedicatedMobile)bindMobileCameraButton();else if(photo)photo.style.display='none'
+  menu.querySelector('[data-group-action="photo"]')?.classList.add('hidden')
   menu.querySelectorAll('[data-family-media]').forEach(n=>n.remove())
-  const items=[['camera','📷 Tirar foto',sendNativePhoto],['image','🖼️ Enviar imagem',chooseImage],['record','🎙️ Gravar áudio',startNativeRecording]]
+  const items=dedicatedMobile
+    ?[['image','🖼️ Enviar imagem',chooseImage],['record','🎙️ Gravar áudio',startNativeRecording]]
+    :[['camera','📷 Tirar foto',sendNativePhoto],['image','🖼️ Enviar imagem',chooseImage],['record','🎙️ Gravar áudio',startNativeRecording]]
   for(const [key,label,fn] of items){const b=document.createElement('button');b.type='button';b.dataset.familyMedia=key;b.textContent=label;b.onclick=async()=>{menu.classList.add('hidden');await fn()};menu.appendChild(b)}
   scheduleHydrate(120)
 }
