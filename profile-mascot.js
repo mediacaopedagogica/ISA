@@ -1,3 +1,4 @@
+import './external-label-fix.js?v=1'
 import { CONFIG } from './config.js'
 const $=id=>document.getElementById(id)
 const mascots=['🐼','🐰','🦊','🐱','🐶','🐻','🐨','🦄','🐸','🐯','🦋','🌷','⭐','💜']
