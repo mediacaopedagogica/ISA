@@ -26,7 +26,6 @@ function ensureMenu(){
     b.onclick=()=>{menu.classList.add('hidden');location.href='./diario.html'}
   }
 }
-const obs=new MutationObserver(()=>ensureMenu())
-obs.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class']})
-window.addEventListener('load',()=>setTimeout(ensureMenu,500))
-setInterval(ensureMenu,1800)
+const list=$('chatList');if(list&&!list.dataset.isaToolsBound){list.dataset.isaToolsBound='1';list.addEventListener('click',e=>{if(e.target.closest('.chat-item[data-conv]'))setTimeout(ensureMenu,100)})}
+document.querySelector('[data-tab="chats"]')?.addEventListener('click',()=>setTimeout(ensureMenu,80))
+ensureMenu();setTimeout(ensureMenu,250)
