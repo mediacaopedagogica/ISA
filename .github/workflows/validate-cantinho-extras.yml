@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
     paths:
+      - 'extras-loader.js'
+      - 'group-controls.js'
+      - 'profile-mascot.js'
       - 'diario.js'
       - 'isa-tools.js'
       - 'diary-parent.js'
@@ -28,6 +31,9 @@ jobs:
           node-version: '20'
       - name: Verificar sintaxe JavaScript
         run: |
+          node --check extras-loader.js
+          node --check group-controls.js
+          node --check profile-mascot.js
           node --check diario.js
           node --check isa-tools.js
           node --check diary-parent.js
