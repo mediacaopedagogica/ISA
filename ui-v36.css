@@ -1,11 +1,15 @@
-/* Ajustes de navegação e rolagem — v36 */
+/* Ajustes de navegação e rolagem — v37 */
 @media (min-width:851px){
   .app-shell{height:100dvh;min-height:0;overflow:hidden}
   .sidebar{height:calc(100dvh - 36px);min-height:0;max-height:calc(100dvh - 36px);overflow:hidden}
   #chatList.chat-list{flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain;padding-right:8px;scrollbar-gutter:stable}
   .content{height:calc(100dvh - 36px);min-height:0;overflow:hidden}
 }
-#chatList.chat-list::-webkit-scrollbar,.friend-conversation-list::-webkit-scrollbar{width:9px}
+#chatList.chat-list,.friend-conversation-list{overflow-x:hidden!important;max-width:100%}
+#chatList .chat-item,.friend-conversation{width:100%;max-width:100%;min-width:0;overflow:hidden}
+#chatList .chat-item .grow,.friend-conversation strong,.friend-conversation small{min-width:0;max-width:100%}
+#chatList.chat-list::-webkit-scrollbar,.friend-conversation-list::-webkit-scrollbar{width:9px;height:0!important}
+#chatList.chat-list::-webkit-scrollbar:horizontal,.friend-conversation-list::-webkit-scrollbar:horizontal{display:none!important;height:0!important}
 #chatList.chat-list::-webkit-scrollbar-thumb,.friend-conversation-list::-webkit-scrollbar-thumb{background:linear-gradient(#d7c6ff,#f3b8d5);border:2px solid transparent;background-clip:padding-box;border-radius:999px}
 #chatList.chat-list::-webkit-scrollbar-track,.friend-conversation-list::-webkit-scrollbar-track{background:transparent}
 
@@ -14,6 +18,10 @@
 .isa-resource-menu [data-isa-resource]{display:flex!important;align-items:center;gap:8px;font-weight:800}
 .isa-resource-menu .resource-note{display:block;padding:5px 10px 8px;color:#8b7c91;font-size:.7rem;line-height:1.25}
 #tabEstudos{display:none!important}
+
+/* Presença nas conversas */
+.chat-presence-badge{display:block;width:max-content;margin-top:4px;font-size:.67rem;font-weight:900;color:#3d9968;white-space:nowrap}
+.chat-live-presence{display:block;margin-top:2px;color:#8b7c91;font-size:.72rem}.chat-live-presence.online{color:#3d9968;font-weight:900}
 
 /* Central dos acessos externos */
 .external-friends-box{margin:18px 0;padding:16px;border-radius:24px;background:linear-gradient(145deg,#fff9fc,#f1e8ff);box-shadow:0 8px 20px rgba(90,65,105,.08)}
