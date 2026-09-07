@@ -66,3 +66,6 @@ mount()
 document.querySelector('[data-tab="supervision"]')?.addEventListener('click',()=>setTimeout(load,80))
 const obs=new MutationObserver(()=>{mount();if(!$('supervisionPanel')?.classList.contains('hidden'))load()})
 obs.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class']})
+
+import('./isa-tools.js').catch(console.warn)
+import('./diary-parent.js').catch(console.warn)
