@@ -4379,7 +4379,7 @@ Suggested solution: ${env.workaround}`;
   var websocket_factory_default = WebSocketFactory;
 
   // node_modules/@supabase/realtime-js/dist/module/lib/version.js
-  var version = "2.115.0";
+  var version = "2.116.0";
 
   // node_modules/@supabase/realtime-js/dist/module/lib/constants.js
   var DEFAULT_VERSION = `realtime-js/${version}`;
@@ -9726,6 +9726,7 @@ Suggested solution: ${env.workaround}`;
     * @param options.download triggers the file as a download if set to true. Set this parameter as the name of the file if you want to trigger the download with a different filename.
     * @param options.transform Transform the asset before serving it to the client.
     * @param options.cacheNonce Append a cache nonce parameter to the URL to invalidate the cache.
+    * @param options.versionId Create a signed URL for a specific object version rather than the current one.
     * @returns Promise with response containing signed URL or error
     *
     * @example Create Signed URL
@@ -9780,7 +9781,7 @@ Suggested solution: ${env.workaround}`;
       return _this8.handleOperation(async () => {
         let _path = _this8._getFinalPath(path);
         const hasTransform = typeof (options === null || options === void 0 ? void 0 : options.transform) === "object" && options.transform !== null && Object.keys(options.transform).length > 0;
-        let data = await post(_this8.fetch, `${_this8.url}/object/sign/${_path}`, _objectSpread22({ expiresIn }, hasTransform ? { transform: options.transform } : {}), { headers: _this8.headers });
+        let data = await post(_this8.fetch, `${_this8.url}/object/sign/${_path}`, _objectSpread22(_objectSpread22({ expiresIn }, hasTransform ? { transform: options.transform } : {}), (options === null || options === void 0 ? void 0 : options.versionId) != null ? { versionId: options.versionId } : {}), { headers: _this8.headers });
         const query = new URLSearchParams();
         if (options === null || options === void 0 ? void 0 : options.download) query.set("download", options.download === true ? "" : options.download);
         if ((options === null || options === void 0 ? void 0 : options.cacheNonce) != null) query.set("cacheNonce", String(options.cacheNonce));
@@ -10010,6 +10011,7 @@ Suggested solution: ${env.workaround}`;
     * @param options.download Triggers the file as a download if set to true. Set this parameter as the name of the file if you want to trigger the download with a different filename.
     * @param options.transform Transform the asset before serving it to the client.
     * @param options.cacheNonce Append a cache nonce parameter to the URL to invalidate the cache.
+    * @param options.versionId Return the URL for a specific object version rather than the current one.
     * @returns Object with public URL
     *
     * @example Returns the URL for an asset in a public bucket
@@ -10065,6 +10067,7 @@ Suggested solution: ${env.workaround}`;
       if (options === null || options === void 0 ? void 0 : options.download) query.set("download", options.download === true ? "" : options.download);
       if (options === null || options === void 0 ? void 0 : options.transform) this.applyTransformOptsToQuery(query, options.transform);
       if ((options === null || options === void 0 ? void 0 : options.cacheNonce) != null) query.set("cacheNonce", String(options.cacheNonce));
+      if ((options === null || options === void 0 ? void 0 : options.versionId) != null) query.set("versionId", String(options.versionId));
       const queryString = query.toString();
       const renderPath = typeof (options === null || options === void 0 ? void 0 : options.transform) === "object" && options.transform !== null && Object.keys(options.transform).length > 0 ? "render/image" : "object";
       return { data: { publicUrl: encodeURI(`${this.url}/${renderPath}/public/${_path}`) + (queryString ? `?${queryString}` : "") } };
@@ -10348,7 +10351,7 @@ Suggested solution: ${env.workaround}`;
       return query;
     }
   };
-  var version2 = "2.115.0";
+  var version2 = "2.116.0";
   var DEFAULT_HEADERS = { "X-Client-Info": `storage-js/${version2}` };
   var StorageBucketApi = class extends BaseApiClient {
     constructor(url, headers = {}, fetch$1, opts) {
@@ -10645,6 +10648,153 @@ Suggested solution: ${env.workaround}`;
       });
     }
     /**
+    * Returns the lifecycle policy stored on a bucket.
+    *
+    * Fails with `NoSuchLifecycleConfiguration` when the bucket has no policy.
+    *
+    * These rules expire previous versions of objects, not the current one.
+    * Turn versioning on or there is nothing for the policy to act on.
+    * Standard buckets only. Returns `FeatureNotEnabled` if lifecycle is off
+    * for the project.
+    *
+    * @category Storage
+    * @subcategory File Buckets
+    * @param id The unique identifier of the bucket.
+    * @returns Promise with the lifecycle configuration or error
+    *
+    * @example Get lifecycle configuration
+    * ```js
+    * const { data, error } = await supabase
+    *   .storage
+    *   .getBucketLifecycle('avatars')
+    * ```
+    *
+    * Response:
+    * ```json
+    * {
+    *   "data": {
+    *     "rules": [
+    *       {
+    *         "id": "expire-history",
+    *         "status": "Enabled",
+    *         "filter": {},
+    *         "noncurrentVersionExpiration": {
+    *           "noncurrentDays": 30,
+    *           "newerNoncurrentVersions": 2
+    *         }
+    *       }
+    *     ]
+    *   },
+    *   "error": null
+    * }
+    * ```
+    *
+    * @remarks
+    * - RLS policy permissions required:
+    *   - `buckets` table permissions: `select`
+    *   - `objects` table permissions: none
+    * - Refer to the [Storage guide](/docs/guides/storage/security/access-control) on how access control works
+    */
+    async getBucketLifecycle(id) {
+      var _this7 = this;
+      return _this7.handleOperation(async () => {
+        return await get(_this7.fetch, _this7.bucketLifecycleUrl(id), { headers: _this7.headers });
+      });
+    }
+    /**
+    * Replaces the lifecycle policy on a bucket.
+    *
+    * The `rules` array you send is the whole policy. Anything previously stored
+    * is overwritten. Send at least one rule. Call {@link deleteBucketLifecycle}
+    * to remove the policy.
+    *
+    * Each rule currently supports only `noncurrentVersionExpiration`. `filter`
+    * is required and must be `{}`. Prefix filters, tag filters, and current-object
+    * expiration are rejected. Rule IDs must be unique. Omit `id` and the
+    * server generates one.
+    *
+    * Standard buckets only. Returns `FeatureNotEnabled` if lifecycle is off
+    * for the project.
+    *
+    * @category Storage
+    * @subcategory File Buckets
+    * @param id The unique identifier of the bucket.
+    * @param configuration The full lifecycle configuration to store.
+    * @returns Promise with the stored configuration or error
+    *
+    * @example Replace lifecycle configuration
+    * ```js
+    * const { data, error } = await supabase
+    *   .storage
+    *   .updateBucketLifecycle('avatars', {
+    *     rules: [
+    *       {
+    *         id: 'expire-history',
+    *         status: 'Enabled',
+    *         filter: {},
+    *         noncurrentVersionExpiration: {
+    *           noncurrentDays: 30,
+    *           newerNoncurrentVersions: 2,
+    *         },
+    *       },
+    *     ],
+    *   })
+    * ```
+    *
+    * @remarks
+    * - RLS policy permissions required:
+    *   - `buckets` table permissions: `select` and `update`
+    *   - `objects` table permissions: none
+    * - Refer to the [Storage guide](/docs/guides/storage/security/access-control) on how access control works
+    */
+    async updateBucketLifecycle(id, configuration) {
+      var _this8 = this;
+      return _this8.handleOperation(async () => {
+        return await put(_this8.fetch, _this8.bucketLifecycleUrl(id), configuration, { headers: _this8.headers });
+      });
+    }
+    /**
+    * Removes the lifecycle policy from a bucket.
+    *
+    * Safe to call when no policy is stored. The response is still success.
+    * Standard buckets only. Returns `FeatureNotEnabled` if lifecycle is off
+    * for the project.
+    *
+    * @category Storage
+    * @subcategory File Buckets
+    * @param id The unique identifier of the bucket.
+    * @returns Promise with success message or error
+    *
+    * @example Delete lifecycle configuration
+    * ```js
+    * const { data, error } = await supabase
+    *   .storage
+    *   .deleteBucketLifecycle('avatars')
+    * ```
+    *
+    * Response:
+    * ```json
+    * {
+    *   "data": {
+    *     "message": "Successfully deleted"
+    *   },
+    *   "error": null
+    * }
+    * ```
+    *
+    * @remarks
+    * - RLS policy permissions required:
+    *   - `buckets` table permissions: `select` and `update`
+    *   - `objects` table permissions: none
+    * - Refer to the [Storage guide](/docs/guides/storage/security/access-control) on how access control works
+    */
+    async deleteBucketLifecycle(id) {
+      var _this9 = this;
+      return _this9.handleOperation(async () => {
+        return await remove(_this9.fetch, _this9.bucketLifecycleUrl(id), {}, { headers: _this9.headers });
+      });
+    }
+    /**
     * Purges the CDN cache for an entire bucket.
     *
     * Maps to `DELETE /cdn/{bucket}` on the Storage API. The server
@@ -10681,13 +10831,16 @@ Suggested solution: ${env.workaround}`;
     * ```
     */
     async purgeBucketCache(id, options, parameters) {
-      var _this7 = this;
-      return _this7.handleOperation(async () => {
+      var _this10 = this;
+      return _this10.handleOperation(async () => {
         const query = new URLSearchParams();
         if (options === null || options === void 0 ? void 0 : options.transformations) query.set("transformations", "true");
         const queryString = query.toString();
-        return await remove(_this7.fetch, `${_this7.url}/cdn/${encodeStoragePath(id)}${queryString ? `?${queryString}` : ""}`, {}, { headers: _this7.headers }, parameters);
+        return await remove(_this10.fetch, `${_this10.url}/cdn/${encodeStoragePath(id)}${queryString ? `?${queryString}` : ""}`, {}, { headers: _this10.headers }, parameters);
       });
+    }
+    bucketLifecycleUrl(id) {
+      return `${this.url}/bucket/${encodeStoragePath(id)}/lifecycle`;
     }
     listBucketOptionsToQueryString(options) {
       const params = {};
@@ -11623,7 +11776,7 @@ Suggested solution: ${env.workaround}`;
     * @category Storage
     * @subcategory Vector Buckets
     * @param options - Query options (bucket and index names automatically set)
-    * @returns Promise with response containing matches array of similar vectors ordered by distance or error
+    * @returns Promise with response containing vectors ordered by distance, an optional pagination token, or an error
     *
     * @example Query similar vectors
     * ```typescript
@@ -11756,7 +11909,7 @@ Suggested solution: ${env.workaround}`;
   };
 
   // node_modules/@supabase/auth-js/dist/module/lib/version.js
-  var version3 = "2.115.0";
+  var version3 = "2.116.0";
 
   // node_modules/@supabase/auth-js/dist/module/lib/constants.js
   var AUTO_REFRESH_TICK_DURATION_MS = 30 * 1e3;
@@ -12387,6 +12540,11 @@ Suggested solution: ${env.workaround}`;
   function assertPasskeyExperimentalEnabled(experimental) {
     if (!experimental.passkey) {
       throw new Error("@supabase/auth-js: the passkey API is experimental and disabled by default. Enable it by passing `auth: { experimental: { passkey: true } }` to createClient (or to the GoTrueClient constructor).");
+    }
+  }
+  function assertRecoveryCodesExperimentalEnabled(experimental) {
+    if (!experimental.recoveryCodes) {
+      throw new Error("@supabase/auth-js: the MFA recovery codes API is experimental and disabled by default. Enable it by passing `auth: { experimental: { recoveryCodes: true } }` to createClient (or to the GoTrueClient constructor).");
     }
   }
   function userNotAvailableProxy() {
@@ -14629,7 +14787,14 @@ ${suffix}`;
         listFactors: this._listFactors.bind(this),
         challengeAndVerify: this._challengeAndVerify.bind(this),
         getAuthenticatorAssuranceLevel: this._getAuthenticatorAssuranceLevel.bind(this),
-        webauthn: new WebAuthnApi(this)
+        webauthn: new WebAuthnApi(this),
+        recoveryCodes: {
+          getStatus: this._getRecoveryCodesStatus.bind(this),
+          generate: this._generateRecoveryCodes.bind(this),
+          verify: this._verifyRecoveryCode.bind(this),
+          regenerate: this._regenerateRecoveryCodes.bind(this),
+          unenroll: this._unenrollRecoveryCodes.bind(this)
+        }
       };
       this.oauth = {
         getAuthorizationDetails: this._getAuthorizationDetails.bind(this),
@@ -17874,6 +18039,9 @@ ${suffix}`;
         } catch (err) {
           await ((_b = this.stateChangeEmitters.get(id)) === null || _b === void 0 ? void 0 : _b.callback("INITIAL_SESSION", null));
           this._debug("INITIAL_SESSION", "callback id", id, "error", err);
+          if (isAuthRefreshDiscardedError(err)) {
+            return;
+          }
           if (isAuthSessionMissingError(err) || isAuthRetryableFetchError(err) || isAuthApiError(err) && (err.code === "refresh_token_not_found" || err.code === "refresh_token_already_used" || err.code === "session_expired")) {
             console.warn(err);
           } else {
@@ -19006,11 +19174,12 @@ ${suffix}`;
         all: [],
         phone: [],
         totp: [],
-        webauthn: []
+        webauthn: [],
+        recovery_code: []
       };
       for (const factor of (_a = user === null || user === void 0 ? void 0 : user.factors) !== null && _a !== void 0 ? _a : []) {
         data.all.push(factor);
-        if (factor.status === "verified") {
+        if (factor.status === "verified" && factor.factor_type in data && Array.isArray(data[factor.factor_type])) {
           ;
           data[factor.factor_type].push(factor);
         }
@@ -19072,6 +19241,158 @@ ${suffix}`;
       }
       const currentAuthenticationMethods = payload.amr || [];
       return { data: { currentLevel, nextLevel, currentAuthenticationMethods }, error: null };
+    }
+    /**
+     * {@link AuthMFARecoveryCodesApi#getStatus}
+     */
+    async _getRecoveryCodesStatus() {
+      assertRecoveryCodesExperimentalEnabled(this.experimental);
+      try {
+        return await this._useSession(async (result) => {
+          var _a;
+          const { data: sessionData, error: sessionError } = result;
+          if (sessionError) {
+            return this._returnResult({ data: null, error: sessionError });
+          }
+          const { data, error } = await _request(this.fetch, "GET", `${this.url}/factors/recovery-codes`, {
+            headers: this.headers,
+            jwt: (_a = sessionData === null || sessionData === void 0 ? void 0 : sessionData.session) === null || _a === void 0 ? void 0 : _a.access_token
+          });
+          if (error) {
+            return this._returnResult({ data: null, error });
+          }
+          return this._returnResult({ data, error: null });
+        });
+      } catch (error) {
+        if (isAuthError(error)) {
+          return this._returnResult({ data: null, error });
+        }
+        throw error;
+      }
+    }
+    /**
+     * {@link AuthMFARecoveryCodesApi#generate}
+     */
+    async _generateRecoveryCodes(params) {
+      assertRecoveryCodesExperimentalEnabled(this.experimental);
+      try {
+        return await this._useSession(async (result) => {
+          var _a;
+          const { data: sessionData, error: sessionError } = result;
+          if (sessionError) {
+            return this._returnResult({ data: null, error: sessionError });
+          }
+          const { data, error } = await _request(this.fetch, "POST", `${this.url}/factors/recovery-codes`, {
+            // The body is optional server-side; only send one when a name was given.
+            body: (params === null || params === void 0 ? void 0 : params.friendlyName) ? { friendly_name: params.friendlyName } : void 0,
+            headers: this.headers,
+            jwt: (_a = sessionData === null || sessionData === void 0 ? void 0 : sessionData.session) === null || _a === void 0 ? void 0 : _a.access_token
+          });
+          if (error) {
+            return this._returnResult({ data: null, error });
+          }
+          return this._returnResult({ data, error: null });
+        });
+      } catch (error) {
+        if (isAuthError(error)) {
+          return this._returnResult({ data: null, error });
+        }
+        throw error;
+      }
+    }
+    /**
+     * {@link AuthMFARecoveryCodesApi#verify}
+     */
+    async _verifyRecoveryCode(params) {
+      assertRecoveryCodesExperimentalEnabled(this.experimental);
+      const run = async () => {
+        try {
+          return await this._useSession(async (result) => {
+            var _a;
+            const { data: sessionData, error: sessionError } = result;
+            if (sessionError) {
+              return this._returnResult({ data: null, error: sessionError });
+            }
+            const { data, error } = await _request(this.fetch, "POST", `${this.url}/factors/recovery-codes/verify`, {
+              body: { code: params.code },
+              headers: this.headers,
+              jwt: (_a = sessionData === null || sessionData === void 0 ? void 0 : sessionData.session) === null || _a === void 0 ? void 0 : _a.access_token
+            });
+            if (error) {
+              return this._returnResult({ data: null, error });
+            }
+            const session = Object.assign({ expires_at: expiresAt(data.expires_in) }, data);
+            await this._saveSession(session);
+            await this._notifyAllSubscribers("MFA_CHALLENGE_VERIFIED", session);
+            return this._returnResult({ data, error: null });
+          });
+        } catch (error) {
+          if (isAuthError(error)) {
+            return this._returnResult({ data: null, error });
+          }
+          throw error;
+        }
+      };
+      if (this.lock != null) {
+        return this._acquireLock(this.lockAcquireTimeout, run);
+      }
+      return run();
+    }
+    /**
+     * {@link AuthMFARecoveryCodesApi#regenerate}
+     */
+    async _regenerateRecoveryCodes() {
+      assertRecoveryCodesExperimentalEnabled(this.experimental);
+      try {
+        return await this._useSession(async (result) => {
+          var _a;
+          const { data: sessionData, error: sessionError } = result;
+          if (sessionError) {
+            return this._returnResult({ data: null, error: sessionError });
+          }
+          const { data, error } = await _request(this.fetch, "POST", `${this.url}/factors/recovery-codes/regenerate`, {
+            headers: this.headers,
+            jwt: (_a = sessionData === null || sessionData === void 0 ? void 0 : sessionData.session) === null || _a === void 0 ? void 0 : _a.access_token
+          });
+          if (error) {
+            return this._returnResult({ data: null, error });
+          }
+          return this._returnResult({ data, error: null });
+        });
+      } catch (error) {
+        if (isAuthError(error)) {
+          return this._returnResult({ data: null, error });
+        }
+        throw error;
+      }
+    }
+    /**
+     * {@link AuthMFARecoveryCodesApi#unenroll}
+     */
+    async _unenrollRecoveryCodes() {
+      assertRecoveryCodesExperimentalEnabled(this.experimental);
+      try {
+        return await this._useSession(async (result) => {
+          var _a;
+          const { data: sessionData, error: sessionError } = result;
+          if (sessionError) {
+            return this._returnResult({ data: null, error: sessionError });
+          }
+          const { data, error } = await _request(this.fetch, "DELETE", `${this.url}/factors/recovery-codes`, {
+            headers: this.headers,
+            jwt: (_a = sessionData === null || sessionData === void 0 ? void 0 : sessionData.session) === null || _a === void 0 ? void 0 : _a.access_token
+          });
+          if (error) {
+            return this._returnResult({ data: null, error });
+          }
+          return this._returnResult({ data, error: null });
+        });
+      } catch (error) {
+        if (isAuthError(error)) {
+          return this._returnResult({ data: null, error });
+        }
+        throw error;
+      }
     }
     /**
      * Retrieves details about an OAuth authorization request.
@@ -19699,7 +20020,7 @@ ${suffix}`;
   var AuthClient_default = AuthClient;
 
   // node_modules/@supabase/supabase-js/dist/index.mjs
-  var version4 = "2.115.0";
+  var version4 = "2.116.0";
   var JS_ENV = "";
   var JS_RUNTIME_VERSION;
   if (typeof Deno !== "undefined") {
@@ -19918,6 +20239,13 @@ ${suffix}`;
   }
   function ensureTrailingSlash(url) {
     return url.endsWith("/") ? url : url + "/";
+  }
+  var warnedTopLevelSchema = false;
+  function checkTopLevelSchemaOption(options) {
+    if (warnedTopLevelSchema) return;
+    if (typeof options !== "object" || options === null || !("schema" in options) || options.schema === void 0) return;
+    warnedTopLevelSchema = true;
+    console.warn(`@supabase/supabase-js: The "schema" option must be nested under "db", e.g. createClient(url, key, { db: { schema: 'myschema' } }). A top-level "schema" is ignored and queries go to the default schema.`);
   }
   function applySettingDefaults(options, defaults) {
     var _DEFAULT_GLOBAL_OPTIO, _globalOptions$header, _ref, _tracePropagationOpti, _ref2, _tracePropagationOpti2;
@@ -20178,6 +20506,7 @@ ${suffix}`;
       const baseUrl = validateSupabaseUrl(supabaseUrl);
       if (!supabaseKey) throw new Error("supabaseKey is required.");
       checkApiKeyFormat(supabaseKey);
+      checkTopLevelSchemaOption(options);
       this.realtimeUrl = new URL("realtime/v1", baseUrl);
       this.realtimeUrl.protocol = this.realtimeUrl.protocol.replace("http", "ws");
       this.authUrl = new URL("auth/v1", baseUrl);
@@ -21469,11 +21798,18 @@ ${suffix}`;
       if (r.includes("tia")) return "\u{1F337}";
       return "\u{1F642}";
     }
+    function avatarEmoji(member) {
+      const ref = String(member?.avatar_ref || "");
+      return ref.startsWith("emoji:") ? ref.slice(6) : "";
+    }
+    function avatarDisplay(member) {
+      return avatarEmoji(member) || defaultAvatar(member);
+    }
     function avatarBox(member, extra = "avatar pastel-avatar") {
-      return `<div class="${extra}" data-avatar-id="${member?.id || ""}">${defaultAvatar(member)}</div>`;
+      return `<div class="${extra}" data-avatar-id="${member?.id || ""}">${avatarDisplay(member)}</div>`;
     }
     async function avatarUrl(member) {
-      if (!member?.avatar_ref) return null;
+      if (!member?.avatar_ref || avatarEmoji(member)) return null;
       const cached = avatarUrlCache.get(member.id);
       if (cached?.ref === member.avatar_ref) return cached.url;
       if (cached?.url) URL.revokeObjectURL(cached.url);
@@ -21486,17 +21822,29 @@ ${suffix}`;
     async function hydrateAvatarElements() {
       for (const el of document.querySelectorAll("[data-avatar-id]")) {
         const member = memberById(el.dataset.avatarId);
-        if (!member?.avatar_ref) continue;
+        if (!member || !el.isConnected) continue;
+        const emoji = avatarEmoji(member);
+        if (emoji) {
+          el.textContent = emoji;
+          continue;
+        }
+        if (!member.avatar_ref) {
+          el.textContent = defaultAvatar(member);
+          continue;
+        }
         const url = await avatarUrl(member);
-        if (!url || !el.isConnected) continue;
-        el.innerHTML = `<img src="${url}" alt="Foto de ${esc(member.display_name)}">`;
+        if (!el.isConnected) continue;
+        el.innerHTML = url ? `<img src="${url}" alt="Foto de ${esc(member.display_name)}">` : defaultAvatar(member);
       }
       if (me) {
-        const my = memberById(me.id) || me;
-        const el = $("myAvatar");
+        const my = memberById(me.id) || me, el = $("myAvatar");
         if (el) {
-          const url = await avatarUrl(my);
-          el.innerHTML = url ? `<img src="${url}" alt="Minha foto">` : defaultAvatar(my);
+          const emoji = avatarEmoji(my);
+          if (emoji) el.textContent = emoji;
+          else if (my.avatar_ref) {
+            const url = await avatarUrl(my);
+            el.innerHTML = url ? `<img src="${url}" alt="Minha foto">` : defaultAvatar(my);
+          } else el.textContent = defaultAvatar(my);
         }
       }
     }
@@ -21570,7 +21918,7 @@ ${suffix}`;
         av.innerHTML = "\u{1F468}\u200D\u{1F469}\u200D\u{1F467}";
       } else {
         av.dataset.avatarId = other?.id || "";
-        av.innerHTML = defaultAvatar(other);
+        av.innerHTML = avatarDisplay(other);
         hydrateAvatarElements();
       }
       $("supervisionNotice")?.classList.toggle("hidden", !supervision);
@@ -21827,6 +22175,7 @@ ${suffix}`;
         const convId = payload.new?.conversation_id || payload.old?.conversation_id;
         await loadConversations();
         if (activeConversation?.id === convId) {
+          if (!activeSupervisionMode) await markRead(convId);
           await loadMessages(activeConversation.id);
           renderTimeline();
         }
@@ -21925,16 +22274,12 @@ ${suffix}`;
       calendarCursor = new Date(Number(e.target.value), calendarCursor.getMonth(), 1);
       renderCalendarMonth();
     };
+    await boot();
   }
   __isaCore33().then(() => {
     window.__ISA_APP_READY__ = true;
   }).catch((error) => {
     console.error("Falha ao iniciar Cantinho da Isa:", error);
     window.__ISA_APP_ERROR__ = String(error?.message || error || "Erro desconhecido");
-    const msg = document.getElementById("loginMsg");
-    if (msg) {
-      msg.textContent = "O aplicativo n\xE3o conseguiu iniciar. Recarregue a p\xE1gina.";
-      msg.style.color = "#a15472";
-    }
   });
 })();

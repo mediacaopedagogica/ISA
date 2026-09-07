@@ -15,11 +15,16 @@ function dayLabelLocal(ts){
 function defaultAvatar(member){
   if(!member)return '💌';if(member.role==='child')return '🌈';const r=(member.relationship_label||'').toLowerCase();if(r.includes('avó')||r.includes('vó'))return '👵';if(r.includes('pai'))return '👨';if(r.includes('mãe')||r.includes('mae'))return '👩';if(r.includes('tia'))return '🌷';return '🙂'
 }
+function avatarEmoji(member){
+  const ref=String(member?.avatar_ref||'');
+  return ref.startsWith('emoji:')?ref.slice(6):''
+}
+function avatarDisplay(member){return avatarEmoji(member)||defaultAvatar(member)}
 function avatarBox(member,extra='avatar pastel-avatar'){
-  return `<div class="${extra}" data-avatar-id="${member?.id||''}">${defaultAvatar(member)}</div>`
+  return `<div class="${extra}" data-avatar-id="${member?.id||''}">${avatarDisplay(member)}</div>`
 }
 async function avatarUrl(member){
-  if(!member?.avatar_ref)return null
+  if(!member?.avatar_ref||avatarEmoji(member))return null
   const cached=avatarUrlCache.get(member.id);if(cached?.ref===member.avatar_ref)return cached.url
   if(cached?.url)URL.revokeObjectURL(cached.url)
   const {data,error}=await supabase.storage.from('profile-avatars').download(member.avatar_ref);if(error)return null
@@ -27,11 +32,21 @@ async function avatarUrl(member){
 }
 async function hydrateAvatarElements(){
   for(const el of document.querySelectorAll('[data-avatar-id]')){
-    const member=memberById(el.dataset.avatarId);if(!member?.avatar_ref)continue
-    const url=await avatarUrl(member);if(!url||!el.isConnected)continue
-    el.innerHTML=`<img src="${url}" alt="Foto de ${esc(member.display_name)}">`
+    const member=memberById(el.dataset.avatarId);if(!member||!el.isConnected)continue
+    const emoji=avatarEmoji(member)
+    if(emoji){el.textContent=emoji;continue}
+    if(!member.avatar_ref){el.textContent=defaultAvatar(member);continue}
+    const url=await avatarUrl(member);if(!el.isConnected)continue
+    el.innerHTML=url?`<img src="${url}" alt="Foto de ${esc(member.display_name)}">`:defaultAvatar(member)
   }
-  if(me){const my=memberById(me.id)||me;const el=$('myAvatar');if(el){const url=await avatarUrl(my);el.innerHTML=url?`<img src="${url}" alt="Minha foto">`:defaultAvatar(my)}}
+  if(me){
+    const my=memberById(me.id)||me,el=$('myAvatar');if(el){
+      const emoji=avatarEmoji(my)
+      if(emoji)el.textContent=emoji
+      else if(my.avatar_ref){const url=await avatarUrl(my);el.innerHTML=url?`<img src="${url}" alt="Minha foto">`:defaultAvatar(my)}
+      else el.textContent=defaultAvatar(my)
+    }
+  }
 }
 async function uploadMyAvatar(file){
   if(!file||!me)return;if(file.size>5*1024*1024)return toast('Use uma foto de até 5 MB.')
@@ -60,7 +75,7 @@ async function openChat(id,fromSupervision=false){
   document.querySelectorAll('[data-conv]').forEach(x=>x.classList.toggle('active',!activeSupervisionMode&&x.dataset.conv===id));hidePanels();$('emptyState').classList.add('hidden');$('chatPanel').classList.remove('hidden')
   const supervision=activeSupervisionMode&&isParent()&&conversationHasChild(activeConversation),other=activeConversation.type==='direct'?directOther(activeConversation):null
   $('chatTitle').textContent=supervision?supervisedTitle(activeConversation):convTitle(activeConversation);$('chatSubtitle').textContent=supervision?'Supervisão da Isa • somente leitura':convSubtitle(activeConversation)
-  const av=$('chatAvatar');if(supervision){av.removeAttribute('data-avatar-id');av.innerHTML='👀'}else if(activeConversation.type==='group'){av.removeAttribute('data-avatar-id');av.innerHTML='👨‍👩‍👧'}else{av.dataset.avatarId=other?.id||'';av.innerHTML=defaultAvatar(other);hydrateAvatarElements()}
+  const av=$('chatAvatar');if(supervision){av.removeAttribute('data-avatar-id');av.innerHTML='👀'}else if(activeConversation.type==='group'){av.removeAttribute('data-avatar-id');av.innerHTML='👨‍👩‍👧'}else{av.dataset.avatarId=other?.id||'';av.innerHTML=avatarDisplay(other);hydrateAvatarElements()}
   $('supervisionNotice')?.classList.toggle('hidden',!supervision);$('composer')?.classList.toggle('hidden',supervision)
   const isGroup=activeConversation.type==='group';$('groupPlusBtn').classList.toggle('hidden',supervision||!isGroup);$('photoBtn').classList.toggle('hidden',supervision||isGroup||!canSendPhoto(activeConversation));$('messageInput').disabled=supervision
   if(!supervision)await markRead(id);await Promise.all([loadMessages(id),loadPolls(id)]);renderTimeline();subscribeChat(id);await loadConversations()
