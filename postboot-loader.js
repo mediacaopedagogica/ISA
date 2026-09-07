@@ -15,11 +15,11 @@ const paths=dedicatedMobile?[
   './call-manager.js?v=7-mobile-fast',
   './mobile-native.js?v=3-no-blank',
   './notifications-v2.js?v=9-stable',
-  './extras-loader.js?v=16-audio-mime'
+  './extras-loader.js?v=17-audio-file-mime'
 ]:[
   './mobile-responsive-v2.js?v=15-android-touch',
   './notifications-v2.js?v=9-stable',
-  './extras-loader.js?v=14-audio-mime'
+  './extras-loader.js?v=15-audio-file-mime'
 ]
 const results=await Promise.allSettled(paths.map(loadWithRetry))
 window.__ISA_EXTRAS_READY__=true
