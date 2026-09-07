@@ -4,7 +4,11 @@ on:
   push:
     branches: [main]
     paths:
-      - 'study-entry-v36.js'
+      - 'study*.js'
+      - '!study-bundle-v36.js'
+      - 'retention-notice.js'
+      - 'periodic-data.js'
+      - 'config.js'
       - '.github/workflows/build-study-v36.yml'
   workflow_dispatch:
 
