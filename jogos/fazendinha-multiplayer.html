@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#8fc76b">
+  <title>Fazendinha da Isa • 2 jogadores</title>
+  <link rel="stylesheet" href="./fazendinha-multiplayer.css?v=1">
+</head>
+<body>
+  <main class="farm-app">
+    <header class="farm-hud">
+      <div class="farm-brand"><span>🌾</span><div><strong>Fazendinha da Isa</strong><small>2 jogadores • mesma fazenda ao vivo</small></div></div>
+      <div class="farm-scoreboard">
+        <div class="score isa"><b>💗 <span id="isaName">Isa</span></b><strong id="isaScore">0</strong><small>pontos</small></div>
+        <div class="score shared"><b>🌾 Fazenda</b><strong id="sharedScore">0</strong><small id="farmLevel">nível 1</small></div>
+        <div class="score primo"><b>💙 <span id="primoName">Primo</span></b><strong id="primoScore">0</strong><small>pontos</small></div>
+      </div>
+      <div class="farm-actions-top">
+        <button id="voiceBtn" class="round-btn" type="button" title="Microfone">🎤</button>
+        <button id="renameBtn" class="round-btn hidden" type="button" title="Nome do jogador">✏️</button>
+        <div id="connectionBadge" class="connection-badge">Conectando…</div>
+      </div>
+    </header>
+
+    <section class="farm-stage-wrap">
+      <div id="farmStage" class="farm-stage" aria-label="Fazendinha 3D"></div>
+      <div id="loadingCard" class="loading-card"><div class="spinner"></div><strong>Entrando na fazendinha…</strong><span>Sincronizando Isa e Primo</span></div>
+      <div id="toast" class="toast hidden"></div>
+      <div id="voiceState" class="voice-state hidden">🎤 Microfone ligado</div>
+      <div class="farm-legend">
+        <span><i class="dot isa"></i> Isa</span>
+        <span><i class="dot primo"></i> Primo</span>
+        <span id="onlineState">aguardando os dois…</span>
+      </div>
+    </section>
+
+    <section class="farm-toolbar">
+      <div class="tool-group">
+        <label for="cropSelect">Semente</label>
+        <select id="cropSelect">
+          <option value="cenoura">🥕 Cenoura</option>
+          <option value="milho">🌽 Milho</option>
+          <option value="tomate">🍅 Tomate</option>
+          <option value="morango">🍓 Morango</option>
+        </select>
+      </div>
+      <button class="tool active" data-tool="plant" type="button">🌱<span>Plantar</span></button>
+      <button class="tool" data-tool="water" type="button">💧<span>Regar</span></button>
+      <button class="tool" data-tool="harvest" type="button">🧺<span>Colher</span></button>
+      <button class="tool" data-tool="feed" type="button">🌾<span>Alimentar</span></button>
+      <button class="tool" data-tool="collect" type="button">🥚<span>Coletar</span></button>
+      <div class="coins">🪙 <strong id="myCoins">50</strong></div>
+    </section>
+
+    <section class="mobile-move" aria-label="Movimento">
+      <button data-move="up" type="button">▲</button>
+      <div><button data-move="left" type="button">◀</button><button data-move="down" type="button">▼</button><button data-move="right" type="button">▶</button></div>
+    </section>
+
+    <aside id="tipCard" class="tip-card">
+      <button id="tipClose" type="button">×</button>
+      <strong>Como jogar</strong>
+      <p>Os dois veem a mesma fazenda. Escolha uma ferramenta e toque em um canteiro ou animal. No notebook, use WASD/setas para andar. No celular, use os botões de direção.</p>
+    </aside>
+
+    <audio id="remoteAudio" autoplay playsinline></audio>
+  </main>
+  <script type="module" src="./fazendinha-multiplayer.js?v=1"></script>
+</body>
+</html>
