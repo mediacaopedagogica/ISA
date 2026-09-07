@@ -21,9 +21,14 @@
 <button id="retry" class="hidden" type="button">Tentar novamente</button>
 </section>
 <script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 import {CONFIG} from './config.js';
+
 const $=id=>document.getElementById(id);
 const token=new URLSearchParams(location.hash.replace(/^#/,'' )).get('acesso')||'';
+const supabase=createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_KEY,{
+  auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}
+});
 let running=false;
 function fail(msg){running=false;$('spinner').classList.add('hidden');$('title').textContent='Acesso indisponível';$('text').textContent='';$('error').textContent=msg;$('retry').classList.remove('hidden')}
 async function jsonFetch(url,options){const r=await fetch(url,options);const d=await r.json().catch(()=>({}));return {r,d}}
@@ -41,22 +46,20 @@ async function start(){
    if(!first.r.ok||!first.d.tokenHash)throw new Error(first.d.error||'Não foi possível iniciar seu acesso.');
 
    $('title').textContent=`Oi, ${first.d.name}! 💜`;$('text').textContent='Entrando…';
-   const c2=new AbortController();const t2=setTimeout(()=>c2.abort(),12000);
-   const second=await jsonFetch(`${CONFIG.SUPABASE_URL}/auth/v1/verify`,{
-     method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,'Content-Type':'application/json'},
-     body:JSON.stringify({token_hash:first.d.tokenHash,type:first.d.verificationType||'magiclink'}),
-     cache:'no-store',signal:c2.signal
+   const {data:verified,error:verifyError}=await supabase.auth.verifyOtp({
+     token_hash:first.d.tokenHash,
+     type:first.d.verificationType||'magiclink'
    });
-   clearTimeout(t2);
-   if(!second.r.ok||!second.d.access_token||!second.d.refresh_token)throw new Error(second.d.error_description||second.d.msg||second.d.message||'Não foi possível confirmar a sessão.');
+   if(verifyError||!verified?.session?.access_token||!verified?.session?.refresh_token){
+     throw new Error(verifyError?.message||'Não foi possível confirmar a sessão.');
+   }
 
-   const session=new URLSearchParams();
-   session.set('access_token',second.d.access_token);
-   session.set('refresh_token',second.d.refresh_token);
-   session.set('expires_in',String(second.d.expires_in||3600));
-   session.set('token_type',second.d.token_type||'bearer');
-   session.set('type','magiclink');
-   location.replace(`./?entry=personal-v41#${session.toString()}`);
+   const {data:sessionData,error:sessionError}=await supabase.auth.getSession();
+   if(sessionError||!sessionData?.session?.user){
+     throw new Error(sessionError?.message||'A sessão não ficou salva neste aparelho.');
+   }
+
+   location.replace('./?entry=personal-v42');
  }catch(e){fail(e?.name==='AbortError'?'A conexão demorou demais. Tente novamente.':(e?.message||'Não foi possível acessar.'))}
 }
 $('retry').onclick=start;start();
