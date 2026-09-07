@@ -72,7 +72,8 @@ export async function capturePhoto(){
   })
 }
 
-function bestMime(){if(!window.MediaRecorder)return'';return ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/ogg','audio/mp4'].find(x=>MediaRecorder.isTypeSupported?.(x))||''}
+function bestMime(){if(!window.MediaRecorder)return'';return ['audio/webm','audio/ogg','audio/mp4','audio/webm;codecs=opus','audio/ogg;codecs=opus'].find(x=>MediaRecorder.isTypeSupported?.(x))||''}
+function plainAudioMime(type){const raw=String(type||'').trim().toLowerCase();if(raw.startsWith('audio/ogg'))return'audio/ogg';if(raw.startsWith('audio/mp4')||raw.startsWith('audio/m4a'))return'audio/mp4';return'audio/webm'}
 function extFor(type){return /ogg/i.test(type)?'ogg':/mp4|m4a/i.test(type)?'m4a':'webm'}
 function timeText(ms){const s=Math.max(0,Math.floor(ms/1000));return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`}
 
@@ -95,7 +96,6 @@ export async function recordAudio({maxMs=120000}={}){
       chunks=[];lastBlob=null;pausedTotal=0;pausedAt=0
       body.innerHTML='<div class="isa-recorder-stage"><div class="isa-mic-orb">🎙️</div><div class="isa-rec-status">Abrindo o microfone…</div></div>'
       try{
-        // Pedido feito SOMENTE após o clique em “Iniciar gravação”.
         stream=await navigator.mediaDevices.getUserMedia({audio:true,video:false})
         const track=stream.getAudioTracks()[0],label=track?.label||'Microfone do aparelho',mime=bestMime()
         rec=new MediaRecorder(stream,mime?{mimeType:mime}:undefined)
@@ -105,7 +105,7 @@ export async function recordAudio({maxMs=120000}={}){
         rec.ondataavailable=e=>{if(e.data?.size)chunks.push(e.data)}
         rec.onerror=()=>{const st=body.querySelector('.isa-rec-status');if(st)st.textContent='O gravador encontrou um erro.'}
         rec.onstop=()=>{
-          clearInterval(timer);stopMeter();lastDuration=elapsed();lastBlob=new Blob(chunks,{type:rec.mimeType||'audio/webm'});stopTracks(stream);stream=null;preview()
+          clearInterval(timer);stopMeter();lastDuration=elapsed();lastBlob=new Blob(chunks,{type:plainAudioMime(rec.mimeType||'audio/webm')});stopTracks(stream);stream=null;preview()
         }
         rec.start(250)
         timer=setInterval(()=>{const ms=elapsed(),el=body.querySelector('.isa-rec-time');if(el)el.textContent=timeText(ms);if(ms>=maxMs&&(rec?.state==='recording'||rec?.state==='paused'))rec.stop()},200)
@@ -129,7 +129,7 @@ export async function recordAudio({maxMs=120000}={}){
       if(!lastBlob?.size){body.innerHTML='<div class="isa-media-error">Não foi possível formar o áudio.</div><div class="isa-media-actions"><button class="primary" data-again type="button">Gravar novamente</button><button data-cancel type="button">Fechar</button></div>';body.querySelector('[data-again]').onclick=ready;body.querySelector('[data-cancel]').onclick=()=>finish(null);return}
       const url=URL.createObjectURL(lastBlob)
       body.innerHTML=`<div class="isa-recorder-stage"><div class="isa-mic-orb">🎧</div><div class="isa-rec-time">${timeText(lastDuration)}</div><div class="isa-rec-status">Ouça antes de enviar.</div><audio class="isa-audio-preview" controls src="${url}"></audio></div><div class="isa-media-actions"><button class="primary" data-use type="button">➤ Enviar áudio</button><button data-again type="button">↻ Gravar novamente</button><button data-cancel type="button">Cancelar</button></div>`
-      body.querySelector('[data-use]').onclick=()=>{const type=lastBlob.type||'audio/webm';URL.revokeObjectURL(url);finish({file:new File([lastBlob],`audio-${Date.now()}.${extFor(type)}`,{type}),durationMs:lastDuration})}
+      body.querySelector('[data-use]').onclick=()=>{const type=plainAudioMime(lastBlob.type||'audio/webm');URL.revokeObjectURL(url);finish({file:new File([lastBlob],`audio-${Date.now()}.${extFor(type)}`,{type}),durationMs:lastDuration})}
       body.querySelector('[data-again]').onclick=()=>{URL.revokeObjectURL(url);ready()}
       body.querySelector('[data-cancel]').onclick=()=>{URL.revokeObjectURL(url);finish(null)}
     }
