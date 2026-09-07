@@ -57,7 +57,7 @@
   const accessToken=hash.get('access_token')||''
   const refreshToken=hash.get('refresh_token')||''
 
-  function loadCore(personalMode=false){
+  async function loadPatchedCore(personalMode=false){
     if(document.getElementById('isaCoreV34Restored'))return
     if(personalMode){
       const overlay=personalOverlay('Carregando suas conversas…')
@@ -81,21 +81,40 @@
       showLogin()
     }
 
-    const core=document.createElement('script')
-    core.id='isaCoreV34Restored'
-    core.src='./app-v34.js?v=34-restored-43'
-    core.async=false
-    core.onload=()=>{
-      module('isaMobileJsRestore','./mobile-responsive-v2.js?v=7-restore')
-      module('isaNotificationsRestore','./notifications-v2.js?v=5-restore')
-      module('isaExtrasRestore','./extras-loader.js?v=14-restore')
+    try{
+      const r=await fetch('./app-v34.js?v=34-hotfix-44',{cache:'no-store'})
+      if(!r.ok)throw new Error('Não foi possível carregar o núcleo do Cantinho.')
+      let source=await r.text()
+      const marker='\n  __isaCore34().then(() => {'
+      const markerAt=source.lastIndexOf(marker)
+      if(markerAt<0)throw new Error('Núcleo incompatível com a correção de inicialização.')
+      const closeAt=source.lastIndexOf('\n  }',markerAt)
+      if(closeAt<0)throw new Error('Não foi possível localizar a inicialização do aplicativo.')
+      source=source.slice(0,closeAt)+'\n    await boot();'+source.slice(closeAt)
+
+      const blobUrl=URL.createObjectURL(new Blob([source],{type:'text/javascript'}))
+      const core=document.createElement('script')
+      core.id='isaCoreV34Restored'
+      core.src=blobUrl
+      core.async=false
+      core.onload=()=>{
+        URL.revokeObjectURL(blobUrl)
+        module('isaMobileJsRestore','./mobile-responsive-v2.js?v=7-restore')
+        module('isaNotificationsRestore','./notifications-v2.js?v=5-restore')
+        module('isaExtrasRestore','./extras-loader.js?v=14-restore')
+      }
+      core.onerror=()=>{
+        URL.revokeObjectURL(blobUrl)
+        fail('Não foi possível carregar o núcleo do Cantinho. Recarregue a página.',personalMode)
+      }
+      document.body.appendChild(core)
+    }catch(e){
+      fail(e?.message||'Não foi possível iniciar o Cantinho.',personalMode)
     }
-    core.onerror=()=>fail('Não foi possível carregar o núcleo do Cantinho. Recarregue a página.',personalMode)
-    document.body.appendChild(core)
   }
 
   ;(async()=>{
-    if(!personal){loadCore(false);return}
+    if(!personal){loadPatchedCore(false);return}
     personalOverlay('Confirmando sua sessão…')
     if(!accessToken||!refreshToken){
       fail('A chave da sessão não chegou completa ao aplicativo.',true)
@@ -112,7 +131,7 @@
       const {data:{user},error:userError}=await sb.auth.getUser()
       if(userError||!user)throw userError||new Error('Sessão sem usuário')
       history.replaceState(null,'','./?entry=personal-v43')
-      loadCore(true)
+      await loadPatchedCore(true)
     }catch(e){
       fail(e?.message||'Não foi possível confirmar sua sessão.',true)
     }
