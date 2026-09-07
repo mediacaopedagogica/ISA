@@ -20,7 +20,7 @@
     <div class="login-card glass">
       <div class="brand-bubble" aria-hidden="true">💌</div>
       <h1>Cantinho da Isa</h1>
-      <p class="muted">Família e amigos(as)</p>
+      <p class="muted">Família</p>
       <label>Login</label><input id="loginUsername" autocomplete="username" placeholder="Ex.: Mãe">
       <label>Senha</label><div class="password-wrap"><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Sua senha"><button id="togglePassword" class="icon-btn" type="button" aria-label="Mostrar senha" title="Mostrar senha">👁️</button></div>
       <button id="loginBtn" class="primary-btn">Entrar 💗</button><button id="openSetupBtn" class="text-btn hidden" tabindex="-1" aria-hidden="true">Primeiro acesso da família</button><p id="loginMsg" class="status-text"></p>
@@ -54,8 +54,26 @@
 </div>
 <dialog id="simpleDialog"><form method="dialog" class="dialog-card"><button class="dialog-close" value="cancel">✕</button><div id="dialogContent"></div></form></dialog><div id="toast" class="toast hidden"></div>
 <script>(function(){const btn=document.getElementById('togglePassword'),input=document.getElementById('loginPassword');if(btn&&input){btn.onclick=()=>{const show=input.type==='password';input.type=show?'text':'password';btn.textContent=show?'🙈':'👁️';btn.setAttribute('aria-label',show?'Ocultar senha':'Mostrar senha');btn.title=show?'Ocultar senha':'Mostrar senha';input.focus()}}})();</script>
-<script>(async()=>{try{if('caches' in window){const keys=await caches.keys();await Promise.all(keys.filter(k=>k.startsWith('cantinho-isa-')).map(k=>caches.delete(k)))}if('serviceWorker' in navigator){const reg=await navigator.serviceWorker.register('./sw.js?v=33',{scope:'./'});reg.update().catch(()=>{})}}catch(error){console.warn('Recuperação de cache:',error)}})();</script>
-<script defer src="./app-v35.js?v=35"></script><script type="module" src="./mobile-responsive-v2.js?v=5"></script><script type="module" src="./notifications-v2.js?v=4"></script><script type="module" src="./extras-loader.js?v=7"></script>
+<script>(async()=>{try{if('caches' in window){const keys=await caches.keys();await Promise.all(keys.filter(k=>k.startsWith('cantinho-isa-')).map(k=>caches.delete(k)))}if('serviceWorker' in navigator){const reg=await navigator.serviceWorker.register('./sw.js?v=34',{scope:'./'});reg.update().catch(()=>{})}}catch(error){console.warn('Recuperação de cache:',error)}})();</script>
+<script>
+(function(){
+  let timer=null;
+  const btn=document.getElementById('loginBtn'),main=document.getElementById('mainView'),msg=document.getElementById('loginMsg');
+  if(!btn||!main)return;
+  const clear=()=>{if(timer){clearTimeout(timer);timer=null}};
+  btn.addEventListener('click',()=>{
+    clear();
+    timer=setTimeout(()=>{
+      if(!main.classList.contains('hidden'))return;
+      btn.disabled=false;
+      btn.textContent='Entrar 💗';
+      if(msg){msg.textContent='A entrada demorou mais que o esperado. Tente novamente.';msg.style.color='#a15472'}
+    },12000);
+  },true);
+  new MutationObserver(()=>{if(!main.classList.contains('hidden'))clear()}).observe(main,{attributes:true,attributeFilter:['class']});
+})();
+</script>
+<script defer src="./app-v34.js?v=34-stable"></script><script type="module" src="./mobile-responsive-v2.js?v=5"></script><script type="module" src="./notifications-v2.js?v=4"></script><script type="module" src="./extras-loader.js?v=8"></script>
 <script>window.addEventListener('load',()=>{setTimeout(()=>{if(window.__ISA_SCRIPT_LOADED__)return;const msg=document.getElementById('loginMsg');if(msg){msg.textContent='O aplicativo não conseguiu carregar. Clique em Recarregar.';msg.style.color='#a15472';const b=document.createElement('button');b.type='button';b.className='soft-btn';b.textContent='Recarregar';b.style.marginTop='10px';b.onclick=()=>location.reload();msg.after(b)}},3500)});</script>
 </body>
 </html>
