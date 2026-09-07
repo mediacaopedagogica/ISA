@@ -21957,7 +21957,7 @@ ${suffix}`;
     if (document.querySelector('link[href^="study-periodic.css"]')) return;
     const l = document.createElement("link");
     l.rel = "stylesheet";
-    l.href = "study-periodic.css?v=1";
+    l.href = "study-periodic.css?v=2-size";
     document.head.appendChild(l);
   }
   function esc7(v) {
