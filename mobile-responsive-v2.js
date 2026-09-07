@@ -1,6 +1,6 @@
 const $=id=>document.getElementById(id)
 const mq=matchMedia('(max-width:850px)')
-let notifyAnchor=null,isaToolsLoaded=false
+let notifyAnchor=null
 
 function shell(){return $('mainView')}
 function who(){return String($('myName')?.textContent||'').trim().toLowerCase()}
@@ -12,7 +12,6 @@ function ensureProfileNav(){
   const study=$('studyNav'),diary=$('diaryNav'),supervision=$('supervisionNav'),parents=$('parentsNav')
   if(who()==='isa'){
     study?.classList.remove('hidden');diary?.classList.remove('hidden');supervision?.classList.add('hidden');parents?.classList.add('hidden')
-    if(!isaToolsLoaded){isaToolsLoaded=true;import('./isa-tools.js?v=5').catch(()=>{isaToolsLoaded=false})}
   }else{
     study?.classList.add('hidden');diary?.classList.add('hidden')
     if(who()==='keise'||who()==='alan'){supervision?.classList.remove('hidden');parents?.classList.remove('hidden')}
@@ -25,7 +24,7 @@ function backBtn(){
 }
 function placeNotifyBanner(){
   const banner=$('notifyBanner');if(!banner)return
-  if(!notifyAnchor&&banner.parentNode){notifyAnchor=document.createComment('notify-banner-home-v3');banner.parentNode.insertBefore(notifyAnchor,banner)}
+  if(!notifyAnchor&&banner.parentNode){notifyAnchor=document.createComment('notify-banner-home-v4');banner.parentNode.insertBefore(notifyAnchor,banner)}
   if(mq.matches){const side=shell()?.querySelector('.sidebar'),head=side?.querySelector('.chat-list-head');if(side&&head&&banner.parentNode!==side)side.insertBefore(banner,head)}
   else if(notifyAnchor?.parentNode&&banner.parentNode!==notifyAnchor.parentNode)notifyAnchor.parentNode.insertBefore(banner,notifyAnchor.nextSibling)
 }
