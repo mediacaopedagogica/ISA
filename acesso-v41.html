@@ -8,7 +8,7 @@
 <title>Cantinho da Isa • Acesso</title>
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <style>
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,"Segoe UI",system-ui,sans-serif}body{min-height:100vh;display:grid;place-items:center;padding:22px;color:#65536f;background:radial-gradient(circle at 15% 15%,#fff0f6 0 18%,transparent 42%),radial-gradient(circle at 86% 12%,#eee4ff 0 18%,transparent 42%),#f8f2fb}.card{width:min(440px,94vw);padding:34px 28px;text-align:center;border-radius:32px;background:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.96);box-shadow:0 20px 55px rgba(95,70,110,.14);backdrop-filter:blur(18px)}.heart{font-size:52px;color:#dca7c9;text-shadow:0 8px 20px rgba(178,125,167,.2)}h1{margin:10px 0 6px;font-size:1.65rem}.muted{color:#92849a}.spinner{width:38px;height:38px;border-radius:50%;border:4px solid #eadff3;border-top-color:#bca1e5;margin:22px auto 8px;animation:s .8s linear infinite}@keyframes s{to{transform:rotate(360deg)}}button{border:0;border-radius:16px;padding:12px 16px;background:#e8dcff;font-weight:800;color:#655078;cursor:pointer}.hidden{display:none!important}.error{color:#a15472;font-weight:700;line-height:1.45}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,"Segoe UI",system-ui,sans-serif}body{min-height:100vh;display:grid;place-items:center;padding:22px;color:#65536f;background:radial-gradient(circle at 15% 15%,#fff0f6 0 18%,transparent 42%),radial-gradient(circle at 86% 12%,#eee4ff 0 18%,transparent 42%),#f8f2fb}.card{width:min(420px,94vw);padding:30px 26px;text-align:center;border-radius:28px;background:rgba(255,255,255,.84);border:1px solid rgba(255,255,255,.96);box-shadow:0 18px 48px rgba(95,70,110,.13)}.heart{font-size:44px;color:#dca7c9}h1{margin:10px 0 6px;font-size:1.5rem}.muted{color:#92849a}.spinner{width:34px;height:34px;border-radius:50%;border:4px solid #eadff3;border-top-color:#bca1e5;margin:20px auto 6px;animation:s .8s linear infinite}@keyframes s{to{transform:rotate(360deg)}}button{border:0;border-radius:14px;padding:11px 15px;background:#e8dcff;font-weight:800;color:#655078;cursor:pointer}.hidden{display:none!important}.error{color:#a15472;font-weight:700;line-height:1.45}
 </style>
 </head>
 <body>
@@ -28,24 +28,24 @@ const token=new URLSearchParams(location.hash.replace(/^#/,'' )).get('acesso')||
 const supabase=createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
 let running=false;
 function fail(msg){running=false;$('spinner').classList.add('hidden');$('title').textContent='Acesso indisponível';$('text').textContent='';$('error').textContent=msg;$('retry').classList.remove('hidden')}
-async function jsonFetch(url,options){const r=await fetch(url,options);const d=await r.json().catch(()=>({}));return {r,d}}
 async function start(){
  if(running)return;running=true;
  $('retry').classList.add('hidden');$('error').textContent='';$('spinner').classList.remove('hidden');
  if(!token){fail('Este link pessoal não é válido.');return}
  try{
-   const c1=new AbortController();const t1=setTimeout(()=>c1.abort(),12000);
-   const first=await jsonFetch(`${CONFIG.SUPABASE_URL}/functions/v1/personal-link-session`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({token}),cache:'no-store',signal:c1.signal});
-   clearTimeout(t1);
-   if(!first.r.ok||!first.d.tokenHash)throw new Error(first.d.error||'Não foi possível iniciar seu acesso.');
-   const name=['Keise','Alan','Isa'].includes(first.d.name)?first.d.name:'Família';
+   const controller=new AbortController();
+   const timeout=setTimeout(()=>controller.abort(),12000);
+   const r=await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/personal-link-session`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({token}),cache:'no-store',signal:controller.signal});
+   clearTimeout(timeout);
+   const d=await r.json().catch(()=>({}));
+   if(!r.ok||!d.tokenHash)throw new Error(d.error||'Não foi possível iniciar seu acesso.');
+   const name=['Keise','Alan','Isa'].includes(d.name)?d.name:'Família';
    $('title').textContent=`Oi, ${name}!`;$('text').textContent='Entrando…';
-   const {data:verified,error:verifyError}=await supabase.auth.verifyOtp({token_hash:first.d.tokenHash,type:first.d.verificationType||'magiclink'});
-   if(verifyError||!verified?.session?.access_token||!verified?.session?.refresh_token)throw new Error(verifyError?.message||'Não foi possível confirmar a sessão.');
-   const session=new URLSearchParams();
-   session.set('access_token',verified.session.access_token);
-   session.set('refresh_token',verified.session.refresh_token);
-   location.replace(`./?perfil=${encodeURIComponent(name)}#${session.toString()}`);
+   const {data,error}=await supabase.auth.verifyOtp({token_hash:d.tokenHash,type:d.verificationType||'magiclink'});
+   if(error||!data?.session)throw new Error(error?.message||'Não foi possível confirmar a sessão.');
+   const {data:stored,error:storedError}=await supabase.auth.getSession();
+   if(storedError||!stored?.session)throw new Error(storedError?.message||'A sessão não foi salva.');
+   location.replace(`./?perfil=${encodeURIComponent(name)}`);
  }catch(e){fail(e?.name==='AbortError'?'A conexão demorou demais. Tente novamente.':(e?.message||'Não foi possível acessar.'))}
 }
 $('retry').onclick=start;start();
