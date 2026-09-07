@@ -1,0 +1,15 @@
+/* Correção isolada para notebook/desktop: restaura a rolagem do histórico do chat.
+   Não é aplicada à versão mobile. */
+@media (min-width: 851px){
+  #chatPanel{
+    min-height:0!important;
+    overflow:hidden!important;
+  }
+  #messages.messages{
+    min-height:0!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    overscroll-behavior-y:contain;
+    scrollbar-gutter:stable;
+  }
+}
