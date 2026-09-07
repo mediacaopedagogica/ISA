@@ -1,8 +1,9 @@
-const URL_RE=/(https?:\/\/[^\s<]+)/gi
+const URL_RE=/((?:https?:\/\/|www\.)[^\s<]+)/gi
 
-function cleanUrl(raw){return String(raw||'').replace(/[),.!?;:]+$/,'')}
+function cleanUrl(raw){return String(raw||'').replace(/[\])},.!?;:]+$/,'')}
+function normalizeUrl(raw){const c=cleanUrl(raw);return /^www\./i.test(c)?`https://${c}`:c}
 function parseVideo(raw){
-  let u;try{u=new URL(raw)}catch{return null}
+  let u;try{u=new URL(normalizeUrl(raw))}catch{return null}
   const h=u.hostname.replace(/^www\./,'').toLowerCase()
   if(h==='youtu.be'){
     const id=u.pathname.split('/').filter(Boolean)[0];if(id)return {type:'youtube',src:`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}`}
@@ -15,7 +16,7 @@ function parseVideo(raw){
   if(h==='vimeo.com'||h.endsWith('.vimeo.com')){
     const id=u.pathname.split('/').filter(Boolean).find(x=>/^\d+$/.test(x));if(id)return {type:'vimeo',src:`https://player.vimeo.com/video/${id}`}
   }
-  if(/\.(mp4|webm|ogg)(?:$|\?)/i.test(u.pathname+u.search))return {type:'direct',src:u.href}
+  if(/\.(mp4|webm|ogg)$/i.test(u.pathname))return {type:'direct',src:u.href}
   return null
 }
 function ensureUi(){
@@ -30,8 +31,8 @@ function ensureUi(){
 }
 function closeVideo(){const d=document.getElementById('isaVideoDrawer');if(!d)return;d.classList.remove('open');const f=document.getElementById('isaVideoFrame');if(f)f.innerHTML=''}
 function openVideo(url){
-  ensureUi();const v=parseVideo(url);if(!v)return window.open(url,'_blank','noopener,noreferrer')
-  const d=document.getElementById('isaVideoDrawer'),f=document.getElementById('isaVideoFrame'),a=document.getElementById('isaVideoOriginal');f.innerHTML='';a.href=url
+  const href=normalizeUrl(url);ensureUi();const v=parseVideo(href);if(!v)return window.open(href,'_blank','noopener,noreferrer')
+  const d=document.getElementById('isaVideoDrawer'),f=document.getElementById('isaVideoFrame'),a=document.getElementById('isaVideoOriginal');f.innerHTML='';a.href=href
   if(v.type==='direct'){const el=document.createElement('video');el.controls=true;el.autoplay=false;el.preload='metadata';el.src=v.src;f.appendChild(el)}
   else{const el=document.createElement('iframe');el.src=v.src;el.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';el.referrerPolicy='strict-origin-when-cross-origin';el.allowFullscreen=true;el.title='Vídeo compartilhado';f.appendChild(el)}
   d.classList.add('open')
@@ -41,7 +42,7 @@ function splitTextNode(node){
   const frag=document.createDocumentFragment();let last=0,m
   while((m=URL_RE.exec(text))){
     if(m.index>last)frag.appendChild(document.createTextNode(text.slice(last,m.index)))
-    const raw=m[0],url=cleanUrl(raw),trail=raw.slice(url.length),a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.className='isa-chat-link';a.textContent=url;frag.appendChild(a)
+    const raw=m[0],display=cleanUrl(raw),url=normalizeUrl(raw),trail=raw.slice(display.length),a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.className='isa-chat-link';a.textContent=display;a.onclick=e=>e.stopPropagation();frag.appendChild(a)
     if(parseVideo(url)){const spacer=document.createTextNode(' '),b=document.createElement('button');b.type='button';b.className='isa-video-open';b.textContent='▶ Ver vídeo';b.dataset.videoUrl=url;b.onclick=e=>{e.preventDefault();e.stopPropagation();openVideo(url)};frag.append(spacer,b)}
     if(trail)frag.appendChild(document.createTextNode(trail));last=m.index+raw.length
   }
