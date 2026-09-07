@@ -18,7 +18,7 @@
 </head>
 <body>
 <div id="app">
-  <section id="loginView" class="screen center-screen">
+  <section id="loginView" class="screen center-screen hidden">
     <div class="login-card glass">
       <div class="brand-bubble" aria-hidden="true">💌</div>
       <h1>Cantinho da Isa</h1>
@@ -84,6 +84,8 @@ if('serviceWorker' in navigator){
 window.addEventListener('load',()=>{
   setTimeout(()=>{
     if(window.__ISA_SCRIPT_LOADED__)return;
+    const login=document.getElementById('loginView');
+    if(login)login.classList.remove('hidden');
     const msg=document.getElementById('loginMsg');
     if(msg){
       msg.textContent='O aplicativo não conseguiu carregar. Clique em Recarregar.';
