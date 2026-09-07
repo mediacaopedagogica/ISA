@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'index.html'
+      - 'app-v33.js'
       - 'postboot-loader.js'
       - 'mobile-stability-fix.css'
       - 'extras-loader.js'
@@ -43,6 +44,7 @@ jobs:
 
       - name: Verificar sintaxe JavaScript
         run: |
+          node --check app-v33.js
           node --check postboot-loader.js
           node --check extras-loader.js
           node --check mobile-responsive-v2.js
@@ -64,7 +66,7 @@ jobs:
 
       - name: Proteger recursos aprovados
         run: |
-          grep -q 'app-v34.js' index.html
+          grep -q 'app-v33.js' index.html
           grep -q 'postboot-loader.js' index.html
           grep -q 'mobile-stability-fix.css' index.html
           grep -q 'mobile-responsive-v2.js' postboot-loader.js
