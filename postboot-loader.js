@@ -15,11 +15,11 @@ const paths=dedicatedMobile?[
   './call-manager.js?v=7-mobile-fast',
   './mobile-native.js?v=3-no-blank',
   './notifications-v2.js?v=9-stable',
-  './extras-loader.js?v=19-audio-day-links'
+  './extras-loader.js?v=20-games'
 ]:[
   './mobile-responsive-v2.js?v=15-android-touch',
   './notifications-v2.js?v=9-stable',
-  './extras-loader.js?v=17-audio-day-links'
+  './extras-loader.js?v=18-games'
 ]
 const results=await Promise.allSettled(paths.map(loadWithRetry))
 window.__ISA_EXTRAS_READY__=true
