@@ -11,6 +11,7 @@ on:
       - 'isa-tools.js'
       - 'diary-parent.js'
       - 'family-media-menu.js'
+      - 'family-media-menu-v2.js'
       - 'calendar-alarm.js'
       - 'amiga.js'
       - 'amiga-ui-enhanced.js'
@@ -39,6 +40,7 @@ jobs:
           node --check isa-tools.js
           node --check diary-parent.js
           node --check family-media-menu.js
+          node --check family-media-menu-v2.js
           node --check calendar-alarm.js
           node --check amiga.js
           node --check amiga-ui-enhanced.js
