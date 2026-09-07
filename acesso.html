@@ -62,5 +62,12 @@
   <script type="module" src="./amiga-ui-enhanced.js?v=5"></script>
   <script type="module" src="./native-media-bridge.js?v=4"></script>
   <script type="module" src="./link-preview.js?v=2"></script>
+  <script type="module" src="./call-manager.js?v=1"></script>
+  <script>
+    document.getElementById('friendEnterBtn')?.addEventListener('click',()=>setTimeout(()=>{
+      const b=document.querySelector('#friendConversationList [data-friend-conv].active')||document.querySelector('#friendConversationList [data-friend-conv]');
+      if(b)b.dispatchEvent(new MouseEvent('click',{bubbles:true}));
+    },700));
+  </script>
 </body>
 </html>
