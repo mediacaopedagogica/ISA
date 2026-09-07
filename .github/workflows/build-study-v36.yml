@@ -38,10 +38,13 @@ jobs:
               if old in s:
                   p.write_text(s.replace(old, '@supabase/supabase-js'), encoding='utf-8')
           PY
-      - name: Gerar bundle local
+      - name: Gerar e validar bundle local
         run: |
           npx esbuild study-entry-v36.js --bundle --format=iife --platform=browser --target=es2020 --outfile=study-bundle-v36.js
           node --check study-bundle-v36.js
+      - name: Restaurar fontes temporariamente alteradas
+        run: |
+          git restore -- 'study*.js' retention-notice.js || true
       - name: Publicar bundle sem perder commits concorrentes
         run: |
           git config user.name 'github-actions[bot]'
