@@ -12,12 +12,19 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="theme-3d.css">
   <link rel="stylesheet" href="login-3d.css">
-  <link rel="stylesheet" href="app-3d.css?v=restore-38">
-  <link rel="stylesheet" href="mobile-responsive-v2.css?v=8-restore">
-  <link rel="stylesheet" href="mobile-stability-fix.css?v=2">
-  <link rel="stylesheet" href="heart-polish.css?v=restore-38">
+  <link rel="stylesheet" href="app-3d.css?v=restore-39">
+  <link rel="stylesheet" href="mobile-responsive-v2.css?v=9-restore">
+  <link rel="stylesheet" href="mobile-stability-fix.css?v=3">
+  <link rel="stylesheet" href="heart-polish.css?v=restore-39">
+  <style>
+    #personalBootGuard{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 18% 14%,#fff0f6 0 18%,transparent 42%),radial-gradient(circle at 86% 12%,#eee4ff 0 18%,transparent 42%),#f8f2fb;color:#65536f;font-family:Inter,"Segoe UI",system-ui,sans-serif}
+    #personalBootGuard.hidden{display:none!important}
+    #personalBootGuard .guard-card{width:min(420px,94vw);padding:30px 26px;text-align:center;border-radius:28px;background:rgba(255,255,255,.88);border:1px solid rgba(255,255,255,.96);box-shadow:0 18px 48px rgba(95,70,110,.13)}
+    #personalBootGuard .guard-heart{font-size:44px;color:#dca7c9}.guard-spinner{width:34px;height:34px;border-radius:50%;border:4px solid #eadff3;border-top-color:#bca1e5;margin:18px auto 4px;animation:guardSpin .8s linear infinite}@keyframes guardSpin{to{transform:rotate(360deg)}}
+  </style>
 </head>
 <body>
+<div id="personalBootGuard" class="hidden" aria-live="polite"><div class="guard-card"><div class="guard-heart">♥</div><h2 id="personalBootTitle">Abrindo seu Cantinho…</h2><p>Carregando suas conversas com segurança.</p><div class="guard-spinner"></div></div></div>
 <div id="app">
   <section id="loginView" class="screen center-screen hidden">
     <div class="login-card glass">
@@ -56,11 +63,24 @@
   </section>
 </div>
 <dialog id="simpleDialog"><form method="dialog" class="dialog-card"><button class="dialog-close" value="cancel">✕</button><div id="dialogContent"></div></form></dialog><div id="toast" class="toast hidden"></div>
+<script>
+(function(){
+  const personal=new URLSearchParams(location.search).get('perfil');
+  const guard=document.getElementById('personalBootGuard');
+  if(personal){guard?.classList.remove('hidden');const t=document.getElementById('personalBootTitle');if(t)t.textContent=`Abrindo o Cantinho de ${personal}…`}
+  window.__ISA_HIDE_BOOT_GUARD__=()=>guard?.classList.add('hidden');
+  const observe=()=>{
+    const main=document.getElementById('mainView'),login=document.getElementById('loginView');
+    if((main&&!main.classList.contains('hidden'))||(login&&!login.classList.contains('hidden')))window.__ISA_HIDE_BOOT_GUARD__();
+  };
+  new MutationObserver(observe).observe(document.getElementById('app'),{subtree:true,attributes:true,attributeFilter:['class']});
+  window.addEventListener('error',e=>{window.__ISA_LAST_RUNTIME_ERROR__=String(e?.error?.message||e?.message||'Erro')});
+  window.addEventListener('unhandledrejection',e=>{window.__ISA_LAST_RUNTIME_ERROR__=String(e?.reason?.message||e?.reason||'Erro')});
+})();
+</script>
 <script>(function(){const btn=document.getElementById('togglePassword'),input=document.getElementById('loginPassword');if(btn&&input){btn.onclick=()=>{const show=input.type==='password';input.type=show?'text':'password';btn.textContent=show?'🙈':'👁️';btn.setAttribute('aria-label',show?'Ocultar senha':'Mostrar senha');btn.title=show?'Ocultar senha':'Mostrar senha';input.focus()}}})();</script>
 <script>
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('./sw.js?v=restore-38',{scope:'./'}).then(reg=>reg.update().catch(()=>{})).catch(error=>console.warn('Service Worker:',error));
-}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=restore-39',{scope:'./'}).then(reg=>reg.update().catch(()=>{})).catch(error=>console.warn('Service Worker:',error));}
 </script>
 <script>
 (function(){
@@ -68,33 +88,41 @@ if('serviceWorker' in navigator){
   const btn=document.getElementById('loginBtn'),main=document.getElementById('mainView'),msg=document.getElementById('loginMsg');
   if(!btn||!main)return;
   const clear=()=>{if(timer){clearTimeout(timer);timer=null}};
-  btn.addEventListener('click',()=>{
-    clear();
-    timer=setTimeout(()=>{
-      if(!main.classList.contains('hidden'))return;
-      btn.disabled=false;
-      btn.textContent='Entrar 💗';
-      if(msg){msg.textContent='A entrada demorou mais que o esperado. Tente novamente.';msg.style.color='#a15472'}
-    },12000);
-  },true);
+  btn.addEventListener('click',()=>{clear();timer=setTimeout(()=>{if(!main.classList.contains('hidden'))return;btn.disabled=false;btn.textContent='Entrar 💗';if(msg){msg.textContent='A entrada demorou mais que o esperado. Tente novamente.';msg.style.color='#a15472'}},12000)},true);
   new MutationObserver(()=>{if(!main.classList.contains('hidden'))clear()}).observe(main,{attributes:true,attributeFilter:['class']});
 })();
 </script>
-<script defer src="./app-v33.js?v=stable-50"></script>
-<script type="module" src="./postboot-loader.js?v=2-fastfix"></script>
+<script defer src="./app-v33.js?v=stable-51"></script>
+<script>
+(function(){
+  let tries=0,loaded=false;
+  const loadExtras=()=>{
+    if(loaded)return;
+    const main=document.getElementById('mainView'),name=String(document.getElementById('myName')?.textContent||'').trim();
+    if(main&&!main.classList.contains('hidden')&&name&&name!=='Família'){
+      loaded=true;
+      const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=3-safe';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
+    }
+    if(++tries<100)setTimeout(loadExtras,120);
+  };
+  setTimeout(loadExtras,180);
+})();
+</script>
 <script>
 window.addEventListener('load',()=>{
   setTimeout(()=>{
-    if(window.__ISA_SCRIPT_LOADED__)return;
-    const login=document.getElementById('loginView');
-    if(login)login.classList.remove('hidden');
-    const msg=document.getElementById('loginMsg');
-    if(msg){
-      msg.textContent='O aplicativo não conseguiu carregar. Clique em Recarregar.';
-      msg.style.color='#a15472';
-      const b=document.createElement('button');b.type='button';b.className='soft-btn';b.textContent='Recarregar';b.style.marginTop='10px';b.onclick=()=>location.reload();msg.after(b);
+    const main=document.getElementById('mainView'),login=document.getElementById('loginView'),personal=new URLSearchParams(location.search).get('perfil');
+    if(main&&!main.classList.contains('hidden')){window.__ISA_HIDE_BOOT_GUARD__?.();return}
+    if(login&&!login.classList.contains('hidden')){window.__ISA_HIDE_BOOT_GUARD__?.();return}
+    if(personal){
+      window.__ISA_HIDE_BOOT_GUARD__?.();
+      login?.classList.remove('hidden');
+      const msg=document.getElementById('loginMsg');
+      if(msg){msg.textContent='A sessão foi reconhecida, mas o aplicativo não terminou de abrir. Recarregue esta página uma vez.';msg.style.color='#a15472'}
+      return;
     }
-  },5000);
+    login?.classList.remove('hidden');
+  },7000);
 });
 </script>
 </body>
