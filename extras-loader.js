@@ -31,6 +31,7 @@ async function loadCoreExtras(){
     jobs.push(loadOnce('isa-tools','./isa-tools.js?v=9-study-fix'))
     jobs.push(loadOnce('games','./games-menu.js?v=3-mobile-games'))
     jobs.push(loadOnce('snake-game','./games-menu-snake.js?v=1'))
+    jobs.push(loadOnce('farm-game','./games-menu-farm.js?v=1'))
     if(!dedicatedMobile)jobs.push(loadOnce('games-notebook-fit','./games-notebook-fit.js?v=1'))
   }
   const result=await Promise.allSettled(jobs)
