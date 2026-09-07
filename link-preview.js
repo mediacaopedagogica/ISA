@@ -1,4 +1,5 @@
 const URL_RE=/((?:https?:\/\/|www\.)[^\s<]+)/gi
+let linkifyTimer=null
 
 function cleanUrl(raw){return String(raw||'').replace(/[\])},.!?;:]+$/,'')}
 function normalizeUrl(raw){const c=cleanUrl(raw);return /^www\./i.test(c)?`https://${c}`:c}
@@ -55,4 +56,6 @@ function linkify(){
     const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentElement?.closest('a,button,script,style')?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);nodes.forEach(splitTextNode);root.dataset.linkified='1'
   }
 }
-const obs=new MutationObserver(()=>queueMicrotask(linkify));obs.observe(document.documentElement,{subtree:true,childList:true});window.addEventListener('load',linkify);setInterval(linkify,2000);linkify()
+function schedule(){clearTimeout(linkifyTimer);linkifyTimer=setTimeout(linkify,80)}
+function observeBox(id){const box=document.getElementById(id);if(!box||box.dataset.linkPreviewObserved==='1')return;box.dataset.linkPreviewObserved='1';const obs=new MutationObserver(schedule);obs.observe(box,{childList:true,subtree:true})}
+ensureUi();observeBox('messages');observeBox('friendMessages');schedule()
