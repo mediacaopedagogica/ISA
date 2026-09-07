@@ -1,5 +1,6 @@
 const $=id=>document.getElementById(id)
 const mq=matchMedia('(max-width:850px)')
+let notifyAnchor=null
 
 function shell(){return $('mainView')}
 function backBtn(){
@@ -11,6 +12,14 @@ function backBtn(){
     b.addEventListener('click',showConversationList)
   }
   return b
+}
+function placeNotifyBanner(){
+  const banner=$('notifyBanner');if(!banner)return
+  if(!notifyAnchor&&banner.parentNode){notifyAnchor=document.createComment('notify-banner-home');banner.parentNode.insertBefore(notifyAnchor,banner)}
+  if(mq.matches){
+    const side=$('mainView')?.querySelector('.sidebar'),head=side?.querySelector('.chat-list-head')
+    if(side&&head&&banner.parentNode!==side)side.insertBefore(banner,head)
+  }else if(notifyAnchor?.parentNode&&banner.parentNode!==notifyAnchor.parentNode){notifyAnchor.parentNode.insertBefore(banner,notifyAnchor.nextSibling)}
 }
 function showConversationList(){
   if(!mq.matches)return
@@ -69,7 +78,7 @@ async function activateNotifications(ev){
       $('notifyBanner')?.classList.add('hidden')
       try{
         if('serviceWorker' in navigator){
-          const reg=await navigator.serviceWorker.ready
+          const reg=await Promise.race([navigator.serviceWorker.ready,new Promise((_,rej)=>setTimeout(()=>rej(new Error('sw-timeout')),2500))])
           await reg.showNotification('Cantinho da Isa 💜',{body:'Notificações ativadas neste aparelho.',icon:'./icon.svg',badge:'./icon.svg',tag:'isa-notification-test',renotify:false})
         }else new Notification('Cantinho da Isa 💜',{body:'Notificações ativadas neste aparelho.'})
       }catch{}
@@ -95,7 +104,7 @@ function wireNotifications(){
 }
 
 function sync(){
-  wireMobileNavigation();wireNotifications();backBtn()
+  wireMobileNavigation();wireNotifications();backBtn();placeNotifyBanner()
   if(!mq.matches){shell()?.classList.remove('mobile-content-open','mobile-chat-open','mobile-panel-open');backBtn()?.classList.add('hidden')}
 }
 
