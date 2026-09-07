@@ -11,6 +11,7 @@ function mainReady(){
   const main=$('mainView')
   return !!main&&!main.classList.contains('hidden')&&!!$('myName')?.textContent?.trim()
 }
+function isIsa(){return String($('myName')?.textContent||'').trim().toLowerCase()==='isa'}
 function idle(fn,delay=180){
   if('requestIdleCallback'in window)requestIdleCallback(()=>fn().catch(()=>{}),{timeout:Math.max(1200,delay+700)})
   else setTimeout(()=>fn().catch(()=>{}),delay)
@@ -18,6 +19,7 @@ function idle(fn,delay=180){
 async function loadProfile(){await loadOnce('profile','./profile-mascot.js?v=2')}
 async function loadGroupTools(){await loadOnce('groups','./group-controls.js?v=3')}
 async function loadPausedFriends(){await loadOnce('paused-friends','./paused-friends-filter.js?v=1')}
+async function loadIsaTools(){if(isIsa())await loadOnce('isa-tools','./isa-tools.js?v=6')}
 async function loadCalls(){await loadOnce('calls','./call-manager.js?v=2')}
 async function loadChatExtras(){
   await Promise.allSettled([
@@ -34,30 +36,33 @@ async function loadSupervisionExtras(){
 
 function wire(){
   if(!mainReady())return false
-  idle(loadProfile,140)
-  idle(loadGroupTools,240)
-  idle(loadPausedFriends,420)
-  // Receptor em segundo plano: recebe chamadas mesmo sem abrir uma conversa.
-  idle(loadCalls,900)
+
+  // Só ligadores pequenos depois da entrada; ferramentas pesadas continuam sob demanda.
+  idle(loadProfile,180)
+  idle(loadGroupTools,320)
+  idle(loadPausedFriends,520)
+  if(isIsa())idle(loadIsaTools,240) // só mostra Diário/Estudos; o conteúdo de Estudos NÃO carrega aqui.
+  idle(loadCalls,1000) // receptor leve para chamadas recebidas; câmera/microfone só abrem ao usar.
 
   const chatList=$('chatList')
-  if(chatList&&!chatList.dataset.extraLoaderV12){
-    chatList.dataset.extraLoaderV12='1'
+  if(chatList&&!chatList.dataset.extraLoaderRestored){
+    chatList.dataset.extraLoaderRestored='1'
     chatList.addEventListener('click',e=>{
       if(!e.target.closest('.chat-item[data-conv]'))return
-      setTimeout(()=>loadChatExtras().catch(()=>{}),130)
+      // Mídia e prévia de links só entram depois de abrir uma conversa.
+      setTimeout(()=>loadChatExtras().catch(()=>{}),120)
     })
   }
   const chats=document.querySelector('[data-tab="chats"]')
-  if(chats&&!chats.dataset.extraLoaderV12){
-    chats.dataset.extraLoaderV12='1'
+  if(chats&&!chats.dataset.extraLoaderRestored){
+    chats.dataset.extraLoaderRestored='1'
     chats.addEventListener('click',()=>{
       if($('chatPanel')&&!$('chatPanel').classList.contains('hidden'))loadChatExtras().catch(()=>{})
     })
   }
   const supervision=document.querySelector('[data-tab="supervision"]')
-  if(supervision&&!supervision.dataset.extraLoaderV12){
-    supervision.dataset.extraLoaderV12='1'
+  if(supervision&&!supervision.dataset.extraLoaderRestored){
+    supervision.dataset.extraLoaderRestored='1'
     supervision.addEventListener('click',()=>loadSupervisionExtras().catch(()=>{}))
   }
   return true
@@ -67,7 +72,7 @@ function start(){
   const main=$('mainView')
   if(main){const obs=new MutationObserver(()=>{if(wire())obs.disconnect()});obs.observe(main,{attributes:true,attributeFilter:['class']})}
   let tries=0
-  const retry=()=>{if(wire()||++tries>=40)return;setTimeout(retry,250)}
+  const retry=()=>{if(wire()||++tries>=50)return;setTimeout(retry,250)}
   retry()
 }
 start()
