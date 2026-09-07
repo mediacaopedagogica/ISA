@@ -1,5 +1,34 @@
 if(new URLSearchParams(location.search).get('mobile')==='1'){
-  window.__ISA_MOBILE_GUARD__={dedicated:true}
+  const $m=id=>document.getElementById(id)
+  document.body.classList.add('mobile-native-mode')
+  if(!document.querySelector('link[data-mobile-native-early]')){
+    const l=document.createElement('link')
+    l.rel='stylesheet';l.href='./mobile-native.css?v=2-early';l.dataset.mobileNativeEarly='1'
+    document.head.appendChild(l)
+  }
+  function syncDedicated(){
+    const main=$m('mainView');if(!main)return
+    const visible=el=>!!el&&!el.classList.contains('hidden')
+    const chat=$m('chatPanel'),calendar=$m('calendarPanel'),supervision=$m('supervisionPanel'),parents=$m('parentsPanel'),study=$m('studyPanel')
+    const anyPanel=[chat,calendar,supervision,parents,study].some(visible)
+    main.classList.toggle('mobile-native-content',anyPanel)
+    if(!anyPanel){
+      const list=$m('chatList');if(list){list.style.removeProperty('display');list.style.removeProperty('pointer-events')}
+    }
+  }
+  const observer=new MutationObserver(syncDedicated)
+  function startDedicated(){
+    ;['chatPanel','calendarPanel','supervisionPanel','parentsPanel','studyPanel'].forEach(id=>{
+      const el=$m(id)
+      if(el&&!el.dataset.mobileEarlyObserved){
+        el.dataset.mobileEarlyObserved='1'
+        observer.observe(el,{attributes:true,attributeFilter:['class']})
+      }
+    })
+    syncDedicated()
+  }
+  startDedicated();document.addEventListener('DOMContentLoaded',startDedicated,{once:true});setTimeout(startDedicated,150);setTimeout(startDedicated,700)
+  window.__ISA_MOBILE_GUARD__={dedicated:true,syncDedicated}
 }else{
 const mobileMQ=matchMedia('(max-width:850px)')
 const $m=id=>document.getElementById(id)
