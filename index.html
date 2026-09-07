@@ -157,8 +157,7 @@
 (async()=>{try{if('caches' in window){const keys=await caches.keys();await Promise.all(keys.filter(k=>k.startsWith('cantinho-isa-')).map(k=>caches.delete(k)))}if('serviceWorker' in navigator){const reg=await navigator.serviceWorker.register('./sw.js?v=30',{scope:'./'});reg.update().catch(()=>{})}}catch(error){console.warn('Recuperação de cache:',error)}})();
 </script>
 <script defer src="./app-v35.js?v=35"></script>
-<script type="module" src="./external-access-controls.js?v=9"></script>
-<script type="module" src="./group-controls.js?v=2"></script>
+<script type="module" src="./extras-loader.js?v=1"></script>
 <script>
 window.addEventListener('load',()=>{setTimeout(()=>{if(window.__ISA_SCRIPT_LOADED__)return;const msg=document.getElementById('loginMsg');if(msg){msg.textContent='O aplicativo não conseguiu carregar. Clique em Recarregar.';msg.style.color='#a15472';const b=document.createElement('button');b.type='button';b.className='soft-btn';b.textContent='Recarregar';b.style.marginTop='10px';b.onclick=()=>location.reload();msg.after(b)}},3500)});
 </script>
