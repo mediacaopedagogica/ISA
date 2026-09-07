@@ -1,53 +1,32 @@
 const $=id=>document.getElementById(id)
-let studyLoading=null,studyTimeout=null
+let studyLoading=null
+const studyModules=['./study.js','./study-document.js','./study-document-collab.js','./retention-notice.js','./study-randomizer.js','./study-flashcards.js','./study-flashcards-delete.js','./study-ideas.js','./study-mindmap.js','./study-periodic.js','./study-material-manager.js','./study-timer.js']
 function isIsa(){return String($('myName')?.textContent||'').trim().toLowerCase()==='isa'}
 function toast(text,ms=3200){const t=$('toast');if(!t){alert(text);return}t.textContent=text;t.classList.remove('hidden');clearTimeout(t._isaTools);t._isaTools=setTimeout(()=>t.classList.add('hidden'),ms)}
-function waitStudyReady(timeout=9000){return new Promise((resolve,reject)=>{const start=Date.now(),tick=()=>{if(typeof window.__ISA_OPEN_STUDY__==='function')return resolve();if(Date.now()-start>timeout)return reject(new Error('Estudos demorou para iniciar. Tente novamente.'));setTimeout(tick,80)};tick()})}
-function resetStudyLoader(){
-  studyLoading=null
-  clearTimeout(studyTimeout)
-  document.querySelectorAll('script[data-study-bundle][data-failed="1"]').forEach(s=>s.remove())
-}
-function ensureStudyBundle(){
-  if(typeof window.__ISA_OPEN_STUDY__==='function')return Promise.resolve()
+async function ensureStudyModules(){
+  if(typeof window.__ISA_OPEN_STUDY__==='function')return true
   if(studyLoading)return studyLoading
-  studyLoading=new Promise((resolve,reject)=>{
-    let existing=document.querySelector('script[data-study-bundle]')
-    if(existing){
-      waitStudyReady(5000).then(resolve).catch(()=>{
-        existing.dataset.failed='1';existing.remove();resetStudyLoader();reject(new Error('Estudos não respondeu. Toque novamente para tentar de novo.'))
-      });return
+  studyLoading=(async()=>{
+    for(const path of studyModules){
+      try{await import(`${path}?v=40-stable`)}catch(e){console.warn('Módulo de Estudos indisponível:',path,e)}
     }
-    const s=document.createElement('script')
-    s.src=`./study-bundle-v36.js?v=39-${Date.now()}`
-    s.async=true
-    s.dataset.studyBundle='1'
-    studyTimeout=setTimeout(()=>{
-      s.dataset.failed='1';s.remove();studyLoading=null
-      reject(new Error('Estudos demorou para carregar. Tente novamente.'))
-    },12000)
-    s.onload=()=>{clearTimeout(studyTimeout);waitStudyReady(7000).then(resolve).catch(err=>{s.dataset.failed='1';studyLoading=null;reject(err)})}
-    s.onerror=()=>{clearTimeout(studyTimeout);s.dataset.failed='1';studyLoading=null;reject(new Error('Não foi possível carregar Estudos. Tente novamente.'))}
-    document.body.appendChild(s)
-  }).catch(e=>{studyLoading=null;throw e})
+    if(typeof window.__ISA_OPEN_STUDY__!=='function')throw new Error('Estudos não conseguiu iniciar.')
+    return true
+  })().catch(e=>{studyLoading=null;throw e})
   return studyLoading
 }
 function setActiveNav(tab){document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab))}
 async function openStudy(){
   if(!isIsa())return
   const b=$('studyNav');if(b){b.disabled=true;b.dataset.loading='1';b.setAttribute('aria-busy','true')}
-  toast('Abrindo Estudos…',1800)
+  toast('Abrindo Estudos…',1600)
   try{
     window.__ISA_STUDY_SCOPE_HINT__='private'
+    await ensureStudyModules()
     window.__ISA_MOBILE_SHOW_CONTENT__?.('panel')
-    await ensureStudyBundle()
-    if(typeof window.__ISA_OPEN_STUDY__!=='function')throw new Error('Estudos não conseguiu iniciar.')
-    await Promise.race([
-      Promise.resolve(window.__ISA_OPEN_STUDY__('private')),
-      new Promise((_,rej)=>setTimeout(()=>rej(new Error('Estudos demorou para abrir. Tente novamente.')),9000))
-    ])
+    await Promise.resolve(window.__ISA_OPEN_STUDY__('private'))
     setActiveNav('study')
-  }catch(e){console.error('Estudos:',e);toast(e.message||'Não foi possível abrir Estudos.',4200);resetStudyLoader()}
+  }catch(e){console.error('Estudos:',e);toast(e.message||'Não foi possível abrir Estudos.',4200);studyLoading=null}
   finally{if(b){b.disabled=false;delete b.dataset.loading;b.removeAttribute('aria-busy')}}
 }
 function openDiary(){if(isIsa())location.href='./diario.html?v=capa-3d-2'}
@@ -76,8 +55,8 @@ function ensureConversationMenu(){
 }
 function wireOnce(){
   wireNav();ensureConversationMenu()
-  const list=$('chatList');if(list&&!list.dataset.isaToolsV6){list.dataset.isaToolsV6='1';list.addEventListener('click',e=>{if(e.target.closest('.chat-item[data-conv]'))setTimeout(ensureConversationMenu,90)})}
-  const chats=document.querySelector('[data-tab="chats"]');if(chats&&!chats.dataset.isaToolsV6){chats.dataset.isaToolsV6='1';chats.addEventListener('click',()=>setTimeout(ensureConversationMenu,80))}
+  const list=$('chatList');if(list&&!list.dataset.isaToolsV7){list.dataset.isaToolsV7='1';list.addEventListener('click',e=>{if(e.target.closest('.chat-item[data-conv]'))setTimeout(ensureConversationMenu,90)})}
+  const chats=document.querySelector('[data-tab="chats"]');if(chats&&!chats.dataset.isaToolsV7){chats.dataset.isaToolsV7='1';chats.addEventListener('click',()=>setTimeout(ensureConversationMenu,80))}
 }
 function start(){
   wireOnce()
