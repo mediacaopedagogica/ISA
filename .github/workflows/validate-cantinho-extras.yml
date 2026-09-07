@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - 'index.html'
+      - 'postboot-loader.js'
+      - 'mobile-stability-fix.css'
       - 'extras-loader.js'
       - 'mobile-responsive-v2.js'
       - 'mobile-responsive-v2.css'
@@ -41,6 +43,7 @@ jobs:
 
       - name: Verificar sintaxe JavaScript
         run: |
+          node --check postboot-loader.js
           node --check extras-loader.js
           node --check mobile-responsive-v2.js
           node --check notifications-v2.js
@@ -61,23 +64,21 @@ jobs:
 
       - name: Proteger recursos aprovados
         run: |
-          # Núcleo e módulos precisam continuar ligados no app principal.
           grep -q 'app-v34.js' index.html
-          grep -q 'mobile-responsive-v2.js' index.html
-          grep -q 'notifications-v2.js' index.html
-          grep -q 'extras-loader.js' index.html
+          grep -q 'postboot-loader.js' index.html
+          grep -q 'mobile-stability-fix.css' index.html
+          grep -q 'mobile-responsive-v2.js' postboot-loader.js
+          grep -q 'notifications-v2.js' postboot-loader.js
+          grep -q 'extras-loader.js' postboot-loader.js
 
-          # Perfil com foto OU mascote.
           grep -q 'profile-mascot.js' extras-loader.js
           grep -q 'Escolha uma foto ou um mascote' profile-mascot.js
           grep -q 'profileAvatarInput' profile-mascot.js
 
-          # Fixação individual por estrela/coração.
           grep -q 'conversation-pins.js' extras-loader.js
           grep -q "marker==='heart'?'💜':'⭐'" conversation-pins.js
           grep -q 'conversation_pins' conversation-pins.js
 
-          # Áudio, foto, chamada de voz e videochamada próprias.
           grep -q 'family-media-menu-v2.js' extras-loader.js
           grep -q 'recordAudio' family-media-menu-v2.js
           grep -q 'Gravar áudio' family-media-menu-v2.js
@@ -86,19 +87,16 @@ jobs:
           grep -q 'Chamada de voz' call-manager.js
           grep -q 'Videochamada' call-manager.js
 
-          # Navegação: Isa = Chat/Calendário/Estudos/Diário; Keise/Alan = Chat/Calendário/Supervisão/Super Pais.
           grep -q 'studyNav' isa-tools.js
           grep -q 'diaryNav' isa-tools.js
           grep -q "who()==='isa'" mobile-responsive-v2.js
           grep -q "who()==='keise'||who()==='alan'" mobile-responsive-v2.js
           grep -q 'grid-template-columns:repeat(4' mobile-responsive-v2.css
 
-          # Diário 3D interno precisa permanecer completo.
           grep -q 'diario-inner-v3.css' diario.html
           grep -q 'diario-inner-v3.js' diario.html
           grep -q 'Meu Diário' diario.html
           grep -q 'Post-its' diario.html
 
-          # Aparência 3D/pastel aprovada.
           test -s app-3d.css
           test -s heart-polish.css
