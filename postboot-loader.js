@@ -12,7 +12,7 @@ async function loadWithRetry(path){
 
 const dedicatedMobile=new URLSearchParams(location.search).get('mobile')==='1'
 const paths=dedicatedMobile?[
-  './mobile-native.js?v=1',
+  './mobile-native.js?v=2-back-fix',
   './notifications-v2.js?v=9-stable',
   './extras-loader.js?v=14-mobile-native'
 ]:[
