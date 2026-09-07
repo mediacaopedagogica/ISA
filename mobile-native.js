@@ -23,7 +23,6 @@ if(mobileParams.get('mobile')==='1'){
     m.classList.remove('mobile-native-content')
     ensureBack().classList.add('hidden')
     document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab==='chats'))
-    try{window.switchTab?.('chats')}catch{}
   }
   function showContent(kind='panel'){
     const m=main();if(!m)return
