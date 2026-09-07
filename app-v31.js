@@ -1,123 +1,44 @@
 (()=>{
-  if(window.__ISA_LIGHT_BOOT__)return
-  window.__ISA_LIGHT_BOOT__=true
+  if(window.__ISA_LIGHT_BOOT__)return;
+  window.__ISA_LIGHT_BOOT__=true;
+  window.__ISA_SCRIPT_LOADED__=true;
 
-  function css(id,href){
-    let el=document.getElementById(id)
-    if(el)return el
-    el=document.createElement('link')
-    el.id=id;el.rel='stylesheet';el.href=href
-    document.head.appendChild(el)
-    return el
-  }
-  function module(id,src){
-    if(document.getElementById(id))return
-    const s=document.createElement('script')
-    s.id=id;s.type='module';s.src=src;s.async=true
-    document.body.appendChild(s)
-  }
-  function showLogin(){document.getElementById('loginView')?.classList.remove('hidden')}
-  function personalOverlay(text='Entrando no seu Cantinho…'){
-    let el=document.getElementById('personalBootOverlay')
-    if(!el){
-      el=document.createElement('div')
-      el.id='personalBootOverlay'
-      el.style.cssText='position:fixed;inset:0;z-index:99999;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 15% 15%,#fff0f6 0 18%,transparent 42%),radial-gradient(circle at 86% 12%,#eee4ff 0 18%,transparent 42%),#f8f2fb;color:#65536f;font-family:Inter,Segoe UI,system-ui,sans-serif'
-      el.innerHTML='<div style="width:min(440px,94vw);padding:34px 28px;text-align:center;border-radius:32px;background:rgba(255,255,255,.86);border:1px solid rgba(255,255,255,.96);box-shadow:0 20px 55px rgba(95,70,110,.14)"><div style="font-size:52px;color:#dca7c9">♥</div><h2 id="personalBootTitle" style="margin:10px 0 8px">Abrindo seu Cantinho…</h2><p id="personalBootText" style="margin:0;color:#92849a">Entrando…</p></div>'
-      document.body.appendChild(el)
-    }
-    const p=document.getElementById('personalBootText');if(p)p.textContent=text
-    return el
-  }
-  function fail(text,personal=false){
-    console.error(text)
-    if(personal){
-      const el=personalOverlay(text)
-      const title=document.getElementById('personalBootTitle');if(title)title.textContent='Não foi possível abrir'
-      let b=el.querySelector('button')
-      if(!b){b=document.createElement('button');b.type='button';b.textContent='Tentar novamente';b.style.cssText='margin-top:18px;border:0;border-radius:16px;padding:12px 18px;background:#e8dcff;color:#655078;font-weight:800;cursor:pointer';b.onclick=()=>location.reload();el.firstElementChild?.appendChild(b)}
-      document.getElementById('loginView')?.classList.add('hidden')
-      return
-    }
-    showLogin()
-    const msg=document.getElementById('loginMsg')
-    if(msg){msg.textContent=text;msg.style.color='#a15472'}
+  const profileRaw=(new URLSearchParams(location.search).get('perfil')||'').trim();
+  const profile=['Keise','Alan','Isa'].find(n=>n.toLowerCase()===profileRaw.toLowerCase())||'';
+
+  if(!document.getElementById('isaChatCardsCss')){
+    const link=document.createElement('link');
+    link.id='isaChatCardsCss';
+    link.rel='stylesheet';
+    link.href='./chat-cards-3d-v2.css?v=46';
+    document.head.appendChild(link);
   }
 
-  css('isaApp3dRestore','./app-3d.css?v=restore-37')
-  css('isaMobileRestore','./mobile-responsive-v2.css?v=7-restore')
-  css('isaHeartRestore','./heart-polish.css?v=restore-37')
-  css('isaChatCardsRestore','./chat-cards-3d-v2.css?v=3-restore')
+  const showError=(text)=>{
+    const login=document.getElementById('loginView');
+    const main=document.getElementById('mainView');
+    if(main)main.classList.add('hidden');
+    if(login)login.classList.remove('hidden');
+    const msg=document.getElementById('loginMsg');
+    if(msg){msg.textContent=text;msg.style.color='#a15472';}
+  };
 
-  const params=new URLSearchParams(location.search)
-  const hash=new URLSearchParams(location.hash.replace(/^#/,''))
-  const profileRaw=(params.get('perfil')||'').trim()
-  const profileName=['Keise','Alan','Isa'].find(n=>n.toLowerCase()===profileRaw.toLowerCase())||''
-  const personal=!!profileName
-  const accessToken=hash.get('access_token')||''
-  const refreshToken=hash.get('refresh_token')||''
+  import('./app.js?v=46').catch(error=>{
+    console.error('Falha ao carregar o Cantinho:',error);
+    showError('Não foi possível abrir o Cantinho. Atualize a página e tente novamente.');
+  });
 
-  async function loadPatchedCore(personalMode=false){
-    if(document.getElementById('isaCoreV34Restored'))return
-    if(personalMode){
-      const overlay=personalOverlay('Carregando suas conversas…')
-      const main=document.getElementById('mainView')
-      const login=document.getElementById('loginView')
-      const watch=()=>{
-        if(main&&!main.classList.contains('hidden')){overlay.remove();observer.disconnect();return}
-        if(login&&!login.classList.contains('hidden')){
-          login.classList.add('hidden')
-          fail('A sessão não abriu corretamente. Tente novamente.',true)
-          observer.disconnect()
-        }
+  if(profile){
+    const started=Date.now();
+    const timer=setInterval(()=>{
+      const main=document.getElementById('mainView');
+      const login=document.getElementById('loginView');
+      if(main&&!main.classList.contains('hidden')){clearInterval(timer);return;}
+      if(login&&!login.classList.contains('hidden')){clearInterval(timer);return;}
+      if(Date.now()-started>20000){
+        clearInterval(timer);
+        showError(`Não foi possível abrir como ${profile}. Tente o link novamente.`);
       }
-      const observer=new MutationObserver(watch)
-      if(main)observer.observe(main,{attributes:true,attributeFilter:['class']})
-      if(login)observer.observe(login,{attributes:true,attributeFilter:['class']})
-      setTimeout(()=>{if(main?.classList.contains('hidden'))personalOverlay('Ainda carregando…')},5000)
-    }else showLogin()
-
-    try{
-      const r=await fetch('./app-v34.js?v=34-hotfix-45',{cache:'no-store'})
-      if(!r.ok)throw new Error('Não foi possível carregar o núcleo do Cantinho.')
-      let source=await r.text()
-      const marker='\n  __isaCore34().then(() => {'
-      const markerAt=source.lastIndexOf(marker)
-      if(markerAt<0)throw new Error('Núcleo incompatível com a inicialização.')
-      const closeAt=source.lastIndexOf('\n  }',markerAt)
-      if(closeAt<0)throw new Error('Não foi possível iniciar o aplicativo.')
-      source=source.slice(0,closeAt)+'\n    await boot();'+source.slice(closeAt)
-      const blobUrl=URL.createObjectURL(new Blob([source],{type:'text/javascript'}))
-      const core=document.createElement('script')
-      core.id='isaCoreV34Restored';core.src=blobUrl;core.async=false
-      core.onload=()=>{
-        URL.revokeObjectURL(blobUrl)
-        module('isaMobileJsRestore','./mobile-responsive-v2.js?v=7-restore')
-        module('isaNotificationsRestore','./notifications-v2.js?v=5-restore')
-        module('isaExtrasRestore','./extras-loader.js?v=14-restore')
-      }
-      core.onerror=()=>{URL.revokeObjectURL(blobUrl);fail('Não foi possível carregar o núcleo do Cantinho.',personalMode)}
-      document.body.appendChild(core)
-    }catch(e){fail(e?.message||'Não foi possível iniciar o Cantinho.',personalMode)}
+    },300);
   }
-
-  ;(async()=>{
-    if(!personal){await loadPatchedCore(false);return}
-    personalOverlay(`Abrindo como ${profileName}…`)
-    try{
-      const [{createClient},{CONFIG}]=await Promise.all([
-        import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'),
-        import('./config.js')
-      ])
-      const sb=createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}})
-      if(accessToken&&refreshToken){
-        const {error}=await sb.auth.setSession({access_token:accessToken,refresh_token:refreshToken})
-        if(error)throw error
-      }
-      const {data:{user},error:userError}=await sb.auth.getUser()
-      if(userError||!user)throw userError||new Error('Sessão não encontrada')
-      history.replaceState(null,'',`./?perfil=${encodeURIComponent(profileName)}`)
-      await loadPatchedCore(true)
-    }catch(e){fail(e?.message||'Não foi possível confirmar sua sessão.',true)}
-  })()
-})()
+})();
