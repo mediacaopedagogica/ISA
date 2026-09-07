@@ -1,0 +1,9 @@
+@media(max-width:850px){
+  #mainView.hidden{display:none!important}
+  #mainView:not(.hidden){display:block!important}
+  #mainView:not(.hidden):not(.mobile-content-open)>.sidebar{display:flex!important}
+  #mainView:not(.hidden):not(.mobile-content-open)>.content{display:none!important}
+  #mainView.mobile-content-open>.sidebar{display:none!important}
+  #mainView.mobile-content-open>.content{display:block!important}
+  #loginView.hidden,#setupView.hidden{display:none!important}
+}
