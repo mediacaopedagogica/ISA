@@ -23,6 +23,10 @@ async function loadGroupTools(){
   await loadOnce('groups','./group-controls.js?v=3')
 }
 
+async function loadCalls(){
+  await loadOnce('calls','./call-manager.js?v=1')
+}
+
 async function loadChatExtras(){
   await loadOnce('family-media','./family-media-menu.js?v=4')
   await loadOnce('native-media','./native-media-bridge.js?v=4')
@@ -44,6 +48,7 @@ function wire(){
 
   loadProfile().catch(()=>{})
   loadGroupTools().catch(()=>{})
+  loadCalls().catch(()=>{})
 
   const chatList=$('chatList')
   if(chatList&&!chatList.dataset.extraLoaderBound){
