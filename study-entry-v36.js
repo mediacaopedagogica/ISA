@@ -1,3 +1,4 @@
+// Entrada das ferramentas de Estudos — v36
 import './study.js'
 import './study-document.js'
 import './retention-notice.js'
