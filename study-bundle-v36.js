@@ -12344,12 +12344,12 @@ Option 2: Install and provide the "ws" package:
      * @category Auth
      * @subcategory Auth Admin
      */
-    async signOut(jwt, scope4 = SIGN_OUT_SCOPES[0]) {
-      if (SIGN_OUT_SCOPES.indexOf(scope4) < 0) {
+    async signOut(jwt, scope5 = SIGN_OUT_SCOPES[0]) {
+      if (SIGN_OUT_SCOPES.indexOf(scope5) < 0) {
         throw new Error(`@supabase/auth-js: Parameter scope must be one of ${SIGN_OUT_SCOPES.join(", ")}`);
       }
       try {
-        await _request(this.fetch, "POST", `${this.url}/logout?scope=${scope4}`, {
+        await _request(this.fetch, "POST", `${this.url}/logout?scope=${scope5}`, {
           headers: this.headers,
           jwt,
           noResolveJson: true
@@ -17261,7 +17261,7 @@ ${suffix}`;
       }
       return await this._signOut(options);
     }
-    async _signOut({ scope: scope4 } = { scope: "global" }) {
+    async _signOut({ scope: scope5 } = { scope: "global" }) {
       return await this._useSession(async (result) => {
         var _a;
         const { data, error: sessionError } = result;
@@ -17270,14 +17270,14 @@ ${suffix}`;
         }
         const accessToken = (_a = data.session) === null || _a === void 0 ? void 0 : _a.access_token;
         if (accessToken) {
-          const { error } = await this.admin.signOut(accessToken, scope4);
+          const { error } = await this.admin.signOut(accessToken, scope5);
           if (error) {
             if (!(isAuthApiError(error) && (error.status === 404 || error.status === 401 || error.status === 403) || isAuthSessionMissingError(error))) {
               return this._returnResult({ error });
             }
           }
         }
-        if (scope4 !== "others") {
+        if (scope5 !== "others") {
           await this._removeSession();
           await removeItemAsync(this.storage, `${this.storageKey}-code-verifier`);
         }
@@ -17794,7 +17794,7 @@ ${suffix}`;
      * const { error } = await supabase.auth.unlinkIdentity(googleIdentity)
      * ```
      */
-    async unlinkIdentity(identity9) {
+    async unlinkIdentity(identity10) {
       try {
         return await this._useSession(async (result) => {
           var _a, _b;
@@ -17802,7 +17802,7 @@ ${suffix}`;
           if (error) {
             throw error;
           }
-          return await _request(this.fetch, "DELETE", `${this.url}/user/identities/${identity9.identity_id}`, {
+          return await _request(this.fetch, "DELETE", `${this.url}/user/identities/${identity10.identity_id}`, {
             headers: this.headers,
             jwt: (_b = (_a = data.session) === null || _a === void 0 ? void 0 : _a.access_token) !== null && _b !== void 0 ? _b : void 0
           });
@@ -20017,11 +20017,11 @@ ${suffix}`;
   function initStudyCalculator({ onSendResult }) {
     const $4 = (id) => document.getElementById(id);
     let expression = "", result = "0", history = [], scientific = false;
-    const esc8 = (v) => String(v ?? "").replace(/[&<>'"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[c]);
+    const esc9 = (v) => String(v ?? "").replace(/[&<>'"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[c]);
     function renderHistory() {
       const box = $4("calcHistory");
       if (!box) return;
-      box.innerHTML = history.map((h, i) => `<div class="calc-history-row"><span>${esc8(h.expression)} = <strong>${esc8(h.result)}</strong></span><button type="button" data-send-calc="${i}">Enviar ao caderno</button></div>`).join("");
+      box.innerHTML = history.map((h, i) => `<div class="calc-history-row"><span>${esc9(h.expression)} = <strong>${esc9(h.result)}</strong></span><button type="button" data-send-calc="${i}">Enviar ao caderno</button></div>`).join("");
       box.querySelectorAll("[data-send-calc]").forEach((b) => b.onclick = () => onSendResult?.(history[Number(b.dataset.sendCalc)]));
     }
     function render6() {
@@ -20688,6 +20688,226 @@ ${suffix}`;
   }
   waitMount();
 
+  // study-document-collab.js
+  var dbC = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+  var $c = (id) => document.getElementById(id);
+  var meC = null;
+  var currentDoc = null;
+  var channelC = null;
+  var resolveTimer = null;
+  var broadcastTimer = null;
+  var lastLocalAt = 0;
+  var editors = /* @__PURE__ */ new Map();
+  function css2() {
+    if (document.querySelector('link[href^="study-document-collab.css"]')) return;
+    const l = document.createElement("link");
+    l.rel = "stylesheet";
+    l.href = "study-document-collab.css?v=1";
+    document.head.appendChild(l);
+  }
+  function esc2(v) {
+    return String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  }
+  function toast2(t) {
+    const x = $c("toast");
+    if (!x) return;
+    x.textContent = t;
+    x.classList.remove("hidden");
+    setTimeout(() => x.classList.add("hidden"), 1800);
+  }
+  async function identity2() {
+    if (meC) return meC;
+    const { data: { user } } = await dbC.auth.getUser();
+    if (!user) throw new Error("Sem sess\xE3o");
+    const { data, error } = await dbC.from("family_members").select("id,family_id,display_name").eq("auth_user_id", user.id).eq("active", true).single();
+    if (error) throw error;
+    meC = data;
+    return data;
+  }
+  function scope2() {
+    return $c("studyScope")?.value || "private";
+  }
+  async function resolveDoc() {
+    clearTimeout(resolveTimer);
+    if (!$c("docPage") || $c("studyDocument")?.classList.contains("hidden")) return;
+    await identity2();
+    const conv = scope2();
+    if (conv === "private") {
+      currentDoc = null;
+      disconnect();
+      paintEditors();
+      return;
+    }
+    const title = $c("docTitle")?.value.trim() || "Sem t\xEDtulo";
+    const html = $c("docPage")?.innerHTML || "";
+    const { data, error } = await dbC.from("study_items").select("id,title,content,owner_member_id,allowed_member_ids,conversation_id,visibility,updated_at").eq("item_type", "document").eq("conversation_id", conv).eq("title", title).order("updated_at", { ascending: false }).limit(10);
+    if (error || !data?.length) {
+      currentDoc = null;
+      disconnect();
+      return;
+    }
+    currentDoc = data.find((x) => (x.content?.html || "") === html) || data[0];
+    connect();
+  }
+  function disconnect() {
+    if (channelC) {
+      dbC.removeChannel(channelC);
+      channelC = null;
+    }
+    editors.clear();
+  }
+  async function connect() {
+    if (!currentDoc) return;
+    if (channelC?._docId === currentDoc.id) return;
+    disconnect();
+    await dbC.realtime.setAuth().catch(() => {
+    });
+    channelC = dbC.channel(`study-doc:${currentDoc.id}`, { config: { private: true, broadcast: { ack: false } } });
+    channelC._docId = currentDoc.id;
+    channelC.on("broadcast", { event: "doc-content" }, ({ payload }) => {
+      if (!payload || payload.memberId === meC?.id) return;
+      editors.set(payload.memberId, { name: payload.name || "Colega", at: Date.now() });
+      paintEditors();
+      const apply = () => {
+        if (!$c("docPage")) return;
+        if (payload.html !== void 0) $c("docPage").innerHTML = payload.html;
+        if (payload.title && $c("docTitle")) $c("docTitle").value = payload.title;
+      };
+      if (Date.now() - lastLocalAt < 450) setTimeout(apply, 500);
+      else apply();
+    }).on("broadcast", { event: "doc-editing" }, ({ payload }) => {
+      if (!payload || payload.memberId === meC?.id) return;
+      editors.set(payload.memberId, { name: payload.name || "Colega", at: Date.now() });
+      paintEditors();
+    }).subscribe();
+    paintEditors();
+  }
+  function paintEditors() {
+    const el = $c("docLiveEditors");
+    if (!el) return;
+    const now = Date.now();
+    for (const [id, v] of editors) if (now - v.at > 3500) editors.delete(id);
+    const names = [...editors.values()].map((v) => v.name);
+    el.textContent = names.length ? `${names.join(", ")} ${names.length === 1 ? "est\xE1" : "est\xE3o"} editando` : scope2() === "private" ? "Documento individual" : "Colabora\xE7\xE3o em tempo real";
+  }
+  function sendLive() {
+    if (!channelC || !currentDoc) return;
+    clearTimeout(broadcastTimer);
+    broadcastTimer = setTimeout(() => {
+      channelC.send({ type: "broadcast", event: "doc-content", payload: { memberId: meC.id, name: meC.display_name, html: $c("docPage")?.innerHTML || "", title: $c("docTitle")?.value || "", at: Date.now() } }).catch(() => {
+      });
+    }, 180);
+    channelC.send({ type: "broadcast", event: "doc-editing", payload: { memberId: meC.id, name: meC.display_name, at: Date.now() } }).catch(() => {
+    });
+  }
+  async function membersForGroup(conv) {
+    const { data: cm } = await dbC.from("conversation_members").select("member_id").eq("conversation_id", conv);
+    const ids = (cm || []).map((x) => x.member_id);
+    if (!ids.length) return [];
+    const { data } = await dbC.from("family_members").select("id,display_name").in("id", ids).eq("active", true).order("display_name");
+    return data || [];
+  }
+  async function shareDialog() {
+    await identity2();
+    const conv = scope2();
+    if (conv === "private") return toast2("Escolha um grupo em \u201CS\xF3 meu / Grupo\u201D antes de compartilhar.");
+    if (!currentDoc) {
+      $c("docSaveBtn")?.click();
+      await new Promise((r) => setTimeout(r, 1400));
+      await resolveDoc();
+    }
+    if (!currentDoc) return toast2("Salve o documento antes de compartilhar.");
+    if (currentDoc.owner_member_id !== meC.id) return toast2("Somente quem criou o documento escolhe os colaboradores.");
+    const members = (await membersForGroup(conv)).filter((x) => x.id !== meC.id), selected = new Set(currentDoc.allowed_member_ids || []);
+    let d = $c("docCollabModal");
+    if (!d) {
+      d = document.createElement("dialog");
+      d.id = "docCollabModal";
+      d.className = "doc-collab-modal";
+      d.innerHTML = '<div class="doc-collab-inner"><button id="docCollabClose" style="float:right" type="button">\u2715</button><div id="docCollabBody"></div></div>';
+      document.body.appendChild(d);
+      $c("docCollabClose").onclick = () => d.close();
+    }
+    $c("docCollabBody").innerHTML = `<h3>Compartilhar documento</h3><div class="doc-share-note">Marque quem deste grupo pode colaborar. Se escolher \u201CTodos do grupo\u201D, qualquer integrante do grupo poder\xE1 editar.</div><label class="doc-collab-member"><input id="docShareAll" type="checkbox" ${selected.size === 0 ? "checked" : ""}> <strong>Todos do grupo</strong></label><div id="docSharePeople">${members.map((m) => `<label class="doc-collab-member"><input type="checkbox" data-share-member="${m.id}" ${selected.has(m.id) ? "checked" : ""}> ${esc2(m.display_name)}</label>`).join("")}</div><div class="doc-collab-actions"><button id="docShareSave" type="button">Salvar colabora\xE7\xE3o</button></div><p class="doc-collab-owner">Somente pessoas que j\xE1 pertencem a este grupo podem ser selecionadas.</p>`;
+    const all = $c("docShareAll"), boxes = [...document.querySelectorAll("[data-share-member]")];
+    const sync = () => boxes.forEach((b) => b.disabled = all.checked);
+    all.onchange = sync;
+    sync();
+    $c("docShareSave").onclick = async () => {
+      const ids = all.checked ? [] : boxes.filter((b) => b.checked).map((b) => b.dataset.shareMember);
+      if (!all.checked && !ids.length) return toast2("Marque pelo menos uma pessoa ou escolha todos do grupo.");
+      const { data, error } = await dbC.from("study_items").update({ allowed_member_ids: ids, updated_by: meC.id }).eq("id", currentDoc.id).select("id,title,content,owner_member_id,allowed_member_ids,conversation_id,visibility,updated_at").single();
+      if (error) {
+        console.error(error);
+        return toast2("N\xE3o foi poss\xEDvel atualizar a colabora\xE7\xE3o.");
+      }
+      currentDoc = data;
+      d.close();
+      connect();
+      toast2(all.checked ? "Documento compartilhado com o grupo" : "Colaboradores atualizados");
+    };
+    d.showModal();
+  }
+  function decorate() {
+    css2();
+    const bar = document.querySelector(".doc-commandbar");
+    if (!bar || !$c("docPage")) return false;
+    if (!$c("docShareBtn")) {
+      const b = document.createElement("button");
+      b.id = "docShareBtn";
+      b.type = "button";
+      b.className = "doc-share-btn";
+      b.textContent = "Compartilhar";
+      bar.appendChild(b);
+      const s = document.createElement("span");
+      s.id = "docLiveEditors";
+      s.className = "doc-live-editors";
+      s.textContent = "Documento individual";
+      bar.appendChild(s);
+      b.onclick = shareDialog;
+      $c("docPage").addEventListener("input", () => {
+        lastLocalAt = Date.now();
+        sendLive();
+      });
+      $c("docTitle").addEventListener("input", () => {
+        lastLocalAt = Date.now();
+        sendLive();
+        clearTimeout(resolveTimer);
+        resolveTimer = setTimeout(resolveDoc, 1200);
+      });
+      $c("studyScope")?.addEventListener("change", () => {
+        currentDoc = null;
+        disconnect();
+        clearTimeout(resolveTimer);
+        resolveTimer = setTimeout(resolveDoc, 900);
+      });
+      const obs = new MutationObserver(() => {
+        if ($c("docSaveState")?.textContent.includes("Salvo")) {
+          clearTimeout(resolveTimer);
+          resolveTimer = setTimeout(resolveDoc, 350);
+        }
+      });
+      obs.observe($c("docSaveState"), { childList: true, characterData: true, subtree: true });
+      setInterval(paintEditors, 1200);
+    }
+    return true;
+  }
+  function wait() {
+    if (decorate()) return;
+    const o = new MutationObserver(() => {
+      if (decorate()) o.disconnect();
+    });
+    o.observe(document.documentElement, { childList: true, subtree: true });
+  }
+  wait();
+  dbC.auth.onAuthStateChange((_e, s) => {
+    if (!s) {
+      meC = null;
+      currentDoc = null;
+      disconnect();
+    }
+  });
+
   // retention-notice.js
   function ensureRetentionCss() {
     if (document.querySelector('link[href^="retention-notice.css"]')) return;
@@ -20737,10 +20957,10 @@ ${suffix}`;
     l.href = "study-randomizer.css?v=1";
     document.head.appendChild(l);
   }
-  function esc2(v) {
+  function esc3(v) {
     return String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   }
-  function toast2(t) {
+  function toast3(t) {
     const x = $r("toast");
     if (!x) return;
     x.textContent = t;
@@ -20758,7 +20978,7 @@ ${suffix}`;
   function lines(id) {
     return ($r(id)?.value || "").split(/\n+/).map((x) => x.trim()).filter(Boolean);
   }
-  async function identity2() {
+  async function identity3() {
     if (meR) return meR;
     const { data: { user } } = await dbR.auth.getUser();
     if (!user) throw new Error("Sem sess\xE3o");
@@ -20768,9 +20988,9 @@ ${suffix}`;
     return data;
   }
   async function groupMembers() {
-    const scope4 = $r("studyScope")?.value;
-    if (!scope4 || scope4 === "private") return [];
-    const { data: cm } = await dbR.from("conversation_members").select("member_id").eq("conversation_id", scope4);
+    const scope5 = $r("studyScope")?.value;
+    if (!scope5 || scope5 === "private") return [];
+    const { data: cm } = await dbR.from("conversation_members").select("member_id").eq("conversation_id", scope5);
     const ids = (cm || []).map((x) => x.member_id);
     if (!ids.length) return [];
     const { data } = await dbR.from("family_members").select("id,display_name").in("id", ids).eq("active", true).order("display_name");
@@ -20778,7 +20998,7 @@ ${suffix}`;
   }
   async function refillPeople() {
     try {
-      await identity2();
+      await identity3();
       const members = await groupMembers();
       if (members.length) $r("randomPeople").value = members.map((x) => x.display_name).join("\n");
       else if (!$r("randomPeople").value.trim()) $r("randomPeople").value = meR.display_name;
@@ -20788,20 +21008,20 @@ ${suffix}`;
   function renderResult() {
     const mode = $r("randomMode").value, people = lines("randomPeople"), items2 = lines("randomItems"), out = $r("randomResult");
     if (mode === "order") {
-      if (!people.length) return toast2("Adicione os nomes.");
+      if (!people.length) return toast3("Adicione os nomes.");
       const order = shuffle(people);
-      out.innerHTML = `<h4>Ordem sorteada</h4><div class="randomizer-order">${order.map((n, i) => `<span><strong>${i + 1}\xBA</strong> ${esc2(n)}</span>`).join("")}</div>`;
+      out.innerHTML = `<h4>Ordem sorteada</h4><div class="randomizer-order">${order.map((n, i) => `<span><strong>${i + 1}\xBA</strong> ${esc3(n)}</span>`).join("")}</div>`;
       return;
     }
     if (mode === "quick") {
-      if (!items2.length) return toast2("Adicione op\xE7\xF5es para sortear.");
+      if (!items2.length) return toast3("Adicione op\xE7\xF5es para sortear.");
       const chosen = items2[Math.floor(Math.random() * items2.length)];
-      out.innerHTML = `<h4>Resultado</h4><div class="randomizer-pair"><strong>${esc2(chosen)}</strong></div>`;
+      out.innerHTML = `<h4>Resultado</h4><div class="randomizer-pair"><strong>${esc3(chosen)}</strong></div>`;
       return;
     }
-    if (!people.length || !items2.length) return toast2("Adicione nomes e op\xE7\xF5es.");
+    if (!people.length || !items2.length) return toast3("Adicione nomes e op\xE7\xF5es.");
     const p = shuffle(people), it = shuffle(items2), label = mode === "themes" ? "Tema" : "Tarefa";
-    out.innerHTML = `<h4>${mode === "themes" ? "Temas sorteados" : "Tarefas sorteadas"}</h4>${p.map((name, i) => `<div class="randomizer-pair"><strong>${esc2(name)}</strong><span>${label}: ${esc2(it[i % it.length])}</span></div>`).join("")}`;
+    out.innerHTML = `<h4>${mode === "themes" ? "Temas sorteados" : "Tarefas sorteadas"}</h4>${p.map((name, i) => `<div class="randomizer-pair"><strong>${esc3(name)}</strong><span>${label}: ${esc3(it[i % it.length])}</span></div>`).join("")}`;
   }
   function mount2() {
     addCss2();
@@ -20854,14 +21074,14 @@ ${suffix}`;
     }
     return true;
   }
-  function wait() {
+  function wait2() {
     if (mount2()) return;
     const o = new MutationObserver(() => {
       if (mount2()) o.disconnect();
     });
     o.observe(document.documentElement, { childList: true, subtree: true });
   }
-  wait();
+  wait2();
   dbR.auth.onAuthStateChange((_e, s) => {
     if (!s) meR = null;
   });
@@ -20883,17 +21103,17 @@ ${suffix}`;
     l.href = "study-flashcards.css?v=1";
     document.head.appendChild(l);
   }
-  function esc3(v) {
+  function esc4(v) {
     return String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   }
-  function toast3(t) {
+  function toast4(t) {
     const x = $f("toast");
     if (!x) return;
     x.textContent = t;
     x.classList.remove("hidden");
     setTimeout(() => x.classList.add("hidden"), 1800);
   }
-  async function identity3() {
+  async function identity4() {
     if (meF) return meF;
     const { data: { user } } = await dbF.auth.getUser();
     if (!user) throw new Error("Sem sess\xE3o");
@@ -20909,54 +21129,54 @@ ${suffix}`;
   function renderEditor() {
     const box = $f("flashEditor");
     if (!box) return;
-    box.innerHTML = cards.map((c, i) => `<div class="flash-row"><textarea data-fq="${i}" placeholder="Pergunta ou conceito">${esc3(c.q)}</textarea><textarea data-fa="${i}" placeholder="Resposta ou explica\xE7\xE3o">${esc3(c.a)}</textarea><button type="button" class="flash-remove" data-fr="${i}" title="Remover">\u2715</button></div>`).join("");
+    box.innerHTML = cards.map((c, i) => `<div class="flash-row"><textarea data-fq="${i}" placeholder="Pergunta ou conceito">${esc4(c.q)}</textarea><textarea data-fa="${i}" placeholder="Resposta ou explica\xE7\xE3o">${esc4(c.a)}</textarea><button type="button" class="flash-remove" data-fr="${i}" title="Remover">\u2715</button></div>`).join("");
     document.querySelectorAll("[data-fq]").forEach((x) => x.oninput = (e) => cards[+e.target.dataset.fq].q = e.target.value);
     document.querySelectorAll("[data-fa]").forEach((x) => x.oninput = (e) => cards[+e.target.dataset.fa].a = e.target.value);
     document.querySelectorAll("[data-fr]").forEach((x) => x.onclick = () => {
-      if (cards.length <= 2) return toast3("Mantenha pelo menos 2 cart\xF5es.");
+      if (cards.length <= 2) return toast4("Mantenha pelo menos 2 cart\xF5es.");
       cards.splice(+x.dataset.fr, 1);
       renderEditor();
     });
   }
   async function saveDeck() {
-    await identity3();
+    await identity4();
     const valid = cards.map((c) => ({ q: c.q.trim(), a: c.a.trim() })).filter((c) => c.q && c.a);
-    if (valid.length < 2) return toast3("Crie pelo menos 2 flashcards completos.");
+    if (valid.length < 2) return toast4("Crie pelo menos 2 flashcards completos.");
     const si = scopeInfo2(), payload = { title: $f("flashTitle").value.trim() || "Meus flashcards", cards: valid };
     if (!deck) {
       const { data, error } = await dbF.from("study_items").insert({ family_id: meF.family_id, conversation_id: si.conversation_id, owner_member_id: meF.id, item_type: "flashcards", title: payload.title, content: { cards: valid }, visibility: si.visibility, allowed_member_ids: [], updated_by: meF.id }).select("id,title,content,conversation_id,visibility,updated_at,expires_at").single();
       if (error) {
         console.error(error);
-        return toast3("N\xE3o foi poss\xEDvel salvar.");
+        return toast4("N\xE3o foi poss\xEDvel salvar.");
       }
       deck = data;
     } else {
       const { data, error } = await dbF.from("study_items").update({ title: payload.title, content: { cards: valid }, updated_by: meF.id }).eq("id", deck.id).select("id,title,content,conversation_id,visibility,updated_at,expires_at").single();
       if (error) {
         console.error(error);
-        return toast3("N\xE3o foi poss\xEDvel salvar.");
+        return toast4("N\xE3o foi poss\xEDvel salvar.");
       }
       deck = data;
     }
     cards = valid;
     renderEditor();
-    toast3("Flashcards salvos \u2713");
+    toast4("Flashcards salvos \u2713");
   }
   async function openList() {
-    await identity3();
+    await identity4();
     const si = scopeInfo2();
     let q = dbF.from("study_items").select("id,title,content,updated_at,expires_at").eq("item_type", "flashcards");
     q = si.visibility === "private" ? q.eq("owner_member_id", meF.id).is("conversation_id", null).eq("visibility", "private") : q.eq("conversation_id", si.conversation_id).eq("visibility", "group");
     const { data, error } = await q.order("updated_at", { ascending: false }).limit(30);
-    if (error) return toast3("N\xE3o foi poss\xEDvel listar.");
+    if (error) return toast4("N\xE3o foi poss\xEDvel listar.");
     const d = $f("flashModal");
-    $f("flashModalBody").innerHTML = `<h3>Abrir flashcards</h3>${(data || []).map((x) => `<div class="flash-list-row"><div><strong>${esc3(x.title)}</strong><small style="display:block">${(x.content?.cards || []).length} cart\xF5es</small></div><button data-open-flash="${x.id}">Abrir</button></div>`).join("") || "<p>Nenhum conjunto salvo.</p>"}`;
+    $f("flashModalBody").innerHTML = `<h3>Abrir flashcards</h3>${(data || []).map((x) => `<div class="flash-list-row"><div><strong>${esc4(x.title)}</strong><small style="display:block">${(x.content?.cards || []).length} cart\xF5es</small></div><button data-open-flash="${x.id}">Abrir</button></div>`).join("") || "<p>Nenhum conjunto salvo.</p>"}`;
     d.showModal();
     document.querySelectorAll("[data-open-flash]").forEach((b) => b.onclick = () => loadDeck(b.dataset.openFlash));
   }
   async function loadDeck(id) {
     const { data, error } = await dbF.from("study_items").select("id,title,content,conversation_id,visibility,updated_at,expires_at").eq("id", id).single();
-    if (error) return toast3("N\xE3o foi poss\xEDvel abrir.");
+    if (error) return toast4("N\xE3o foi poss\xEDvel abrir.");
     deck = data;
     cards = (data.content?.cards || []).map((c) => ({ q: c.q || "", a: c.a || "" }));
     $f("flashTitle").value = data.title;
@@ -20978,7 +21198,7 @@ ${suffix}`;
   }
   function startStudy() {
     const valid = cards.filter((c) => c.q.trim() && c.a.trim());
-    if (valid.length < 1) return toast3("Crie cart\xF5es primeiro.");
+    if (valid.length < 1) return toast4("Crie cart\xF5es primeiro.");
     cards = valid;
     studyIndex = 0;
     showAnswer = false;
@@ -20989,11 +21209,11 @@ ${suffix}`;
   }
   function renderStudy() {
     const c = cards[studyIndex];
-    $f("flashFlip").innerHTML = `<div class="flash-side"><small>${showAnswer ? "Resposta" : "Pergunta"} \u2022 ${studyIndex + 1}/${cards.length}</small><div style="margin-top:20px"><strong>${esc3(showAnswer ? c.a : c.q)}</strong></div><small style="display:block;margin-top:24px">Clique no cart\xE3o para virar</small></div>`;
+    $f("flashFlip").innerHTML = `<div class="flash-side"><small>${showAnswer ? "Resposta" : "Pergunta"} \u2022 ${studyIndex + 1}/${cards.length}</small><div style="margin-top:20px"><strong>${esc4(showAnswer ? c.a : c.q)}</strong></div><small style="display:block;margin-top:24px">Clique no cart\xE3o para virar</small></div>`;
   }
   function startQuiz() {
     const valid = cards.filter((c) => c.q.trim() && c.a.trim());
-    if (valid.length < 2) return toast3("O quiz precisa de pelo menos 2 cart\xF5es.");
+    if (valid.length < 2) return toast4("O quiz precisa de pelo menos 2 cart\xF5es.");
     cards = valid;
     quizIndex = 0;
     quizScore = 0;
@@ -21013,7 +21233,7 @@ ${suffix}`;
       return;
     }
     const c = cards[quizIndex], wrong = cards.filter((_, i) => i !== quizIndex).map((x) => x.a), opts = [c.a, ...wrong.sort(() => Math.random() - 0.5).slice(0, Math.min(3, wrong.length))].sort(() => Math.random() - 0.5);
-    $f("flashQuizArea").innerHTML = `<div class="flash-quiz"><small>Pergunta ${quizIndex + 1}/${cards.length}</small><h3>${esc3(c.q)}</h3><div>${opts.map((o) => `<button class="quiz-option" data-quiz-opt="${esc3(o)}">${esc3(o)}</button>`).join("")}</div><div id="quizFeedback"></div><button id="quizNext" type="button" class="hidden">Pr\xF3xima</button></div>`;
+    $f("flashQuizArea").innerHTML = `<div class="flash-quiz"><small>Pergunta ${quizIndex + 1}/${cards.length}</small><h3>${esc4(c.q)}</h3><div>${opts.map((o) => `<button class="quiz-option" data-quiz-opt="${esc4(o)}">${esc4(o)}</button>`).join("")}</div><div id="quizFeedback"></div><button id="quizNext" type="button" class="hidden">Pr\xF3xima</button></div>`;
     document.querySelectorAll("[data-quiz-opt]").forEach((b) => b.onclick = () => {
       const correct = b.dataset.quizOpt === c.a;
       document.querySelectorAll("[data-quiz-opt]").forEach((x) => {
@@ -21106,14 +21326,14 @@ ${suffix}`;
     }
     return true;
   }
-  function wait2() {
+  function wait3() {
     if (mount3()) return;
     const o = new MutationObserver(() => {
       if (mount3()) o.disconnect();
     });
     o.observe(document.documentElement, { childList: true, subtree: true });
   }
-  wait2();
+  wait3();
   dbF.auth.onAuthStateChange((_e, s) => {
     if (!s) {
       meF = null;
@@ -21125,14 +21345,14 @@ ${suffix}`;
   var db2 = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
   var $2 = (id) => document.getElementById(id);
   var me2 = null;
-  function toast4(t) {
+  function toast5(t) {
     const x = $2("toast");
     if (!x) return;
     x.textContent = t;
     x.classList.remove("hidden");
     setTimeout(() => x.classList.add("hidden"), 1800);
   }
-  async function identity4() {
+  async function identity5() {
     if (me2) return me2;
     const { data: { user } } = await db2.auth.getUser();
     if (!user) return null;
@@ -21145,7 +21365,7 @@ ${suffix}`;
     return v === "private" ? { private: true, id: null } : { private: false, id: v };
   }
   async function listOwned() {
-    const m = await identity4();
+    const m = await identity5();
     if (!m) return [];
     const s = currentScope();
     let q = db2.from("study_items").select("id,owner_member_id").eq("item_type", "flashcards").eq("owner_member_id", m.id);
@@ -21176,27 +21396,27 @@ ${suffix}`;
       b.onclick = async (e) => {
         e.stopPropagation();
         if (!confirm("Excluir este conjunto de flashcards?")) return;
-        const { error } = await db2.from("study_items").delete().eq("id", id).eq("owner_member_id", (await identity4()).id);
-        if (error) return toast4("N\xE3o foi poss\xEDvel excluir.");
+        const { error } = await db2.from("study_items").delete().eq("id", id).eq("owner_member_id", (await identity5()).id);
+        if (error) return toast5("N\xE3o foi poss\xEDvel excluir.");
         row.remove();
         $2("flashNew")?.click();
-        toast4("Conjunto exclu\xEDdo");
+        toast5("Conjunto exclu\xEDdo");
       };
       row.appendChild(b);
     }
   }
   async function deleteAll() {
-    const m = await identity4();
+    const m = await identity5();
     if (!m) return;
     const owned = await listOwned();
-    if (!owned.length) return toast4("Voc\xEA n\xE3o tem conjuntos para apagar aqui.");
+    if (!owned.length) return toast5("Voc\xEA n\xE3o tem conjuntos para apagar aqui.");
     if (!confirm("Apagar TODOS os seus conjuntos de flashcards deste espa\xE7o?")) return;
     const ids = owned.map((x) => x.id);
     const { error } = await db2.from("study_items").delete().in("id", ids).eq("owner_member_id", m.id);
-    if (error) return toast4("N\xE3o foi poss\xEDvel apagar tudo.");
+    if (error) return toast5("N\xE3o foi poss\xEDvel apagar tudo.");
     $2("flashModal")?.close();
     $2("flashNew")?.click();
-    toast4("Seus flashcards foram apagados");
+    toast5("Seus flashcards foram apagados");
   }
   function bind2() {
     const b = $2("flashOpen");
@@ -21205,14 +21425,14 @@ ${suffix}`;
     b.addEventListener("click", () => setTimeout(enhance, 120));
     return true;
   }
-  function wait3() {
+  function wait4() {
     if (bind2()) return;
     const o = new MutationObserver(() => {
       if (bind2()) o.disconnect();
     });
     o.observe(document.documentElement, { childList: true, subtree: true });
   }
-  wait3();
+  wait4();
   db2.auth.onAuthStateChange((_e, s) => {
     if (!s) me2 = null;
   });
@@ -21228,24 +21448,24 @@ ${suffix}`;
   var drag = null;
   var newTone = "yellow";
   var TONES = ["yellow", "pink", "lilac", "blue", "mint", "peach"];
-  function css2() {
+  function css3() {
     if (document.querySelector('link[href^="study-ideas.css"]')) return;
     const l = document.createElement("link");
     l.rel = "stylesheet";
     l.href = "study-ideas.css?v=2";
     document.head.appendChild(l);
   }
-  function esc4(v) {
+  function esc5(v) {
     return String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   }
-  function toast5(t) {
+  function toast6(t) {
     const x = $i("toast");
     if (!x) return;
     x.textContent = t;
     x.classList.remove("hidden");
     setTimeout(() => x.classList.add("hidden"), 1700);
   }
-  async function identity5() {
+  async function identity6() {
     if (meI) return meI;
     const { data: { user } } = await dbI.auth.getUser();
     if (!user) throw new Error("Sem sess\xE3o");
@@ -21277,11 +21497,11 @@ ${suffix}`;
     const c = $i("ideasCanvas");
     if (!c) return;
     notes = notes.map(normalize);
-    c.innerHTML = notes.map((n, idx) => `<article class="idea-note" data-note-id="${n.id}" data-tone="${n.tone}" style="left:${n.x}px;top:${n.y}px;transform:rotate(${n.rotate}deg)"><div class="idea-pin" data-drag-note="${idx}" title="Arraste pelo pino"></div><div class="idea-note-head"><span class="idea-author">${esc4(n.by || "")}</span><button type="button" data-edit-note="${idx}" title="Editar">Editar</button>${canDeleteNote(n) ? `<button type="button" data-remove-note="${idx}" title="Excluir">Excluir</button>` : ""}</div><div class="idea-text" data-drag-note="${idx}">${esc4(n.text || "")}</div></article>`).join("") || '<div class="ideas-empty"><strong>Seu quadro est\xE1 vazio.</strong><span>Escolha uma cor, escreva uma nota e clique em \u201CFixar no quadro\u201D.</span></div>';
+    c.innerHTML = notes.map((n, idx) => `<article class="idea-note" data-note-id="${n.id}" data-tone="${n.tone}" style="left:${n.x}px;top:${n.y}px;transform:rotate(${n.rotate}deg)"><div class="idea-pin" data-drag-note="${idx}" title="Arraste pelo pino"></div><div class="idea-note-head"><span class="idea-author">${esc5(n.by || "")}</span><button type="button" data-edit-note="${idx}" title="Editar">Editar</button>${canDeleteNote(n) ? `<button type="button" data-remove-note="${idx}" title="Excluir">Excluir</button>` : ""}</div><div class="idea-text" data-drag-note="${idx}">${esc5(n.text || "")}</div></article>`).join("") || '<div class="ideas-empty"><strong>Seu quadro est\xE1 vazio.</strong><span>Escolha uma cor, escreva uma nota e clique em \u201CFixar no quadro\u201D.</span></div>';
     document.querySelectorAll("[data-remove-note]").forEach((x) => x.onclick = (e) => {
       e.stopPropagation();
       const idx = +x.dataset.removeNote;
-      if (!canDeleteNote(notes[idx])) return toast5("Voc\xEA s\xF3 pode excluir seus pr\xF3prios post-its.");
+      if (!canDeleteNote(notes[idx])) return toast6("Voc\xEA s\xF3 pode excluir seus pr\xF3prios post-its.");
       if (!confirm("Excluir este post-it?")) return;
       notes.splice(idx, 1);
       render();
@@ -21331,31 +21551,31 @@ ${suffix}`;
     });
   }
   async function addFromComposer() {
-    await identity5();
+    await identity6();
     const ta = $i("ideaComposerText"), text = ta.value.trim();
-    if (!text) return toast5("Digite o que deseja colocar no post-it.");
+    if (!text) return toast6("Digite o que deseja colocar no post-it.");
     const { w } = boardDimensions(), count = notes.length;
     const x = Math.max(18, Math.min(w - 210, 25 + count % 4 * 215)), y = 30 + Math.floor(count / 4) % 4 * 175;
     notes.push({ id: crypto.randomUUID(), text, tone: newTone, by: meI.display_name, owner_id: meI.id, x, y, rotate: [-2, 1, -1, 2, 0][count % 5] });
     ta.value = "";
     render();
     schedule();
-    toast5("Post-it fixado no quadro");
+    toast6("Post-it fixado no quadro");
   }
   function editNote(idx) {
     const n = notes[idx];
     if (!n) return;
-    if (n.owner_id && n.owner_id !== meI?.id && scopeInfo3().visibility === "group") return toast5("No grupo, cada pessoa edita os pr\xF3prios post-its.");
+    if (n.owner_id && n.owner_id !== meI?.id && scopeInfo3().visibility === "group") return toast6("No grupo, cada pessoa edita os pr\xF3prios post-its.");
     const text = prompt("Editar post-it:", n.text);
     if (text === null) return;
     const trimmed = text.trim();
-    if (!trimmed) return toast5("O post-it n\xE3o pode ficar vazio.");
+    if (!trimmed) return toast6("O post-it n\xE3o pode ficar vazio.");
     n.text = trimmed;
     render();
     schedule();
   }
   async function load() {
-    await identity5();
+    await identity6();
     board = null;
     notes = [];
     if (channel) {
@@ -21389,7 +21609,7 @@ ${suffix}`;
     saveTimer2 = setTimeout(save, 500);
   }
   async function save() {
-    await identity5();
+    await identity6();
     clearTimeout(saveTimer2);
     const si = scopeInfo3();
     if (!board) {
@@ -21412,19 +21632,19 @@ ${suffix}`;
     $i("ideasStatus").textContent = "Salvo \u2713";
   }
   async function clearMine() {
-    await identity5();
+    await identity6();
     const group = scopeInfo3().visibility === "group";
     const mine = notes.filter((n) => !n.owner_id || n.owner_id === meI.id);
-    if (!mine.length) return toast5(group ? "Voc\xEA n\xE3o tem post-its para apagar." : "O quadro j\xE1 est\xE1 vazio.");
+    if (!mine.length) return toast6(group ? "Voc\xEA n\xE3o tem post-its para apagar." : "O quadro j\xE1 est\xE1 vazio.");
     const msg = group ? "Apagar todos os post-its que voc\xEA criou neste grupo?" : "Apagar TODOS os post-its deste quadro?";
     if (!confirm(msg)) return;
     notes = group ? notes.filter((n) => n.owner_id && n.owner_id !== meI.id) : [];
     render();
     schedule();
-    toast5(group ? "Seus post-its foram apagados" : "Quadro limpo");
+    toast6(group ? "Seus post-its foram apagados" : "Quadro limpo");
   }
   function mount4() {
-    css2();
+    css3();
     const grid = document.querySelector(".study-home-grid"), panel = $i("studyPanel");
     if (!grid || !panel) return false;
     if (!$i("openIdeasTool")) {
@@ -21475,7 +21695,7 @@ ${suffix}`;
       $i("ideaComposerText").onkeydown = (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key === "Enter") addFromComposer();
       };
-      $i("ideasSave").onclick = () => save().then(() => toast5("Quadro salvo \u2713"));
+      $i("ideasSave").onclick = () => save().then(() => toast6("Quadro salvo \u2713"));
       $i("ideasClearMine").onclick = clearMine;
       $i("studyScope")?.addEventListener("change", () => {
         if (!$i("studyIdeas").classList.contains("hidden")) load();
@@ -21484,14 +21704,14 @@ ${suffix}`;
     }
     return true;
   }
-  function wait4() {
+  function wait5() {
     if (mount4()) return;
     const o = new MutationObserver(() => {
       if (mount4()) o.disconnect();
     });
     o.observe(document.documentElement, { childList: true, subtree: true });
   }
-  wait4();
+  wait5();
   dbI.auth.onAuthStateChange((_e, s) => {
     if (!s) {
       meI = null;
@@ -21509,24 +21729,24 @@ ${suffix}`;
   var selectedId = null;
   var saveTimer3 = null;
   var channel2 = null;
-  function css3() {
+  function css4() {
     if (document.querySelector('link[href^="study-mindmap.css"]')) return;
     const l = document.createElement("link");
     l.rel = "stylesheet";
     l.href = "study-mindmap.css?v=1";
     document.head.appendChild(l);
   }
-  function esc5(v) {
+  function esc6(v) {
     return String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   }
-  function toast6(t) {
+  function toast7(t) {
     const x = $m("toast");
     if (!x) return;
     x.textContent = t;
     x.classList.remove("hidden");
     setTimeout(() => x.classList.add("hidden"), 1600);
   }
-  async function identity6() {
+  async function identity7() {
     if (meM) return meM;
     const { data: { user } } = await dbM.auth.getUser();
     if (!user) throw new Error("Sem sess\xE3o");
@@ -21549,7 +21769,7 @@ ${suffix}`;
   function render2() {
     const c = $m("mindCanvas");
     if (!c) return;
-    c.innerHTML = `<svg class="mind-svg" viewBox="0 0 1600 1000" preserveAspectRatio="none">${lineSvg()}</svg>${nodes.map((n) => `<button type="button" class="mind-node ${n.parent ? "" : "root"} ${selectedId === n.id ? "selected" : ""}" data-node="${n.id}" data-tone="${n.tone || "lilac"}" style="left:${n.x}px;top:${n.y}px">${esc5(n.text)}</button>`).join("")}`;
+    c.innerHTML = `<svg class="mind-svg" viewBox="0 0 1600 1000" preserveAspectRatio="none">${lineSvg()}</svg>${nodes.map((n) => `<button type="button" class="mind-node ${n.parent ? "" : "root"} ${selectedId === n.id ? "selected" : ""}" data-node="${n.id}" data-tone="${n.tone || "lilac"}" style="left:${n.x}px;top:${n.y}px">${esc6(n.text)}</button>`).join("")}`;
     document.querySelectorAll("[data-node]").forEach(bindNode);
   }
   function bindNode(el) {
@@ -21599,7 +21819,7 @@ ${suffix}`;
   }
   function removeNode() {
     const n = nodes.find((x) => x.id === selectedId);
-    if (!n || !n.parent) return toast6("O t\xF3pico central n\xE3o pode ser removido.");
+    if (!n || !n.parent) return toast7("O t\xF3pico central n\xE3o pode ser removido.");
     const remove2 = /* @__PURE__ */ new Set([n.id]);
     let changed2 = true;
     while (changed2) {
@@ -21615,7 +21835,7 @@ ${suffix}`;
     schedule2();
   }
   async function load2() {
-    await identity6();
+    await identity7();
     mapItem = null;
     if (channel2) {
       dbM.removeChannel(channel2);
@@ -21646,7 +21866,7 @@ ${suffix}`;
     saveTimer3 = setTimeout(save2, 700);
   }
   async function save2() {
-    await identity6();
+    await identity7();
     clearTimeout(saveTimer3);
     const si = scopeInfo4();
     if (!mapItem) {
@@ -21669,7 +21889,7 @@ ${suffix}`;
     $m("mindStatus").textContent = "Salvo \u2713";
   }
   function mount5() {
-    css3();
+    css4();
     const grid = document.querySelector(".study-home-grid"), panel = $m("studyPanel");
     if (!grid || !panel) return false;
     if (!$m("openMindmapTool")) {
@@ -21703,21 +21923,21 @@ ${suffix}`;
       $m("mindAdd").onclick = addBranch;
       $m("mindEdit").onclick = () => selectedId && editNode(selectedId);
       $m("mindRemove").onclick = removeNode;
-      $m("mindSave").onclick = () => save2().then(() => toast6("Mapa salvo \u2713"));
+      $m("mindSave").onclick = () => save2().then(() => toast7("Mapa salvo \u2713"));
       $m("studyScope")?.addEventListener("change", () => {
         if (!$m("studyMindmap").classList.contains("hidden")) load2();
       });
     }
     return true;
   }
-  function wait5() {
+  function wait6() {
     if (mount5()) return;
     const o = new MutationObserver(() => {
       if (mount5()) o.disconnect();
     });
     o.observe(document.documentElement, { childList: true, subtree: true });
   }
-  wait5();
+  wait6();
   dbM.auth.onAuthStateChange((_e, s) => {
     if (!s) {
       meM = null;
@@ -21733,14 +21953,14 @@ ${suffix}`;
   var $p = (id) => document.getElementById(id);
   var compare = [];
   var CAT = { alkali: "Metais alcalinos", alkaline: "Alcalino-terrosos", transition: "Metais de transi\xE7\xE3o", post: "P\xF3s-transi\xE7\xE3o", metalloid: "Semimetais", nonmetal: "N\xE3o metais", halogen: "Halog\xEAnios", noble: "Gases nobres", lanthanide: "Lantan\xEDdeos", actinide: "Actin\xEDdeos", unknown: "Outros" };
-  function css4() {
+  function css5() {
     if (document.querySelector('link[href^="study-periodic.css"]')) return;
     const l = document.createElement("link");
     l.rel = "stylesheet";
     l.href = "study-periodic.css?v=1";
     document.head.appendChild(l);
   }
-  function esc6(v) {
+  function esc7(v) {
     return String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   }
   function match(e) {
@@ -21748,10 +21968,10 @@ ${suffix}`;
     return (!q || e.name.toLowerCase().includes(q) || e.s.toLowerCase() === q || String(e.n) === q) && (cat === "all" || e.cat === cat);
   }
   function tile(e) {
-    return `<button type="button" class="element-tile cat-${e.cat} ${compare.includes(e.n) ? "selected-compare" : ""}" data-element="${e.n}" style="grid-column:${e.group};grid-row:${e.period}" title="${esc6(e.name)}"><span class="n">${e.n}</span><span class="s">${e.s}</span><span class="nm">${esc6(e.name)}</span></button>`;
+    return `<button type="button" class="element-tile cat-${e.cat} ${compare.includes(e.n) ? "selected-compare" : ""}" data-element="${e.n}" style="grid-column:${e.group};grid-row:${e.period}" title="${esc7(e.name)}"><span class="n">${e.n}</span><span class="s">${e.s}</span><span class="nm">${esc7(e.name)}</span></button>`;
   }
   function seriesTile(e) {
-    return `<button type="button" class="element-tile cat-${e.cat} ${compare.includes(e.n) ? "selected-compare" : ""}" data-element="${e.n}" title="${esc6(e.name)}"><span class="n">${e.n}</span><span class="s">${e.s}</span><span class="nm">${esc6(e.name)}</span></button>`;
+    return `<button type="button" class="element-tile cat-${e.cat} ${compare.includes(e.n) ? "selected-compare" : ""}" data-element="${e.n}" title="${esc7(e.name)}"><span class="n">${e.n}</span><span class="s">${e.s}</span><span class="nm">${esc7(e.name)}</span></button>`;
   }
   function render3() {
     const filtered = ELEMENTS.filter(match), set = new Set(filtered.map((x) => x.n)), main = ELEMENTS.filter((e) => e.group && !(e.n >= 58 && e.n <= 71) && !(e.n >= 90 && e.n <= 103) && set.has(e.n)), lan = ELEMENTS.filter((e) => e.n >= 58 && e.n <= 71 && set.has(e.n)), act = ELEMENTS.filter((e) => e.n >= 90 && e.n <= 103 && set.has(e.n));
@@ -21776,7 +21996,7 @@ ${suffix}`;
       document.body.appendChild(d);
       $p("periodicClose").onclick = () => d.close();
     }
-    $p("periodicDetailBody").innerHTML = `<div class="element-hero"><div class="element-big cat-${e.cat}"><div><small>${e.n}</small><strong style="display:block">${e.s}</strong></div></div><div><h2>${esc6(e.name)}</h2><p>${CAT[e.cat] || "Elemento qu\xEDmico"}</p></div></div><div class="element-facts"><div><strong>N\xFAmero at\xF4mico</strong><br>${e.n}</div><div><strong>Massa at\xF4mica</strong><br>${e.mass}</div><div><strong>Grupo</strong><br>${e.group ?? "S\xE9rie interna"}</div><div><strong>Per\xEDodo</strong><br>${e.period}</div><div><strong>Estado f\xEDsico</strong><br>${e.state}</div><div><strong>Classifica\xE7\xE3o</strong><br>${CAT[e.cat] || e.cat}</div></div><p><strong>Usos e aplica\xE7\xF5es:</strong> ${esc6(e.use)}.</p><button id="periodicAddCompare" type="button">${compare.includes(e.n) ? "Remover da compara\xE7\xE3o" : "Comparar este elemento"}</button>`;
+    $p("periodicDetailBody").innerHTML = `<div class="element-hero"><div class="element-big cat-${e.cat}"><div><small>${e.n}</small><strong style="display:block">${e.s}</strong></div></div><div><h2>${esc7(e.name)}</h2><p>${CAT[e.cat] || "Elemento qu\xEDmico"}</p></div></div><div class="element-facts"><div><strong>N\xFAmero at\xF4mico</strong><br>${e.n}</div><div><strong>Massa at\xF4mica</strong><br>${e.mass}</div><div><strong>Grupo</strong><br>${e.group ?? "S\xE9rie interna"}</div><div><strong>Per\xEDodo</strong><br>${e.period}</div><div><strong>Estado f\xEDsico</strong><br>${e.state}</div><div><strong>Classifica\xE7\xE3o</strong><br>${CAT[e.cat] || e.cat}</div></div><p><strong>Usos e aplica\xE7\xF5es:</strong> ${esc7(e.use)}.</p><button id="periodicAddCompare" type="button">${compare.includes(e.n) ? "Remover da compara\xE7\xE3o" : "Comparar este elemento"}</button>`;
     $p("periodicAddCompare").onclick = () => {
       toggleCompare(e.n);
       d.close();
@@ -21795,7 +22015,7 @@ ${suffix}`;
     const bar = $p("periodicCompare");
     if (!bar) return;
     const els = compare.map((n) => ELEMENTS.find((x) => x.n === n)).filter(Boolean);
-    bar.innerHTML = `<strong>Comparar:</strong> ${els.map((e) => `<span>${e.s} \u2022 ${esc6(e.name)}</span>`).join(" \xD7 ") || "<span>Selecione at\xE9 2 elementos</span>"} ${els.length === 2 ? '<button id="periodicCompareBtn" type="button">Ver compara\xE7\xE3o</button>' : ""}`;
+    bar.innerHTML = `<strong>Comparar:</strong> ${els.map((e) => `<span>${e.s} \u2022 ${esc7(e.name)}</span>`).join(" \xD7 ") || "<span>Selecione at\xE9 2 elementos</span>"} ${els.length === 2 ? '<button id="periodicCompareBtn" type="button">Ver compara\xE7\xE3o</button>' : ""}`;
     if ($p("periodicCompareBtn")) $p("periodicCompareBtn").onclick = showCompare;
   }
   function showCompare() {
@@ -21806,12 +22026,12 @@ ${suffix}`;
       openElement(a.n);
       d = $p("periodicDetail");
     }
-    const row = (label, x, y) => `<tr><th>${label}</th><td>${esc6(x)}</td><td>${esc6(y)}</td></tr>`;
-    $p("periodicDetailBody").innerHTML = `<h2>Compara\xE7\xE3o de elementos</h2><table class="compare-table"><tr><th></th><th>${a.s} \u2022 ${esc6(a.name)}</th><th>${b.s} \u2022 ${esc6(b.name)}</th></tr>${row("N\xFAmero at\xF4mico", a.n, b.n)}${row("Massa", a.mass, b.mass)}${row("Grupo", a.group ?? "S\xE9rie interna", b.group ?? "S\xE9rie interna")}${row("Per\xEDodo", a.period, b.period)}${row("Estado f\xEDsico", a.state, b.state)}${row("Classifica\xE7\xE3o", CAT[a.cat], CAT[b.cat])}${row("Usos", a.use, b.use)}</table>`;
+    const row = (label, x, y) => `<tr><th>${label}</th><td>${esc7(x)}</td><td>${esc7(y)}</td></tr>`;
+    $p("periodicDetailBody").innerHTML = `<h2>Compara\xE7\xE3o de elementos</h2><table class="compare-table"><tr><th></th><th>${a.s} \u2022 ${esc7(a.name)}</th><th>${b.s} \u2022 ${esc7(b.name)}</th></tr>${row("N\xFAmero at\xF4mico", a.n, b.n)}${row("Massa", a.mass, b.mass)}${row("Grupo", a.group ?? "S\xE9rie interna", b.group ?? "S\xE9rie interna")}${row("Per\xEDodo", a.period, b.period)}${row("Estado f\xEDsico", a.state, b.state)}${row("Classifica\xE7\xE3o", CAT[a.cat], CAT[b.cat])}${row("Usos", a.use, b.use)}</table>`;
     d.showModal();
   }
   function mount6() {
-    css4();
+    css5();
     const grid = document.querySelector(".study-home-grid"), panel = $p("studyPanel");
     if (!grid || !panel) return false;
     if (!$p("openPeriodicTool")) {
@@ -21847,31 +22067,31 @@ ${suffix}`;
     }
     return true;
   }
-  function wait6() {
+  function wait7() {
     if (mount6()) return;
     const o = new MutationObserver(() => {
       if (mount6()) o.disconnect();
     });
     o.observe(document.documentElement, { childList: true, subtree: true });
   }
-  wait6();
+  wait7();
 
   // study-material-manager.js
   var db3 = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
   var $3 = (id) => document.getElementById(id);
   var me3 = null;
   var LABELS = { document: "Documento", notebook: "Caderno", flashcards: "Flashcards", idea_board: "Quadro de Post-its", mindmap: "Mapa Mental", timer_session: "Cron\xF4metro", randomizer: "Sorteador" };
-  function esc7(v) {
+  function esc8(v) {
     return String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   }
-  function toast7(t) {
+  function toast8(t) {
     const x = $3("toast");
     if (!x) return;
     x.textContent = t;
     x.classList.remove("hidden");
     setTimeout(() => x.classList.add("hidden"), 1800);
   }
-  async function identity7() {
+  async function identity8() {
     if (me3) return me3;
     const { data: { user } } = await db3.auth.getUser();
     if (!user) return null;
@@ -21879,14 +22099,14 @@ ${suffix}`;
     me3 = data || null;
     return me3;
   }
-  function scope2() {
+  function scope3() {
     const v = $3("studyScope")?.value || "private";
     return v === "private" ? { private: true, id: null } : { private: false, id: v };
   }
   async function items() {
-    const m = await identity7();
+    const m = await identity8();
     if (!m) return [];
-    const s = scope2();
+    const s = scope3();
     let q = db3.from("study_items").select("id,title,item_type,updated_at,expires_at,owner_member_id").eq("owner_member_id", m.id);
     q = s.private ? q.is("conversation_id", null).eq("visibility", "private") : q.eq("conversation_id", s.id);
     const { data } = await q.order("updated_at", { ascending: false }).limit(100);
@@ -21896,27 +22116,27 @@ ${suffix}`;
     const box = $3("materialsList");
     if (!box) return;
     const data = await items();
-    box.innerHTML = data.map((x) => `<div class="materials-row"><div><strong>${esc7(x.title || LABELS[x.item_type] || "Material")}</strong><small>${esc7(LABELS[x.item_type] || x.item_type)} \u2022 ${new Date(x.updated_at).toLocaleString("pt-BR")}</small></div><button type="button" data-delete-material="${x.id}">Excluir</button></div>`).join("") || '<p class="muted">Voc\xEA ainda n\xE3o salvou materiais neste espa\xE7o.</p>';
+    box.innerHTML = data.map((x) => `<div class="materials-row"><div><strong>${esc8(x.title || LABELS[x.item_type] || "Material")}</strong><small>${esc8(LABELS[x.item_type] || x.item_type)} \u2022 ${new Date(x.updated_at).toLocaleString("pt-BR")}</small></div><button type="button" data-delete-material="${x.id}">Excluir</button></div>`).join("") || '<p class="muted">Voc\xEA ainda n\xE3o salvou materiais neste espa\xE7o.</p>';
     document.querySelectorAll("[data-delete-material]").forEach((b) => b.onclick = () => removeOne(b.dataset.deleteMaterial));
   }
   async function removeOne(id) {
-    const m = await identity7();
+    const m = await identity8();
     if (!m) return;
     if (!confirm("Excluir este material?")) return;
     const { error } = await db3.from("study_items").delete().eq("id", id).eq("owner_member_id", m.id);
-    if (error) return toast7("N\xE3o foi poss\xEDvel excluir.");
-    toast7("Material exclu\xEDdo");
+    if (error) return toast8("N\xE3o foi poss\xEDvel excluir.");
+    toast8("Material exclu\xEDdo");
     render4();
   }
   async function removeAll() {
-    const m = await identity7();
+    const m = await identity8();
     if (!m) return;
     const data = await items();
-    if (!data.length) return toast7("N\xE3o h\xE1 materiais seus para apagar aqui.");
+    if (!data.length) return toast8("N\xE3o h\xE1 materiais seus para apagar aqui.");
     if (!confirm("Apagar TODOS os seus materiais deste espa\xE7o?")) return;
     const { error } = await db3.from("study_items").delete().in("id", data.map((x) => x.id)).eq("owner_member_id", m.id);
-    if (error) return toast7("N\xE3o foi poss\xEDvel apagar tudo.");
-    toast7("Seus materiais foram apagados");
+    if (error) return toast8("N\xE3o foi poss\xEDvel apagar tudo.");
+    toast8("Seus materiais foram apagados");
     render4();
   }
   function mount7() {
@@ -21956,22 +22176,22 @@ ${suffix}`;
     }
     return true;
   }
-  function css5() {
+  function css6() {
     if (document.querySelector("style[data-materials-css]")) return;
     const s = document.createElement("style");
     s.dataset.materialsCss = "1";
     s.textContent = ".materials-shell{max-width:900px;margin:auto;background:linear-gradient(145deg,#fff,#f6efff);border-radius:28px;padding:20px;box-shadow:0 18px 42px rgba(88,64,108,.12)}.materials-head{display:flex;gap:12px;align-items:center;margin-bottom:14px}.materials-head>div{flex:1}.materials-head h3{margin:0}.materials-head button,.materials-row button{border:0;border-radius:14px;padding:9px 12px;font-weight:850;background:#ffe1e8;color:#8d5060}.materials-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:12px;margin:8px 0;border-radius:16px;background:rgba(255,255,255,.82)}.materials-row small{display:block;color:#8a7a90;margin-top:3px}@media(max-width:650px){.materials-head{align-items:flex-start;flex-direction:column}.materials-head button{width:100%}}";
     document.head.appendChild(s);
   }
-  function wait7() {
-    css5();
+  function wait8() {
+    css6();
     if (mount7()) return;
     const o = new MutationObserver(() => {
       if (mount7()) o.disconnect();
     });
     o.observe(document.documentElement, { childList: true, subtree: true });
   }
-  wait7();
+  wait8();
   db3.auth.onAuthStateChange((_e, s) => {
     if (!s) me3 = null;
   });
@@ -21987,21 +22207,21 @@ ${suffix}`;
   var membersT = [];
   var finishedKey = "";
   var PRESETS = [30, 60, 120, 300, 600, 1500];
-  function css6() {
+  function css7() {
     if (document.querySelector('link[href^="study-timer.css"]')) return;
     const l = document.createElement("link");
     l.rel = "stylesheet";
     l.href = "study-timer.css?v=1";
     document.head.appendChild(l);
   }
-  function toast8(t) {
+  function toast9(t) {
     const x = $t("toast");
     if (!x) return;
     x.textContent = t;
     x.classList.remove("hidden");
     setTimeout(() => x.classList.add("hidden"), 1900);
   }
-  async function identity8() {
+  async function identity9() {
     if (meT) return meT;
     const { data: { user } } = await dbT.auth.getUser();
     if (!user) throw new Error("Sem sess\xE3o");
@@ -22010,7 +22230,7 @@ ${suffix}`;
     meT = data;
     return data;
   }
-  function scope3() {
+  function scope4() {
     const v = $t("studyScope")?.value || "private";
     return v === "private" ? { private: true, id: null } : { private: false, id: v };
   }
@@ -22084,7 +22304,7 @@ ${suffix}`;
     if (finishedKey === key) return;
     finishedKey = key;
     beep();
-    toast8(stateT.mode === "response" ? "Tempo para responder encerrado!" : "Tempo de estudo encerrado!");
+    toast9(stateT.mode === "response" ? "Tempo para responder encerrado!" : "Tempo de estudo encerrado!");
     if (document.visibilityState !== "visible" && "Notification" in window && Notification.permission === "granted") {
       new Notification("Cantinho da Isa", { body: stateT.mode === "response" ? "O tempo para responder terminou." : "O tempo de estudo terminou." });
     }
@@ -22095,8 +22315,8 @@ ${suffix}`;
     }
   }
   async function loadMembers() {
-    await identity8();
-    const s = scope3();
+    await identity9();
+    const s = scope4();
     if (s.private) {
       membersT = [{ id: meT.id, display_name: meT.display_name }];
     } else {
@@ -22114,7 +22334,7 @@ ${suffix}`;
     }
   }
   async function load3() {
-    await identity8();
+    await identity9();
     if (channelT) {
       dbT.removeChannel(channelT);
       channelT = null;
@@ -22122,7 +22342,7 @@ ${suffix}`;
     itemT = null;
     stateT = null;
     finishedKey = "";
-    const s = scope3();
+    const s = scope4();
     let q = dbT.from("study_items").select("id,owner_member_id,content,conversation_id,visibility,updated_at").eq("item_type", "timer_session").eq("title", "Cron\xF4metro \u2022 Modo Estudo");
     q = s.private ? q.eq("owner_member_id", meT.id).is("conversation_id", null).eq("visibility", "private") : q.eq("conversation_id", s.id).eq("visibility", "group");
     const { data } = await q.order("updated_at", { ascending: false }).limit(1);
@@ -22145,15 +22365,15 @@ ${suffix}`;
     startTick();
   }
   async function persist(feedback = true) {
-    await identity8();
-    const s = scope3();
+    await identity9();
+    const s = scope4();
     stateT.updated_by_name = meT.display_name;
     const payload = { timer: stateT };
     if (!itemT) {
       const { data, error } = await dbT.from("study_items").insert({ family_id: meT.family_id, conversation_id: s.id, owner_member_id: meT.id, item_type: "timer_session", title: "Cron\xF4metro \u2022 Modo Estudo", content: payload, visibility: s.private ? "private" : "group", allowed_member_ids: [], updated_by: meT.id }).select("id,owner_member_id,content,conversation_id,visibility,updated_at").single();
       if (error) {
         console.error(error);
-        return toast8("N\xE3o foi poss\xEDvel sincronizar o cron\xF4metro.");
+        return toast9("N\xE3o foi poss\xEDvel sincronizar o cron\xF4metro.");
       }
       itemT = data;
       await load3();
@@ -22161,13 +22381,13 @@ ${suffix}`;
       const { error } = await dbT.from("study_items").update({ content: payload, updated_by: meT.id }).eq("id", itemT.id);
       if (error) {
         console.error(error);
-        return toast8("N\xE3o foi poss\xEDvel sincronizar o cron\xF4metro.");
+        return toast9("N\xE3o foi poss\xEDvel sincronizar o cron\xF4metro.");
       }
     }
     if (feedback) render5();
   }
   function setMode(mode) {
-    if (stateT?.running) return toast8("Pause antes de trocar o modo.");
+    if (stateT?.running) return toast9("Pause antes de trocar o modo.");
     stateT = fresh(mode);
     if (mode === "response" && membersT.length === 1) {
       stateT.target_member_id = membersT[0].id;
@@ -22179,7 +22399,7 @@ ${suffix}`;
     persist(false);
   }
   function setDuration(ms) {
-    if (stateT.running) return toast8("Pause antes de alterar o tempo.");
+    if (stateT.running) return toast9("Pause antes de alterar o tempo.");
     stateT.duration_ms = ms;
     stateT.remaining_ms = ms;
     durationInputs(ms);
@@ -22203,7 +22423,7 @@ ${suffix}`;
       stateT.remaining_ms = stateT.duration_ms || 6e4;
     }
     if (stateT.mode === "response" && !stateT.target_member_id) {
-      return toast8("Escolha quem vai responder.");
+      return toast9("Escolha quem vai responder.");
     }
     stateT.started_at = (/* @__PURE__ */ new Date()).toISOString();
     stateT.running = true;
@@ -22243,7 +22463,7 @@ ${suffix}`;
     tickT = setInterval(render5, 250);
   }
   function mount8() {
-    css6();
+    css7();
     const grid = document.querySelector(".study-home-grid"), panel = $t("studyPanel");
     if (!grid || !panel) return false;
     if (!$t("openTimerTool")) {
@@ -22288,14 +22508,14 @@ ${suffix}`;
     }
     return true;
   }
-  function wait8() {
+  function wait9() {
     if (mount8()) return;
     const o = new MutationObserver(() => {
       if (mount8()) o.disconnect();
     });
     o.observe(document.documentElement, { childList: true, subtree: true });
   }
-  wait8();
+  wait9();
   dbT.auth.onAuthStateChange((_e, s) => {
     if (!s) {
       meT = null;
