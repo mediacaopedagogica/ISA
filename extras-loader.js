@@ -20,13 +20,13 @@ async function loadCoreExtras(){
   const jobs=[
     loadOnce('profile','./profile-mascot.js?v=4-stable'),
     loadOnce('groups','./group-controls.js?v=5-stable'),
-    loadOnce('pins','./conversation-pins.js?v=4-noloop'),
+    loadOnce('pins','./conversation-pins.js?v=5-direct-pin'),
     loadOnce('paused-friends','./paused-friends-filter.js?v=3-stable'),
     loadOnce('calls','./call-manager.js?v=4-stable'),
     loadOnce('family-media','./family-media-menu-v2.js?v=4-stable'),
     loadOnce('links','./link-preview.js?v=5-stable')
   ]
-  if(isIsa())jobs.push(loadOnce('isa-tools','./isa-tools.js?v=8-stable'))
+  if(isIsa())jobs.push(loadOnce('isa-tools','./isa-tools.js?v=9-study-fix'))
   const result=await Promise.allSettled(jobs)
   result.forEach((r,i)=>{if(r.status==='rejected')console.warn('Módulo extra não carregou',i,r.reason)})
 }
