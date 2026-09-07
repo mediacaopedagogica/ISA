@@ -1,3 +1,6 @@
+if(new URLSearchParams(location.search).get('mobile')==='1'){
+  window.__ISA_MOBILE_GUARD__={dedicated:true}
+}else{
 const mobileMQ=matchMedia('(max-width:850px)')
 const $m=id=>document.getElementById(id)
 let suppressTrustedClickUntil=0
@@ -50,7 +53,6 @@ document.addEventListener('click',event=>{
   syncAfterClick(event)
 },true)
 
-// Chrome/Android: transforma o toque em clique explícito. Isso evita a tela bonita porém estática.
 document.addEventListener('touchend',event=>{
   if(!mobileMQ.matches||!mobileReady())return
   const action=event.target.closest?.('#mainView button,#mainView [role="button"]')
@@ -73,3 +75,4 @@ function startMobileGuard(){
 }
 startMobileGuard();document.addEventListener('DOMContentLoaded',startMobileGuard,{once:true});setTimeout(startMobileGuard,250)
 window.__ISA_MOBILE_GUARD__={showMobileList,showMobileContent}
+}
