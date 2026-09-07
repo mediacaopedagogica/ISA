@@ -12,10 +12,10 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="theme-3d.css">
   <link rel="stylesheet" href="login-3d.css">
-  <link rel="stylesheet" href="app-3d.css?v=restore-37">
-  <link rel="stylesheet" href="mobile-responsive-v2.css?v=7-restore">
-  <link rel="stylesheet" href="mobile-stability-fix.css?v=1">
-  <link rel="stylesheet" href="heart-polish.css?v=restore-37">
+  <link rel="stylesheet" href="app-3d.css?v=restore-38">
+  <link rel="stylesheet" href="mobile-responsive-v2.css?v=8-restore">
+  <link rel="stylesheet" href="mobile-stability-fix.css?v=2">
+  <link rel="stylesheet" href="heart-polish.css?v=restore-38">
 </head>
 <body>
 <div id="app">
@@ -59,7 +59,7 @@
 <script>(function(){const btn=document.getElementById('togglePassword'),input=document.getElementById('loginPassword');if(btn&&input){btn.onclick=()=>{const show=input.type==='password';input.type=show?'text':'password';btn.textContent=show?'🙈':'👁️';btn.setAttribute('aria-label',show?'Ocultar senha':'Mostrar senha');btn.title=show?'Ocultar senha':'Mostrar senha';input.focus()}}})();</script>
 <script>
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('./sw.js?v=restore-37',{scope:'./'}).then(reg=>reg.update().catch(()=>{})).catch(error=>console.warn('Service Worker:',error));
+  navigator.serviceWorker.register('./sw.js?v=restore-38',{scope:'./'}).then(reg=>reg.update().catch(()=>{})).catch(error=>console.warn('Service Worker:',error));
 }
 </script>
 <script>
@@ -80,8 +80,8 @@ if('serviceWorker' in navigator){
   new MutationObserver(()=>{if(!main.classList.contains('hidden'))clear()}).observe(main,{attributes:true,attributeFilter:['class']});
 })();
 </script>
-<script defer src="./app-v34.js?v=direct-49"></script>
-<script type="module" src="./postboot-loader.js?v=1"></script>
+<script defer src="./app-v33.js?v=stable-50"></script>
+<script type="module" src="./postboot-loader.js?v=2-fastfix"></script>
 <script>
 window.addEventListener('load',()=>{
   setTimeout(()=>{
