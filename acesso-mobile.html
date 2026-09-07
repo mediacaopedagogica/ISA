@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#cdb8ff">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Cantinho da Isa • Família Mobile</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="familia-externa.css?v=1">
+  <link rel="stylesheet" href="amiga-ui-enhanced.css?v=6-family-emoji">
+  <link rel="stylesheet" href="familia-mobile.css?v=1">
+</head>
+<body>
+  <main id="friendApp" class="friend-page">
+    <section id="friendGate" class="friend-gate shell-card">
+      <div class="friend-heart" aria-hidden="true">♥</div>
+      <p class="eyebrow">Cantinho da Isa</p>
+      <h1 id="friendGateTitle">Verificando seu acesso…</h1>
+      <p id="friendGateText" class="muted">Só um instante.</p>
+      <button id="friendEnterBtn" class="primary hidden" type="button">Acessar 💜</button>
+      <p id="friendGateError" class="error-text"></p>
+    </section>
+
+    <section id="friendChat" class="friend-chat hidden">
+      <aside class="friend-sidebar shell-card">
+        <div class="friend-profile">
+          <div class="friend-avatar" aria-hidden="true">💜</div>
+          <div><small id="friendRelationship">Família</small><strong id="friendName">Perfil</strong></div>
+        </div>
+        <div class="friend-side-title"><strong>Conversas</strong><small>Isa e grupos criados por ela</small></div>
+        <div id="friendConversationList" class="friend-conversation-list"></div>
+        <div class="friend-link-note">🔒 Este acesso é pessoal. Aqui aparecem apenas a Isa e os grupos em que ela colocou você.</div>
+      </aside>
+
+      <section class="friend-main shell-card">
+        <div id="friendEmpty" class="friend-empty"><div class="friend-heart" aria-hidden="true">♥</div><h2>Cantinho da Isa 💕</h2><p>Escolha a Isa ou um grupo criado por ela.</p></div>
+        <div id="friendThread" class="friend-thread hidden">
+          <header class="friend-thread-head">
+            <button id="friendBackBtn" class="back-btn" type="button">←</button>
+            <div class="thread-avatar">💬</div>
+            <div><h2 id="friendThreadTitle">Isa</h2><small id="friendThreadSubtitle">Conversa direta com a Isa</small></div>
+          </header>
+          <div id="friendMessages" class="friend-messages"></div>
+          <div class="retention-note">Mensagens e imagens deste acesso ficam disponíveis por até 2 dias.</div>
+          <div class="friend-composer">
+            <button id="friendPhotoBtn" class="emoji-btn" type="button" title="Enviar imagem">📷</button>
+            <input id="friendPhotoInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+            <button id="friendEmojiBtn" class="emoji-btn" type="button" title="Emojis">😊</button>
+            <div id="friendEmojiBar" class="emoji-bar hidden"></div>
+            <textarea id="friendMessageInput" rows="1" maxlength="5000" placeholder="Digite uma mensagem…"></textarea>
+            <button id="friendSendBtn" class="send-btn" type="button">➤</button>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+  <div id="friendToast" class="friend-toast hidden"></div>
+  <script type="module" src="./familia-externa.js?v=1"></script>
+  <script type="module" src="./familia-emoji-completo.js?v=2"></script>
+  <script type="module" src="./call-manager.js?v=6-external-family"></script>
+</body>
+</html>
