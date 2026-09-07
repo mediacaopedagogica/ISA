@@ -1,0 +1,38 @@
+name: Publish audio retention and links
+
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-audio-retention-links.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Refresh main loader
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old='./postboot-loader.js?v=12-audio-player'
+          new='./postboot-loader.js?v=13-audio-day-links'
+          if old in s:
+              p.write_text(s.replace(old,new))
+          else:
+              print('index already refreshed')
+          PY
+      - name: Commit if changed
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Publish audio retention and inline link preview"
+          git push
