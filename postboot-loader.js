@@ -11,9 +11,9 @@ async function loadWithRetry(path){
 }
 
 const paths=[
-  './mobile-responsive-v2.js?v=12-fastfix',
-  './notifications-v2.js?v=8-fastfix',
-  './extras-loader.js?v=12-fastfix'
+  './mobile-responsive-v2.js?v=13-noloop',
+  './notifications-v2.js?v=9-stable',
+  './extras-loader.js?v=13-noloop'
 ]
 const results=await Promise.allSettled(paths.map(loadWithRetry))
 window.__ISA_EXTRAS_READY__=true
