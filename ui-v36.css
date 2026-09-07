@@ -1,0 +1,33 @@
+/* Ajustes de navegação e rolagem — v36 */
+@media (min-width:851px){
+  .app-shell{height:100dvh;min-height:0;overflow:hidden}
+  .sidebar{height:calc(100dvh - 36px);min-height:0;max-height:calc(100dvh - 36px);overflow:hidden}
+  #chatList.chat-list{flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain;padding-right:8px;scrollbar-gutter:stable}
+  .content{height:calc(100dvh - 36px);min-height:0;overflow:hidden}
+}
+#chatList.chat-list::-webkit-scrollbar,.friend-conversation-list::-webkit-scrollbar{width:9px}
+#chatList.chat-list::-webkit-scrollbar-thumb,.friend-conversation-list::-webkit-scrollbar-thumb{background:linear-gradient(#d7c6ff,#f3b8d5);border:2px solid transparent;background-clip:padding-box;border-radius:999px}
+#chatList.chat-list::-webkit-scrollbar-track,.friend-conversation-list::-webkit-scrollbar-track{background:transparent}
+
+/* O + vira o menu principal de recursos da Isa */
+.isa-resource-menu{width:230px!important}
+.isa-resource-menu [data-isa-resource]{display:flex!important;align-items:center;gap:8px;font-weight:800}
+.isa-resource-menu .resource-note{display:block;padding:5px 10px 8px;color:#8b7c91;font-size:.7rem;line-height:1.25}
+#tabEstudos{display:none!important}
+
+/* Central dos acessos externos */
+.external-friends-box{margin:18px 0;padding:16px;border-radius:24px;background:linear-gradient(145deg,#fff9fc,#f1e8ff);box-shadow:0 8px 20px rgba(90,65,105,.08)}
+.external-friends-head p{margin:4px 0 12px;color:#8b7c91;font-size:.82rem}
+.external-create-row{display:flex;gap:8px;margin:12px 0}.external-create-row input{flex:1}
+.external-friend-list{display:grid;gap:9px}.external-friend-card{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;background:#fff;border-radius:18px;padding:12px;box-shadow:0 5px 14px rgba(85,62,101,.07)}
+.external-friend-name small,.external-friend-name span{display:block}.external-friend-name small{color:#93849a;font-size:.72rem}.external-status{width:max-content;margin-top:5px;padding:3px 8px;border-radius:999px;font-size:.67rem;font-weight:900}.external-status.active{background:#dff5e9;color:#3f805d}.external-status.paused{background:#fff0bd;color:#8a6a24}.external-status.revoked{background:#ffe0e7;color:#9b5068}
+.external-friend-actions{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}.external-friend-actions button{border:0;border-radius:11px;padding:7px 9px;background:#eee5ff;font-size:.72rem;font-weight:800}.external-friend-actions button.pause{background:#fff0bd}.external-friend-actions button.resume{background:#dff5e9}.external-friend-actions button.danger{background:#ffe0e7;color:#9b5068}
+
+/* No celular a lista continua vertical, mas dentro do bloco de conversas */
+@media(max-width:850px){
+  .sidebar{height:42dvh;max-height:42dvh;min-height:260px;overflow:hidden}
+  #chatList.chat-list{flex:1 1 auto;min-height:0;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain}
+  .content{height:58dvh;min-height:0}
+  .chat-panel,.panel-pad{height:58dvh}
+  .external-friend-card{grid-template-columns:1fr}.external-friend-actions{justify-content:flex-start}
+}
