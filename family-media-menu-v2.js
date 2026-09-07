@@ -59,7 +59,7 @@ async function uploadMedia(file,kind,{duration=null,maxMb=12}={}){
     toast(kind==='audio'?'Enviando áudio…':'Enviando foto…')
     const up=await fetch(`${CONFIG.SUPABASE_URL}/storage/v1/object/chat-temp/${path}`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${token}`,'Content-Type':contentType,'x-upsert':'false'},body:uploadFile})
     if(!up.ok){let d=null;try{d=await up.json()}catch{};throw new Error(d?.message||`Não foi possível enviar ${kind==='audio'?'o áudio':'a foto'}.`)}
-    const expires=new Date(Date.now()+7*86400000).toISOString()
+    const expires=new Date(Date.now()+(kind==='audio'?1:7)*86400000).toISOString()
     const payload={conversation_id:id,sender_id:u.id,kind,media_provider:'supabase-storage',media_ref:path,media_mime:contentType,media_expires_at:expires}
     if(kind==='audio')payload.media_duration_ms=duration||null
     const ins=await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/messages`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${token}`,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(payload)})
@@ -111,11 +111,12 @@ async function hydrateAudio(){
   audioHydrateBusy=true
   try{
     if(!me)await identity().catch(()=>null)
-    const r=await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/messages?select=id,sender_id,sent_at,media_ref,media_mime,media_deleted_at,deleted_at&conversation_id=eq.${id}&kind=eq.audio&deleted_at=is.null&order=sent_at.asc`,{headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${token}`},cache:'no-store'})
+    const r=await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/messages?select=id,sender_id,sent_at,media_ref,media_mime,media_expires_at,media_deleted_at,deleted_at&conversation_id=eq.${id}&kind=eq.audio&deleted_at=is.null&order=sent_at.asc`,{headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${token}`},cache:'no-store'})
     if(!r.ok)return
     for(const m of await r.json()){
       const bubble=ensureAudioBubble(m);if(!bubble||bubble.querySelector('.chat-audio'))continue
-      if(!m.media_ref||m.media_deleted_at){if(!bubble.querySelector('.audio-unavailable'))bubble.insertAdjacentHTML('afterbegin','<div class="photo-expired audio-unavailable">🎙️ Áudio indisponível.</div>');continue}
+      const expired=m.media_expires_at&&new Date(m.media_expires_at).getTime()<=Date.now()
+      if(!m.media_ref||m.media_deleted_at||expired){if(!bubble.querySelector('.audio-unavailable'))bubble.insertAdjacentHTML('afterbegin','<div class="photo-expired audio-unavailable">🎙️ Áudio expirado após 1 dia.</div>');continue}
       try{
         const url=await signed(m.media_ref)
         const a=document.createElement('audio');a.className='chat-audio';a.controls=true;a.preload='metadata';a.src=url;a.style.display='block';a.style.width='min(360px,100%)';a.style.maxWidth='100%';a.setAttribute('controlsList','nodownload');bubble.prepend(a);a.load()
