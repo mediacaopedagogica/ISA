@@ -16,118 +16,27 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Install robust Android touch bridge
-        run: |
-          cat > mobile-interaction-guard.js <<'EOF'
-          const mobileMQ=matchMedia('(max-width:850px)')
-          const $m=id=>document.getElementById(id)
-          let suppressTrustedClickUntil=0
-
-          function mobileMain(){return $m('mainView')}
-          function mobileReady(){const m=mobileMain();return !!m&&!m.classList.contains('hidden')}
-
-          function ensureTouchCss(){
-            if(document.querySelector('style[data-mobile-touch-fix]'))return
-            const s=document.createElement('style')
-            s.dataset.mobileTouchFix='1'
-            s.textContent='@media(max-width:850px){#mainView .profile-mini,#mainView .nav-tabs,#mainView .chat-list-head,#mainView .chat-list{position:relative!important;z-index:5!important;pointer-events:auto!important}#mainView button,#mainView [role="button"],#mainView .chat-item{pointer-events:auto!important;touch-action:manipulation!important;-webkit-tap-highlight-color:rgba(160,120,220,.12)}}'
-            document.head.appendChild(s)
-          }
-
-          function ensurePanelBack(){
-            let b=$m('mobilePanelBack')
-            if(!b){
-              b=document.createElement('button')
-              b.id='mobilePanelBack';b.type='button';b.textContent='←';b.title='Voltar às conversas';b.setAttribute('aria-label','Voltar às conversas');b.className='hidden'
-              mobileMain()?.querySelector('.content')?.appendChild(b)
-            }
-            return b
-          }
-
-          function showMobileList(){
-            if(!mobileMQ.matches||!mobileReady())return
-            const m=mobileMain();m.classList.remove('mobile-content-open','mobile-chat-open','mobile-panel-open')
-            ensurePanelBack()?.classList.add('hidden')
-            const list=$m('chatList');if(list){list.style.removeProperty('display');list.style.removeProperty('pointer-events')}
-          }
-
-          function showMobileContent(kind='panel'){
-            if(!mobileMQ.matches||!mobileReady())return
-            const m=mobileMain();m.classList.add('mobile-content-open');m.classList.toggle('mobile-chat-open',kind==='chat');m.classList.toggle('mobile-panel-open',kind!=='chat')
-            const back=ensurePanelBack();if(back)back.classList.toggle('hidden',kind==='chat')
-          }
-
-          function syncAfterClick(event){
-            if(!mobileMQ.matches||!mobileReady())return
-            const nav=event.target.closest?.('.nav-btn[data-tab]')
-            if(nav){const tab=nav.dataset.tab;if(tab==='chats')setTimeout(showMobileList,0);else if(tab!=='study'&&tab!=='diary')setTimeout(()=>showMobileContent('panel'),0)}
-            const card=event.target.closest?.('#chatList .chat-item[data-conv]')
-            if(card&&!event.target.closest?.('.conversation-pin-action'))setTimeout(()=>showMobileContent('chat'),0)
-            if(event.target.closest?.('#mobileBackBtn,#mobilePanelBack'))setTimeout(showMobileList,0)
-          }
-
-          document.addEventListener('click',event=>{
-            if(Date.now()<suppressTrustedClickUntil&&event.isTrusted){event.preventDefault();event.stopImmediatePropagation();return}
-            syncAfterClick(event)
-          },true)
-
-          // Chrome/Android: transforma o toque em clique explícito. Isso evita a tela bonita porém estática.
-          document.addEventListener('touchend',event=>{
-            if(!mobileMQ.matches||!mobileReady())return
-            const action=event.target.closest?.('#mainView button,#mainView [role="button"]')
-            if(!action||action.disabled)return
-            event.preventDefault()
-            suppressTrustedClickUntil=Date.now()+650
-            action.click()
-          },{capture:true,passive:false})
-
-          const contentObserver=new MutationObserver(()=>{
-            if(!mobileMQ.matches||!mobileReady())return
-            const chat=$m('chatPanel'),calendar=$m('calendarPanel'),supervision=$m('supervisionPanel'),parents=$m('parentsPanel')
-            if(chat&&!chat.classList.contains('hidden'))showMobileContent('chat')
-            else if([calendar,supervision,parents].some(p=>p&&!p.classList.contains('hidden')))showMobileContent('panel')
-          })
-
-          function startMobileGuard(){
-            ensureTouchCss();ensurePanelBack()
-            ;['chatPanel','calendarPanel','supervisionPanel','parentsPanel'].forEach(id=>{const el=$m(id);if(el&&!el.dataset.mobileGuardObserved){el.dataset.mobileGuardObserved='1';contentObserver.observe(el,{attributes:true,attributeFilter:['class']})}})
-          }
-          startMobileGuard();document.addEventListener('DOMContentLoaded',startMobileGuard,{once:true});setTimeout(startMobileGuard,250)
-          window.__ISA_MOBILE_GUARD__={showMobileList,showMobileContent}
-          EOF
-
-      - name: Load touch bridge before the app and refresh caches
+      - name: Publish dedicated mobile loader versions
         run: |
           python - <<'PY'
           from pathlib import Path
-          import re
-          p=Path('index.html');s=p.read_text(encoding='utf-8')
-          s=re.sub(r'<script defer src="\./mobile-interaction-guard\.js\?v=[^"]+"></script>\s*','',s)
-          marker='<script defer src="./app-v33.js?v=stable-52-avatar"></script>'
-          replacement='<script defer src="./mobile-interaction-guard.js?v=2-android-touch"></script>\n<script defer src="./app-v33.js?v=stable-52-avatar"></script>'
-          if marker in s:s=s.replace(marker,replacement)
-          elif './app-v33.js?' in s:
-            s=re.sub(r'(<script defer src="\./app-v33\.js\?v=[^"]+"></script>)',r'<script defer src="./mobile-interaction-guard.js?v=2-android-touch"></script>\n\1',s,count=1)
-          s=s.replace('./postboot-loader.js?v=5-mobile-interaction','./postboot-loader.js?v=6-android-touch')
-          p.write_text(s,encoding='utf-8')
-
-          p=Path('postboot-loader.js');s=p.read_text(encoding='utf-8')
-          s=re.sub(r"\s*'\./mobile-interaction-guard\.js\?v=[^']+',\n",'\n',s)
-          s=s.replace('./mobile-responsive-v2.js?v=14-mobiletap','./mobile-responsive-v2.js?v=15-android-touch')
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('./mobile-interaction-guard.js?v=2-android-touch','./mobile-interaction-guard.js?v=3-native-skip')
+          s=s.replace('./postboot-loader.js?v=6-android-touch','./postboot-loader.js?v=7-native-mobile')
+          s=s.replace('./postboot-loader.js?v=5-mobile-interaction','./postboot-loader.js?v=7-native-mobile')
           p.write_text(s,encoding='utf-8')
           PY
-
       - name: Sanity check
         run: |
-          grep -q 'touchend' mobile-interaction-guard.js
-          grep -q 'mobile-interaction-guard.js?v=2-android-touch' index.html
-          grep -q 'postboot-loader.js?v=6-android-touch' index.html
-
+          grep -q 'mobile-interaction-guard.js?v=3-native-skip' index.html
+          grep -q 'postboot-loader.js?v=7-native-mobile' index.html
+          grep -q "dedicatedMobile" postboot-loader.js
+          grep -q "mobile-native.js" postboot-loader.js
       - name: Commit
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add mobile-interaction-guard.js postboot-loader.js index.html
-          git diff --cached --quiet || git commit -m 'Fix Android touch interactions across mobile app'
+          git add index.html
+          git diff --cached --quiet || git commit -m 'Publish dedicated mobile entry flow'
           git push
