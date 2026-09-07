@@ -22,21 +22,22 @@
     if(msg){msg.textContent=text;msg.style.color='#a15472'}
   }
 
-  // Visual aprovado: 3D pastel, responsivo e acabamento de corações.
-  css('isaApp3dRestore','./app-3d.css?v=restore-1')
-  css('isaMobileRestore','./mobile-responsive-v2.css?v=6-restore')
-  css('isaHeartRestore','./heart-polish.css?v=restore-1')
+  // Visual aprovado. CSS não bloqueia o login e mantém 3D/corações/mobile.
+  css('isaApp3dRestore','./app-3d.css?v=restore-37')
+  css('isaMobileRestore','./mobile-responsive-v2.css?v=7-restore')
+  css('isaHeartRestore','./heart-polish.css?v=restore-37')
+  css('isaChatCardsRestore','./chat-cards-3d-v2.css?v=3-restore')
 
-  // Núcleo único e estável. Contém login, chat, leitura e presença Online/Offline.
+  // Núcleo único: login, chat, leitura e presença Online/Offline.
   const core=document.createElement('script')
   core.id='isaCoreV34Restored'
-  core.src='./app-v34.js?v=34-restored-1'
+  core.src='./app-v34.js?v=34-restored-37'
   core.async=false
   core.onload=()=>{
-    // Estes módulos são pequenos e só ligam comportamento. Ferramentas pesadas continuam lazy.
-    module('isaMobileJsRestore','./mobile-responsive-v2.js?v=6-restore')
-    module('isaNotificationsRestore','./notifications-v2.js?v=4-restore')
-    module('isaExtrasRestore','./extras-loader.js?v=13-restore')
+    // Só conectores pequenos. Recursos pesados ficam lazy no extras-loader.
+    module('isaMobileJsRestore','./mobile-responsive-v2.js?v=7-restore')
+    module('isaNotificationsRestore','./notifications-v2.js?v=5-restore')
+    module('isaExtrasRestore','./extras-loader.js?v=14-restore')
   }
   core.onerror=()=>fail('Não foi possível carregar o núcleo do Cantinho. Recarregue a página.')
   document.body.appendChild(core)
