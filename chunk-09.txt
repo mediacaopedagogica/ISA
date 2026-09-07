@@ -68,3 +68,5 @@ if($('calendarNextBtn'))$('calendarNextBtn').onclick=()=>{calendarCursor=new Dat
 if($('calendarTodayBtn'))$('calendarTodayBtn').onclick=()=>{const n=new Date();calendarCursor=new Date(n.getFullYear(),n.getMonth(),1);calendarSelectedDate=new Date(n.getFullYear(),n.getMonth(),n.getDate());renderCalendarMonth()}
 if($('calendarMonthSelect'))$('calendarMonthSelect').onchange=e=>{calendarCursor=new Date(calendarCursor.getFullYear(),Number(e.target.value),1);renderCalendarMonth()}
 if($('calendarYearSelect'))$('calendarYearSelect').onchange=e=>{calendarCursor=new Date(Number(e.target.value),calendarCursor.getMonth(),1);renderCalendarMonth()}
+
+await boot();
