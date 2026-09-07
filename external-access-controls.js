@@ -2,6 +2,7 @@ import { CONFIG } from './config.js'
 
 const $=id=>document.getElementById(id)
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+let loading=false
 
 function sessionToken(){
   try{
@@ -26,11 +27,13 @@ function ensureCss(){if(document.querySelector('link[href^="external-access.css"
 function mount(){
   const panel=$('supervisionPanel');if(!panel||$('externalFriendsBox'))return
   ensureCss()
-  const box=document.createElement('section');box.id='externalFriendsBox';box.className='external-friends-box hidden';box.innerHTML=`<div class="external-friends-head"><div><h3>Acessos por link da Isa 🌷</h3><p>Familiares e amigas podem entrar por um link pessoal. As amigas podem ficar pausadas e ser ativadas apenas quando houver trabalhos ou atividades.</p></div></div><div id="externalCreateWrap"></div><div id="externalFriendList" class="external-friend-list"></div>`
+  const box=document.createElement('section');box.id='externalFriendsBox';box.className='external-friends-box hidden';box.innerHTML=`<div class="external-friends-head"><div><h3>Acessos externos da Isa 🌷</h3><p>Amigas e familiares podem entrar pelo próprio link. Keise e Alan podem pausar ou reativar o acesso temporariamente.</p></div></div><div id="externalCreateWrap"></div><div id="externalFriendList" class="external-friend-list"></div>`
   const info=panel.querySelector('.supervision-info');if(info?.nextSibling)panel.insertBefore(box,info.nextSibling);else panel.appendChild(box)
 }
 async function load(){
+  if(loading)return
   mount();const box=$('externalFriendsBox');if(!box)return
+  loading=true
   try{
     const list=await rpc('external_friend_list',{})
     box.classList.remove('hidden')
@@ -39,13 +42,13 @@ async function load(){
     if(canCreate)$('createExternalFriendBtn').onclick=createFriend
     $('externalFriendList').innerHTML=(list||[]).map(x=>{
       const status=!x.active?'revoked':x.paused?'paused':'active';const label=status==='revoked'?'Revogado':status==='paused'?'Pausado':'Ativo';const relation=esc(x.relationship||'Acesso por link')
-      return `<article class="external-friend-card" data-ext-card="${x.memberId}"><div class="external-friend-name"><strong>${esc(x.name)}</strong><small>${relation}</small><span class="external-status ${status}">${label}</span></div><div class="external-friend-actions">${x.active?`<button class="${x.paused?'resume':'pause'}" data-ext-pause="${x.memberId}" data-paused="${x.paused?'1':'0'}">${x.paused?'▶ Ativar':'⏸ Pausar'}</button>`:''}${x.token?`<button data-ext-copy="${esc(x.token)}">🔗 Copiar link</button><button data-ext-regen="${x.memberId}">↻ Novo link</button><button class="danger" data-ext-revoke="${x.memberId}">Revogar</button>`:''}</div></article>`
+      return `<article class="external-friend-card" data-ext-card="${x.memberId}"><div class="external-friend-name"><strong>${esc(x.name)}</strong><small>${relation}</small><span class="external-status ${status}">${label}</span></div><div class="external-friend-actions">${x.active?`<button class="${x.paused?'resume':'pause'}" data-ext-pause="${x.memberId}" data-paused="${x.paused?'1':'0'}">${x.paused?'▶ Reativar chat':'⏸ Desativar chat'}</button>`:''}${x.token?`<button data-ext-copy="${esc(x.token)}">🔗 Copiar link</button><button data-ext-regen="${x.memberId}">↻ Novo link</button><button class="danger" data-ext-revoke="${x.memberId}">Revogar</button>`:''}</div></article>`
     }).join('')||'<p class="muted">Nenhum acesso por link criado.</p>'
     document.querySelectorAll('[data-ext-pause]').forEach(b=>b.onclick=()=>togglePause(b))
     document.querySelectorAll('[data-ext-copy]').forEach(b=>b.onclick=()=>copyLink(b.dataset.extCopy))
     document.querySelectorAll('[data-ext-regen]').forEach(b=>b.onclick=()=>regenerate(b.dataset.extRegen))
     document.querySelectorAll('[data-ext-revoke]').forEach(b=>b.onclick=()=>revoke(b.dataset.extRevoke))
-  }catch(e){box.classList.add('hidden')}
+  }catch(e){box.classList.add('hidden')}finally{loading=false}
 }
 async function togglePause(btn){
   const paused=btn.dataset.paused==='1';btn.disabled=true
@@ -63,13 +66,4 @@ async function regenerate(id){if(!confirm('Gerar um novo link? O link antigo dei
 async function revoke(id){if(!confirm('Revogar este acesso? O link deixará de funcionar.'))return;try{await rpc('external_friend_revoke',{p_member_id:id});toast('Acesso revogado');await load()}catch(e){toast(e.message)}}
 
 mount()
-document.querySelector('[data-tab="supervision"]')?.addEventListener('click',()=>setTimeout(load,80))
-const obs=new MutationObserver(()=>{mount();if(!$('supervisionPanel')?.classList.contains('hidden'))load()})
-obs.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class']})
-
-import('./isa-tools.js?v=2').catch(console.warn)
-import('./diary-parent.js?v=2').catch(console.warn)
-import('./family-media-menu.js?v=3').catch(console.warn)
-import('./calendar-alarm.js?v=2').catch(console.warn)
-import('./native-media-bridge.js?v=2').catch(console.warn)
-import('./link-preview.js?v=2').catch(console.warn)
+load()
