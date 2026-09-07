@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#cdb8ff">
   <title>Cantinho da Isa • Acesso externo</title>
   <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="amiga.css?v=2">
+  <link rel="stylesheet" href="amiga.css?v=3">
 </head>
 <body>
   <main id="friendApp" class="friend-page">
@@ -23,8 +23,9 @@
     <section id="friendChat" class="friend-chat hidden">
       <aside class="friend-sidebar shell-card">
         <div class="friend-profile">
-          <div class="friend-avatar">🌷</div>
-          <div><small>Acesso pessoal</small><strong id="friendName">Amiga</strong></div>
+          <button id="friendAvatarBtn" class="friend-avatar" type="button" title="Trocar foto ou mascote">🌷</button>
+          <input id="friendProfilePhotoInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+          <div><small>Acesso pessoal</small><strong id="friendName">Perfil</strong><button id="friendProfileEditBtn" class="friend-profile-edit" type="button">Trocar perfil</button></div>
         </div>
         <div class="friend-side-title"><strong>Conversas</strong><small>Direto com a Isa ou grupos criados por ela</small></div>
         <div id="friendConversationList" class="friend-conversation-list"></div>
@@ -32,25 +33,16 @@
       </aside>
 
       <section class="friend-main shell-card">
-        <div id="friendEmpty" class="friend-empty">
-          <div class="friend-heart small" aria-hidden="true">♥</div>
-          <h2>Oi! 💕</h2>
-          <p>Escolha a conversa com a Isa ou um grupo em que ela colocou você.</p>
-        </div>
+        <div id="friendEmpty" class="friend-empty"><div class="friend-heart small" aria-hidden="true">♥</div><h2>Oi! 💕</h2><p>Escolha a conversa com a Isa ou um grupo em que ela colocou você.</p></div>
         <div id="friendThread" class="friend-thread hidden">
-          <header class="friend-thread-head">
-            <button id="friendBackBtn" class="back-btn" type="button">←</button>
-            <div class="thread-avatar">💬</div>
-            <div><h2 id="friendThreadTitle">Isa</h2><small id="friendThreadSubtitle">Conversa</small></div>
-          </header>
+          <header class="friend-thread-head"><button id="friendBackBtn" class="back-btn" type="button">←</button><div class="thread-avatar">💬</div><div><h2 id="friendThreadTitle">Isa</h2><small id="friendThreadSubtitle">Conversa</small></div></header>
           <div id="friendMessages" class="friend-messages"></div>
           <div class="friend-composer">
-            <button id="friendPhotoBtn" class="emoji-btn hidden" type="button" title="Enviar imagem para atividade">📷</button>
+            <button id="friendPlusBtn" class="emoji-btn" type="button" title="Mais opções">＋</button>
+            <div id="friendPlusMenu" class="emoji-bar hidden"><button id="friendStudyBtn" type="button">📚 Estudos</button><button id="friendPhotoBtn" class="hidden" type="button">📷 Imagem para atividade</button></div>
             <input id="friendPhotoInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
             <button id="friendEmojiBtn" class="emoji-btn" type="button" title="Emojis">😊</button>
-            <div id="friendEmojiBar" class="emoji-bar hidden">
-              <button type="button">😊</button><button type="button">😂</button><button type="button">🥰</button><button type="button">😍</button><button type="button">💜</button><button type="button">💕</button><button type="button">✨</button><button type="button">📚</button><button type="button">✏️</button><button type="button">✅</button>
-            </div>
+            <div id="friendEmojiBar" class="emoji-bar hidden"><button type="button">😊</button><button type="button">😂</button><button type="button">🥰</button><button type="button">😍</button><button type="button">💜</button><button type="button">💕</button><button type="button">✨</button><button type="button">📚</button><button type="button">✏️</button><button type="button">✅</button></div>
             <textarea id="friendMessageInput" rows="1" maxlength="5000" placeholder="Digite uma mensagem…"></textarea>
             <button id="friendSendBtn" class="send-btn" type="button">➤</button>
           </div>
@@ -58,18 +50,12 @@
       </section>
     </section>
   </main>
+  <dialog id="friendProfileDialog" class="friend-profile-dialog"><div class="friend-profile-dialog-card"><button id="friendProfileClose" type="button" class="friend-profile-close">✕</button><h3>Seu perfil 💜</h3><p>Escolha uma foto ou um mascote.</p><button id="friendChoosePhoto" class="primary" type="button">📷 Usar ou trocar foto</button><div id="friendMascotGrid" class="friend-mascot-grid"></div></div></dialog>
   <div id="friendToast" class="friend-toast hidden"></div>
   <script>
-    const pausedObserver=new MutationObserver(()=>{
-      const err=document.getElementById('friendGateError');
-      if(!err||!/temporariamente indisponível/i.test(err.textContent||''))return;
-      document.getElementById('friendGateTitle').textContent='Acesso temporariamente indisponível';
-      document.getElementById('friendGateText').textContent='Seu acesso ao chat para trabalhos escolares está temporariamente indisponível.';
-      document.getElementById('friendEnterBtn').classList.add('hidden');
-      err.textContent='';
-    });
+    const pausedObserver=new MutationObserver(()=>{const err=document.getElementById('friendGateError');if(!err||!/temporariamente indisponível/i.test(err.textContent||''))return;document.getElementById('friendGateTitle').textContent='Acesso temporariamente indisponível';document.getElementById('friendGateText').textContent='Seu acesso ao chat para trabalhos escolares está temporariamente indisponível.';document.getElementById('friendEnterBtn').classList.add('hidden');err.textContent='';});
     pausedObserver.observe(document.getElementById('friendGateError'),{childList:true,characterData:true,subtree:true});
   </script>
-  <script type="module" src="./amiga.js?v=2"></script>
+  <script type="module" src="./amiga.js?v=3"></script>
 </body>
 </html>
