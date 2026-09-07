@@ -23,7 +23,7 @@ async function loadCoreExtras(){
     loadOnce('groups','./group-controls.js?v=5-stable'),
     loadOnce('pins','./conversation-pins.js?v=5-direct-pin'),
     loadOnce('paused-friends','./paused-friends-filter.js?v=3-stable'),
-    loadOnce('family-media','./family-media-menu-v2.js?v=4-stable'),
+    loadOnce('family-media','./family-media-menu-v2.js?v=5-mobile-camera-gallery'),
     loadOnce('links','./link-preview.js?v=5-stable')
   ]
   if(!dedicatedMobile)jobs.push(loadOnce('calls','./call-manager.js?v=4-stable'))
