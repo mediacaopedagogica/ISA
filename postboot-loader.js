@@ -11,8 +11,7 @@ async function loadWithRetry(path){
 }
 
 const paths=[
-  './mobile-interaction-guard.js?v=1',
-  './mobile-responsive-v2.js?v=14-mobiletap',
+  './mobile-responsive-v2.js?v=15-android-touch',
   './notifications-v2.js?v=9-stable',
   './extras-loader.js?v=13-noloop'
 ]
