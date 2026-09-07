@@ -26,42 +26,43 @@ function toast(text){const t=$('toast');if(!t)return alert(text);t.textContent=t
 function activeConv(){return document.querySelector('.chat-item.active[data-conv]')?.dataset.conv||null}
 function isSupervision(){return !$('supervisionNotice')?.classList.contains('hidden')}
 function isChatOpen(){return $('chatPanel')&&!$('chatPanel').classList.contains('hidden')}
-function ensureInputs(){if(!$('familyAudioInput')){const i=document.createElement('input');i.type='file';i.id='familyAudioInput';i.hidden=true;document.body.appendChild(i)}}
 async function conversationHasFriend(id){
   const token=sessionToken();if(!token||!id)return false
   const r=await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/conversation_members?select=family_members(relationship_label)&conversation_id=eq.${id}`,{headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${token}`},cache:'no-store'})
   if(!r.ok)return false
   const rows=await r.json();return rows.some(x=>/amiga/i.test(x.family_members?.relationship_label||''))
 }
-async function uploadAudio(file,duration){
+function fileExt(file,fallback){return (file?.name?.split('.').pop()||fallback).replace(/[^a-z0-9]/gi,'').toLowerCase()||fallback}
+async function uploadMedia(file,kind,{duration=null,maxMb=12}={}){
   const id=activeConv();if(!id||!file)return
-  if(await conversationHasFriend(id))return toast('Áudio fica disponível somente nas conversas da família.')
-  if(file.size>12*1024*1024)return toast('Use um áudio de até 12 MB.')
-  const token=sessionToken();if(!token)return
+  if(kind==='audio'&&await conversationHasFriend(id))return toast('Áudio fica disponível somente nas conversas da família.')
+  if(file.size>maxMb*1024*1024)return toast(`Use um arquivo de até ${maxMb} MB.`)
+  const token=sessionToken();if(!token)return toast('Entre novamente no Cantinho.')
+  let path=''
   try{
-    const u=await identity(),ext=(file.name.split('.').pop()||'webm').replace(/[^a-z0-9]/gi,'').toLowerCase(),path=`${u.family_id}/${id}/${u.id}/${crypto.randomUUID()}.${ext}`
-    toast('Enviando áudio…')
-    const up=await fetch(`${CONFIG.SUPABASE_URL}/storage/v1/object/chat-temp/${path}`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${token}`,'Content-Type':file.type||'audio/webm','x-upsert':'false'},body:file})
-    if(!up.ok)throw new Error('Não foi possível enviar o áudio.')
+    const u=await identity()
+    const fallback=kind==='audio'?'webm':'jpg',ext=fileExt(file,fallback)
+    path=`${u.family_id}/${id}/${u.id}/${crypto.randomUUID()}.${ext}`
+    toast(kind==='audio'?'Enviando áudio…':'Enviando foto…')
+    const up=await fetch(`${CONFIG.SUPABASE_URL}/storage/v1/object/chat-temp/${path}`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${token}`,'Content-Type':file.type||(kind==='audio'?'audio/webm':'image/jpeg'),'x-upsert':'false'},body:file})
+    if(!up.ok){let d=null;try{d=await up.json()}catch{};throw new Error(d?.message||`Não foi possível enviar ${kind==='audio'?'o áudio':'a foto'}.`)}
     const expires=new Date(Date.now()+7*86400000).toISOString()
-    const ins=await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/messages`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${token}`,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({conversation_id:id,sender_id:u.id,kind:'audio',media_provider:'supabase-storage',media_ref:path,media_mime:file.type||'audio/webm',media_duration_ms:duration||null,media_expires_at:expires})})
-    if(!ins.ok){await fetch(`${CONFIG.SUPABASE_URL}/storage/v1/object/chat-temp/${path}`,{method:'DELETE',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${token}`}}).catch(()=>{});let d=null;try{d=await ins.json()}catch{};throw new Error(d?.message||'Áudio não permitido nesta conversa.')}
-    toast('Áudio enviado 🎙️');scheduleHydrate(350)
-  }catch(e){toast(e.message||'Não foi possível enviar o áudio.')}
+    const payload={conversation_id:id,sender_id:u.id,kind,media_provider:'supabase-storage',media_ref:path,media_mime:file.type||(kind==='audio'?'audio/webm':'image/jpeg'),media_expires_at:expires}
+    if(kind==='audio')payload.media_duration_ms=duration||null
+    const ins=await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/messages`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${token}`,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(payload)})
+    if(!ins.ok){await fetch(`${CONFIG.SUPABASE_URL}/storage/v1/object/chat-temp/${path}`,{method:'DELETE',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${token}`}}).catch(()=>{});let d=null;try{d=await ins.json()}catch{};throw new Error(d?.message||`${kind==='audio'?'Áudio':'Foto'} não permitido nesta conversa.`)}
+    toast(kind==='audio'?'Áudio enviado 🎙️':'Foto enviada 📷')
+    if(kind==='audio')scheduleHydrate(350)
+  }catch(e){console.error('Envio de mídia:',e);toast(e.message||'Não foi possível enviar.')}
 }
 async function sendNativePhoto(){
-  const file=await capturePhoto();if(!file)return
-  const input=$('photoInput');if(!input)return toast('Envio de imagem indisponível.')
-  const dt=new DataTransfer();dt.items.add(file);input.files=dt.files;input.dispatchEvent(new Event('change',{bubbles:true}))
+  try{const file=await capturePhoto();if(file)await uploadMedia(file,'photo',{maxMb:10})}catch(e){toast(e.message||'Não foi possível tirar a foto.')}
 }
 function chooseImage(){const i=$('photoInput');if(!i)return;i.removeAttribute('capture');i.setAttribute('accept','image/jpeg,image/png,image/webp,image/gif');i.click()}
 async function startNativeRecording(){
   const id=activeConv();if(!id)return
   if(await conversationHasFriend(id))return toast('Áudio fica disponível somente nas conversas da família.')
-  try{
-    const result=await recordAudio();if(!result?.file)return
-    await uploadAudio(result.file,result.durationMs)
-  }catch(e){toast(e.message||'Não foi possível iniciar o gravador.')}
+  try{const result=await recordAudio();if(result?.file)await uploadMedia(result.file,'audio',{duration:result.durationMs,maxMb:12})}catch(e){toast(e.message||'Não foi possível iniciar o gravador.')}
 }
 async function signed(path){const token=sessionToken();const r=await fetch(`${CONFIG.SUPABASE_URL}/storage/v1/object/sign/chat-temp/${path}`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({expiresIn:300})});const d=await r.json();if(!r.ok)throw new Error();return d.signedURL||d.signedUrl}
 async function hydrateAudio(){
@@ -81,7 +82,6 @@ async function hydrateAudio(){
 function scheduleHydrate(delay=220){clearTimeout(audioHydrateTimer);audioHydrateTimer=setTimeout(hydrateAudio,delay)}
 function ensureMenu(){
   if(!isChatOpen()||isSupervision())return
-  ensureInputs()
   const plus=$('groupPlusBtn'),menu=$('groupPlusMenu'),photo=$('photoBtn');if(!plus||!menu)return
   plus.classList.remove('hidden');if(photo)photo.style.display='none';menu.querySelector('[data-group-action="photo"]')?.classList.add('hidden')
   menu.querySelectorAll('[data-family-media]').forEach(n=>n.remove())
