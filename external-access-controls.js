@@ -69,6 +69,7 @@ obs.observe(document.documentElement,{subtree:true,childList:true,attributes:tru
 
 import('./isa-tools.js?v=2').catch(console.warn)
 import('./diary-parent.js?v=2').catch(console.warn)
-import('./family-media-menu.js?v=2').catch(console.warn)
+import('./family-media-menu.js?v=3').catch(console.warn)
 import('./calendar-alarm.js?v=2').catch(console.warn)
 import('./native-media-bridge.js?v=1').catch(console.warn)
+import('./link-preview.js?v=1').catch(console.warn)
