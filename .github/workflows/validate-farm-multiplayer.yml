@@ -34,12 +34,19 @@ jobs:
           test -s jogos/fazendinha-multiplayer.js
           test -s games-menu-farm.js
           grep -q 'Fazendinha da Isa' jogos/fazendinha-multiplayer.html
+          grep -q 'guestIdentityForm' jogos/fazendinha-multiplayer.html
+          grep -q 'Este perfil vale só dentro da Fazendinha' jogos/fazendinha-multiplayer.html
           grep -q 'farm_game_bootstrap' jogos/fazendinha-multiplayer.js
+          grep -q 'p_guest_token' jogos/fazendinha-multiplayer.js
+          grep -q 'cantinho-farm-guest-v2' jogos/fazendinha-multiplayer.js
           grep -q 'farm_game_snapshot' jogos/fazendinha-multiplayer.js
           grep -q 'farm_game_action' jogos/fazendinha-multiplayer.js
           grep -q 'RTCPeerConnection' jogos/fazendinha-multiplayer.js
           grep -q 'getUserMedia' jogos/fazendinha-multiplayer.js
-          grep -q 'games-menu-farm.js?v=1' acesso.html
-          grep -q 'games-menu-farm.js?v=1' acesso-mobile.html
-          grep -q "loadOnce('farm-game','./games-menu-farm.js?v=1')" extras-loader.js
+          grep -q 'InstancedMesh' jogos/fazendinha-multiplayer.js
+          grep -q 'MeshPhysicalMaterial' jogos/fazendinha-multiplayer.js
+          grep -q 'games-menu-farm.js?v=2-realism-identity' acesso.html
+          grep -q 'games-menu-farm.js?v=2-realism-identity' acesso-mobile.html
+          grep -q "loadOnce('farm-game','./games-menu-farm.js?v=2-realism-identity')" extras-loader.js
           grep -q 'data-game=.farm' games-menu-farm.js
+          ! grep -q 'Isa no notebook e Primo no celular' games-menu-farm.js
