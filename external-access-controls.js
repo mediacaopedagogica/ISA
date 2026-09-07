@@ -67,7 +67,7 @@ document.querySelector('[data-tab="supervision"]')?.addEventListener('click',()=
 const obs=new MutationObserver(()=>{mount();if(!$('supervisionPanel')?.classList.contains('hidden'))load()})
 obs.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class']})
 
-import('./isa-tools.js').catch(console.warn)
-import('./diary-parent.js').catch(console.warn)
-import('./family-media-menu.js').catch(console.warn)
-import('./calendar-alarm.js').catch(console.warn)
+import('./isa-tools.js?v=2').catch(console.warn)
+import('./diary-parent.js?v=2').catch(console.warn)
+import('./family-media-menu.js?v=2').catch(console.warn)
+import('./calendar-alarm.js?v=2').catch(console.warn)
