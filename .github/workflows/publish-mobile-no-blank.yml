@@ -20,23 +20,23 @@ jobs:
           from pathlib import Path
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-          s=s.replace('./mobile-interaction-guard.js?v=3-native-skip','./mobile-interaction-guard.js?v=4-early')
+          s=s.replace('./postboot-loader.js?v=9-no-blank','./postboot-loader.js?v=10-fast-calls')
           p.write_text(s,encoding='utf-8')
 
           p=Path('entrar-mobile.html')
           s=p.read_text(encoding='utf-8')
-          s=s.replace("u.searchParams.set('v','2')","u.searchParams.set('v','3')")
+          s=s.replace("u.searchParams.set('v','3')","u.searchParams.set('v','4')")
           p.write_text(s,encoding='utf-8')
           PY
       - name: Verify
         run: |
-          grep -q 'mobile-interaction-guard.js?v=4-early' index.html
-          grep -q "u.searchParams.set('v','3')" entrar-mobile.html
-          grep -q 'mobile-native.js?v=3-no-blank' postboot-loader.js
+          grep -q 'postboot-loader.js?v=10-fast-calls' index.html
+          grep -q "u.searchParams.set('v','4')" entrar-mobile.html
+          grep -q 'call-manager.js?v=7-mobile-fast' postboot-loader.js
       - name: Commit
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html entrar-mobile.html
-          git diff --cached --quiet || git commit -m 'Boot dedicated mobile navigation before app'
+          git diff --cached --quiet || git commit -m 'Load mobile calls without delay'
           git push
