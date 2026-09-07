@@ -1,3 +1,5 @@
+import './v36-loader.js?v=36'
+import './profile-mascot.js?v=1'
 import { CONFIG } from './config.js'
 const $=id=>document.getElementById(id)
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
