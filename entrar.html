@@ -23,6 +23,7 @@
 import {CONFIG} from './config.js';
 const $=id=>document.getElementById(id);
 const token=new URLSearchParams(location.hash.replace(/^#/,'' )).get('acesso')||'';
+const STORAGE_KEY='sb-srazofmrxzwqcavnhplq-auth-token';
 async function start(){
  $('retry').classList.add('hidden');$('error').textContent='';$('spinner').classList.remove('hidden');
  if(!token){fail('Este link não é válido.');return}
@@ -32,8 +33,11 @@ async function start(){
    $('title').textContent=`Oi, ${d.name}! 💜`;$('text').textContent='Entrando…';
    const v=await fetch(`${CONFIG.SUPABASE_URL}/auth/v1/verify`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({type:d.type||'magiclink',token_hash:d.tokenHash})});
    const s=await v.json().catch(()=>({}));if(!v.ok||!s.access_token||!s.refresh_token)throw new Error(s.msg||s.error_description||'Não foi possível iniciar a sessão.');
-   const q=new URLSearchParams({access_token:s.access_token,refresh_token:s.refresh_token,expires_in:String(s.expires_in||3600),token_type:s.token_type||'bearer',type:'magiclink'});
-   location.replace(`./#${q.toString()}`);
+   const expiresIn=Number(s.expires_in||3600);
+   const session={access_token:s.access_token,refresh_token:s.refresh_token,expires_in:expiresIn,expires_at:Number(s.expires_at||Math.floor(Date.now()/1000)+expiresIn),token_type:s.token_type||'bearer',user:s.user||null};
+   localStorage.setItem(STORAGE_KEY,JSON.stringify(session));
+   sessionStorage.setItem('isa_direct_access','1');
+   location.replace('./?acesso=direto&v=38');
  }catch(e){fail(e.message||'Não foi possível acessar.')}
 }
 function fail(msg){$('spinner').classList.add('hidden');$('title').textContent='Acesso indisponível';$('text').textContent='';$('error').textContent=msg;$('retry').classList.remove('hidden')}
