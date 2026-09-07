@@ -1,0 +1,35 @@
+name: Validar módulos do Cantinho
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'diario.js'
+      - 'isa-tools.js'
+      - 'diary-parent.js'
+      - 'family-media-menu.js'
+      - 'calendar-alarm.js'
+      - 'amiga.js'
+      - 'amiga-ui-enhanced.js'
+      - 'external-access-controls.js'
+      - '.github/workflows/validate-cantinho-extras.yml'
+  workflow_dispatch:
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Verificar sintaxe JavaScript
+        run: |
+          node --check diario.js
+          node --check isa-tools.js
+          node --check diary-parent.js
+          node --check family-media-menu.js
+          node --check calendar-alarm.js
+          node --check amiga.js
+          node --check amiga-ui-enhanced.js
+          node --check external-access-controls.js
