@@ -21926,15 +21926,19 @@ ${suffix}`;
       calendarCursor = new Date(Number(e.target.value), calendarCursor.getMonth(), 1);
       renderCalendarMonth();
     };
+    await boot();
   }
   __isaCore34().then(() => {
     window.__ISA_APP_READY__ = true;
   }).catch((error) => {
     console.error("Falha ao iniciar Cantinho da Isa:", error);
     window.__ISA_APP_ERROR__ = String(error?.message || error || "Erro desconhecido");
+    const personal = new URLSearchParams(location.search).get("perfil");
+    const login = document.getElementById("loginView");
+    if (login && !personal) login.classList.remove("hidden");
     const msg = document.getElementById("loginMsg");
     if (msg) {
-      msg.textContent = "O aplicativo n\xE3o conseguiu iniciar. Recarregue a p\xE1gina.";
+      msg.textContent = "O aplicativo n\xE3o conseguiu iniciar. Atualize a p\xE1gina.";
       msg.style.color = "#a15472";
     }
   });
