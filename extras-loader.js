@@ -12,48 +12,60 @@ function mainReady(){
   return !!main&&!main.classList.contains('hidden')&&!!$('myName')?.textContent?.trim()
 }
 function isIsa(){return String($('myName')?.textContent||'').trim().toLowerCase()==='isa'}
+function idle(fn,delay=180){
+  if('requestIdleCallback'in window)requestIdleCallback(()=>fn().catch(()=>{}),{timeout:1200})
+  else setTimeout(()=>fn().catch(()=>{}),delay)
+}
 async function loadProfile(){await loadOnce('profile','./profile-mascot.js?v=2')}
 async function loadGroupTools(){await loadOnce('groups','./group-controls.js?v=3')}
-async function loadCalls(){await loadOnce('calls','./call-manager.js?v=2')}
-async function loadPausedFriends(){await loadOnce('paused-friends','./paused-friends-filter.js?v=1')}
 async function loadIsaTools(){if(isIsa())await loadOnce('isa-tools','./isa-tools.js?v=5')}
 async function loadChatExtras(){
-  await loadOnce('family-media','./family-media-menu-v2.js?v=2')
-  await loadOnce('links','./link-preview.js?v=3')
+  await Promise.allSettled([
+    loadOnce('family-media','./family-media-menu-v2.js?v=2'),
+    loadOnce('links','./link-preview.js?v=3')
+  ])
 }
-async function loadSupervisionExtras(){
-  await loadOnce('external-access','./external-access-controls.js?v=11')
-  await loadOnce('diary-parent','./diary-parent.js?v=3')
-}
+async function loadCalls(){await loadOnce('calls','./call-manager.js?v=2')}
+async function loadSupervisionExtras(){await loadOnce('diary-parent','./diary-parent.js?v=3')}
+
 function wire(){
   if(!mainReady())return false
-  loadProfile().catch(()=>{})
-  loadGroupTools().catch(()=>{})
-  loadCalls().catch(()=>{})
-  loadPausedFriends().catch(()=>{})
-  loadIsaTools().catch(()=>{})
+  idle(loadProfile,120)
+  idle(loadGroupTools,220)
+  if(isIsa())idle(loadIsaTools,260)
+
   const chatList=$('chatList')
-  if(chatList&&!chatList.dataset.extraLoaderBound){
-    chatList.dataset.extraLoaderBound='1'
-    chatList.addEventListener('click',e=>{if(e.target.closest('.chat-item[data-conv]'))setTimeout(()=>loadChatExtras().catch(()=>{}),80)})
+  if(chatList&&!chatList.dataset.extraLoaderV7){
+    chatList.dataset.extraLoaderV7='1'
+    chatList.addEventListener('click',e=>{
+      if(!e.target.closest('.chat-item[data-conv]'))return
+      setTimeout(()=>loadChatExtras().catch(()=>{}),120)
+      setTimeout(()=>loadCalls().catch(()=>{}),900)
+    })
   }
-  document.querySelector('[data-tab="chats"]')?.addEventListener('click',()=>{if($('chatPanel')&&!$('chatPanel').classList.contains('hidden'))loadChatExtras().catch(()=>{})})
-  document.querySelector('[data-tab="supervision"]')?.addEventListener('click',()=>loadSupervisionExtras().catch(()=>{}),{once:false})
-  const chat=$('chatPanel')
-  if(chat&&!chat.dataset.extraLoaderObserved){
-    chat.dataset.extraLoaderObserved='1'
-    const obs=new MutationObserver(()=>{if(!chat.classList.contains('hidden')){loadChatExtras().catch(()=>{});obs.disconnect()}})
-    obs.observe(chat,{attributes:true,attributeFilter:['class']})
-    if(!chat.classList.contains('hidden')){loadChatExtras().catch(()=>{});obs.disconnect()}
+  const chats=document.querySelector('[data-tab="chats"]')
+  if(chats&&!chats.dataset.extraLoaderV7){
+    chats.dataset.extraLoaderV7='1'
+    chats.addEventListener('click',()=>{
+      if($('chatPanel')&&!$('chatPanel').classList.contains('hidden'))loadChatExtras().catch(()=>{})
+    })
+  }
+  const supervision=document.querySelector('[data-tab="supervision"]')
+  if(supervision&&!supervision.dataset.extraLoaderV7){
+    supervision.dataset.extraLoaderV7='1'
+    supervision.addEventListener('click',()=>loadSupervisionExtras().catch(()=>{}))
   }
   return true
 }
 function start(){
   if(wire())return
   const main=$('mainView')
-  if(main){const obs=new MutationObserver(()=>{if(wire())obs.disconnect()});obs.observe(main,{attributes:true,attributeFilter:['class']})}
+  if(main){
+    const obs=new MutationObserver(()=>{if(wire())obs.disconnect()})
+    obs.observe(main,{attributes:true,attributeFilter:['class']})
+  }
   let tries=0
-  const retry=()=>{if(wire()||++tries>=28)return;setTimeout(retry,250)}
+  const retry=()=>{if(wire()||++tries>=40)return;setTimeout(retry,250)}
   retry()
 }
 start()
