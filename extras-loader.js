@@ -11,7 +11,7 @@ function loadMobilePlatform(){
   if(!document.querySelector('link[data-isa-mobile-v1]')){
     const l=document.createElement('link');l.rel='stylesheet';l.href='./mobile-responsive-v1.css?v=1';l.dataset.isaMobileV1='1';document.head.appendChild(l)
   }
-  return loadOnce('mobile-responsive','./mobile-responsive-v1.js?v=1')
+  return loadOnce('mobile-responsive','./mobile-responsive-v1.js?v=2')
 }
 
 function mainReady(){
