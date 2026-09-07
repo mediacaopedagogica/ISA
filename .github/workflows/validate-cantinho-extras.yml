@@ -35,6 +35,8 @@ on:
       - 'acesso-mobile.html'
       - 'paloma-studies.js'
       - 'paloma-studies.css'
+      - 'paloma-studies-advanced.js'
+      - 'paloma-studies-advanced.css'
       - '.github/workflows/validate-cantinho-extras.yml'
   workflow_dispatch:
 
@@ -70,6 +72,7 @@ jobs:
           node --check call-manager.js
           node --check games-notebook-fit.js
           node --check paloma-studies.js
+          node --check paloma-studies-advanced.js
 
       - name: Proteger recursos aprovados
         run: |
@@ -122,6 +125,19 @@ jobs:
           grep -q 'Flashcards' paloma-studies.js
           grep -q 'Editor acadêmico' paloma-studies.js
 
+          grep -q 'paloma-studies-advanced.css' acesso.html
+          grep -q 'paloma-studies-advanced.js' acesso.html
+          grep -q 'paloma-studies-advanced.css' acesso-mobile.html
+          grep -q 'paloma-studies-advanced.js' acesso-mobile.html
+          grep -q 'paloma_study_advanced_load' paloma-studies-advanced.js
+          grep -q 'paloma_study_advanced_save' paloma-studies-advanced.js
+          grep -q 'Anatomia 3D' paloma-studies-advanced.js
+          grep -q 'Farmacologia' paloma-studies-advanced.js
+          grep -q 'Casos fictícios' paloma-studies-advanced.js
+          grep -q 'PDF / Imprimir ABNT' paloma-studies-advanced.js
+          grep -q 'ABNT NBR 14724:2024' paloma-studies-advanced.js
+
           test -s app-3d.css
           test -s heart-polish.css
           test -s paloma-studies.css
+          test -s paloma-studies-advanced.css
