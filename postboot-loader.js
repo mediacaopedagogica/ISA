@@ -1,25 +1,19 @@
-const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-async function waitForApp(timeout=12000){
-  const start=Date.now();
-  while(Date.now()-start<timeout){
-    const main=document.getElementById('mainView');
-    const name=String(document.getElementById('myName')?.textContent||'').trim();
-    if(window.__ISA_APP_READY__ && main && !main.classList.contains('hidden') && name && name!=='Família') return true;
-    if(window.__ISA_APP_ERROR__) throw new Error(window.__ISA_APP_ERROR__);
-    await sleep(80);
-  }
-  throw new Error('O Cantinho demorou para concluir a entrada.');
-}
+// Carrega os recursos complementares de forma independente do boot principal.
+// Cada módulo já sabe esperar o perfil/mainView quando necessário.
+const modules = [
+  import('./mobile-responsive-v2.js?v=11-fastfix'),
+  import('./notifications-v2.js?v=7-fastfix'),
+  import('./extras-loader.js?v=11-fastfix')
+];
 
-try{
-  await waitForApp();
-  await Promise.allSettled([
-    import('./mobile-responsive-v2.js?v=10-stable'),
-    import('./notifications-v2.js?v=6-stable'),
-    import('./extras-loader.js?v=10-stable')
-  ]);
-  window.__ISA_EXTRAS_READY__=true;
-}catch(error){
-  console.error('Pós-inicialização:',error);
-  window.__ISA_POSTBOOT_ERROR__=String(error?.message||error||'Erro');
-}
+const results = await Promise.allSettled(modules);
+window.__ISA_EXTRAS_READY__ = true;
+window.__ISA_EXTRAS_RESULTS__ = results.map((r, i) => ({
+  index: i,
+  ok: r.status === 'fulfilled',
+  error: r.status === 'rejected' ? String(r.reason?.message || r.reason || 'Erro') : null
+}));
+
+results.forEach((r, i) => {
+  if (r.status === 'rejected') console.warn('Módulo complementar não carregou', i, r.reason);
+});
