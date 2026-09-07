@@ -12,6 +12,9 @@ on:
       - 'amiga.js'
       - 'amiga-ui-enhanced.js'
       - 'external-access-controls.js'
+      - 'media-capture.js'
+      - 'native-media-bridge.js'
+      - 'link-preview.js'
       - '.github/workflows/validate-cantinho-extras.yml'
   workflow_dispatch:
 
@@ -33,3 +36,6 @@ jobs:
           node --check amiga.js
           node --check amiga-ui-enhanced.js
           node --check external-access-controls.js
+          node --check media-capture.js
+          node --check native-media-bridge.js
+          node --check link-preview.js
