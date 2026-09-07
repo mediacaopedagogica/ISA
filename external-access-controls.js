@@ -20,13 +20,13 @@ async function rpc(name,args={}){
   return data
 }
 function toast(text){const t=$('toast');if(!t)return;t.textContent=text;t.classList.remove('hidden');clearTimeout(t._ext);t._ext=setTimeout(()=>t.classList.add('hidden'),2200)}
-function linkFor(token){const u=new URL('./amiga.html',location.href);u.hash=`acesso=${token}`;return u.toString()}
+function linkFor(token){const u=new URL('./acesso.html',location.href);u.hash=`acesso=${token}`;return u.toString()}
 function ensureCss(){if(document.querySelector('link[href^="external-access.css"]'))return;const l=document.createElement('link');l.rel='stylesheet';l.href='external-access.css?v=2';document.head.appendChild(l)}
 
 function mount(){
   const panel=$('supervisionPanel');if(!panel||$('externalFriendsBox'))return
   ensureCss()
-  const box=document.createElement('section');box.id='externalFriendsBox';box.className='external-friends-box hidden';box.innerHTML=`<div class="external-friends-head"><div><h3>Acessos por link da Isa 🌷</h3><p>As amigas podem ficar pausadas e ser ativadas somente quando houver trabalhos ou atividades. Pausar mantém o link salvo.</p></div></div><div id="externalCreateWrap"></div><div id="externalFriendList" class="external-friend-list"></div>`
+  const box=document.createElement('section');box.id='externalFriendsBox';box.className='external-friends-box hidden';box.innerHTML=`<div class="external-friends-head"><div><h3>Acessos por link da Isa 🌷</h3><p>Familiares e amigas podem entrar por um link pessoal. As amigas podem ficar pausadas e ser ativadas apenas quando houver trabalhos ou atividades.</p></div></div><div id="externalCreateWrap"></div><div id="externalFriendList" class="external-friend-list"></div>`
   const info=panel.querySelector('.supervision-info');if(info?.nextSibling)panel.insertBefore(box,info.nextSibling);else panel.appendChild(box)
 }
 async function load(){
