@@ -67,99 +67,30 @@
     <main class="content glass">
       <section id="birthdayHero" class="birthday-hero hidden" aria-live="polite"></section>
       <section id="notifyBanner" class="notify-banner hidden"><div>🔔 <strong>Ative as notificações</strong><small>Receba alertas de novas mensagens e lembretes neste aparelho.</small></div><button id="enableNotificationsBtn" class="soft-btn">Ativar</button></section>
-
       <section id="emptyState" class="empty-state"><div class="big-emoji">🏡</div><h2>Bem-vinda ao Cantinho da Isa</h2><p>Escolha uma conversa ou crie um grupo.</p></section>
-
       <section id="chatPanel" class="chat-panel hidden">
-        <header class="chat-header">
-          <button id="mobileBackBtn" class="icon-btn mobile-only">←</button>
-          <div class="avatar pastel-avatar" id="chatAvatar">💬</div>
-          <div class="grow"><h3 id="chatTitle">Conversa</h3><small id="chatSubtitle">Família</small></div>
-        </header>
+        <header class="chat-header"><button id="mobileBackBtn" class="icon-btn mobile-only">←</button><div class="avatar pastel-avatar" id="chatAvatar">💬</div><div class="grow"><h3 id="chatTitle">Conversa</h3><small id="chatSubtitle">Família</small></div></header>
         <div id="supervisionNotice" class="supervision-notice hidden">👀 <strong>Modo Supervisão</strong><span>Você está acompanhando esta conversa da Isa em modo somente leitura.</span></div>
         <button id="pinnedBar" class="pinned-bar hidden" type="button"></button>
-        <div id="messages" class="messages"></div>
-        <div id="typingLine" class="typing-line"></div>
+        <div id="messages" class="messages"></div><div id="typingLine" class="typing-line"></div>
         <footer id="composer" class="composer">
-          <div class="group-plus-wrap">
-            <button class="icon-btn hidden" id="groupPlusBtn" title="Mais opções">＋</button>
-            <div id="groupPlusMenu" class="plus-menu hidden">
-              <button type="button" data-group-action="poll">📊 Criar enquete</button>
-              <button type="button" data-group-action="photo">📷 Enviar foto</button>
-            </div>
-          </div>
-          <button class="icon-btn" id="photoBtn" title="Enviar foto">📷</button>
-          <input id="photoInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
-          <div class="emoji-wrap">
-            <button class="icon-btn" id="emojiBtn" title="Emojis">😊</button>
-            <div id="emojiPicker" class="emoji-picker hidden">
-              <input id="emojiSearch" type="search" placeholder="Buscar emoji...">
-              <div id="emojiTabs" class="emoji-tabs"></div>
-              <div id="emojiGrid" class="emoji-grid"></div>
-            </div>
-          </div>
-          <textarea id="messageInput" rows="1" placeholder="Digite uma mensagem..."></textarea>
-          <button id="sendBtn" class="send-btn">➤</button>
+          <div class="group-plus-wrap"><button class="icon-btn hidden" id="groupPlusBtn" title="Mais opções">＋</button><div id="groupPlusMenu" class="plus-menu hidden"><button type="button" data-group-action="poll">📊 Criar enquete</button><button type="button" data-group-action="photo">📷 Enviar foto</button></div></div>
+          <button class="icon-btn" id="photoBtn" title="Enviar foto">📷</button><input id="photoInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+          <div class="emoji-wrap"><button class="icon-btn" id="emojiBtn" title="Emojis">😊</button><div id="emojiPicker" class="emoji-picker hidden"><input id="emojiSearch" type="search" placeholder="Buscar emoji..."><div id="emojiTabs" class="emoji-tabs"></div><div id="emojiGrid" class="emoji-grid"></div></div></div>
+          <textarea id="messageInput" rows="1" placeholder="Digite uma mensagem..."></textarea><button id="sendBtn" class="send-btn">➤</button>
         </footer>
       </section>
-
       <section id="familyPanel" class="panel-pad hidden"><div id="familyGrid" class="family-grid"></div></section>
-
-      <section id="calendarPanel" class="panel-pad hidden calendar-panel">
-        <div class="panel-title calendar-panel-title">
-          <div><h2>Meu Calendário 📅</h2><p class="muted">Seus eventos e os eventos que compartilharam com você.</p></div>
-          <button id="newEventBtn" class="soft-btn">＋ Evento</button>
-        </div>
-        <div id="birthdayStrip" class="birthday-strip hidden"></div>
-        <div class="calendar-shell-3d">
-          <div class="calendar-toolbar">
-            <button id="calendarPrevBtn" class="calendar-round-btn" type="button">‹</button>
-            <div class="calendar-selects">
-              <select id="calendarMonthSelect" aria-label="Mês"></select>
-              <select id="calendarYearSelect" aria-label="Ano"></select>
-            </div>
-            <button id="calendarTodayBtn" class="calendar-today-btn" type="button">Hoje</button>
-            <button id="calendarNextBtn" class="calendar-round-btn" type="button">›</button>
-          </div>
-          <div class="calendar-weekdays" aria-hidden="true"><span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span></div>
-          <div id="calendarGrid" class="calendar-grid-real"></div>
-        </div>
-        <div id="calendarDayDetails" class="calendar-day-details"></div>
-        <div id="calendarList" class="calendar-list hidden"></div>
-      </section>
-
-      <section id="supervisionPanel" class="panel-pad hidden">
-        <div class="panel-title supervision-title"><div><h2>Supervisão da Isa 👀💜</h2><p class="muted">Acompanhe de forma transparente as conversas que envolvem a Isa.</p></div></div>
-        <div class="supervision-info">🛡️ <div><strong>Conta supervisionada</strong><p>Aqui aparecem somente as conversas da Isa permitidas para esta conta. Conversas entre adultos continuam privadas.</p></div></div>
-        <div id="supervisionList" class="supervision-list"></div>
-      </section>
-
-      <section id="parentsPanel" class="panel-pad hidden">
-        <div class="panel-title"><div><h2>Central Super Pais 🛡️</h2><p class="muted">Acessos, permissões e configurações do Cantinho da Isa.</p></div><button id="newMemberBtn" class="soft-btn">＋ Familiar</button></div>
-        <div class="parent-cards"><article class="parent-stat"><span>🔔</span><strong id="alertCount">0</strong><small>alertas</small></article><article class="parent-stat"><span>👥</span><strong id="memberCount">0</strong><small>familiares</small></article><article class="parent-stat"><span>🟢</span><strong id="onlineCount">0</strong><small>online</small></article></div>
-        <h3>Gerenciar familiares</h3><div id="permissionsTable" class="permissions-table"></div>
-        <h3>Alertas recentes</h3><div id="alertsList" class="alerts-list"></div>
-      </section>
+      <section id="calendarPanel" class="panel-pad hidden calendar-panel"><div class="panel-title calendar-panel-title"><div><h2>Meu Calendário 📅</h2><p class="muted">Seus eventos e os eventos que compartilharam com você.</p></div><button id="newEventBtn" class="soft-btn">＋ Evento</button></div><div id="birthdayStrip" class="birthday-strip hidden"></div><div class="calendar-shell-3d"><div class="calendar-toolbar"><button id="calendarPrevBtn" class="calendar-round-btn" type="button">‹</button><div class="calendar-selects"><select id="calendarMonthSelect" aria-label="Mês"></select><select id="calendarYearSelect" aria-label="Ano"></select></div><button id="calendarTodayBtn" class="calendar-today-btn" type="button">Hoje</button><button id="calendarNextBtn" class="calendar-round-btn" type="button">›</button></div><div class="calendar-weekdays" aria-hidden="true"><span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span></div><div id="calendarGrid" class="calendar-grid-real"></div></div><div id="calendarDayDetails" class="calendar-day-details"></div><div id="calendarList" class="calendar-list hidden"></div></section>
+      <section id="supervisionPanel" class="panel-pad hidden"><div class="panel-title supervision-title"><div><h2>Supervisão da Isa 👀💜</h2><p class="muted">Acompanhe de forma transparente as conversas que envolvem a Isa.</p></div></div><div class="supervision-info">🛡️ <div><strong>Conta supervisionada</strong><p>Aqui aparecem somente as conversas da Isa permitidas para esta conta. Conversas entre adultos continuam privadas.</p></div></div><div id="supervisionList" class="supervision-list"></div></section>
+      <section id="parentsPanel" class="panel-pad hidden"><div class="panel-title"><div><h2>Central Super Pais 🛡️</h2><p class="muted">Acessos, permissões e configurações do Cantinho da Isa.</p></div><button id="newMemberBtn" class="soft-btn">＋ Familiar</button></div><div class="parent-cards"><article class="parent-stat"><span>🔔</span><strong id="alertCount">0</strong><small>alertas</small></article><article class="parent-stat"><span>👥</span><strong id="memberCount">0</strong><small>familiares</small></article><article class="parent-stat"><span>🟢</span><strong id="onlineCount">0</strong><small>online</small></article></div><h3>Gerenciar familiares</h3><div id="permissionsTable" class="permissions-table"></div><h3>Alertas recentes</h3><div id="alertsList" class="alerts-list"></div></section>
     </main>
   </section>
 </div>
-
-<dialog id="simpleDialog"><form method="dialog" class="dialog-card"><button class="dialog-close" value="cancel">✕</button><div id="dialogContent"></div></form></dialog>
-<div id="toast" class="toast hidden"></div>
-<script>
-(function(){
-  const btn=document.getElementById('togglePassword');
-  const input=document.getElementById('loginPassword');
-  if(btn&&input){btn.onclick=()=>{const show=input.type==='password';input.type=show?'text':'password';btn.textContent=show?'🙈':'👁️';btn.setAttribute('aria-label',show?'Ocultar senha':'Mostrar senha');btn.title=show?'Ocultar senha':'Mostrar senha';input.focus()}}
-})();
-</script>
-<script>
-(async()=>{try{if('caches' in window){const keys=await caches.keys();await Promise.all(keys.filter(k=>k.startsWith('cantinho-isa-')).map(k=>caches.delete(k)))}if('serviceWorker' in navigator){const reg=await navigator.serviceWorker.register('./sw.js?v=30',{scope:'./'});reg.update().catch(()=>{})}}catch(error){console.warn('Recuperação de cache:',error)}})();
-</script>
-<script defer src="./app-v35.js?v=35"></script>
-<script type="module" src="./extras-loader.js?v=3"></script>
-<script>
-window.addEventListener('load',()=>{setTimeout(()=>{if(window.__ISA_SCRIPT_LOADED__)return;const msg=document.getElementById('loginMsg');if(msg){msg.textContent='O aplicativo não conseguiu carregar. Clique em Recarregar.';msg.style.color='#a15472';const b=document.createElement('button');b.type='button';b.className='soft-btn';b.textContent='Recarregar';b.style.marginTop='10px';b.onclick=()=>location.reload();msg.after(b)}},3500)});
-</script>
+<dialog id="simpleDialog"><form method="dialog" class="dialog-card"><button class="dialog-close" value="cancel">✕</button><div id="dialogContent"></div></form></dialog><div id="toast" class="toast hidden"></div>
+<script>(function(){const btn=document.getElementById('togglePassword'),input=document.getElementById('loginPassword');if(btn&&input){btn.onclick=()=>{const show=input.type==='password';input.type=show?'text':'password';btn.textContent=show?'🙈':'👁️';btn.setAttribute('aria-label',show?'Ocultar senha':'Mostrar senha');btn.title=show?'Ocultar senha':'Mostrar senha';input.focus()}}})();</script>
+<script>(async()=>{try{if('caches' in window){const keys=await caches.keys();await Promise.all(keys.filter(k=>k.startsWith('cantinho-isa-')).map(k=>caches.delete(k)))}if('serviceWorker' in navigator){const reg=await navigator.serviceWorker.register('./sw.js?v=30',{scope:'./'});reg.update().catch(()=>{})}}catch(error){console.warn('Recuperação de cache:',error)}})();</script>
+<script defer src="./app-v35.js?v=35"></script><script type="module" src="./extras-loader.js?v=4"></script>
+<script>window.addEventListener('load',()=>{setTimeout(()=>{if(window.__ISA_SCRIPT_LOADED__)return;const msg=document.getElementById('loginMsg');if(msg){msg.textContent='O aplicativo não conseguiu carregar. Clique em Recarregar.';msg.style.color='#a15472';const b=document.createElement('button');b.type='button';b.className='soft-btn';b.textContent='Recarregar';b.style.marginTop='10px';b.onclick=()=>location.reload();msg.after(b)}},3500)});</script>
 </body>
 </html>
