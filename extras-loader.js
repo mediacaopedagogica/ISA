@@ -28,7 +28,7 @@ async function loadCalls(){
 }
 
 async function loadChatExtras(){
-  await loadOnce('family-media','./family-media-menu-v2.js?v=1')
+  await loadOnce('family-media','./family-media-menu-v2.js?v=2')
   await loadOnce('links','./link-preview.js?v=3')
   if(isIsa())await loadOnce('isa-tools','./isa-tools.js?v=3')
 }
