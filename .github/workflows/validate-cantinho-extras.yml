@@ -29,6 +29,8 @@ on:
       - 'link-preview.js'
       - 'call-manager.js'
       - 'games-notebook-fit.js'
+      - 'games-menu-snake.js'
+      - 'jogos/cobrinha-pastel.html'
       - 'app-3d.css'
       - 'heart-polish.css'
       - 'acesso.html'
@@ -74,6 +76,7 @@ jobs:
           node --check link-preview.js
           node --check call-manager.js
           node --check games-notebook-fit.js
+          node --check games-menu-snake.js
           node --check paloma-studies.js
           node --check paloma-studies-advanced.js
           node --check paloma-studies-advanced-mobile.js
@@ -108,6 +111,13 @@ jobs:
           grep -q 'min-width:851px' games-notebook-fit.js
           grep -q 'cantinhoEmbeddedNotebookStyle' games-notebook-fit.js
           grep -q 'games-notebook-fit.js' acesso.html
+          grep -q 'games-menu-snake.js' extras-loader.js
+          grep -q 'games-menu-snake.js?v=1' acesso.html
+          grep -q 'games-menu-snake.js?v=1' acesso-mobile.html
+          grep -q 'Cobrinha Pastel' games-menu-snake.js
+          grep -q 'cobrinha-pastel.html' games-menu-snake.js
+          grep -q 'Cobrinha Pastel' jogos/cobrinha-pastel.html
+          grep -q 'data-dir="up"' jogos/cobrinha-pastel.html
 
           grep -q 'studyNav' isa-tools.js
           grep -q 'diaryNav' isa-tools.js
@@ -163,3 +173,5 @@ jobs:
           test -s paloma-studies.css
           test -s paloma-studies-advanced.css
           test -s paloma-study-desk.css
+          test -s games-menu-snake.js
+          test -s jogos/cobrinha-pastel.html
