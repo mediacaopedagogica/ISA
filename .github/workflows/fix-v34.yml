@@ -47,21 +47,40 @@ jobs:
           grep -q 'async function boot' app-v34.js
           grep -q 'await boot()' app-v34.js
 
-      - name: Switch index to direct core
+      - name: Restore app modules
         run: |
+          test -f extras-loader.js
+          test -f call-manager.js
+          test -f family-media-menu-v2.js
+          test -f media-capture.js
+          test -f mobile-responsive-v2.js
+          test -f notifications-v2.js
           python - <<'PY'
           from pathlib import Path
+          import re
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-          import re
-          s=re.sub(r'<script defer src="\./app-v31\.js\?v=[^"]+"></script>', '<script defer src="./app-v34.js?v=direct-47"></script>', s, count=1)
+          # Remove stale/duplicate loaders, while keeping the direct core.
+          s=re.sub(r'<script defer src="\./app-v31\.js\?v=[^"]+"></script>', '', s)
+          s=re.sub(r'<script defer src="\./app-v34\.js\?v=[^"]+"></script>', '', s)
+          s=re.sub(r'<script type="module" src="\./mobile-responsive-v2\.js\?v=[^"]+"></script>', '', s)
+          s=re.sub(r'<script type="module" src="\./notifications-v2\.js\?v=[^"]+"></script>', '', s)
+          s=re.sub(r'<script type="module" src="\./extras-loader\.js\?v=[^"]+"></script>', '', s)
+          block='''<script defer src="./app-v34.js?v=direct-48"></script>\n<script type="module" src="./mobile-responsive-v2.js?v=8-restore"></script>\n<script type="module" src="./notifications-v2.js?v=5-restore"></script>\n<script type="module" src="./extras-loader.js?v=9-restore"></script>'''
+          marker='<script>\nwindow.addEventListener(\'load\',()=>{'
+          if marker not in s:
+              raise SystemExit('load marker not found')
+          s=s.replace(marker,block+'\n'+marker,1)
           p.write_text(s,encoding='utf-8')
           PY
+          grep -q 'extras-loader.js?v=9-restore' index.html
+          grep -q 'notifications-v2.js?v=5-restore' index.html
+          grep -q 'mobile-responsive-v2.js?v=8-restore' index.html
 
-      - name: Commit direct boot
+      - name: Commit restored app
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add app-v34.js index.html
-          git commit -m 'Use direct v34 boot for personal access'
+          git commit -m 'Restore calls audio notifications and responsive extras' || exit 0
           git push
