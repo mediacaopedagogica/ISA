@@ -34,6 +34,16 @@ async function conversationHasFriend(id){
   const rows=await r.json();return rows.some(x=>/amiga/i.test(x.family_members?.relationship_label||''))
 }
 function fileExt(file,fallback){return (file?.name?.split('.').pop()||fallback).replace(/[^a-z0-9]/gi,'').toLowerCase()||fallback}
+function uploadMime(file,kind){
+  const raw=String(file?.type||'').trim().toLowerCase()
+  if(kind==='audio'){
+    if(raw.startsWith('audio/webm'))return 'audio/webm'
+    if(raw.startsWith('audio/ogg'))return 'audio/ogg'
+    if(raw.startsWith('audio/mp4')||raw.startsWith('audio/m4a'))return 'audio/mp4'
+    return 'audio/webm'
+  }
+  return raw||'image/jpeg'
+}
 async function uploadMedia(file,kind,{duration=null,maxMb=12}={}){
   const id=activeConv();if(!id||!file)return
   if(kind==='audio'&&await conversationHasFriend(id))return toast('Áudio fica disponível somente nas conversas da família.')
@@ -42,13 +52,13 @@ async function uploadMedia(file,kind,{duration=null,maxMb=12}={}){
   let path=''
   try{
     const u=await identity()
-    const fallback=kind==='audio'?'webm':'jpg',ext=fileExt(file,fallback)
+    const fallback=kind==='audio'?'webm':'jpg',ext=fileExt(file,fallback),contentType=uploadMime(file,kind)
     path=`${u.family_id}/${id}/${u.id}/${crypto.randomUUID()}.${ext}`
     toast(kind==='audio'?'Enviando áudio…':'Enviando foto…')
-    const up=await fetch(`${CONFIG.SUPABASE_URL}/storage/v1/object/chat-temp/${path}`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${token}`,'Content-Type':file.type||(kind==='audio'?'audio/webm':'image/jpeg'),'x-upsert':'false'},body:file})
+    const up=await fetch(`${CONFIG.SUPABASE_URL}/storage/v1/object/chat-temp/${path}`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${token}`,'Content-Type':contentType,'x-upsert':'false'},body:file})
     if(!up.ok){let d=null;try{d=await up.json()}catch{};throw new Error(d?.message||`Não foi possível enviar ${kind==='audio'?'o áudio':'a foto'}.`)}
     const expires=new Date(Date.now()+7*86400000).toISOString()
-    const payload={conversation_id:id,sender_id:u.id,kind,media_provider:'supabase-storage',media_ref:path,media_mime:file.type||(kind==='audio'?'audio/webm':'image/jpeg'),media_expires_at:expires}
+    const payload={conversation_id:id,sender_id:u.id,kind,media_provider:'supabase-storage',media_ref:path,media_mime:contentType,media_expires_at:expires}
     if(kind==='audio')payload.media_duration_ms=duration||null
     const ins=await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/messages`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${token}`,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(payload)})
     if(!ins.ok){await fetch(`${CONFIG.SUPABASE_URL}/storage/v1/object/chat-temp/${path}`,{method:'DELETE',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${token}`}}).catch(()=>{});let d=null;try{d=await ins.json()}catch{};throw new Error(d?.message||`${kind==='audio'?'Áudio':'Foto'} não permitido nesta conversa.`)}
