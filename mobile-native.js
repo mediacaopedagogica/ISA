@@ -8,28 +8,36 @@ if(mobileParams.get('mobile')==='1'){
   const $=id=>document.getElementById(id)
   const main=()=>$('mainView')
   let suppressClickUntil=0
+  let homeMode=true
 
   function ensureBack(){
     let b=$('mobileNativeBack')
     if(!b){
       b=document.createElement('button');b.id='mobileNativeBack';b.type='button';b.className='hidden';b.textContent='←';b.setAttribute('aria-label','Voltar');b.title='Voltar'
       document.body.appendChild(b)
-      b.addEventListener('click',()=>showHome())
+      b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();showHome()})
     }
     return b
   }
+
   function showHome(){
     const m=main();if(!m)return
+    homeMode=true
     m.classList.remove('mobile-native-content')
     ensureBack().classList.add('hidden')
     document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab==='chats'))
+    const list=$('chatList')
+    if(list){list.style.removeProperty('display');list.style.removeProperty('pointer-events')}
   }
+
   function showContent(kind='panel'){
     const m=main();if(!m)return
+    homeMode=false
     m.classList.add('mobile-native-content')
     const b=ensureBack();b.classList.toggle('hidden',kind==='chat')
     if(kind==='chat')setTimeout(ensureConversationActions,0)
   }
+
   function ensureConversationActions(){
     const panel=$('chatPanel');if(!panel||panel.classList.contains('hidden'))return
     const plus=$('groupPlusBtn');if(plus)plus.classList.remove('hidden')
@@ -39,18 +47,22 @@ if(mobileParams.get('mobile')==='1'){
       poll.addEventListener('click',()=>{menu.classList.add('hidden');try{window.openPollDialog?.()}catch{}})
     }
   }
+
   function openNav(tab,nav){
     if(tab==='chats'){showHome();return}
+    homeMode=false
     if(tab==='study'||tab==='diary'){
-      nav?.click();
+      nav?.click()
       if(tab==='study')setTimeout(()=>showContent('panel'),120)
       return
     }
     try{window.switchTab?.(tab)}catch{}
     showContent('panel')
   }
+
   function openCard(card){
     const id=card?.dataset?.conv;if(!id)return
+    homeMode=false
     try{
       const result=window.openChat?.(id,false)
       Promise.resolve(result).finally(()=>showContent('chat'))
@@ -64,18 +76,21 @@ if(mobileParams.get('mobile')==='1'){
     const card=event.target.closest?.('#chatList .chat-item[data-conv]')
     if(card&&!event.target.closest?.('.conversation-pin-action')){event.preventDefault();event.stopImmediatePropagation();suppressClickUntil=Date.now()+700;openCard(card);return}
     const back=event.target.closest?.('#mobileBackBtn,#mobileNativeBack')
-    if(back){event.preventDefault();event.stopImmediatePropagation();suppressClickUntil=Date.now()+700;if(back.id==='mobileBackBtn'){back.click()}showHome();return}
+    if(back){event.preventDefault();event.stopImmediatePropagation();suppressClickUntil=Date.now()+700;showHome();return}
   },true)
+
   document.addEventListener('click',event=>{
     if(Date.now()<suppressClickUntil&&event.isTrusted&&(event.target.closest?.('.nav-btn[data-tab]')||event.target.closest?.('#chatList .chat-item[data-conv]')||event.target.closest?.('#mobileBackBtn,#mobileNativeBack'))){event.preventDefault();event.stopImmediatePropagation()}
   },true)
 
   const observer=new MutationObserver(()=>{
+    if(homeMode)return
     const chat=$('chatPanel'),cal=$('calendarPanel'),sup=$('supervisionPanel'),parents=$('parentsPanel'),study=$('studyPanel')
     if(chat&&!chat.classList.contains('hidden'))showContent('chat')
     else if([cal,sup,parents,study].some(p=>p&&!p.classList.contains('hidden')))showContent('panel')
     ensureConversationActions()
   })
+
   function start(){
     ensureBack()
     ;['chatPanel','calendarPanel','supervisionPanel','parentsPanel','studyPanel'].forEach(id=>{const el=$(id);if(el&&!el.dataset.mobileNativeObserved){el.dataset.mobileNativeObserved='1';observer.observe(el,{attributes:true,attributeFilter:['class']})}})
