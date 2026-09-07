@@ -7,6 +7,7 @@ function jwtSub(t){try{const p=t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/
 async function rest(path){const t=token();if(!t)throw new Error('Sem sessão');const r=await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/${path}`,{headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${t}`},cache:'no-store'});let d=null;try{d=await r.json()}catch{}if(!r.ok)throw new Error(d?.message||'Não foi possível carregar.');return d}
 async function edge(body){const t=token();if(!t)throw new Error('Sem sessão');const r=await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/chat-actions`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${t}`,'Content-Type':'application/json'},body:JSON.stringify(body)});let d=null;try{d=await r.json()}catch{}if(!r.ok||d?.error)throw new Error(d?.error||'Não foi possível concluir.');return d}
 async function actor(){if(actorCache)return actorCache;const t=token(),sub=t&&jwtSub(t);if(!sub)throw new Error('Sem sessão');const d=await rest(`family_members?auth_user_id=eq.${encodeURIComponent(sub)}&active=eq.true&select=id,family_id,role,display_name&limit=1`);actorCache=d?.[0]||null;return actorCache}
+function isResponsible(a){return ['super_admin','super_parent'].includes(a?.role)}
 function toast(s){const t=$('toast');if(!t)return;t.textContent=s;t.classList.remove('hidden');clearTimeout(t._grp);t._grp=setTimeout(()=>t.classList.add('hidden'),2100)}
 function activeId(){return document.querySelector('.chat-item.active[data-conv]')?.dataset.conv||null}
 function scheduleSync(delay=120){clearTimeout(syncTimer);syncTimer=setTimeout(syncButton,delay)}
@@ -14,12 +15,13 @@ async function syncButton(){
   const id=activeId(),header=document.querySelector('#chatPanel .chat-header');if(!header)return
   let b=$('groupManageBtn');if(!b){b=document.createElement('button');b.id='groupManageBtn';b.type='button';b.className='icon-btn hidden';b.title='Editar grupo';b.textContent='⚙️';header.appendChild(b);b.onclick=openManager}
   if(!id){b.classList.add('hidden');return}
-  try{const a=await actor();if(!['child','super_admin'].includes(a?.role)){b.classList.add('hidden');return}const c=await rest(`conversations?id=eq.${encodeURIComponent(id)}&select=id,type,title&limit=1`);b.classList.toggle('hidden',c?.[0]?.type!=='group')}catch{b.classList.add('hidden')}
+  try{const a=await actor();if(!isResponsible(a)){b.classList.add('hidden');return}const c=await rest(`conversations?id=eq.${encodeURIComponent(id)}&select=id,type,title&limit=1`);b.classList.toggle('hidden',c?.[0]?.type!=='group')}catch{b.classList.add('hidden')}
 }
 async function openManager(){
   const id=activeId();if(!id)return
   try{
-    const a=await actor(),conv=(await rest(`conversations?id=eq.${encodeURIComponent(id)}&select=id,type,title&limit=1`))?.[0];if(!conv||conv.type!=='group')return
+    const a=await actor();if(!isResponsible(a))return toast('Somente os responsáveis podem editar grupos.')
+    const conv=(await rest(`conversations?id=eq.${encodeURIComponent(id)}&select=id,type,title&limit=1`))?.[0];if(!conv||conv.type!=='group')return
     const cms=await rest(`conversation_members?conversation_id=eq.${encodeURIComponent(id)}&select=member_id`),current=new Set((cms||[]).map(x=>x.member_id))
     const fam=await rest(`family_members?family_id=eq.${encodeURIComponent(a.family_id)}&active=eq.true&select=id,display_name,role,relationship_label&order=display_name.asc`)
     const dlg=$('simpleDialog'),content=$('dialogContent');if(!dlg||!content)return
