@@ -27,6 +27,7 @@ function toast(text){const t=$('toast');if(!t)return alert(text);t.textContent=t
 function activeConv(){return document.querySelector('.chat-item.active[data-conv]')?.dataset.conv||null}
 function isSupervision(){return !$('supervisionNotice')?.classList.contains('hidden')}
 function isChatOpen(){return $('chatPanel')&&!$('chatPanel').classList.contains('hidden')}
+function fmtTime(ts){try{return new Intl.DateTimeFormat('pt-BR',{hour:'2-digit',minute:'2-digit'}).format(new Date(ts))}catch{return''}}
 async function conversationHasFriend(id){
   const token=sessionToken();if(!token||!id)return false
   const r=await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/conversation_members?select=family_members(relationship_label)&conversation_id=eq.${id}`,{headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${token}`},cache:'no-store'})
@@ -64,7 +65,7 @@ async function uploadMedia(file,kind,{duration=null,maxMb=12}={}){
     const ins=await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/messages`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${token}`,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(payload)})
     if(!ins.ok){await fetch(`${CONFIG.SUPABASE_URL}/storage/v1/object/chat-temp/${path}`,{method:'DELETE',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${token}`}}).catch(()=>{});let d=null;try{d=await ins.json()}catch{};throw new Error(d?.message||`${kind==='audio'?'Áudio':'Foto'} não permitido nesta conversa.`)}
     toast(kind==='audio'?'Áudio enviado 🎙️':'Foto enviada 📷')
-    if(kind==='audio')scheduleHydrate(350)
+    if(kind==='audio'){scheduleHydrate(120);setTimeout(()=>scheduleHydrate(0),700)}
   }catch(e){console.error('Envio de mídia:',e);toast(e.message||'Não foi possível enviar.')}
 }
 async function sendNativePhoto(){
@@ -84,18 +85,43 @@ async function startNativeRecording(){
   if(await conversationHasFriend(id))return toast('Áudio fica disponível somente nas conversas da família.')
   try{const result=await recordAudio();if(result?.file)await uploadMedia(result.file,'audio',{duration:result.durationMs,maxMb:12})}catch(e){toast(e.message||'Não foi possível iniciar o gravador.')}
 }
-async function signed(path){const token=sessionToken();const r=await fetch(`${CONFIG.SUPABASE_URL}/storage/v1/object/sign/chat-temp/${path}`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({expiresIn:300})});const d=await r.json();if(!r.ok)throw new Error();return d.signedURL||d.signedUrl}
+async function signed(path){
+  const token=sessionToken();if(!token)throw new Error('Sem sessão')
+  const r=await fetch(`${CONFIG.SUPABASE_URL}/storage/v1/object/sign/chat-temp/${path}`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({expiresIn:300})})
+  const d=await r.json();if(!r.ok)throw new Error('Não foi possível liberar o áudio.')
+  const raw=d.signedURL||d.signedUrl;if(!raw)throw new Error('URL do áudio indisponível.')
+  if(/^https?:\/\//i.test(raw))return raw
+  return `${CONFIG.SUPABASE_URL}/storage/v1${raw.startsWith('/')?'':'/'}${raw}`
+}
+function ensureAudioBubble(m){
+  let row=document.getElementById(`msg-${m.id}`)
+  if(!row){
+    const box=$('messages');if(!box)return null
+    const mine=!!me&&m.sender_id===me.id
+    row=document.createElement('div');row.className=`message-row ${mine?'mine':''}`;row.id=`msg-${m.id}`;row.dataset.audioSynthetic='1'
+    row.innerHTML=`<div class="bubble">${mine?'':'<span class="sender">Família</span>'}<span class="meta">${fmtTime(m.sent_at)}</span></div>`
+    box.appendChild(row)
+    requestAnimationFrame(()=>{box.scrollTop=box.scrollHeight})
+  }
+  return row.querySelector('.bubble')
+}
 async function hydrateAudio(){
   if(audioHydrateBusy||!isChatOpen())return
   const id=activeConv(),token=sessionToken();if(!id||!token)return
   audioHydrateBusy=true
   try{
-    const r=await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/messages?select=id,media_ref,media_deleted_at,deleted_at&conversation_id=eq.${id}&kind=eq.audio&deleted_at=is.null&order=sent_at.asc`,{headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${token}`},cache:'no-store'})
+    if(!me)await identity().catch(()=>null)
+    const r=await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/messages?select=id,sender_id,sent_at,media_ref,media_mime,media_deleted_at,deleted_at&conversation_id=eq.${id}&kind=eq.audio&deleted_at=is.null&order=sent_at.asc`,{headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${token}`},cache:'no-store'})
     if(!r.ok)return
     for(const m of await r.json()){
-      const bubble=document.querySelector(`#msg-${CSS.escape(m.id)} .bubble`);if(!bubble||bubble.querySelector('.chat-audio'))continue
-      if(!m.media_ref||m.media_deleted_at){bubble.insertAdjacentHTML('afterbegin','<div class="photo-expired">🎙️ Áudio indisponível.</div>');continue}
-      try{const url=await signed(m.media_ref);const a=document.createElement('audio');a.className='chat-audio';a.controls=true;a.preload='metadata';a.src=url;bubble.prepend(a)}catch{bubble.insertAdjacentHTML('afterbegin','<div class="photo-expired">🎙️ Áudio indisponível.</div>')}
+      const bubble=ensureAudioBubble(m);if(!bubble||bubble.querySelector('.chat-audio'))continue
+      if(!m.media_ref||m.media_deleted_at){if(!bubble.querySelector('.audio-unavailable'))bubble.insertAdjacentHTML('afterbegin','<div class="photo-expired audio-unavailable">🎙️ Áudio indisponível.</div>');continue}
+      try{
+        const url=await signed(m.media_ref)
+        const a=document.createElement('audio');a.className='chat-audio';a.controls=true;a.preload='metadata';a.src=url;a.style.display='block';a.style.width='min(360px,100%)';a.style.maxWidth='100%';a.setAttribute('controlsList','nodownload');bubble.prepend(a);a.load()
+      }catch{
+        if(!bubble.querySelector('.audio-unavailable'))bubble.insertAdjacentHTML('afterbegin','<div class="photo-expired audio-unavailable">🎙️ Áudio indisponível.</div>')
+      }
     }
   }finally{audioHydrateBusy=false}
 }
@@ -118,5 +144,6 @@ function bindLifecycle(){
   const messages=$('messages');if(messages&&!messages.dataset.audioHydrateObservedV2){messages.dataset.audioHydrateObservedV2='1';const obs=new MutationObserver(()=>scheduleHydrate());obs.observe(messages,{childList:true,subtree:true})}
   const list=$('chatList');if(list&&!list.dataset.familyMediaV2Bound){list.dataset.familyMediaV2Bound='1';list.addEventListener('click',e=>{if(e.target.closest('.chat-item[data-conv]'))setTimeout(()=>{ensureMenu();scheduleHydrate()},140)})}
   document.querySelector('[data-tab="chats"]')?.addEventListener('click',()=>setTimeout(ensureMenu,80))
+  setInterval(()=>{if(document.visibilityState==='visible'&&isChatOpen())scheduleHydrate(0)},3000)
 }
 bindLifecycle()
