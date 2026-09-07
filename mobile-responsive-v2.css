@@ -1,0 +1,72 @@
+@media (max-width:850px){
+  html,body{width:100%;height:100%;min-height:100%;overflow-x:hidden}
+  body{overscroll-behavior-y:none}
+  .screen{min-height:100dvh}
+  .app-shell{display:block!important;width:100%!important;height:100dvh!important;min-height:100dvh!important;padding:0!important;overflow:hidden!important}
+  .app-shell>.sidebar{display:flex!important;flex-direction:column!important;width:100%!important;height:100dvh!important;max-height:100dvh!important;min-height:100dvh!important;border-radius:0!important;overflow:hidden!important}
+  .app-shell>.content{display:none!important;width:100%!important;height:100dvh!important;min-height:100dvh!important;border-radius:0!important;overflow:hidden!important}
+  .app-shell.mobile-content-open>.sidebar{display:none!important}
+  .app-shell.mobile-content-open>.content{display:block!important}
+
+  .profile-mini{flex:0 0 auto!important;margin:8px!important;padding:10px 12px!important;min-height:78px!important;border-radius:24px!important}
+  .profile-mini .grow{min-width:0}
+  .profile-mini strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nav-tabs{flex:0 0 auto!important;margin:0 8px!important;padding:7px!important;display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px!important;overflow:visible!important}
+  .nav-btn{min-width:0!important;min-height:56px!important;padding:7px 3px!important;font-size:20px!important}
+  .nav-btn span{display:block!important;font-size:10px!important;line-height:1.1!important;margin-top:3px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  .chat-list-head{flex:0 0 auto!important;margin:6px 12px 2px!important;padding:5px 4px!important}
+  .chat-list{display:block!important;visibility:visible!important;opacity:1!important;flex:1 1 auto!important;min-height:0!important;height:auto!important;max-height:none!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;padding:4px 10px calc(18px + env(safe-area-inset-bottom))!important}
+  .chat-item{display:flex!important;min-height:70px!important;margin:6px 0!important;padding:10px 11px!important}
+  .chat-item .avatar{flex:0 0 50px!important}
+
+  .content{position:relative!important}
+  .empty-state{height:100dvh!important;min-height:100dvh!important;padding:24px!important;overflow:auto!important}
+  .chat-panel{height:100dvh!important;min-height:100dvh!important;grid-template-rows:auto auto minmax(0,1fr) auto auto!important}
+  .chat-header{margin:6px 7px 0!important;padding:9px 10px!important;min-height:62px!important}
+  .messages{min-height:0!important;margin:6px!important;padding:11px 9px!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important}
+  .bubble{max-width:88%!important}
+  .composer{margin:0 5px calc(5px + env(safe-area-inset-bottom))!important;padding:7px!important;gap:5px!important}
+  .composer textarea{min-width:0!important;min-height:43px!important;padding:9px 10px!important}
+  .composer .icon-btn,.composer .send-btn{width:42px!important;height:42px!important;flex:0 0 42px!important}
+  .typing-line{padding:1px 10px 2px!important}
+
+  .panel-pad,#studyPanel{height:100dvh!important;min-height:100dvh!important;max-height:100dvh!important;padding:60px 11px 18px!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important}
+  #studyPanel{position:relative!important}
+  .notify-banner{margin:7px 9px!important;padding:10px 11px!important;gap:8px!important;align-items:center!important;flex:0 0 auto!important}
+  .notify-banner>div{min-width:0!important}
+  .notify-banner strong{font-size:.94rem!important}
+  .notify-banner small{font-size:.73rem!important;line-height:1.25!important}
+  .notify-banner .soft-btn{flex:0 0 auto!important;padding:9px 11px!important}
+
+  .calendar-panel{padding-top:60px!important}
+  .calendar-panel-title{align-items:flex-start!important;gap:7px!important;flex-wrap:wrap!important}
+  .calendar-panel-title>div{flex:1 1 180px!important}
+  .calendar-shell-3d{padding:7px!important;border-radius:19px!important;overflow:hidden!important}
+  .calendar-toolbar{gap:4px!important}
+  .calendar-selects{gap:4px!important;min-width:0!important}
+  .calendar-selects select{min-width:0!important;width:50%!important;padding:8px 4px!important;font-size:.77rem!important}
+  .calendar-round-btn{width:35px!important;height:35px!important}
+  .calendar-today-btn{padding:8px!important;font-size:.74rem!important}
+  .calendar-weekdays,.calendar-grid-real{gap:3px!important}
+  .calendar-day{min-height:62px!important;padding:4px!important;border-radius:11px!important}
+  .calendar-mini-event{font-size:.5rem!important;padding:2px!important}
+
+  .parent-cards{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px!important}
+  .parent-stat{padding:9px 5px!important}
+  .parent-stat strong{font-size:21px!important}
+  .member-admin-card{grid-template-columns:1fr!important}
+  .member-actions{justify-content:flex-start!important}
+  .dialog-grid,.check-list{grid-template-columns:1fr!important}
+
+  #mobilePanelBack{position:fixed!important;z-index:9500!important;left:10px!important;top:calc(8px + env(safe-area-inset-top))!important;width:42px!important;height:42px!important;border:0!important;border-radius:14px!important;background:linear-gradient(145deg,#fff,#eadfff)!important;box-shadow:0 8px 18px rgba(92,70,111,.18)!important;font-size:22px!important;color:#665471!important;display:grid!important;place-items:center!important}
+  #mobilePanelBack.hidden{display:none!important}
+  .emoji-picker{position:fixed!important;left:6px!important;right:6px!important;bottom:calc(64px + env(safe-area-inset-bottom))!important;width:auto!important;max-height:55dvh!important}
+  .plus-menu{bottom:51px!important;max-height:55dvh!important;overflow:auto!important}
+}
+@media (max-width:430px){
+  .profile-mini .avatar{width:47px!important;height:47px!important}
+  .profile-mini strong{font-size:1rem!important}
+  .nav-tabs{grid-template-columns:repeat(4,minmax(54px,1fr))!important}
+  .panel-title h2{font-size:1.3rem!important}
+  .birthday-hero{margin:7px!important}
+}
