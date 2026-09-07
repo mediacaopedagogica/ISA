@@ -73,7 +73,11 @@
   new MutationObserver(()=>{if(!main.classList.contains('hidden'))clear()}).observe(main,{attributes:true,attributeFilter:['class']});
 })();
 </script>
-<script defer src="./app-v34.js?v=34-stable"></script><script type="module" src="./mobile-responsive-v2.js?v=5"></script><script type="module" src="./notifications-v2.js?v=4"></script><script type="module" src="./extras-loader.js?v=8"></script>
+<script defer src="./app-v34.js?v=34-stable"></script>
+<script type="module" src="./mobile-responsive-v2.js?v=5"></script>
+<script type="module" src="./notifications-v2.js?v=4"></script>
+<script type="module" src="./isa-tools.js?v=6"></script>
+<script type="module" src="./extras-loader.js?v=9"></script>
 <script>window.addEventListener('load',()=>{setTimeout(()=>{if(window.__ISA_SCRIPT_LOADED__)return;const msg=document.getElementById('loginMsg');if(msg){msg.textContent='O aplicativo não conseguiu carregar. Clique em Recarregar.';msg.style.color='#a15472';const b=document.createElement('button');b.type='button';b.className='soft-btn';b.textContent='Recarregar';b.style.marginTop='10px';b.onclick=()=>location.reload();msg.after(b)}},3500)});</script>
 </body>
 </html>
