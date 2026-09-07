@@ -7,13 +7,12 @@ if(mobileParams.get('mobile')==='1'){
 
   const $=id=>document.getElementById(id)
   const main=()=>$('mainView')
-  let suppressClickUntil=0
-  let homeMode=true
 
   function ensureBack(){
     let b=$('mobileNativeBack')
     if(!b){
-      b=document.createElement('button');b.id='mobileNativeBack';b.type='button';b.className='hidden';b.textContent='←';b.setAttribute('aria-label','Voltar');b.title='Voltar'
+      b=document.createElement('button')
+      b.id='mobileNativeBack';b.type='button';b.className='hidden';b.textContent='←';b.setAttribute('aria-label','Voltar');b.title='Voltar'
       document.body.appendChild(b)
       b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();showHome()})
     }
@@ -22,7 +21,6 @@ if(mobileParams.get('mobile')==='1'){
 
   function showHome(){
     const m=main();if(!m)return
-    homeMode=true
     m.classList.remove('mobile-native-content')
     ensureBack().classList.add('hidden')
     document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab==='chats'))
@@ -32,10 +30,24 @@ if(mobileParams.get('mobile')==='1'){
 
   function showContent(kind='panel'){
     const m=main();if(!m)return
-    homeMode=false
     m.classList.add('mobile-native-content')
-    const b=ensureBack();b.classList.toggle('hidden',kind==='chat')
+    ensureBack().classList.toggle('hidden',kind==='chat')
     if(kind==='chat')setTimeout(ensureConversationActions,0)
+  }
+
+  function visible(el){return !!el&&!el.classList.contains('hidden')}
+
+  function syncFromPanels(){
+    const chat=$('chatPanel'),cal=$('calendarPanel'),sup=$('supervisionPanel'),parents=$('parentsPanel'),study=$('studyPanel')
+    if(visible(chat)){showContent('chat');return true}
+    if([cal,sup,parents,study].some(visible)){showContent('panel');return true}
+    return false
+  }
+
+  function syncSoon(){
+    setTimeout(syncFromPanels,0)
+    setTimeout(syncFromPanels,80)
+    setTimeout(syncFromPanels,220)
   }
 
   function ensureConversationActions(){
@@ -48,55 +60,42 @@ if(mobileParams.get('mobile')==='1'){
     }
   }
 
-  function openNav(tab,nav){
-    if(tab==='chats'){showHome();return}
-    homeMode=false
-    if(tab==='study'||tab==='diary'){
-      nav?.click()
-      if(tab==='study')setTimeout(()=>showContent('panel'),120)
-      return
-    }
-    try{window.switchTab?.(tab)}catch{}
-    showContent('panel')
-  }
-
-  function openCard(card){
-    const id=card?.dataset?.conv;if(!id)return
-    homeMode=false
-    try{
-      const result=window.openChat?.(id,false)
-      Promise.resolve(result).finally(()=>showContent('chat'))
-    }catch{card.click();setTimeout(()=>showContent('chat'),0)}
-  }
-
-  document.addEventListener('pointerup',event=>{
-    if(event.pointerType&&event.pointerType!=='touch'&&event.pointerType!=='pen')return
-    const nav=event.target.closest?.('.nav-btn[data-tab]')
-    if(nav){event.preventDefault();event.stopImmediatePropagation();suppressClickUntil=Date.now()+700;openNav(nav.dataset.tab,nav);return}
-    const card=event.target.closest?.('#chatList .chat-item[data-conv]')
-    if(card&&!event.target.closest?.('.conversation-pin-action')){event.preventDefault();event.stopImmediatePropagation();suppressClickUntil=Date.now()+700;openCard(card);return}
-    const back=event.target.closest?.('#mobileBackBtn,#mobileNativeBack')
-    if(back){event.preventDefault();event.stopImmediatePropagation();suppressClickUntil=Date.now()+700;showHome();return}
-  },true)
-
+  // IMPORTANTE: no mobile dedicado nunca bloqueamos o clique original do app.
+  // O núcleo é quem abre conversa/calendário/supervisão. Esta camada apenas troca a tela
+  // depois que um painel realmente ficou visível. Assim um toque nunca gera tela vazia.
   document.addEventListener('click',event=>{
-    if(Date.now()<suppressClickUntil&&event.isTrusted&&(event.target.closest?.('.nav-btn[data-tab]')||event.target.closest?.('#chatList .chat-item[data-conv]')||event.target.closest?.('#mobileBackBtn,#mobileNativeBack'))){event.preventDefault();event.stopImmediatePropagation()}
+    const back=event.target.closest?.('#mobileBackBtn')
+    if(back){setTimeout(showHome,0);setTimeout(showHome,90);return}
+
+    const ownBack=event.target.closest?.('#mobileNativeBack')
+    if(ownBack)return
+
+    const nav=event.target.closest?.('.nav-btn[data-tab]')
+    if(nav){
+      if(nav.dataset.tab==='chats'){setTimeout(showHome,0);return}
+      syncSoon();return
+    }
+
+    const card=event.target.closest?.('#chatList .chat-item[data-conv]')
+    if(card&&!event.target.closest?.('.conversation-pin-action')){syncSoon();return}
   },true)
 
-  const observer=new MutationObserver(()=>{
-    if(homeMode)return
-    const chat=$('chatPanel'),cal=$('calendarPanel'),sup=$('supervisionPanel'),parents=$('parentsPanel'),study=$('studyPanel')
-    if(chat&&!chat.classList.contains('hidden'))showContent('chat')
-    else if([cal,sup,parents,study].some(p=>p&&!p.classList.contains('hidden')))showContent('panel')
-    ensureConversationActions()
-  })
+  // Também observa o estado real dos painéis. Não esconde a lista até algum conteúdo existir.
+  const observer=new MutationObserver(()=>{syncFromPanels();ensureConversationActions()})
 
   function start(){
     ensureBack()
-    ;['chatPanel','calendarPanel','supervisionPanel','parentsPanel','studyPanel'].forEach(id=>{const el=$(id);if(el&&!el.dataset.mobileNativeObserved){el.dataset.mobileNativeObserved='1';observer.observe(el,{attributes:true,attributeFilter:['class']})}})
+    ;['chatPanel','calendarPanel','supervisionPanel','parentsPanel','studyPanel'].forEach(id=>{
+      const el=$(id)
+      if(el&&!el.dataset.mobileNativeObserved){
+        el.dataset.mobileNativeObserved='1'
+        observer.observe(el,{attributes:true,attributeFilter:['class']})
+      }
+    })
     ensureConversationActions()
   }
+
   start();document.addEventListener('DOMContentLoaded',start,{once:true});setTimeout(start,300);setTimeout(start,1200)
   window.__ISA_MOBILE_SHOW_CONTENT__=showContent
-  window.__ISA_MOBILE_NATIVE__={showHome,showContent}
+  window.__ISA_MOBILE_NATIVE__={showHome,showContent,syncFromPanels}
 }
