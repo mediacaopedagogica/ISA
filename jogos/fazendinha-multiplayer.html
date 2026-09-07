@@ -5,32 +5,32 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
   <meta name="theme-color" content="#8fc76b">
   <title>Fazendinha da Isa • 2 jogadores</title>
-  <link rel="stylesheet" href="./fazendinha-multiplayer.css?v=1">
+  <link rel="stylesheet" href="./fazendinha-multiplayer.css?v=2-realism-identity">
 </head>
 <body>
   <main class="farm-app">
     <header class="farm-hud">
-      <div class="farm-brand"><span>🌾</span><div><strong>Fazendinha da Isa</strong><small>2 jogadores • mesma fazenda ao vivo</small></div></div>
+      <div class="farm-brand"><span>🌾</span><div><strong>Fazendinha da Isa</strong></div></div>
       <div class="farm-scoreboard">
         <div class="score isa"><b>💗 <span id="isaName">Isa</span></b><strong id="isaScore">0</strong><small>pontos</small></div>
         <div class="score shared"><b>🌾 Fazenda</b><strong id="sharedScore">0</strong><small id="farmLevel">nível 1</small></div>
-        <div class="score primo"><b>💙 <span id="primoName">Primo</span></b><strong id="primoScore">0</strong><small>pontos</small></div>
+        <div class="score primo"><b>💙 <span id="primoName">Jogador 2</span></b><strong id="primoScore">0</strong><small>pontos</small></div>
       </div>
       <div class="farm-actions-top">
         <button id="voiceBtn" class="round-btn" type="button" title="Microfone">🎤</button>
-        <button id="renameBtn" class="round-btn hidden" type="button" title="Nome do jogador">✏️</button>
+        <button id="renameBtn" class="round-btn hidden" type="button" title="Meu jogador">👤</button>
         <div id="connectionBadge" class="connection-badge">Conectando…</div>
       </div>
     </header>
 
     <section class="farm-stage-wrap">
       <div id="farmStage" class="farm-stage" aria-label="Fazendinha 3D"></div>
-      <div id="loadingCard" class="loading-card"><div class="spinner"></div><strong>Entrando na fazendinha…</strong><span>Sincronizando Isa e Primo</span></div>
+      <div id="loadingCard" class="loading-card"><div class="spinner"></div><strong>Entrando na fazendinha…</strong><span>Preparando o mundo compartilhado</span></div>
       <div id="toast" class="toast hidden"></div>
       <div id="voiceState" class="voice-state hidden">🎤 Microfone ligado</div>
       <div class="farm-legend">
-        <span><i class="dot isa"></i> Isa</span>
-        <span><i class="dot primo"></i> Primo</span>
+        <span><i class="dot isa"></i> <span id="legendIsa">Isa</span></span>
+        <span><i class="dot primo"></i> <span id="legendPrimo">Jogador 2</span></span>
         <span id="onlineState">aguardando os dois…</span>
       </div>
     </section>
@@ -61,11 +61,33 @@
     <aside id="tipCard" class="tip-card">
       <button id="tipClose" type="button">×</button>
       <strong>Como jogar</strong>
-      <p>Os dois veem a mesma fazenda. Escolha uma ferramenta e toque em um canteiro ou animal. No notebook, use WASD/setas para andar. No celular, use os botões de direção.</p>
+      <p>Escolha uma ferramenta e toque em um canteiro ou animal. No notebook, use WASD/setas para andar. No celular, use os botões de direção.</p>
     </aside>
+
+    <section id="guestIdentity" class="identity-overlay hidden" aria-modal="true" role="dialog" aria-label="Identidade do jogador">
+      <form id="guestIdentityForm" class="identity-card">
+        <div class="identity-icon">🌾</div>
+        <p class="identity-eyebrow">Jogador convidado</p>
+        <h2>Quem vai cuidar da fazendinha?</h2>
+        <p class="identity-help">Este perfil vale só dentro da Fazendinha. Ele não dá acesso ao chat nem aos Estudos da Paloma.</p>
+        <label class="identity-label" for="guestName">Nome do jogador</label>
+        <input id="guestName" maxlength="20" autocomplete="off" placeholder="Digite o nome" required>
+        <fieldset class="avatar-picker">
+          <legend>Escolha uma cor</legend>
+          <label><input type="radio" name="guestAvatar" value="blue" checked><span class="avatar-dot blue">●</span></label>
+          <label><input type="radio" name="guestAvatar" value="green"><span class="avatar-dot green">●</span></label>
+          <label><input type="radio" name="guestAvatar" value="orange"><span class="avatar-dot orange">●</span></label>
+          <label><input type="radio" name="guestAvatar" value="purple"><span class="avatar-dot purple">●</span></label>
+          <label><input type="radio" name="guestAvatar" value="red"><span class="avatar-dot red">●</span></label>
+          <label><input type="radio" name="guestAvatar" value="teal"><span class="avatar-dot teal">●</span></label>
+        </fieldset>
+        <p id="guestIdentityError" class="identity-error"></p>
+        <div class="identity-actions"><button id="identityCancel" class="identity-cancel hidden" type="button">Cancelar</button><button class="identity-save" type="submit">Entrar na fazenda 🌱</button></div>
+      </form>
+    </section>
 
     <audio id="remoteAudio" autoplay playsinline></audio>
   </main>
-  <script type="module" src="./fazendinha-multiplayer.js?v=1"></script>
+  <script type="module" src="./fazendinha-multiplayer.js?v=2-realism-identity"></script>
 </body>
 </html>
