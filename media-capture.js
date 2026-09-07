@@ -12,19 +12,35 @@ function ensureStyles(){
   .isa-recorder-stage{padding:25px 16px;border-radius:22px;background:linear-gradient(145deg,#fff5fa,#ece3ff);text-align:center}.isa-mic-orb{width:94px;height:94px;border-radius:50%;margin:0 auto 10px;display:grid;place-items:center;font-size:42px;background:#fff;box-shadow:0 13px 28px rgba(87,65,104,.12)}.isa-mic-orb.recording{animation:isaPulse 1.2s infinite}@keyframes isaPulse{50%{transform:scale(1.06);box-shadow:0 13px 34px rgba(231,118,153,.25)}}
   .isa-rec-time{font-size:1.65rem;font-weight:950;color:#6d5878}.isa-level{height:10px;border-radius:999px;background:#e9def1;overflow:hidden;margin:16px auto 5px;max-width:360px}.isa-level>span{display:block;height:100%;width:4%;background:linear-gradient(90deg,#c2aff0,#ec9ebb);transition:width .08s linear}.isa-rec-status{color:#88798f;font-size:.82rem;min-height:20px}.isa-audio-preview{width:100%;margin-top:15px}
   .isa-media-error{padding:18px;border-radius:18px;background:#fff0f3;color:#985066;text-align:center;font-weight:700}
+  .isa-permission-help{margin-top:12px;padding:14px 16px;border-radius:18px;background:#fff;color:#65566d;box-shadow:0 6px 18px rgba(74,55,88,.08);font-size:.86rem;line-height:1.5;text-align:left}.isa-permission-help strong{display:block;margin-bottom:6px;color:#5f4d68}.isa-permission-help ol{margin:8px 0 0;padding-left:21px}.isa-permission-help small{display:block;margin-top:9px;color:#8c7f93}
   `;document.head.appendChild(s)
 }
 function errorText(err,kind){
   const n=err?.name||''
-  if(n==='NotAllowedError'||n==='PermissionDeniedError')return kind==='camera'?'A câmera foi bloqueada pelo navegador. Autorize a câmera para este site e tente novamente.':'O microfone foi bloqueado pelo navegador. Autorize o microfone para este site e tente novamente.'
+  if(n==='NotAllowedError'||n==='PermissionDeniedError')return kind==='camera'?'A câmera foi bloqueada pelo navegador.':'O microfone foi bloqueado pelo navegador.'
   if(n==='NotFoundError'||n==='DevicesNotFoundError')return kind==='camera'?'Nenhuma câmera foi encontrada neste aparelho.':'Nenhum microfone foi encontrado neste aparelho.'
   if(n==='NotReadableError'||n==='TrackStartError')return kind==='camera'?'A câmera está sendo usada por outro aplicativo. Feche o outro aplicativo e tente novamente.':'O microfone está sendo usado por outro aplicativo. Feche o outro aplicativo e tente novamente.'
   return kind==='camera'?'Não foi possível abrir a câmera neste aparelho.':'Não foi possível iniciar o gravador neste aparelho.'
+}
+function isDenied(err){const n=err?.name||'';return n==='NotAllowedError'||n==='PermissionDeniedError'}
+async function permissionState(kind){
+  try{if(!navigator.permissions?.query)return'unknown';const p=await navigator.permissions.query({name:kind==='camera'?'camera':'microphone'});return p?.state||'unknown'}catch{return'unknown'}
+}
+function permissionHelp(kind){
+  const label=kind==='camera'?'câmera':'microfone'
+  return `<div class="isa-permission-help"><strong>🔐 Como liberar ${label} no Edge/Chrome</strong><ol><li>Clique no ícone de <b>cadeado/ajustes</b> ao lado do endereço do Cantinho.</li><li>Abra <b>Permissões para este site</b>.</li><li>Em <b>${kind==='camera'?'Câmera':'Microfone'}</b>, escolha <b>Permitir</b>.</li><li>Volte ao Cantinho e clique em <b>Verificar novamente</b>.</li></ol><small>Se ainda não funcionar, verifique também se o Windows permite que o navegador use o ${label}.</small></div>`
 }
 function stopTracks(stream){try{stream?.getTracks?.().forEach(t=>t.stop())}catch{}}
 function modal(title,subtitle){
   ensureStyles();activeCleanup?.();document.getElementById('isaNativeMediaModal')?.remove()
   const root=document.createElement('div');root.id='isaNativeMediaModal';root.className='isa-media-modal';root.innerHTML=`<section class="isa-media-card"><header class="isa-media-head"><div><h3>${title}</h3><p>${subtitle}</p></div><button class="isa-media-close" type="button" aria-label="Fechar">✕</button></header><div class="isa-media-body"></div></section>`;document.body.appendChild(root);return root
+}
+function showPermissionError(body,err,kind,retry,finish){
+  const denied=isDenied(err)
+  body.innerHTML=`<div class="isa-media-error">${errorText(err,kind)}</div>${denied?permissionHelp(kind):''}<div class="isa-media-actions"><button class="primary" data-retry type="button">${denied?'🔄 Verificar novamente':'Tentar novamente'}</button>${denied?'<button data-reload type="button">↻ Recarregar Cantinho</button>':''}<button data-cancel type="button">Fechar</button></div>`
+  body.querySelector('[data-retry]').onclick=retry
+  body.querySelector('[data-reload]')?.addEventListener('click',()=>location.reload())
+  body.querySelector('[data-cancel]').onclick=()=>finish(null)
 }
 
 export async function capturePhoto(){
@@ -56,7 +72,7 @@ export async function capturePhoto(){
           actions.querySelector('[data-again]').onclick=()=>open(currentDevice)
           actions.querySelector('[data-cancel]').onclick=()=>finish(null)
         }
-      }catch(err){stopTracks(stream);stream=null;body.innerHTML=`<div class="isa-media-error">${errorText(err,'camera')}</div><div class="isa-media-actions"><button data-retry type="button">Tentar novamente</button><button data-cancel type="button">Fechar</button></div>`;body.querySelector('[data-retry]').onclick=()=>open(deviceId);body.querySelector('[data-cancel]').onclick=()=>finish(null)}
+      }catch(err){stopTracks(stream);stream=null;showPermissionError(body,err,'camera',()=>open(deviceId),finish)}
     }
     await open()
   })
@@ -81,16 +97,17 @@ export async function recordAudio({maxMs=120000}={}){
     async function start(){
       cleanup();chunks=[];lastBlob=null;body.innerHTML='<div class="isa-recorder-stage"><div class="isa-mic-orb">🎙️</div><div class="isa-rec-status">Solicitando acesso ao microfone…</div></div>'
       try{
+        const state=await permissionState('audio');if(state==='denied'){const e=new DOMException('Microfone bloqueado','NotAllowedError');throw e}
         stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false})
         const mime=bestMime();rec=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);started=Date.now()
         body.innerHTML='<div class="isa-recorder-stage"><div class="isa-mic-orb recording">🎙️</div><div class="isa-rec-time">0:00</div><div class="isa-level"><span></span></div><div class="isa-rec-status">Gravando… fale normalmente.</div></div><div class="isa-media-actions"><button class="primary" data-stop type="button">■ Parar gravação</button><button data-cancel type="button">Cancelar</button></div>'
         try{ctx=new (window.AudioContext||window.webkitAudioContext)();source=ctx.createMediaStreamSource(stream);analyser=ctx.createAnalyser();analyser.fftSize=256;source.connect(analyser);meter()}catch{}
         rec.ondataavailable=e=>{if(e.data?.size)chunks.push(e.data)}
-        rec.onerror=e=>{body.querySelector('.isa-rec-status').textContent='O gravador encontrou um erro.'}
+        rec.onerror=e=>{const st=body.querySelector('.isa-rec-status');if(st)st.textContent='O gravador encontrou um erro.'}
         rec.onstop=()=>{clearInterval(timer);cancelAnimationFrame(raf);lastDuration=Date.now()-started;lastBlob=new Blob(chunks,{type:rec.mimeType||'audio/webm'});stopTracks(stream);stream=null;preview()}
         rec.start(250);timer=setInterval(()=>{const elapsed=Date.now()-started;const el=body.querySelector('.isa-rec-time');if(el)el.textContent=timeText(elapsed);if(elapsed>=maxMs&&rec?.state==='recording')rec.stop()},250)
         body.querySelector('[data-stop]').onclick=()=>{if(rec?.state==='recording')rec.stop()};body.querySelector('[data-cancel]').onclick=()=>finish(null)
-      }catch(err){cleanup();body.innerHTML=`<div class="isa-media-error">${errorText(err,'audio')}</div><div class="isa-media-actions"><button data-retry type="button">Tentar novamente</button><button data-cancel type="button">Fechar</button></div>`;body.querySelector('[data-retry]').onclick=start;body.querySelector('[data-cancel]').onclick=()=>finish(null)}
+      }catch(err){cleanup();showPermissionError(body,err,'audio',start,finish)}
     }
     function preview(){
       if(!lastBlob?.size){body.innerHTML='<div class="isa-media-error">Não foi possível formar o áudio. Tente gravar novamente.</div><div class="isa-media-actions"><button data-again type="button">Gravar novamente</button><button data-cancel type="button">Fechar</button></div>';body.querySelector('[data-again]').onclick=start;body.querySelector('[data-cancel]').onclick=()=>finish(null);return}
