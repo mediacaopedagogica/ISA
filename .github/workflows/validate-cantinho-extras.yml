@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - 'extras-loader.js'
+      - 'mobile-responsive-v1.js'
+      - 'mobile-responsive-v1.css'
       - 'group-controls.js'
       - 'profile-mascot.js'
       - 'diario.js'
@@ -36,6 +38,7 @@ jobs:
       - name: Verificar sintaxe JavaScript
         run: |
           node --check extras-loader.js
+          node --check mobile-responsive-v1.js
           node --check group-controls.js
           node --check profile-mascot.js
           node --check diario.js
