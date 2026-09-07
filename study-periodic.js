@@ -2,7 +2,7 @@ import { ELEMENTS } from './periodic-data.js'
 const $p=id=>document.getElementById(id)
 let compare=[]
 const CAT={alkali:'Metais alcalinos',alkaline:'Alcalino-terrosos',transition:'Metais de transição',post:'Pós-transição',metalloid:'Semimetais',nonmetal:'Não metais',halogen:'Halogênios',noble:'Gases nobres',lanthanide:'Lantanídeos',actinide:'Actinídeos',unknown:'Outros'}
-function css(){if(document.querySelector('link[href^="study-periodic.css"]'))return;const l=document.createElement('link');l.rel='stylesheet';l.href='study-periodic.css?v=1';document.head.appendChild(l)}
+function css(){if(document.querySelector('link[href^="study-periodic.css"]'))return;const l=document.createElement('link');l.rel='stylesheet';l.href='study-periodic.css?v=2-size';document.head.appendChild(l)}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function match(e){const q=($p('periodicSearch')?.value||'').trim().toLowerCase(),cat=$p('periodicFilter')?.value||'all';return (!q||e.name.toLowerCase().includes(q)||e.s.toLowerCase()===q||String(e.n)===q)&& (cat==='all'||e.cat===cat)}
 function tile(e){return `<button type="button" class="element-tile cat-${e.cat} ${compare.includes(e.n)?'selected-compare':''}" data-element="${e.n}" style="grid-column:${e.group};grid-row:${e.period}" title="${esc(e.name)}"><span class="n">${e.n}</span><span class="s">${e.s}</span><span class="nm">${esc(e.name)}</span></button>`}
