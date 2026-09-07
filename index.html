@@ -101,7 +101,7 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=res
     const main=document.getElementById('mainView'),name=String(document.getElementById('myName')?.textContent||'').trim();
     if(main&&!main.classList.contains('hidden')&&name&&name!=='Família'){
       loaded=true;
-      const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=4-noloop';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
+      const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=5-mobile-interaction';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
     }
     if(++tries<100)setTimeout(loadExtras,120);
   };
