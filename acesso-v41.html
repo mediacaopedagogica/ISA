@@ -40,12 +40,14 @@ async function start(){
    const d=await r.json().catch(()=>({}));
    if(!r.ok||!d.tokenHash)throw new Error(d.error||'Não foi possível iniciar seu acesso.');
    const name=['Keise','Alan','Isa'].includes(d.name)?d.name:'Família';
-   $('title').textContent=`Oi, ${name}!`;$('text').textContent='Entrando…';
+   $('title').textContent=`Oi, ${name}!`;$('text').textContent='Preparando seu Cantinho…';
    const {data,error}=await supabase.auth.verifyOtp({token_hash:d.tokenHash,type:d.verificationType||'magiclink'});
    if(error||!data?.session)throw new Error(error?.message||'Não foi possível confirmar a sessão.');
    const {data:stored,error:storedError}=await supabase.auth.getSession();
    if(storedError||!stored?.session)throw new Error(storedError?.message||'A sessão não foi salva.');
-   location.replace(`./?perfil=${encodeURIComponent(name)}`);
+   await new Promise(resolve=>setTimeout(resolve,220));
+   const u=new URL('./',location.href);u.searchParams.set('perfil',name);u.searchParams.set('entrada','pessoal');u.searchParams.set('v','52');u.hash='';
+   location.replace(u.href);
  }catch(e){fail(e?.name==='AbortError'?'A conexão demorou demais. Tente novamente.':(e?.message||'Não foi possível acessar.'))}
 }
 $('retry').onclick=start;start();
