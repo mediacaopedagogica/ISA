@@ -1,5 +1,5 @@
 import { CONFIG } from './config.js'
-import { capturePhoto, recordAudio } from './media-capture.js?v=3'
+import { capturePhoto, recordAudio } from './media-capture.js?v=4-audio-file-mime'
 
 const $=id=>document.getElementById(id)
 let me=null,audioHydrateBusy=false,audioHydrateTimer=null
@@ -53,9 +53,10 @@ async function uploadMedia(file,kind,{duration=null,maxMb=12}={}){
   try{
     const u=await identity()
     const fallback=kind==='audio'?'webm':'jpg',ext=fileExt(file,fallback),contentType=uploadMime(file,kind)
+    const uploadFile=kind==='audio'&&file.type!==contentType?new File([file],file.name||`audio-${Date.now()}.${ext}`,{type:contentType}):file
     path=`${u.family_id}/${id}/${u.id}/${crypto.randomUUID()}.${ext}`
     toast(kind==='audio'?'Enviando áudio…':'Enviando foto…')
-    const up=await fetch(`${CONFIG.SUPABASE_URL}/storage/v1/object/chat-temp/${path}`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${token}`,'Content-Type':contentType,'x-upsert':'false'},body:file})
+    const up=await fetch(`${CONFIG.SUPABASE_URL}/storage/v1/object/chat-temp/${path}`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${token}`,'Content-Type':contentType,'x-upsert':'false'},body:uploadFile})
     if(!up.ok){let d=null;try{d=await up.json()}catch{};throw new Error(d?.message||`Não foi possível enviar ${kind==='audio'?'o áudio':'a foto'}.`)}
     const expires=new Date(Date.now()+7*86400000).toISOString()
     const payload={conversation_id:id,sender_id:u.id,kind,media_provider:'supabase-storage',media_ref:path,media_mime:contentType,media_expires_at:expires}
