@@ -36,6 +36,7 @@ on:
       - 'paloma-studies.js'
       - 'paloma-studies.css'
       - 'paloma-studies-advanced.js'
+      - 'paloma-studies-advanced-mobile.js'
       - 'paloma-studies-advanced.css'
       - '.github/workflows/validate-cantinho-extras.yml'
   workflow_dispatch:
@@ -73,6 +74,7 @@ jobs:
           node --check games-notebook-fit.js
           node --check paloma-studies.js
           node --check paloma-studies-advanced.js
+          node --check paloma-studies-advanced-mobile.js
 
       - name: Proteger recursos aprovados
         run: |
@@ -118,7 +120,8 @@ jobs:
           grep -q 'paloma-studies.css' acesso.html
           grep -q 'paloma-studies.js' acesso.html
           grep -q 'paloma-studies.css' acesso-mobile.html
-          grep -q 'paloma-studies.js' acesso-mobile.html
+          grep -q 'paloma-studies.js?v=2-mobile-reopen' acesso-mobile.html
+          grep -q 'games-menu.js?v=4-mobile-reopen' acesso-mobile.html
           grep -q 'paloma_study_load' paloma-studies.js
           grep -q 'paloma_study_save' paloma-studies.js
           grep -q 'Caderno digital' paloma-studies.js
@@ -128,7 +131,9 @@ jobs:
           grep -q 'paloma-studies-advanced.css' acesso.html
           grep -q 'paloma-studies-advanced.js' acesso.html
           grep -q 'paloma-studies-advanced.css' acesso-mobile.html
-          grep -q 'paloma-studies-advanced.js' acesso-mobile.html
+          grep -q 'paloma-studies-advanced-mobile.js?v=1' acesso-mobile.html
+          grep -q 'PalomaMobileMutationObserver' paloma-studies-advanced-mobile.js
+          grep -q "closest('.ps-coming')" paloma-studies-advanced-mobile.js
           grep -q 'paloma_study_advanced_load' paloma-studies-advanced.js
           grep -q 'paloma_study_advanced_save' paloma-studies-advanced.js
           grep -q 'Anatomia 3D' paloma-studies-advanced.js
