@@ -28,6 +28,7 @@ on:
       - 'media-capture.js'
       - 'link-preview.js'
       - 'call-manager.js'
+      - 'games-notebook-fit.js'
       - 'app-3d.css'
       - 'heart-polish.css'
       - 'acesso.html'
@@ -67,6 +68,7 @@ jobs:
           node --check media-capture.js
           node --check link-preview.js
           node --check call-manager.js
+          node --check games-notebook-fit.js
           node --check paloma-studies.js
 
       - name: Proteger recursos aprovados
@@ -93,6 +95,11 @@ jobs:
           grep -q 'RTCPeerConnection' call-manager.js
           grep -q 'Chamada de voz' call-manager.js
           grep -q 'Videochamada' call-manager.js
+
+          grep -q 'games-notebook-fit.js' extras-loader.js
+          grep -q 'min-width:851px' games-notebook-fit.js
+          grep -q 'cantinhoEmbeddedNotebookStyle' games-notebook-fit.js
+          grep -q 'games-notebook-fit.js' acesso.html
 
           grep -q 'studyNav' isa-tools.js
           grep -q 'diaryNav' isa-tools.js
