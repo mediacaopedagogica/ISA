@@ -8,8 +8,10 @@ on:
       - 'group-controls.js'
       - 'profile-mascot.js'
       - 'diario.js'
+      - 'diario-cover-logic.js'
       - 'isa-tools.js'
       - 'diary-parent.js'
+      - 'paused-friends-filter.js'
       - 'family-media-menu.js'
       - 'family-media-menu-v2.js'
       - 'calendar-alarm.js'
@@ -37,8 +39,10 @@ jobs:
           node --check group-controls.js
           node --check profile-mascot.js
           node --check diario.js
+          node --check diario-cover-logic.js
           node --check isa-tools.js
           node --check diary-parent.js
+          node --check paused-friends-filter.js
           node --check family-media-menu.js
           node --check family-media-menu-v2.js
           node --check calendar-alarm.js
