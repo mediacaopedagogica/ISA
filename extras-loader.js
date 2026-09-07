@@ -18,6 +18,7 @@ function idle(fn,delay=180){
 }
 async function loadProfile(){await loadOnce('profile','./profile-mascot.js?v=2')}
 async function loadGroupTools(){await loadOnce('groups','./group-controls.js?v=3')}
+async function loadPins(){await loadOnce('pins','./conversation-pins.js?v=2')}
 async function loadPausedFriends(){await loadOnce('paused-friends','./paused-friends-filter.js?v=1')}
 async function loadIsaTools(){if(isIsa())await loadOnce('isa-tools','./isa-tools.js?v=6')}
 async function loadCalls(){await loadOnce('calls','./call-manager.js?v=2')}
@@ -37,19 +38,21 @@ async function loadSupervisionExtras(){
 function wire(){
   if(!mainReady())return false
 
-  // Só ligadores pequenos depois da entrada; ferramentas pesadas continuam sob demanda.
+  // Depois que a entrada terminou, carregamos apenas conectores pequenos.
+  // Ferramentas pesadas continuam sendo abertas somente quando a pessoa usa o recurso.
   idle(loadProfile,180)
-  idle(loadGroupTools,320)
+  idle(loadGroupTools,300)
+  idle(loadPins,380)
   idle(loadPausedFriends,520)
-  if(isIsa())idle(loadIsaTools,240) // só mostra Diário/Estudos; o conteúdo de Estudos NÃO carrega aqui.
-  idle(loadCalls,1000) // receptor leve para chamadas recebidas; câmera/microfone só abrem ao usar.
+  if(isIsa())idle(loadIsaTools,240) // exibe Diário/Estudos; o bundle de Estudos só carrega ao clicar.
+  idle(loadCalls,1000) // receptor leve para chamadas; câmera/microfone só são ativados ao usar.
 
   const chatList=$('chatList')
   if(chatList&&!chatList.dataset.extraLoaderRestored){
     chatList.dataset.extraLoaderRestored='1'
     chatList.addEventListener('click',e=>{
       if(!e.target.closest('.chat-item[data-conv]'))return
-      // Mídia e prévia de links só entram depois de abrir uma conversa.
+      // Foto, gravador de áudio e prévia de links entram somente depois de abrir uma conversa.
       setTimeout(()=>loadChatExtras().catch(()=>{}),120)
     })
   }
