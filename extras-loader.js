@@ -27,7 +27,10 @@ async function loadCoreExtras(){
     loadOnce('links','./link-preview.js?v=6-inline-video')
   ]
   if(!dedicatedMobile)jobs.push(loadOnce('calls','./call-manager.js?v=4-stable'))
-  if(isIsa())jobs.push(loadOnce('isa-tools','./isa-tools.js?v=9-study-fix'))
+  if(isIsa()){
+    jobs.push(loadOnce('isa-tools','./isa-tools.js?v=9-study-fix'))
+    jobs.push(loadOnce('games','./games-menu.js?v=1-bricks'))
+  }
   const result=await Promise.allSettled(jobs)
   result.forEach((r,i)=>{if(r.status==='rejected')console.warn('Módulo extra não carregou',i,r.reason)})
 }
