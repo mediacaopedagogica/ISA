@@ -136,13 +136,3 @@
 .read-receipt{display:block;margin-top:3px;font-size:10px;text-align:right;color:#9b8ca4;font-weight:700}
 .read-receipt.read{color:#7a5fc8}
 @media(max-width:850px){.panel-pad{height:calc(100dvh - 220px)!important;padding-bottom:max(84px,env(safe-area-inset-bottom))!important}}
-
-
-/* v35 external friend links */
-.external-friends-manager{margin:26px 0;padding:18px;border-radius:24px;background:linear-gradient(145deg,rgba(255,245,251,.96),rgba(241,235,255,.96));box-shadow:0 10px 0 rgba(197,178,218,.16),inset 2px 3px 5px #fff}
-.external-friends-head h3{margin:0 0 5px}.external-friends-head p{margin:0;color:#8d7f94;font-size:.86rem}
-.external-friend-create{display:grid;grid-template-columns:1fr auto;gap:9px;margin:14px 0}.external-friend-create input{border:1px solid #eadcf1;border-radius:15px;padding:11px 13px;background:#fff;outline:0}
-.external-friend-safety{padding:11px 13px;border-radius:16px;background:linear-gradient(145deg,#fff4c9,#eaf8ef);font-size:.78rem;color:#796c7e;margin-bottom:12px}
-.external-friends-list{display:grid;gap:9px}.external-friend-card{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:11px;padding:11px 12px;border-radius:18px;background:#fff;box-shadow:0 5px 0 rgba(198,181,213,.14)}.external-friend-card.revoked{opacity:.68}
-.external-friend-avatar{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(145deg,#fff0b9,#ffdce9,#e6dcff)}.external-friend-info strong,.external-friend-info small{display:block}.external-friend-info small{color:#95859b;margin-top:2px}.external-friend-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-@media(max-width:700px){.external-friend-create{grid-template-columns:1fr}.external-friend-card{grid-template-columns:auto 1fr}.external-friend-actions{grid-column:1/-1;justify-content:flex-start}}
