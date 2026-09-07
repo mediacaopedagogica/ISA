@@ -23,8 +23,8 @@ async function loadCoreExtras(){
     loadOnce('groups','./group-controls.js?v=5-stable'),
     loadOnce('pins','./conversation-pins.js?v=5-direct-pin'),
     loadOnce('paused-friends','./paused-friends-filter.js?v=3-stable'),
-    loadOnce('family-media','./family-media-menu-v2.js?v=8-audio-player'),
-    loadOnce('links','./link-preview.js?v=5-stable')
+    loadOnce('family-media','./family-media-menu-v2.js?v=9-audio-day'),
+    loadOnce('links','./link-preview.js?v=6-inline-video')
   ]
   if(!dedicatedMobile)jobs.push(loadOnce('calls','./call-manager.js?v=4-stable'))
   if(isIsa())jobs.push(loadOnce('isa-tools','./isa-tools.js?v=9-study-fix'))
