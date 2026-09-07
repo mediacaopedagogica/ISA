@@ -36,7 +36,7 @@ jobs:
           files = list(Path('.').glob('study*.js')) + [Path('retention-notice.js')]
           old = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"
           for p in files:
-              if not p.exists():
+              if not p.exists() or p.name == 'study-bundle-v36.js':
                   continue
               s = p.read_text(encoding='utf-8')
               if old in s:
@@ -46,9 +46,13 @@ jobs:
         run: |
           npx esbuild study-entry-v36.js --bundle --format=iife --platform=browser --target=es2020 --outfile=study-bundle-v36.js
           node --check study-bundle-v36.js
-      - name: Restaurar fontes temporariamente alteradas
+      - name: Restaurar somente fontes temporariamente alteradas
         run: |
-          git restore -- 'study*.js' retention-notice.js || true
+          git diff --name-only | while IFS= read -r p; do
+            if [ -n "$p" ] && [ "$p" != "study-bundle-v36.js" ]; then
+              git restore -- "$p"
+            fi
+          done
       - name: Publicar bundle sem perder commits concorrentes
         run: |
           git config user.name 'github-actions[bot]'
