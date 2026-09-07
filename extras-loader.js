@@ -12,20 +12,22 @@ function mainReady(){
   return !!main&&!main.classList.contains('hidden')&&!!$('myName')?.textContent?.trim()
 }
 function idle(fn,delay=180){
-  if('requestIdleCallback'in window)requestIdleCallback(()=>fn().catch(()=>{}),{timeout:1200})
+  if('requestIdleCallback'in window)requestIdleCallback(()=>fn().catch(()=>{}),{timeout:Math.max(1200,delay+700)})
   else setTimeout(()=>fn().catch(()=>{}),delay)
 }
 async function loadProfile(){await loadOnce('profile','./profile-mascot.js?v=2')}
 async function loadGroupTools(){await loadOnce('groups','./group-controls.js?v=3')}
+async function loadPausedFriends(){await loadOnce('paused-friends','./paused-friends-filter.js?v=1')}
+async function loadCalls(){await loadOnce('calls','./call-manager.js?v=2')}
 async function loadChatExtras(){
   await Promise.allSettled([
     loadOnce('family-media','./family-media-menu-v2.js?v=2'),
     loadOnce('links','./link-preview.js?v=3')
   ])
 }
-async function loadCalls(){await loadOnce('calls','./call-manager.js?v=2')}
 async function loadSupervisionExtras(){
   await Promise.allSettled([
+    loadOnce('external-access','./external-access-controls.js?v=11'),
     loadOnce('diary-parent','./diary-parent.js?v=3')
   ])
 }
@@ -34,26 +36,28 @@ function wire(){
   if(!mainReady())return false
   idle(loadProfile,140)
   idle(loadGroupTools,240)
+  idle(loadPausedFriends,420)
+  // Receptor em segundo plano: recebe chamadas mesmo sem abrir uma conversa.
+  idle(loadCalls,900)
 
   const chatList=$('chatList')
-  if(chatList&&!chatList.dataset.extraLoaderV11){
-    chatList.dataset.extraLoaderV11='1'
+  if(chatList&&!chatList.dataset.extraLoaderV12){
+    chatList.dataset.extraLoaderV12='1'
     chatList.addEventListener('click',e=>{
       if(!e.target.closest('.chat-item[data-conv]'))return
       setTimeout(()=>loadChatExtras().catch(()=>{}),130)
-      setTimeout(()=>loadCalls().catch(()=>{}),1200)
     })
   }
   const chats=document.querySelector('[data-tab="chats"]')
-  if(chats&&!chats.dataset.extraLoaderV11){
-    chats.dataset.extraLoaderV11='1'
+  if(chats&&!chats.dataset.extraLoaderV12){
+    chats.dataset.extraLoaderV12='1'
     chats.addEventListener('click',()=>{
       if($('chatPanel')&&!$('chatPanel').classList.contains('hidden'))loadChatExtras().catch(()=>{})
     })
   }
   const supervision=document.querySelector('[data-tab="supervision"]')
-  if(supervision&&!supervision.dataset.extraLoaderV11){
-    supervision.dataset.extraLoaderV11='1'
+  if(supervision&&!supervision.dataset.extraLoaderV12){
+    supervision.dataset.extraLoaderV12='1'
     supervision.addEventListener('click',()=>loadSupervisionExtras().catch(()=>{}))
   }
   return true
