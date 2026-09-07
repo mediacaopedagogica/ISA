@@ -1,0 +1,51 @@
+name: Fix avatar stability
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-avatar-stability.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch avatar rendering
+        run: python scripts/patch-avatar-stability.py
+      - name: Rebuild stable app v33
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install --no-save @supabase/supabase-js@2 esbuild@0.25.9
+          cat > core-v33-entry.js <<'EOF'
+          import { createClient } from '@supabase/supabase-js'
+          import { CONFIG } from './config.js'
+          window.__ISA_SCRIPT_LOADED__ = true;
+          async function __isaCore33(){
+          window.__ISA_CORE_STARTED__ = true;
+          EOF
+          cat chunk-00.txt chunk-01.txt chunk-02.txt chunk-03.txt chunk-04.txt chunk-05.txt chunk-06.txt chunk-07.txt chunk-08.txt chunk-09.txt >> core-v33-entry.js
+          cat >> core-v33-entry.js <<'EOF'
+          }
+          __isaCore33().then(()=>{window.__ISA_APP_READY__=true;}).catch(error=>{
+            console.error('Falha ao iniciar Cantinho da Isa:',error);
+            window.__ISA_APP_ERROR__=String(error?.message||error||'Erro desconhecido');
+          });
+          EOF
+          npx esbuild core-v33-entry.js --bundle --format=iife --platform=browser --target=es2020 --outfile=app-v33.js
+          node --check app-v33.js
+          grep -q "startsWith('emoji:')" chunk-08.txt
+          grep -q "avatarDisplay" app-v33.js
+          grep -q "stable-52-avatar" index.html
+      - name: Commit avatar stability fix
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add chunk-08.txt index.html app-v33.js
+          git commit -m 'Stabilize saved profile avatars and emojis'
+          git push
