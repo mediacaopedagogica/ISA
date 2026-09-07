@@ -30,6 +30,10 @@ on:
       - 'call-manager.js'
       - 'app-3d.css'
       - 'heart-polish.css'
+      - 'acesso.html'
+      - 'acesso-mobile.html'
+      - 'paloma-studies.js'
+      - 'paloma-studies.css'
       - '.github/workflows/validate-cantinho-extras.yml'
   workflow_dispatch:
 
@@ -63,6 +67,7 @@ jobs:
           node --check media-capture.js
           node --check link-preview.js
           node --check call-manager.js
+          node --check paloma-studies.js
 
       - name: Proteger recursos aprovados
         run: |
@@ -100,5 +105,16 @@ jobs:
           grep -q 'Meu Diário' diario.html
           grep -q 'Post-its' diario.html
 
+          grep -q 'paloma-studies.css' acesso.html
+          grep -q 'paloma-studies.js' acesso.html
+          grep -q 'paloma-studies.css' acesso-mobile.html
+          grep -q 'paloma-studies.js' acesso-mobile.html
+          grep -q 'paloma_study_load' paloma-studies.js
+          grep -q 'paloma_study_save' paloma-studies.js
+          grep -q 'Caderno digital' paloma-studies.js
+          grep -q 'Flashcards' paloma-studies.js
+          grep -q 'Editor acadêmico' paloma-studies.js
+
           test -s app-3d.css
           test -s heart-polish.css
+          test -s paloma-studies.css
