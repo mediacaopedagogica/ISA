@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="login-3d.css">
   <link rel="stylesheet" href="app-3d.css?v=restore-37">
   <link rel="stylesheet" href="mobile-responsive-v2.css?v=7-restore">
+  <link rel="stylesheet" href="mobile-stability-fix.css?v=1">
   <link rel="stylesheet" href="heart-polish.css?v=restore-37">
 </head>
 <body>
@@ -79,11 +80,8 @@ if('serviceWorker' in navigator){
   new MutationObserver(()=>{if(!main.classList.contains('hidden'))clear()}).observe(main,{attributes:true,attributeFilter:['class']});
 })();
 </script>
-
-<script defer src="./app-v34.js?v=direct-48"></script>
-<script type="module" src="./mobile-responsive-v2.js?v=8-restore"></script>
-<script type="module" src="./notifications-v2.js?v=5-restore"></script>
-<script type="module" src="./extras-loader.js?v=9-restore"></script>
+<script defer src="./app-v34.js?v=direct-49"></script>
+<script type="module" src="./postboot-loader.js?v=1"></script>
 <script>
 window.addEventListener('load',()=>{
   setTimeout(()=>{
