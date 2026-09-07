@@ -1,0 +1,42 @@
+name: Publish mobile no blank
+
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-mobile-no-blank.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refresh dedicated mobile assets
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('./postboot-loader.js?v=8-back-fix','./postboot-loader.js?v=9-no-blank')
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('entrar-mobile.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace("u.searchParams.set('v','1')","u.searchParams.set('v','2')")
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify
+        run: |
+          grep -q 'postboot-loader.js?v=9-no-blank' index.html
+          grep -q "u.searchParams.set('v','2')" entrar-mobile.html
+          grep -q 'mobile-native.js?v=3-no-blank' postboot-loader.js
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html entrar-mobile.html
+          git diff --cached --quiet || git commit -m 'Publish mobile panels without blank screens'
+          git push
