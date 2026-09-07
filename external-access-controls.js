@@ -70,3 +70,4 @@ obs.observe(document.documentElement,{subtree:true,childList:true,attributes:tru
 import('./isa-tools.js').catch(console.warn)
 import('./diary-parent.js').catch(console.warn)
 import('./family-media-menu.js').catch(console.warn)
+import('./calendar-alarm.js').catch(console.warn)
