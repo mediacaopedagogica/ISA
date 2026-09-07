@@ -7,7 +7,7 @@ async function rest(path,opt={}){const t=token();if(!t)throw new Error('Sem sess
 async function identity(){if(me)return me;const t=token(),sub=t&&jwtSub(t);if(!sub)throw new Error('Sem sessão');const rows=await rest(`family_members?select=id&auth_user_id=eq.${encodeURIComponent(sub)}&active=eq.true&limit=1`);me=rows?.[0]||null;return me}
 async function loadPins(){const u=await identity();if(!u)return;const rows=await rest(`conversation_pins?select=conversation_id,marker,pinned_at&member_id=eq.${u.id}&order=pinned_at.asc`);pins=new Map((rows||[]).map(x=>[x.conversation_id,x]));apply()}
 function markerIcon(marker){return marker==='heart'?'💜':'⭐'}
-function schedule(){clearTimeout(scheduled);scheduled=setTimeout(apply,55)}
+function schedule(){clearTimeout(scheduled);scheduled=setTimeout(apply,80)}
 function apply(){
   const list=$('chatList');if(!list||busy)return;busy=true
   try{
@@ -28,7 +28,13 @@ function apply(){
       if(ap&&bp)return String(pins.get(a.dataset.conv)?.pinned_at||'').localeCompare(String(pins.get(b.dataset.conv)?.pinned_at||''))
       return 0
     })
-    ordered.forEach(c=>list.appendChild(c))
+    const current=[...list.querySelectorAll('.chat-item[data-conv]')]
+    const needsReorder=ordered.some((card,i)=>current[i]!==card)
+    if(needsReorder){
+      const frag=document.createDocumentFragment()
+      ordered.forEach(c=>frag.appendChild(c))
+      list.appendChild(frag)
+    }
   }finally{busy=false}
 }
 async function setPin(id,marker){
@@ -52,7 +58,8 @@ function intercept(e){const a=e.target.closest('.conversation-pin-action');if(!a
 function start(){
   const list=$('chatList');if(!list)return
   list.addEventListener('click',intercept,true);list.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.closest('.conversation-pin-action'))intercept(e)},true)
-  const obs=new MutationObserver(schedule);obs.observe(list,{childList:true})
+  const obs=new MutationObserver(records=>{if(records.some(r=>[...r.addedNodes].some(n=>n.nodeType===1&&n.matches?.('.chat-item[data-conv]'))))schedule()})
+  obs.observe(list,{childList:true})
   document.addEventListener('click',e=>{if(pop&&!pop.contains(e.target)&&!e.target.closest('.conversation-pin-action'))closePop()},true)
   loadPins().catch(console.error)
 }
