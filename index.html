@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="theme-3d.css">
   <link rel="stylesheet" href="login-3d.css">
-  <link rel="stylesheet" href="mobile-responsive-v2.css?v=2">
+  <link rel="stylesheet" href="mobile-responsive-v2.css?v=3">
 </head>
 <body>
 <div id="app">
@@ -48,20 +48,18 @@
   <section id="mainView" class="screen app-shell hidden">
     <aside class="sidebar glass">
       <div class="profile-mini">
-        <button id="myAvatarBtn" class="avatar pastel-avatar profile-avatar-btn" type="button" title="Alterar foto de perfil" aria-label="Alterar foto de perfil">
-          <span id="myAvatar">🙂</span><span class="avatar-camera">📷</span>
-        </button>
+        <button id="myAvatarBtn" class="avatar pastel-avatar profile-avatar-btn" type="button" title="Alterar foto de perfil" aria-label="Alterar foto de perfil"><span id="myAvatar">🙂</span><span class="avatar-camera">📷</span></button>
         <input id="profileAvatarInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
         <div class="grow"><small class="muted">Você está como</small><strong id="myName">Família</strong><small id="myRole">online</small></div>
         <button id="logoutBtn" class="tiny-btn profile-exit-btn" title="Sair da conta">Sair</button>
       </div>
       <nav class="nav-tabs">
-        <button class="nav-btn active" data-tab="chats">💬 <span>Conversas</span></button>
+        <button class="nav-btn active" data-tab="chats">💬 <span>Chat</span></button>
         <button class="nav-btn" data-tab="calendar">📅 <span>Calendário</span></button>
-        <button class="nav-btn hidden" data-tab="diary" id="diaryNav">📔 <span>Meu Diário</span></button>
         <button class="nav-btn hidden" data-tab="study" id="studyNav">📚 <span>Estudos</span></button>
+        <button class="nav-btn hidden" data-tab="diary" id="diaryNav">📔 <span>Meu Diário</span></button>
         <button class="nav-btn hidden" data-tab="supervision" id="supervisionNav">👀 <span>Supervisão</span></button>
-        <button class="nav-btn" data-tab="parents" id="parentsNav">🛡️ <span>Super Pais</span></button>
+        <button class="nav-btn hidden" data-tab="parents" id="parentsNav">🛡️ <span>Super Pais</span></button>
       </nav>
       <div class="chat-list-head"><strong>Conversas</strong><button id="newGroupBtn" class="tiny-btn">＋ Grupo</button></div>
       <div id="chatList" class="chat-list"></div>
@@ -92,10 +90,10 @@
 </div>
 <dialog id="simpleDialog"><form method="dialog" class="dialog-card"><button class="dialog-close" value="cancel">✕</button><div id="dialogContent"></div></form></dialog><div id="toast" class="toast hidden"></div>
 <script>(function(){const btn=document.getElementById('togglePassword'),input=document.getElementById('loginPassword');if(btn&&input){btn.onclick=()=>{const show=input.type==='password';input.type=show?'text':'password';btn.textContent=show?'🙈':'👁️';btn.setAttribute('aria-label',show?'Ocultar senha':'Mostrar senha');btn.title=show?'Ocultar senha':'Mostrar senha';input.focus()}}})();</script>
-<script>(async()=>{try{if('caches' in window){const keys=await caches.keys();await Promise.all(keys.filter(k=>k.startsWith('cantinho-isa-')).map(k=>caches.delete(k)))}if('serviceWorker' in navigator){const reg=await navigator.serviceWorker.register('./sw.js?v=31',{scope:'./'});reg.update().catch(()=>{})}}catch(error){console.warn('Recuperação de cache:',error)}})();</script>
+<script>(async()=>{try{if('caches' in window){const keys=await caches.keys();await Promise.all(keys.filter(k=>k.startsWith('cantinho-isa-')).map(k=>caches.delete(k)))}if('serviceWorker' in navigator){const reg=await navigator.serviceWorker.register('./sw.js?v=32',{scope:'./'});reg.update().catch(()=>{})}}catch(error){console.warn('Recuperação de cache:',error)}})();</script>
 <script defer src="./app-v35.js?v=35"></script>
-<script type="module" src="./mobile-responsive-v2.js?v=2"></script>
-<script type="module" src="./notifications-v2.js?v=2"></script>
+<script type="module" src="./mobile-responsive-v2.js?v=3"></script>
+<script type="module" src="./notifications-v2.js?v=3"></script>
 <script type="module" src="./extras-loader.js?v=6"></script>
 <script>window.addEventListener('load',()=>{setTimeout(()=>{if(window.__ISA_SCRIPT_LOADED__)return;const msg=document.getElementById('loginMsg');if(msg){msg.textContent='O aplicativo não conseguiu carregar. Clique em Recarregar.';msg.style.color='#a15472';const b=document.createElement('button');b.type='button';b.className='soft-btn';b.textContent='Recarregar';b.style.marginTop='10px';b.onclick=()=>location.reload();msg.after(b)}},3500)});</script>
 </body>
