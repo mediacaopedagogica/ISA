@@ -5,7 +5,7 @@ let notifyAnchor=null
 function shell(){return $('mainView')}
 function who(){return String($('myName')?.textContent||'').trim().toLowerCase()}
 function mainReady(){return !!shell()&&!shell().classList.contains('hidden')&&!!who()}
-function syncProfileSubtitle(){const role=$('myRole');if(!role)return;if(!role.dataset.desktopText)role.dataset.desktopText=role.textContent||'';role.textContent=mq.matches?'Cantinho da Isa 💜':role.dataset.desktopText}
+function syncProfileSubtitle(){const role=$('myRole');if(!role)return;if(!role.dataset.desktopText)role.dataset.desktopText=role.textContent||'';const next=mq.matches?'Cantinho da Isa 💜':role.dataset.desktopText;if(role.textContent!==next)role.textContent=next}
 function ensureProfileNav(){
   if(!mainReady())return
   syncProfileSubtitle()
@@ -28,7 +28,7 @@ function backBtn(){
 }
 function placeNotifyBanner(){
   const banner=$('notifyBanner');if(!banner)return
-  if(!notifyAnchor&&banner.parentNode){notifyAnchor=document.createComment('notify-banner-home-v5');banner.parentNode.insertBefore(notifyAnchor,banner)}
+  if(!notifyAnchor&&banner.parentNode){notifyAnchor=document.createComment('notify-banner-home-v6');banner.parentNode.insertBefore(notifyAnchor,banner)}
   if(mq.matches){
     const side=shell()?.querySelector('.sidebar'),head=side?.querySelector('.chat-list-head')
     if(side&&head&&banner.parentNode!==side)side.insertBefore(banner,head)
@@ -57,18 +57,18 @@ function showContent(kind='panel'){
 function wire(){
   ensureProfileNav()
   const list=$('chatList')
-  if(list&&!list.dataset.mobileV5Bound){
-    list.dataset.mobileV5Bound='1'
+  if(list&&!list.dataset.mobileV6Bound){
+    list.dataset.mobileV6Bound='1'
     list.addEventListener('click',e=>{if(mq.matches&&e.target.closest('.chat-item[data-conv]'))setTimeout(()=>showContent('chat'),70)})
   }
   const mb=$('mobileBackBtn')
-  if(mb&&!mb.dataset.mobileV5Bound){
-    mb.dataset.mobileV5Bound='1'
+  if(mb&&!mb.dataset.mobileV6Bound){
+    mb.dataset.mobileV6Bound='1'
     mb.addEventListener('click',()=>{if(mq.matches)setTimeout(showConversationList,30)})
   }
   document.querySelectorAll('.nav-btn[data-tab]').forEach(btn=>{
-    if(btn.dataset.mobileV5Bound)return
-    btn.dataset.mobileV5Bound='1'
+    if(btn.dataset.mobileV6Bound)return
+    btn.dataset.mobileV6Bound='1'
     btn.addEventListener('click',()=>{
       if(!mq.matches)return
       const tab=btn.dataset.tab
@@ -106,7 +106,7 @@ sync()
 const main=$('mainView')
 if(main){const obs=new MutationObserver(()=>sync());obs.observe(main,{attributes:true,attributeFilter:['class']})}
 const nav=document.querySelector('.nav-tabs')
-if(nav){const obs=new MutationObserver(()=>{ensureProfileNav();wire()});obs.observe(nav,{childList:true,subtree:true,attributes:true,attributeFilter:['class']})}
+if(nav){const obs=new MutationObserver(()=>{ensureProfileNav();wire()});obs.observe(nav,{childList:true,subtree:true})}
 window.addEventListener('resize',sync,{passive:true})
 mq.addEventListener?.('change',sync)
 window.__ISA_MOBILE_SHOW_CONTENT__=showContent
