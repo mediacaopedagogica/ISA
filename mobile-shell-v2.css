@@ -1,0 +1,56 @@
+@media(max-width:850px){
+  html,body{width:100%;max-width:100%;overflow-x:hidden;background:linear-gradient(145deg,#fff9fd,#f2eaff 52%,#eef7ff)}
+  body{min-height:100dvh}
+  .app-shell{display:block!important;padding:0!important;min-height:100dvh!important;background:transparent}
+  .sidebar,.content{width:100%!important;max-width:100%!important;border-radius:0!important;min-height:0!important}
+  .sidebar{height:100dvh!important;max-height:100dvh!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;background:linear-gradient(160deg,rgba(255,255,255,.88),rgba(246,235,255,.86) 55%,rgba(238,247,255,.88))!important}
+  .profile-mini{margin:10px 12px 5px;padding:12px 14px!important;border:1px solid rgba(255,255,255,.9)!important;border-radius:25px!important;background:linear-gradient(145deg,rgba(255,255,255,.82),rgba(238,225,255,.82),rgba(255,226,239,.72))!important;box-shadow:0 10px 0 rgba(139,107,177,.08),0 16px 30px rgba(91,65,119,.11)!important}
+  .profile-mini .avatar{width:58px!important;height:58px!important;border-radius:21px!important}
+  .profile-mini .grow small:first-child{display:none!important}
+  .profile-mini .grow strong{font-size:1.2rem!important;display:block}
+  .profile-mini .grow #myRole{font-size:.78rem!important;margin-top:2px}
+  .profile-exit-btn{font-size:.85rem!important;padding:10px 14px!important;border-radius:16px!important;background:linear-gradient(145deg,#fff,#ffe8ef)!important;box-shadow:0 6px 0 rgba(191,115,149,.12)!important}
+  .nav-tabs{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:8px!important;padding:8px 12px 10px!important;overflow:visible!important}
+  .nav-btn{min-width:0!important;height:82px!important;padding:10px 4px!important;border-radius:21px!important;background:rgba(255,255,255,.56)!important;border:1px solid rgba(255,255,255,.84)!important;box-shadow:0 8px 0 rgba(131,101,168,.08),0 12px 20px rgba(95,69,124,.08)!important;font-size:1.5rem!important}
+  .nav-btn span{display:block!important;margin-top:5px!important;font-size:.68rem!important;line-height:1.05!important;font-weight:800!important;white-space:normal!important}
+  .nav-btn.active{background:linear-gradient(145deg,#d6c5ff,#e4efff,#ffe4ef)!important;box-shadow:inset 0 0 0 2px rgba(255,255,255,.7),0 8px 0 rgba(126,90,178,.12),0 14px 24px rgba(96,70,132,.12)!important}
+  .chat-list-head{padding:10px 18px 7px!important;font-size:1.15rem!important;flex:0 0 auto!important}
+  .chat-list{flex:1 1 auto!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overflow-x:hidden!important;padding:4px 12px calc(18px + env(safe-area-inset-bottom))!important;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+  .chat-item{min-width:0!important;margin:6px 0!important;padding:12px!important;border-radius:24px!important;background:rgba(255,255,255,.68)!important;border:1px solid rgba(255,255,255,.9)!important;box-shadow:0 7px 0 rgba(122,92,156,.07),0 10px 22px rgba(83,61,106,.07)!important}
+  .chat-item .avatar{width:54px!important;height:54px!important;flex:0 0 54px!important}
+  .chat-item strong{font-size:1rem!important}
+  .chat-item small{font-size:.8rem!important;max-width:100%!important}
+  .content{height:auto!important;min-height:100dvh!important;overflow:hidden!important;background:linear-gradient(160deg,rgba(255,255,255,.9),rgba(247,239,255,.9),rgba(238,247,255,.9))!important}
+  body.mobile-chat-list .content{display:none!important}
+  body.mobile-chat-list .sidebar{display:flex!important}
+  body.mobile-chat-open .sidebar{display:none!important}
+  body.mobile-chat-open .content{display:block!important;height:100dvh!important;min-height:100dvh!important}
+  body.mobile-panel-open .sidebar{height:auto!important;max-height:none!important;display:flex!important;overflow:visible!important}
+  body.mobile-panel-open .sidebar .chat-list-head,body.mobile-panel-open .sidebar .chat-list{display:none!important}
+  body.mobile-panel-open .content{display:block!important;min-height:calc(100dvh - 186px)!important;height:auto!important}
+  body.mobile-panel-open .empty-state{display:none!important}
+  .chat-panel{height:100dvh!important;min-height:100dvh!important;grid-template-rows:auto auto 1fr auto auto!important}
+  .chat-header{position:sticky;top:0;z-index:30;padding:10px 12px!important;background:rgba(255,255,255,.92)!important;backdrop-filter:blur(18px)}
+  .mobile-only{display:grid!important}
+  .messages{min-height:0!important;padding:14px 10px 18px!important;-webkit-overflow-scrolling:touch}
+  .bubble{max-width:88%!important}
+  .composer{padding:8px 8px calc(8px + env(safe-area-inset-bottom))!important;gap:5px!important}
+  .composer .icon-btn{width:42px!important;height:42px!important}
+  .composer textarea{min-width:0!important;padding:11px 12px!important}
+  .panel-pad{height:auto!important;min-height:calc(100dvh - 186px)!important;overflow:visible!important;padding:14px 10px calc(20px + env(safe-area-inset-bottom))!important}
+  .notify-banner{margin:5px 12px 8px!important;padding:11px 12px!important;border-radius:21px!important;flex:0 0 auto!important;background:linear-gradient(145deg,#e8f4ff,#fff,#ffe8f2)!important;box-shadow:0 8px 0 rgba(112,87,142,.06)!important}
+  .notify-banner .soft-btn{flex:0 0 auto!important;background:linear-gradient(145deg,#9274ee,#ec82c0)!important;color:white!important;box-shadow:0 6px 0 rgba(103,77,164,.13)!important}
+  .empty-state{display:none!important}
+  .calendar-panel .panel-title{align-items:flex-start!important}
+  .calendar-shell-3d{overflow-x:auto!important;max-width:100%!important}
+  .calendar-grid-real{min-width:650px}
+  .parent-cards{grid-template-columns:repeat(3,1fr)!important}
+  .supervision-list,.permissions-table{max-width:100%!important;overflow-x:hidden!important}
+}
+@media(max-width:430px){
+  .profile-mini{margin-left:8px;margin-right:8px}
+  .nav-tabs{padding-left:8px!important;padding-right:8px!important;gap:5px!important}
+  .nav-btn{height:74px!important;font-size:1.32rem!important;border-radius:18px!important}
+  .nav-btn span{font-size:.62rem!important}
+  .notify-banner{margin-left:8px!important;margin-right:8px!important}
+}
