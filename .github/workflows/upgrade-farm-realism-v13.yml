@@ -1,0 +1,152 @@
+name: Upgrade Fazendinha realism v13
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/upgrade-farm-realism-v13.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Rebuild foliage roofs lighting and animals
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p=Path('jogos/fazendinha-experience-v6.js')
+          s=p.read_text()
+
+          # Softer cinematic lighting: remove the white/black clipped look.
+          s=s.replace("scene.fog=new THREE.Fog(0xc9d8c4,38,78)","scene.fog=new THREE.Fog(0xcbd8c3,32,72)")
+          s=s.replace("renderer.toneMappingExposure=.98", "renderer.toneMappingExposure=.82")
+          s=s.replace("sk.turbidity.value=6.7;sk.rayleigh.value=2.1;sk.mieCoefficient.value=.006;sk.mieDirectionalG.value=.78", "sk.turbidity.value=9.5;sk.rayleigh.value=1.45;sk.mieCoefficient.value=.0045;sk.mieDirectionalG.value=.74")
+          s=s.replace("new THREE.HemisphereLight(0xe6f5ff,0x425232,1.2)", "new THREE.HemisphereLight(0xeaf4ff,0x526342,.92)")
+          s=s.replace("const sun=new THREE.DirectionalLight(0xffe3ad,4.35)", "const sun=new THREE.DirectionalLight(0xffdfad,3.15)")
+          s=s.replace("const fill=new THREE.DirectionalLight(0xa9d6ff,.8)", "const fill=new THREE.DirectionalLight(0xb5d8ff,.55)")
+
+          # Trees: many smaller leaf clusters instead of the large cardboard/blob canopy.
+          a=s.index('let farmLeafTexture=null')
+          b=s.index('[[-18,8,1.2,1,false]', a)
+          tree=r"""let farmLeafTexture=null
+function getFarmLeafTexture(){if(farmLeafTexture)return farmLeafTexture;const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d');x.clearRect(0,0,256,256);x.fillStyle='white';x.beginPath();for(let i=0;i<96;i++){const a=i/96*Math.PI*2,r=91+Math.sin(a*5)*11+Math.sin(a*9+1.4)*7+Math.sin(a*17+.3)*3;const px=128+Math.cos(a)*r,py=128+Math.sin(a)*r*.72;if(!i)x.moveTo(px,py);else x.lineTo(px,py)}x.closePath();x.fill();const g=x.createRadialGradient(120,108,15,128,128,118);g.addColorStop(0,'rgba(255,255,255,.18)');g.addColorStop(.72,'rgba(255,255,255,.04)');g.addColorStop(1,'rgba(255,255,255,0)');x.globalCompositeOperation='destination-out';x.fillStyle=g;x.fillRect(0,0,256,256);x.globalCompositeOperation='source-over';farmLeafTexture=new THREE.CanvasTexture(c);farmLeafTexture.colorSpace=THREE.SRGBColorSpace;farmLeafTexture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());return farmLeafTexture}
+function tree(x,z,s=1,seed=1,fruit=false){const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(s);const bark=mat(0x5a3827,.99,woodTex);const trunkPts=[new THREE.Vector3(0,0,0),new THREE.Vector3(.03*Math.sin(seed),1.1,.01),new THREE.Vector3(-.06*Math.cos(seed*.71),2.25,.04),new THREE.Vector3(.06*Math.sin(seed*.81),3.5,-.02)];for(let i=0;i<trunkPts.length-1;i++)g.add(beam(trunkPts[i],trunkPts[i+1],.23-i*.045,bark,14));for(let i=0;i<13;i++){const an=i/13*Math.PI*2+seed*.53,y=1.8+(i%5)*.34,len=.74+((i*17+seed)%9)*.085,start=new THREE.Vector3(0,y,0),end=new THREE.Vector3(Math.cos(an)*len,y+.28+((i+seed)%4)*.13,Math.sin(an)*len*.82);g.add(beam(start,end,.052,bark,10))}
+ const leafTex=getFarmLeafTexture(),leafColors=[0x2c6437,0x37733b,0x458145,0x528d4a,0x648f50];for(let i=0;i<46;i++){const an=i*2.399+seed*.47,r=.22+((i*29+seed)%17)*.065,y=2.42+((i*11+seed)%17)*.105,sz=.42+((i*7+seed)%7)*.035,grp=new THREE.Group(),lm=new THREE.MeshStandardMaterial({color:leafColors[(i+seed)%leafColors.length],map:leafTex,transparent:true,alphaTest:.3,side:THREE.DoubleSide,roughness:1,depthWrite:true});for(let j=0;j<2;j++){const q=M(new THREE.PlaneGeometry(sz*1.5,sz),lm);q.rotation.y=an+j*Math.PI*.5;q.rotation.x=(j?-.22:.18);grp.add(q)}grp.position.set(Math.cos(an)*r,y,Math.sin(an)*r*.8);g.add(grp)}for(let i=0;i<7;i++){const an=i/7*Math.PI*2+seed*.17,end=new THREE.Vector3(Math.cos(an)*.62,.12,Math.sin(an)*.62);g.add(beam(new THREE.Vector3(0,.08,0),end,.06,bark,9))}if(fruit)for(let i=0;i<18;i++){const an=i/18*Math.PI*2+seed,r=.45+((i*13)%9)*.075;g.add(M(new THREE.SphereGeometry(.055,12,9),mat(i%3?0xc74635:0xd9ad35,.72),Math.cos(an)*r,2.65+((i*7)%10)*.11,Math.sin(an)*r*.75))}outside.add(g)}
+"""
+          s=s[:a]+tree+s[b:]
+
+          # Ground: shorter, greener grass; current tall dark sticks looked artificial.
+          m=re.search(r"function addGroundDetails\(\)\{.*?\n\}\naddGroundDetails\(\)",s,re.S)
+          if not m: raise SystemExit('addGroundDetails not found')
+          ground=r"""function addGroundDetails(){
+  let seed=918273;const rnd=()=>((seed=Math.imul(seed^seed>>>15,1|seed))>>>0)/4294967296;
+  const avoid=(x,z)=>Math.abs(x-1.6)<2.7||Math.abs(z-5.2)<1.85||(x>-15&&x<-7&&z>-4&&z<4.5)||(x>4&&x<17&&z>-9&&z<4)||(x>-9&&x<-3.5&&z>-5.5&&z<4)||((x+10.2)**2/24+(z+7.4)**2/10<1.35);
+  const bladeGeo=new THREE.PlaneGeometry(.035,.24),bladeMat=new THREE.MeshStandardMaterial({color:0x5d873f,roughness:1,side:THREE.DoubleSide});const blades=new THREE.InstancedMesh(bladeGeo,bladeMat,2400),o=new THREE.Object3D();
+  for(let i=0;i<2400;i++){let x=-20+rnd()*40,z=-14+rnd()*28;if(avoid(x,z)){i--;continue}const sc=.6+rnd()*.85;o.position.set(x,.105,z);o.rotation.set(0,rnd()*Math.PI,(-.11+rnd()*.22));o.scale.set(sc,sc*(.65+rnd()*.6),sc);o.updateMatrix();blades.setMatrixAt(i,o.matrix)}outside.add(blades);
+  const flowerColors=[0xf0cf55,0xf1a7bb,0xbba2df,0xf6eee2,0xe78272];for(let i=0;i<155;i++){let x=-19+rnd()*38,z=-13+rnd()*26;if(avoid(x,z)){i--;continue}const stem=M(new THREE.CylinderGeometry(.009,.012,.18,5),mat(0x4d763e,1),x,.09,z);outside.add(stem);for(let k=0;k<3;k++){const a=k/3*Math.PI*2,q=M(new THREE.SphereGeometry(.025,8,6),mat(flowerColors[(i+k)%flowerColors.length],.8),x+Math.cos(a)*.028,.2,z+Math.sin(a)*.028);q.scale.y=.55;outside.add(q)}}
+  for(let i=0;i<100;i++){let x=-19+rnd()*38,z=-13+rnd()*26;if(avoid(x,z)){i--;continue}const q=M(new THREE.DodecahedronGeometry(.05+rnd()*.095,1),stone,x,.055,z);q.scale.set(1+rnd(),.38+rnd()*.34,.7+rnd()*.65);q.rotation.y=rnd()*Math.PI;outside.add(q)}
+}
+addGroundDetails()"""
+          s=s[:m.start()]+ground+s[m.end():]
+
+          # House roof: stable continuous PBR roof with ridge and gutters. No floating shingles.
+          hs=s.index('function house(){')
+          he=s.index('function barn(){',hs)
+          old=s[hs:he]
+          # Strip only the roof tile loops from v12 and replace with stable panels by rebuilding the function.
+          house=r"""function house(){const g=new THREE.Group();g.position.set(-11,0,-.4);const sidingA=mat(0xe7dcc6,.96,whiteWood),sidingB=mat(0xdccdb2,.98,whiteWood),stoneBase=mat(0x8f8776,.98,stoneTex),shingle=mat(0x8f3e2d,.95,roofTex),trim=mat(0x69452f,.96,woodTex);g.add(M(rb(6.85,3.35,4.9,.1),sidingA,0,1.82,0));for(let x=-3.1;x<=3.1;x+=.55)for(const z of [-2.5,2.5]){const q=M(new THREE.BoxGeometry(.48,.34,.18),stoneBase,x,.18,z);q.rotation.z=Math.sin(x*2.3)*.035;g.add(q)}for(let y=.35,k=0;y<3.35;y+=.21,k++){const b=M(new THREE.BoxGeometry(6.9,.17,.055),k%2?sidingA:sidingB,0,y,2.49);b.position.x=k%2?-.02:.02;g.add(b)}for(const x of [-2,2]){windowDetail(g,x,1.9,2.54,1.22,1.3);for(const sx of [-.78,.78])g.add(M(rb(.28,1.4,.1,.025),trim,x+sx,1.9,2.6));const box=M(rb(1.45,.24,.36,.04),trim,x,1.03,2.68);g.add(box);for(let i=0;i<7;i++){g.add(M(new THREE.CylinderGeometry(.012,.018,.23,6),mat(0x47753e,1),x-.55+i*.18,1.24,2.7));g.add(M(new THREE.IcosahedronGeometry(.05,1),mat([0xe7828d,0xf0c95c,0xa889c5][i%3],.8),x-.55+i*.18,1.38,2.7))}}
+ const door=M(rb(1.12,2.42,.18,.045),darkWood,.35,1.28,2.55);door.userData={kind:'door-enter'};g.add(door);interactive.push(door);for(const py of [.72,1.38,2.02])g.add(M(rb(.72,.36,.035,.02),trim,.35,py,2.66));g.add(M(new THREE.SphereGeometry(.055,12,9),phys(0xc9a152,.22,.45),.74,1.28,2.68));
+ const deck=mat(0x785036,.98,woodTex);for(let i=0;i<18;i++)g.add(M(rb(.34,.15,2.3,.03),deck,-3+i*.35,.18,3.15));for(const x of [-2.9,-1.45,1.45,2.9]){g.add(M(rb(.16,2.8,.16,.035),trim,x,1.55,3.38));g.add(M(rb(.26,.18,.26,.04),stoneBase,x,.14,3.38))}const porchRoof=M(new THREE.BoxGeometry(7.15,.15,2.45),shingle,0,3.05,2.78);porchRoof.rotation.x=.09;g.add(porchRoof);
+ const slope=.56;for(const side of [-1,1]){const panel=M(new THREE.BoxGeometry(7.6,.18,3.75),shingle,0,4.12,side*1.42);panel.rotation.x=side*slope;g.add(panel);const gutter=M(new THREE.CylinderGeometry(.055,.055,7.65,10),phys(0x5e5a55,.42,.45),0,3.02,side*3.06);gutter.rotation.z=Math.PI/2;g.add(gutter)}const ridge=M(new THREE.CylinderGeometry(.105,.105,7.7,12),shingle,0,5.18,0);ridge.rotation.z=Math.PI/2;g.add(ridge);for(let x=-3.5;x<=3.5;x+=.32){const cap=M(new THREE.BoxGeometry(.27,.09,.54),shingle,x,5.18,0);cap.rotation.x=.02;g.add(cap)}
+ const chimneyMat=mat(0x9a5f49,.97,stoneTex);g.add(M(rb(.72,2.05,.76,.04),chimneyMat,-2.25,4.05,-.7));const porchPot=(px,pz,c)=>{g.add(M(new THREE.CylinderGeometry(.18,.25,.32,16),mat(0xa45d3d,.88),px,.34,pz));for(let i=0;i<9;i++){const leaf=M(new THREE.SphereGeometry(.085,12,8),mat(c,.92),px+(Math.random()-.5)*.28,.58+Math.random()*.34,pz+(Math.random()-.5)*.22);leaf.scale.set(.5,1.2,.38);g.add(leaf)}};porchPot(-2.3,3.52,0x4e7f47);porchPot(2.25,3.52,0x527d43);const bench=new THREE.Group();bench.position.set(-1.55,.16,3.72);bench.add(M(rb(1.45,.12,.46,.035),trim,0,.52,0));bench.add(M(rb(1.45,.78,.1,.035),trim,0,.93,-.18));for(const bx of [-.58,.58])bench.add(M(new THREE.CylinderGeometry(.035,.045,.55,8),trim,bx,.27,0));g.add(bench);const lamp=new THREE.PointLight(0xffb45a,1.6,6);lamp.position.set(1.15,2.28,3.45);g.add(lamp);outside.add(g);exteriorDoor=door}
+"""
+          s=s[:hs]+house+s[he:]
+
+          # Barn roof: same correction, plus barn props kept at ground level.
+          bs=s.index('function barn(){')
+          be=s.index('function silo(){',bs)
+          barn=r"""function barn(){const g=new THREE.Group();g.position.set(9.7,0,-4.6);const red1=mat(0x87362d,.98,tex('#823229','46,18,14',5,9)),red2=mat(0x713029,.99,tex('#713029','40,16,13',5,9)),creamTrim=mat(0xd7c8a6,.96,whiteWood),roofBarn=mat(0x4c342d,.97,roofTex),hay=mat(0xc9a34e,1),barrel=mat(0x6f4a31,.97,woodTex);g.add(M(rb(7.55,4.5,5.8,.09),red1,0,2.28,0));for(let x=-3.55,i=0;x<=3.55;x+=.34,i++){const p=M(new THREE.BoxGeometry(.28,4.22,.06),i%3===0?red2:red1,x,2.25,2.93);p.rotation.z=Math.sin(i*.9)*.006;g.add(p)}for(const x of [-3.65,3.65])g.add(M(rb(.18,4.55,.18,.035),creamTrim,x,2.3,2.98));g.add(M(new THREE.PlaneGeometry(3.55,3.45),new THREE.MeshStandardMaterial({color:0x17100c}),.15,1.82,2.98));for(const sx of [-2.12,2.42]){const d=M(rb(1.72,3.52,.16,.025),red2,sx,1.82,3.08);g.add(d);g.add(beam(new THREE.Vector3(sx-.62,.48,3.19),new THREE.Vector3(sx+.62,3.12,3.19),.055,creamTrim));g.add(beam(new THREE.Vector3(sx+.62,.48,3.19),new THREE.Vector3(sx-.62,3.12,3.19),.055,creamTrim))}
+ const slope=.57;for(const side of [-1,1]){const panel=M(new THREE.BoxGeometry(8.25,.2,4.2),roofBarn,0,5.15,side*1.62);panel.rotation.x=side*slope;g.add(panel)}const ridge=M(new THREE.CylinderGeometry(.12,.12,8.35,12),roofBarn,0,6.38,0);ridge.rotation.z=Math.PI/2;g.add(ridge);for(let x=-3.8;x<=3.8;x+=.34)g.add(M(new THREE.BoxGeometry(.28,.1,.58),roofBarn,x,6.38,0));
+ const loft=M(rb(1.45,1.05,.12,.035),creamTrim,.1,3.65,3.06);g.add(loft);g.add(M(new THREE.PlaneGeometry(1.16,.78),new THREE.MeshBasicMaterial({color:0x2c211a}),.1,3.65,3.13));for(let i=0;i<10;i++){const bale=M(rb(1.05,.66,.82,.07),hay,-2.8+(i%3)*1.12,.44+Math.floor(i/3)*.68,1.86+(i%2)*.2);bale.rotation.y=(i%3-1)*.06;g.add(bale)}for(const [x,z] of [[2.6,2.05],[3.1,1.55]]){const b=M(new THREE.CylinderGeometry(.42,.42,.8,22),barrel,x,.42,z);b.rotation.z=Math.PI/2;g.add(b)}g.add(M(rb(2.15,.42,.72,.08),darkWood,1.95,.25,3.8));g.add(M(rb(1.6,.28,.9,.06),darkWood,-3.0,.18,3.65));const lamp=new THREE.PointLight(0xffa443,1.8,7);lamp.position.set(2.7,2.9,3.35);g.add(lamp);outside.add(g)}
+"""
+          s=s[:bs]+barn+s[be:]
+
+          # Better model sources for cow, chicken and dog; pin source commit and smooth all loaded animals.
+          am=re.search(r"const realAnimalSpecs=\{.*?\n\}\nconst animalMixers=\[\]",s,re.S)
+          if not am: raise SystemExit('realAnimalSpecs not found')
+          specs=r"""const realAnimalSpecs={
+  'vaca-1':{url:'https://raw.githubusercontent.com/jakubkrzysztofsikora/choyce-engine/c55f1ab2050d11b51e2e4181d156c6877cef5668/data/models/third_party/styloo_animals/Cow.glb',scale:.56,interactive:true},
+  'galinha-1':{url:'https://raw.githubusercontent.com/jakubkrzysztofsikora/choyce-engine/c55f1ab2050d11b51e2e4181d156c6877cef5668/data/models/third_party/styloo_animals/chicken.glb',scale:.34,interactive:true},
+  'pig-a':{url:'https://threejs.org/manual/examples/resources/models/animals/Pig.gltf',scale:.43},
+  'pig-b':{url:'https://threejs.org/manual/examples/resources/models/animals/Pig.gltf',scale:.39},
+  'sheep-a':{url:'https://threejs.org/manual/examples/resources/models/animals/Sheep.gltf',scale:.45},
+  'sheep-b':{url:'https://threejs.org/manual/examples/resources/models/animals/Sheep.gltf',scale:.41},
+  'horse-a':{url:'https://threejs.org/examples/models/gltf/Horse.glb',scale:.012},
+  'dog-a':{url:'https://raw.githubusercontent.com/jakubkrzysztofsikora/choyce-engine/c55f1ab2050d11b51e2e4181d156c6877cef5668/data/models/third_party/styloo_animals/dog.glb',scale:.38}
+}
+const animalMixers=[]"""
+          s=s[:am.start()]+specs+s[am.end():]
+          s=s.replace("model.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true;if(spec.interactive){o.userData={kind:'animal',id:key};interactive.push(o)}}})", "model.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true;o.geometry?.computeVertexNormals?.();if(Array.isArray(o.material)){for(const mm of o.material){if(mm){mm.flatShading=false;mm.roughness=Math.max(.58,mm.roughness??.7);mm.needsUpdate=true}}}else if(o.material){o.material.flatShading=false;o.material.roughness=Math.max(.58,o.material.roughness??.7);o.material.needsUpdate=true}if(spec.interactive){o.userData={kind:'animal',id:key};interactive.push(o)}}})")
+
+          p.write_text(s)
+          PY
+
+      - name: Bundle v13
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('jogos/fazendinha-experience-v6.js')
+          s=p.read_text()
+          repl={
+            "import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js'":"import * as THREE from 'three'",
+            "import { Sky } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/objects/Sky.js'":"import { Sky } from 'three/addons/objects/Sky.js'",
+            "import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/controls/OrbitControls.js'":"import { OrbitControls } from 'three/addons/controls/OrbitControls.js'",
+            "import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js'":"import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'",
+            "import { RGBELoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/RGBELoader.js'":"import { RGBELoader } from 'three/addons/loaders/RGBELoader.js'",
+            "import * as SkeletonUtils from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/utils/SkeletonUtils.js'":"import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js'",
+            "import { RoundedBoxGeometry } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/geometries/RoundedBoxGeometry.js'":"import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'",
+          }
+          for a,b in repl.items():
+              if a not in s: raise SystemExit(f'missing import {a}')
+              s=s.replace(a,b)
+          Path('jogos/.fazendinha-entry-v13.js').write_text(s)
+          PY
+          npm install --no-save three@0.180.0 esbuild@0.25.9
+          npx esbuild jogos/.fazendinha-entry-v13.js --bundle --format=iife --target=es2020 --outfile=jogos/fazendinha-bundle-v13.js --log-level=info
+          node --check jogos/fazendinha-bundle-v13.js
+          rm -f jogos/.fazendinha-entry-v13.js package-lock.json
+          rm -rf node_modules
+
+      - name: Update HTML and cache chain
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          h=Path('jogos/fazendinha-multiplayer.html');x=h.read_text();x=re.sub(r'fazendinha-experience-v6\.css\?v=[^\"\']+','fazendinha-experience-v6.css?v=13-stable-roofs',x);x=re.sub(r'fazendinha-bundle-v\d+\.js\?v=[^\"\']+','fazendinha-bundle-v13.js?v=13-stable-roofs',x);h.write_text(x)
+          g=Path('games-menu-farm.js');x=g.read_text();x=re.sub(r'fazendinha-multiplayer\.html\?v=[^&`\"\']+','fazendinha-multiplayer.html?v=13-stable-roofs',x);g.write_text(x)
+          e=Path('extras-loader.js');x=e.read_text();x=re.sub(r'games-menu-farm\.js\?v=[^\'\"]+','games-menu-farm.js?v=13-stable-roofs',x);e.write_text(x)
+          p=Path('postboot-loader.js');x=p.read_text();x=re.sub(r'extras-loader\.js\?v=[^\'\"]+','extras-loader.js?v=33-farm-v13',x);p.write_text(x)
+          i=Path('index.html');x=i.read_text();x=re.sub(r'postboot-loader\.js\?v=[^\'\"]+','postboot-loader.js?v=13-farm-v13',x);i.write_text(x)
+          PY
+          node --check jogos/fazendinha-bundle-v13.js
+          grep -q 'fazendinha-bundle-v13.js?v=13-stable-roofs' jogos/fazendinha-multiplayer.html
+          grep -q 'stable-roofs' games-menu-farm.js
+
+      - name: Commit generated v13
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add jogos/fazendinha-experience-v6.js jogos/fazendinha-bundle-v13.js jogos/fazendinha-multiplayer.html games-menu-farm.js extras-loader.js postboot-loader.js index.html
+          git commit -m 'Fix Fazendinha roofs foliage lighting and animal realism v13'
+          git push
