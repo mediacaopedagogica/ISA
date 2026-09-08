@@ -10,22 +10,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build and publish private preview
+      - name: Apply manual steering patch
         shell: bash
         run: |
-          mkdir -p jogos
-          cat .build/dupla/part1.txt .build/dupla/part2.txt .build/dupla/part3.txt .build/dupla/part4.txt | base64 -d | gzip -d > jogos/dupla-na-pista-teste.html
-          grep -q 'Dupla na Pista' jogos/dupla-na-pista-teste.html
+          python scripts/patch_dupla_manual_arcade_v1.py
           python - <<'PY'
           from pathlib import Path
-          p=Path('index.html')
-          s=p.read_text()
-          s=s.replace("./postboot-loader.js?v=21-alan-studio-locked","./postboot-loader.js?v=22-alan-supervision-game")
-          p.write_text(s)
+          import re
+          s=Path('jogos/dupla-na-pista-teste.html').read_text()
+          m=re.findall(r'<script type="module">(.*?)</script>',s,re.S)
+          if not m:
+              raise SystemExit('module not found')
+          Path('/tmp/dupla.mjs').write_text(m[-1])
           PY
+          node --check /tmp/dupla.mjs
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add jogos/dupla-na-pista-teste.html index.html
-          if git diff --cached --quiet; then exit 0; fi
-          git commit -m 'feat: publish private Dupla na Pista 3D preview'
+          git add jogos/dupla-na-pista-teste.html
+          if git diff --cached --quiet; then
+            echo 'No game changes to publish.'
+            exit 0
+          fi
+          git commit -m 'fix: manual steering and natural body movement'
           git push
