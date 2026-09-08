@@ -1,0 +1,7 @@
+#alanGenreStudiosOverlay .ags-title-input{border:0;background:transparent;color:#fff;font-weight:900;font-size:18px;min-width:220px;outline:none}
+#alanGenreStudiosOverlay .ags-duo-mics{position:absolute;left:49%;top:55px;display:flex;gap:42px;font-size:64px;transform:translateX(-50%);filter:drop-shadow(0 12px 8px #0008)}
+#alanGenreStudiosOverlay .ags-save-record{display:inline-flex;margin-top:8px;padding:8px 11px;border-radius:10px;background:rgba(255,255,255,.08);color:#fff;text-decoration:none;font-weight:800;border:1px solid rgba(255,255,255,.12)}
+#alanGenreStudiosOverlay .ags-spot>label{position:relative;z-index:5;background:rgba(0,0,0,.38);padding:5px 8px;border-radius:999px}
+#alanGenreStudiosOverlay .ags-instrument:hover{filter:drop-shadow(0 20px 18px rgba(232,179,103,.2)) drop-shadow(0 18px 16px rgba(0,0,0,.38))}
+#alanGenreStudiosOverlay .ags-title-input::placeholder{color:#b9a99e}
+@media(max-width:700px){#alanGenreStudiosOverlay .ags-duo-mics{font-size:52px;gap:30px}.ags-title-input{max-width:54vw}}
