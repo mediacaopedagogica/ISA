@@ -1,0 +1,116 @@
+name: Upgrade Fazendinha organic realism v11
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/upgrade-farm-realism-v11.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Substituir vegetação e terreno geométricos
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('jogos/fazendinha-experience-v6.js')
+          s=p.read_text()
+
+          old_path="""function path(w,h,x,z,rot=0){const p=M(new THREE.PlaneGeometry(w,h,24,14),pathMat,x,.055,z);p.rotation.x=-Math.PI/2;p.rotation.z=rot;outside.add(p)}path(4.3,27,1.6,0);path(39,2.9,0,5.2);path(9,2,-11,-.5,.25)"""
+          new_path="""function path(w,h,x,z,rot=0){const g=new THREE.PlaneGeometry(w,h,28,40),a=g.attributes.position;for(let i=0;i<a.count;i++){const xx=a.getX(i),yy=a.getY(i),edge=Math.abs(xx)/(w*.5),wav=Math.sin(yy*.58+x*.17)*.16+Math.sin(yy*1.31+z*.23)*.07;if(edge>.72)a.setX(i,xx+Math.sign(xx)*wav*(edge-.72)*1.9);a.setZ(i,(Math.sin(xx*1.7+yy*.35)+Math.cos(yy*.61))*-.018)}g.computeVertexNormals();const p=M(g,pathMat,x,.058,z);p.rotation.x=-Math.PI/2;p.rotation.z=rot;p.receiveShadow=true;outside.add(p)}path(4.3,27,1.6,0);path(39,2.9,0,5.2);path(9,2,-11,-.5,.25)"""
+          if old_path not in s: raise SystemExit('Bloco path antigo não encontrado')
+          s=s.replace(old_path,new_path)
+
+          old_tree="""function tree(x,z,s=1,seed=1,fruit=false){const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(s);g.add(M(new THREE.CylinderGeometry(.28,.5,3.35,18),wood,0,1.68,0));const colors=[0x315f35,0x3f7540,0x4b8740,0x5a934d];for(let i=0;i<18;i++){const a=i/18*Math.PI*2+seed*.4,r=.25+((i*29)%10)/11,q=M(new THREE.SphereGeometry(.58+((i*7)%5)*.06,20,15),mat(colors[(i+seed)%4],.93),Math.cos(a)*r,2.65+((i*13)%8)*.15,Math.sin(a)*r*.84);q.scale.y=.78+((i*5)%4)*.07;g.add(q)}if(fruit)for(let i=0;i<13;i++){const a=i/13*Math.PI*2,r=.45+Math.random()*.55;g.add(M(new THREE.SphereGeometry(.075,10,8),mat(i%3?0xd9573e:0xdcb736,.7),Math.cos(a)*r,2.7+Math.random(),Math.sin(a)*r*.8))}outside.add(g)}"""
+          # current source has 0x4b8745, accept that exact version too
+          if old_tree not in s:
+              old_tree=old_tree.replace('0x4b8740','0x4b8745')
+          new_tree="""function tree(x,z,s=1,seed=1,fruit=false){const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(s);const bark=mat(0x5d3d2a,.99,woodTex);const trunk=M(new THREE.CylinderGeometry(.25,.48,3.55,14,6),bark,0,1.72,0);trunk.rotation.z=(seed%3-1)*.025;g.add(trunk);for(let i=0;i<8;i++){const a=i/8*Math.PI*2+seed*.63,y=1.9+(i%4)*.34,len=.95+((i*17+seed)%7)*.08,start=new THREE.Vector3(0,y,0),end=new THREE.Vector3(Math.cos(a)*len,y+.38+((i+seed)%3)*.16,Math.sin(a)*len*.82);g.add(beam(start,end,.07,bark,9))}const colors=[0x24552f,0x2f6635,0x3b783d,0x4b8745,0x568f49];for(let i=0;i<15;i++){const a=i*.91+seed*.57,r=.22+((i*31+seed)%11)*.085,y=2.72+((i*13+seed)%9)*.16,geo=new THREE.IcosahedronGeometry(.63+((i*7+seed)%5)*.075,2),q=M(geo,mat(colors[(i+seed)%colors.length],.96),Math.cos(a)*r,y,Math.sin(a)*r*.8);q.scale.set(1+((i%3)-1)*.12,.72+((i*5)%4)*.08,.86+((i*7)%3)*.09);q.rotation.set((i%4)*.07,a*.18,(i%5)*.05);g.add(q)}for(let i=0;i<5;i++){const a=i/5*Math.PI*2+seed*.3,end=new THREE.Vector3(Math.cos(a)*.68,.16,Math.sin(a)*.68);g.add(beam(new THREE.Vector3(0,.12,0),end,.09,bark,8))}if(fruit)for(let i=0;i<16;i++){const a=i/16*Math.PI*2+seed,r=.5+((i*11)%8)*.07;g.add(M(new THREE.SphereGeometry(.07,10,8),mat(i%3?0xd9573e:0xe2bd3f,.72),Math.cos(a)*r,2.65+((i*7)%10)*.12,Math.sin(a)*r*.78))}outside.add(g)}"""
+          if old_tree not in s: raise SystemExit('Bloco tree antigo não encontrado')
+          s=s.replace(old_tree,new_tree)
+
+          anchor="""[[-18,8,1.2,1,false],[-15,9.3,1,2,true],[-10,9.8,.95,3,true],[-5,10,.9,4,false],[11,9.5,1.05,5,true],[17,6.5,1,6,false],[-18,-.3,1,7,false],[-16,-10,1.1,8,false],[-3.5,-11,.9,9,true],[17,-1,.9,10,false],[17,-10,1.05,11,false]].forEach(v=>tree(...v))"""
+          detail="""
+function addGroundDetails(){
+  let seed=918273;const rnd=()=>((seed=Math.imul(seed^seed>>>15,1|seed))>>>0)/4294967296;
+  const avoid=(x,z)=>Math.abs(x-1.6)<2.6||Math.abs(z-5.2)<1.8||(x>-15&&x<-7&&z>-4&&z<4.5)||(x>4&&x<17&&z>-9&&z<4)||(x>-9&&x<-3.5&&z>-5.5&&z<4)||((x+10.2)**2/24+(z+7.4)**2/10<1.35);
+  const bladeGeo=new THREE.PlaneGeometry(.055,.42),bladeMat=new THREE.MeshStandardMaterial({color:0x355f2f,roughness:1,side:THREE.DoubleSide});const blades=new THREE.InstancedMesh(bladeGeo,bladeMat,1450),o=new THREE.Object3D();
+  for(let i=0;i<1450;i++){let x=-20+rnd()*40,z=-14+rnd()*28;if(avoid(x,z)){i--;continue}const sc=.55+rnd()*1.15;o.position.set(x,.18,z);o.rotation.set(0,rnd()*Math.PI,(-.18+rnd()*.36));o.scale.set(sc,sc*(.75+rnd()*.65),sc);o.updateMatrix();blades.setMatrixAt(i,o.matrix)}blades.castShadow=false;blades.receiveShadow=false;outside.add(blades);
+  const flowerColors=[0xf2cf52,0xf4a6b8,0xb8a0df,0xf7eee1,0xe37e6d];for(let i=0;i<120;i++){let x=-19+rnd()*38,z=-13+rnd()*26;if(avoid(x,z)){i--;continue}const stem=M(new THREE.CylinderGeometry(.012,.017,.28,5),mat(0x3f6f37,1),x,.14,z),petal=M(new THREE.IcosahedronGeometry(.045+rnd()*.025,1),mat(flowerColors[i%flowerColors.length],.8),x,.3,z);outside.add(stem,petal)}
+  for(let i=0;i<95;i++){let x=-19+rnd()*38,z=-13+rnd()*26;if(avoid(x,z)){i--;continue}const q=M(new THREE.DodecahedronGeometry(.055+rnd()*.11,1),stone,x,.07,z);q.scale.set(1+rnd(),.45+rnd()*.45,.7+rnd()*.7);q.rotation.y=rnd()*Math.PI;outside.add(q)}
+}
+addGroundDetails()
+"""
+          if anchor not in s: raise SystemExit('Âncora das árvores não encontrada')
+          s=s.replace(anchor,anchor+detail)
+
+          old_lake="""const waterMat=phys(0x4fa7c7,.05,.05,{transparent:true,opacity:.82,clearcoat:1,clearcoatRoughness:.03,reflectivity:.8});const lake=M(new THREE.CircleGeometry(3.8,110),waterMat,-10.2,.055,-7.4);lake.rotation.x=-Math.PI/2;lake.scale.set(1.22,.85,1);lake.userData={kind:'fishspot'};outside.add(lake);interactive.push(lake);for(let i=0;i<48;i++){const a=i/48*Math.PI*2,r=4;const q=M(new THREE.DodecahedronGeometry(.18+Math.random()*.16,1),stone,-10.2+Math.cos(a)*r*1.2,.13,-7.4+Math.sin(a)*r*.85);q.scale.y=.55;outside.add(q)}"""
+          new_lake="""const waterMat=phys(0x4fa7c7,.05,.05,{transparent:true,opacity:.84,clearcoat:1,clearcoatRoughness:.025,reflectivity:.9});const lv=[0,0,0],li=[],ln=120;for(let i=0;i<=ln;i++){const a=i/ln*Math.PI*2,r=3.8*(1+.075*Math.sin(a*3+1.2)+.045*Math.sin(a*7+.6));lv.push(Math.cos(a)*r*1.22,Math.sin(a)*r*.85,0);if(i<ln)li.push(0,i+1,i+2)}const lakeGeo=new THREE.BufferGeometry();lakeGeo.setAttribute('position',new THREE.Float32BufferAttribute(lv,3));lakeGeo.setIndex(li);lakeGeo.computeVertexNormals();const lake=M(lakeGeo,waterMat,-10.2,.055,-7.4);lake.rotation.x=-Math.PI/2;lake.userData={kind:'fishspot'};outside.add(lake);interactive.push(lake);for(let i=0;i<62;i++){const a=i/62*Math.PI*2,r=4*(1+.07*Math.sin(a*3+1.2));const px=-10.2+Math.cos(a)*r*1.22,pz=-7.4+Math.sin(a)*r*.85,q=M(new THREE.DodecahedronGeometry(.12+(i%7)*.025,1),stone,px,.11,pz);q.scale.set(1.1+(i%3)*.18,.45+(i%4)*.07,.8+(i%5)*.09);q.rotation.y=a;outside.add(q);if(i%3===0){const reed=M(new THREE.CylinderGeometry(.018,.025,.55+(i%5)*.07,6),mat(0x58743a,1),px,.3,pz);reed.rotation.z=(i%2?-.08:.08);outside.add(reed)}}"""
+          if old_lake not in s: raise SystemExit('Bloco lake antigo não encontrado')
+          s=s.replace(old_lake,new_lake)
+          p.write_text(s)
+          PY
+      - name: Gerar bundle v11
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('jogos/fazendinha-experience-v6.js')
+          s=p.read_text()
+          repl={
+            "import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js'":"import * as THREE from 'three'",
+            "import { Sky } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/objects/Sky.js'":"import { Sky } from 'three/addons/objects/Sky.js'",
+            "import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/controls/OrbitControls.js'":"import { OrbitControls } from 'three/addons/controls/OrbitControls.js'",
+            "import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js'":"import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'",
+            "import { RGBELoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/RGBELoader.js'":"import { RGBELoader } from 'three/addons/loaders/RGBELoader.js'",
+            "import * as SkeletonUtils from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/utils/SkeletonUtils.js'":"import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js'",
+            "import { RoundedBoxGeometry } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/geometries/RoundedBoxGeometry.js'":"import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'",
+          }
+          for a,b in repl.items():
+              if a not in s: raise SystemExit(f'Import esperado não encontrado: {a}')
+              s=s.replace(a,b)
+          Path('jogos/.fazendinha-entry-v11.js').write_text(s)
+          PY
+          npm install --no-save three@0.180.0 esbuild@0.25.9
+          npx esbuild jogos/.fazendinha-entry-v11.js --bundle --format=iife --target=es2020 --outfile=jogos/fazendinha-bundle-v11.js --log-level=info
+          node --check jogos/fazendinha-bundle-v11.js
+          rm -f jogos/.fazendinha-entry-v11.js package-lock.json
+          rm -rf node_modules
+      - name: Atualizar HTML e caches
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          h=Path('jogos/fazendinha-multiplayer.html');s=h.read_text();s=s.replace('fazendinha-experience-v6.css?v=10-browser-bundle','fazendinha-experience-v6.css?v=11-organic-world');s=s.replace('<script defer src="./fazendinha-bundle-v10.js?v=10-browser-bundle"></script>','<script defer src="./fazendinha-bundle-v11.js?v=11-organic-world"></script>');h.write_text(s)
+          g=Path('games-menu-farm.js');x=g.read_text();x=re.sub(r'fazendinha-multiplayer\.html\?v=[^&`]+', 'fazendinha-multiplayer.html?v=11-organic-world', x);g.write_text(x)
+          e=Path('extras-loader.js');x=e.read_text();x=re.sub(r'games-menu-farm\.js\?v=[^\'\"]+', 'games-menu-farm.js?v=11-organic-world', x);e.write_text(x)
+          p=Path('postboot-loader.js');x=p.read_text();x=re.sub(r'extras-loader\.js\?v=[^\'\"]+', 'extras-loader.js?v=31-farm-v11', x);p.write_text(x)
+          i=Path('index.html');x=i.read_text();x=re.sub(r'postboot-loader\.js\?v=[^\'\"]+', 'postboot-loader.js?v=23-farm-v11', x);i.write_text(x)
+          PY
+      - name: Validar sintaxe e integração
+        run: |
+          node --check jogos/fazendinha-experience-v6.js
+          node --check jogos/fazendinha-bundle-v11.js
+          node --check games-menu-farm.js
+          node --check extras-loader.js
+          node --check postboot-loader.js
+          grep -q 'function addGroundDetails' jogos/fazendinha-experience-v6.js
+          grep -q 'IcosahedronGeometry' jogos/fazendinha-experience-v6.js
+          grep -q 'InstancedMesh' jogos/fazendinha-experience-v6.js
+          grep -q 'fazendinha-bundle-v11.js?v=11-organic-world' jogos/fazendinha-multiplayer.html
+          grep -q 'v=11-organic-world' games-menu-farm.js
+      - name: Publicar upgrade visual
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add jogos/fazendinha-experience-v6.js jogos/fazendinha-bundle-v11.js jogos/fazendinha-multiplayer.html games-menu-farm.js extras-loader.js postboot-loader.js index.html
+          git commit -m 'Upgrade Fazendinha terrain trees and lake realism v11'
+          git push
