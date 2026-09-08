@@ -1,0 +1,55 @@
+name: Publish Alan studios and score v2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'alan-genre-studios.js'
+      - 'alan-genre-studios.css'
+      - 'alan-genre-studios-v2.css'
+      - 'alan-score-study-v2.js'
+      - 'alan-score-study-v2.css'
+      - 'extras-loader.js'
+      - 'postboot-loader.js'
+      - 'scripts/patch-alan-studios-score-v2.py'
+      - '.github/workflows/publish-alan-studios-score-v2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  validate-and-publish:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch cache and notation fixes
+        run: python scripts/patch-alan-studios-score-v2.py
+      - name: Validate JavaScript
+        run: |
+          node --check alan-genre-studios.js
+          node --check alan-score-study-v2.js
+          node --check extras-loader.js
+          node --check postboot-loader.js
+      - name: Validate required features
+        run: |
+          grep -q "Estúdios" alan-genre-studios.js
+          grep -q "Estúdio Forró" alan-genre-studios.js
+          grep -q "Estúdio Sertanejo" alan-genre-studios.js
+          grep -q "Estúdio MPB" alan-genre-studios.js
+          grep -q "Karaokê do Alan" alan-genre-studios.js
+          grep -q "Partitura Manual" alan-score-study-v2.js
+          grep -q "alan_score_study_load" alan-score-study-v2.js
+          grep -q "alan-genre-studios.js?v=2-sampled-karaoke" extras-loader.js
+          grep -q "postboot-loader.js?v=18-alan-studios-score" index.html
+      - name: Commit generated patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add alan-score-study-v2.js alan-genre-studios.js index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish Alan studios and manual score v2"
+            git push
+          fi
