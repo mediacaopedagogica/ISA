@@ -14,6 +14,7 @@ function mainReady(){
   return !!main&&!main.classList.contains('hidden')&&!!who()&&who()!=='família'
 }
 function isIsa(){return who()==='isa'}
+function isKeise(){return who()==='keise'}
 function isParent(){return who()==='keise'||who()==='alan'}
 function isAlan(){return who()==='alan'}
 const dedicatedMobile=new URLSearchParams(location.search).get('mobile')==='1'
@@ -28,11 +29,21 @@ async function loadCoreExtras(){
     loadOnce('links','./link-preview.js?v=6-inline-video')
   ]
   if(!dedicatedMobile)jobs.push(loadOnce('calls','./call-manager.js?v=4-stable'))
+
+  if(isKeise()){
+    jobs.push(loadOnce('keise-alan-studio-control','./keise-alan-studio-control.js?v=1-master-lock'))
+  }
+
   if(isAlan()){
-    jobs.push(loadOnce('alan-studio','./alan-studio.js?v=1'))
-    jobs.push(loadOnce('alan-score','./alan-studio-score.js?v=2-inside-full-studio'))
-    jobs.push(loadOnce('alan-band-management','./alan-band-management.js?v=1-edital'))
-    jobs.push(loadOnce('alan-band-operations','./alan-band-operations.js?v=1-production'))
+    const accessModule=await loadOnce('alan-studio-access','./alan-studio-access.js?v=1-master-lock')
+    const studioEnabled=await accessModule.isAlanStudioEnabled()
+    if(studioEnabled){
+      jobs.push(loadOnce('alan-studio','./alan-studio.js?v=1'))
+      jobs.push(loadOnce('alan-score','./alan-studio-score.js?v=2-inside-full-studio'))
+      jobs.push(loadOnce('alan-band-management','./alan-band-management.js?v=1-edital'))
+      jobs.push(loadOnce('alan-band-operations','./alan-band-operations.js?v=1-production'))
+      jobs.push(loadOnce('alan-genre-studios','./alan-genre-studios.js?v=2-real-samples'))
+    }
   }
   if(isIsa()){
     jobs.push(loadOnce('isa-tools','./isa-tools.js?v=9-study-fix'))
