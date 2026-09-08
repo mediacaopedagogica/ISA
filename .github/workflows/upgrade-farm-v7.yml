@@ -18,7 +18,9 @@ jobs:
         with:
           node-version: '20'
       - name: Build natural-model upgrade
-        run: python scripts/upgrade-farm-v7.py
+        run: |
+          python scripts/upgrade-farm-v7.py
+          git restore .github/workflows/validate-farm-multiplayer.yml
       - name: Verify farm before commit
         run: |
           node --check jogos/fazendinha-experience-v6.js
@@ -37,6 +39,6 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add jogos/fazendinha-experience-v6.js jogos/fazendinha-multiplayer.html games-menu-farm.js extras-loader.js postboot-loader.js index.html .github/workflows/validate-farm-multiplayer.yml
+          git add jogos/fazendinha-experience-v6.js jogos/fazendinha-multiplayer.html games-menu-farm.js extras-loader.js postboot-loader.js index.html
           git diff --cached --quiet || git commit -m 'Upgrade Fazendinha to natural 3D models v7'
           git push
