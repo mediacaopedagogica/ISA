@@ -31,6 +31,7 @@ async function loadCoreExtras(){
   if(isAlan()){
     jobs.push(loadOnce('alan-studio','./alan-studio.js?v=1'))
     jobs.push(loadOnce('alan-workshop','./alan-studio-workshop.js?v=1'))
+    jobs.push(loadOnce('alan-band-management','./alan-band-management.js?v=1-edital'))
   }
   if(isIsa()){
     jobs.push(loadOnce('isa-tools','./isa-tools.js?v=9-study-fix'))
