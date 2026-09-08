@@ -31,6 +31,7 @@ async function loadCoreExtras(){
   if(!dedicatedMobile)jobs.push(loadOnce('calls','./call-manager.js?v=4-stable'))
 
   if(isKeise()){
+    jobs.push(loadOnce('keise-access-settings','./keise-access-settings.js?v=1-edit-login'))
     jobs.push(loadOnce('keise-alan-studio-control','./keise-alan-studio-control.js?v=1-master-lock'))
     jobs.push(loadOnce('keise-game-test','./keise-game-test.js?v=2-real-preview'))
   }
