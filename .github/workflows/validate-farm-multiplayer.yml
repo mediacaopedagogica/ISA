@@ -38,12 +38,19 @@ jobs:
           test -s jogos/fazendinha-experience-v6.css
           test -s jogos/fazendinha-experience-v6.js
           grep -q 'Fazendinha Família Feliz' jogos/fazendinha-multiplayer.html
-          grep -q 'fazendinha-experience-v6.js?v=6-camera-casa-pesca' jogos/fazendinha-multiplayer.html
+          grep -q 'fazendinha-experience-v6.js?v=7-natural-models' jogos/fazendinha-multiplayer.html
           grep -q 'camera360Btn' jogos/fazendinha-multiplayer.html
           grep -q 'eyeCameraBtn' jogos/fazendinha-multiplayer.html
           grep -q 'data-tool="fish"' jogos/fazendinha-multiplayer.html
           grep -q 'GLTFLoader' jogos/fazendinha-experience-v6.js
           grep -q 'Soldier.glb' jogos/fazendinha-experience-v6.js
+          grep -q 'Michelle.glb' jogos/fazendinha-experience-v6.js
+          grep -q 'Cow.gltf' jogos/fazendinha-experience-v6.js
+          grep -q 'Pig.gltf' jogos/fazendinha-experience-v6.js
+          grep -q 'Sheep.gltf' jogos/fazendinha-experience-v6.js
+          grep -q 'Horse.gltf' jogos/fazendinha-experience-v6.js
+          grep -q 'Pug.gltf' jogos/fazendinha-experience-v6.js
+          grep -q 'polishInterior' jogos/fazendinha-experience-v6.js
           grep -q 'OrbitControls' jogos/fazendinha-experience-v6.js
           grep -q "locationMode='inside'" jogos/fazendinha-experience-v6.js
           grep -q "kind:'door-enter'" jogos/fazendinha-experience-v6.js
@@ -55,9 +62,9 @@ jobs:
           grep -q 'farm_game_snapshot' jogos/fazendinha-experience-v6.js
           grep -q 'farm_game_action' jogos/fazendinha-experience-v6.js
           grep -q "function eligible(){return currentName()==='isa'}" games-menu-farm.js
-          grep -q 'v=6-camera-casa-pesca' games-menu-farm.js
-          grep -q "loadOnce('farm-game','./games-menu-farm.js?v=6-camera-casa-pesca')" extras-loader.js
-          grep -q 'postboot-loader.js?v=18-farm-v6' index.html
+          grep -q 'v=7-natural-models' games-menu-farm.js
+          grep -q "loadOnce('farm-game','./games-menu-farm.js?v=7-natural-models')" extras-loader.js
+          grep -q 'postboot-loader.js?v=19-farm-v7' index.html
           ! grep -q 'games-menu-farm.js' acesso.html
           ! grep -q 'games-menu-farm.js' acesso-mobile.html
           ! grep -q 'Isa no notebook e Primo no celular' games-menu-farm.js
