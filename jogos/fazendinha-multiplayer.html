@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#75512e">
   <title>Fazendinha Família Feliz • Em construção</title>
   <link rel="stylesheet" href="./fazendinha-multiplayer.css?v=5-realismo-vivo">
-  <link rel="stylesheet" href="./fazendinha-experience-v6.css?v=7-natural-models">
+  <link rel="stylesheet" href="./fazendinha-experience-v6.css?v=7b-loading-fix">
 </head>
 <body>
 <main class="farm-app">
@@ -88,7 +88,7 @@
   </section>
   <audio id="remoteAudio" autoplay playsinline></audio>
 </main>
-<script type="module" src="./fazendinha-experience-v6.js?v=7-natural-models"></script>
+<script type="module" src="./fazendinha-experience-v6.js?v=7b-loading-fix"></script>
 <script>document.querySelectorAll('[data-soon]').forEach(b=>b.addEventListener('click',()=>{const t=document.getElementById('toast');t.textContent='🚧 '+b.dataset.soon+' será liberado nas próximas etapas.';t.classList.remove('hidden');clearTimeout(t._hide);t._hide=setTimeout(()=>t.classList.add('hidden'),1800)}))</script>
 </body>
 </html>

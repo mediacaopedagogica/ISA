@@ -107,7 +107,7 @@ async function upgradeAnimalModels(){
     }catch(e){console.warn('Modelo natural de animal não carregou; mantendo fallback.',key,e)}
   }
 }
-upgradeAnimalModels()
+queueMicrotask(()=>upgradeAnimalModels())
 
 
 // Interior da casa: sala + cozinha + jantar em escala real.
