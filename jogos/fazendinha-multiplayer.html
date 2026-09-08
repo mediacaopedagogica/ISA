@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
   <meta name="theme-color" content="#75512e">
   <title>Fazendinha Família Feliz • Em construção</title>
-  <link rel="stylesheet" href="./fazendinha-multiplayer.css?v=4-realismo-movimento">
+  <link rel="stylesheet" href="./fazendinha-multiplayer.css?v=5-realismo-vivo">
 </head>
 <body>
 <main class="farm-app">
@@ -42,7 +42,7 @@
       <span>□ Caminhar pela fazenda</span>
     </aside>
 
-    <div id="loadingCard" class="loading-card"><div class="spinner"></div><strong>Entrando na Fazendinha Família Feliz…</strong><span>Preparando o mundo 3D</span></div>
+    <div id="loadingCard" class="loading-card"><div class="spinner"></div><strong>Entrando na Fazendinha Família Feliz…</strong><span>Renderizando o cenário 3D detalhado</span></div>
     <div id="toast" class="toast hidden"></div>
     <div id="voiceState" class="voice-state hidden">🎤 Microfone ligado</div>
     <div class="construction-ribbon">🚧 EM CONSTRUÇÃO • teste exclusivo da Isa</div>
@@ -56,7 +56,7 @@
     <aside id="tipCard" class="tip-card">
       <button id="tipClose" type="button">×</button>
       <strong>Como testar</strong>
-      <p><b>Andar:</b> clique no chão ou use WASD/setas. <b>Interagir:</b> escolha uma ferramenta e clique no canteiro ou animal. Regar, colher, plantar e alimentar têm animação no próprio cenário.</p>
+      <p><b>Andar:</b> clique no chão ou use WASD/setas. <b>Interagir:</b> escolha uma ferramenta e clique no canteiro ou animal. O personagem caminha até o local e executa a ação no cenário.</p>
     </aside>
   </section>
 
@@ -80,7 +80,7 @@
   </section>
   <audio id="remoteAudio" autoplay playsinline></audio>
 </main>
-<script type="module" src="./fazendinha-multiplayer.js?v=4-realismo-movimento"></script>
+<script type="module" src="./fazendinha-realismo-v5.js?v=5-realismo-vivo"></script>
 <script>document.querySelectorAll('[data-soon]').forEach(b=>b.addEventListener('click',()=>{const t=document.getElementById('toast');t.textContent='🚧 '+b.dataset.soon+' será liberado nas próximas etapas.';t.classList.remove('hidden');clearTimeout(t._hide);t._hide=setTimeout(()=>t.classList.add('hidden'),1800)}))</script>
 </body>
 </html>
