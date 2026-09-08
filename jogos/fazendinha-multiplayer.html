@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#75512e">
   <title>Fazendinha Família Feliz • Em construção</title>
   <link rel="stylesheet" href="./fazendinha-multiplayer.css?v=5-realismo-vivo">
-  <link rel="stylesheet" href="./fazendinha-experience-v6.css?v=6-camera-casa-pesca">
+  <link rel="stylesheet" href="./fazendinha-experience-v6.css?v=7-natural-models">
 </head>
 <body>
 <main class="farm-app">
@@ -49,7 +49,7 @@
       <span>□ Pescar no laguinho</span>
     </aside>
 
-    <div id="loadingCard" class="loading-card"><div class="spinner"></div><strong>Entrando na Fazendinha Família Feliz…</strong><span>Carregando cenário, personagens humanoides e interior da casa</span></div>
+    <div id="loadingCard" class="loading-card"><div class="spinner"></div><strong>Entrando na Fazendinha Família Feliz…</strong><span>Carregando cenário, personagens humanoides e animais 3D detalhados</span></div>
     <div id="toast" class="toast hidden"></div>
     <div id="voiceState" class="voice-state hidden">🎤 Microfone ligado</div>
     <div class="construction-ribbon">🚧 EM CONSTRUÇÃO • teste exclusivo da Isa</div>
@@ -88,7 +88,7 @@
   </section>
   <audio id="remoteAudio" autoplay playsinline></audio>
 </main>
-<script type="module" src="./fazendinha-experience-v6.js?v=6-camera-casa-pesca"></script>
+<script type="module" src="./fazendinha-experience-v6.js?v=7-natural-models"></script>
 <script>document.querySelectorAll('[data-soon]').forEach(b=>b.addEventListener('click',()=>{const t=document.getElementById('toast');t.textContent='🚧 '+b.dataset.soon+' será liberado nas próximas etapas.';t.classList.remove('hidden');clearTimeout(t._hide);t._hide=setTimeout(()=>t.classList.add('hidden'),1800)}))</script>
 </body>
 </html>

@@ -27,8 +27,8 @@ function updateEnergy(delta){energy=clamp(Math.round(energy+delta),0,100);localS
 const stage=$('farmStage'),stageWrap=document.querySelector('.farm-stage-wrap')
 const scene=new THREE.Scene();scene.fog=new THREE.Fog(0xc9d8c4,38,78)
 const camera=new THREE.PerspectiveCamera(44,1,.08,190);camera.position.set(18,13.8,25);camera.lookAt(0,1,-1)
-const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.75));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;renderer.domElement.tabIndex=0;renderer.domElement.style.outline='none';stage.appendChild(renderer.domElement)
-const orbit=new OrbitControls(camera,renderer.domElement);orbit.enableDamping=true;orbit.dampingFactor=.08;orbit.minDistance=4;orbit.maxDistance=27;orbit.maxPolarAngle=Math.PI*.49;orbit.enablePan=false;orbit.enabled=false
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.98;renderer.domElement.tabIndex=0;renderer.domElement.style.outline='none';stage.appendChild(renderer.domElement)
+const orbit=new OrbitControls(camera,renderer.domElement);orbit.enableDamping=true;orbit.dampingFactor=.08;orbit.minDistance=2.8;orbit.maxDistance=30;orbit.maxPolarAngle=Math.PI*.49;orbit.enablePan=false;orbit.enabled=false
 
 const sky=new Sky();sky.scale.setScalar(130);scene.add(sky);const sk=sky.material.uniforms;sk.turbidity.value=6.7;sk.rayleigh.value=2.1;sk.mieCoefficient.value=.006;sk.mieDirectionalG.value=.78;sk.sunPosition.value.setFromSphericalCoords(1,THREE.MathUtils.degToRad(56),THREE.MathUtils.degToRad(225))
 scene.add(new THREE.HemisphereLight(0xe6f5ff,0x425232,1.2));const sun=new THREE.DirectionalLight(0xffe3ad,4.35);sun.position.set(-18,25,13);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-26;sun.shadow.camera.right=26;sun.shadow.camera.top=23;sun.shadow.camera.bottom=-23;sun.shadow.camera.far=75;sun.shadow.bias=-.0003;scene.add(sun);const fill=new THREE.DirectionalLight(0xa9d6ff,.8);fill.position.set(17,12,-16);scene.add(fill)
@@ -81,6 +81,34 @@ function horse(){const g=new THREE.Group(),b=mat(0x875336,.88),d=mat(0x30251f,.9
 function dog(){const g=new THREE.Group(),b=mat(0xc38b4e,.88),d=mat(0x563724,.9);const body=M(new THREE.CapsuleGeometry(.25,.65,7,20),b,0,.5,0);body.rotation.z=Math.PI/2;g.add(body);g.add(M(new THREE.SphereGeometry(.28,20,15),b,.62,.67,0));for(const z of [-.19,.19]){const e=M(new THREE.ConeGeometry(.1,.31,10),d,.55,.95,z);e.rotation.z=Math.PI;g.add(e)}return g}
 function addAnimal(key,type,x,z,interactiveFlag=false,scale=1){const f={vaca:cow,galinha:chicken,porco:pig,ovelha:sheep,cavalo:horse,cachorro:dog}[type],g=f();g.position.set(x,0,z);g.scale.setScalar(scale);g.userData={kind:interactiveFlag?'animal':'decor',id:key,type,baseX:x,baseZ:z,phase:Math.random()*6.2};g.traverse(o=>{if(o.isMesh&&interactiveFlag)o.userData={kind:'animal',id:key}});outside.add(g);animalMeshes.set(key,g);if(interactiveFlag)g.traverse(o=>{if(o.isMesh)interactive.push(o)});return g}
 addAnimal('vaca-1','vaca',9.3,.2,true,1.05);addAnimal('galinha-1','galinha',6.1,-.75,true,.95);addAnimal('pig-a','porco',13.1,1.35,false,.9);addAnimal('pig-b','porco',14.2,.35,false,.85);addAnimal('sheep-a','ovelha',12.2,-1.2,false,.92);addAnimal('sheep-b','ovelha',13.6,-1.65,false,.86);addAnimal('horse-a','cavalo',5.25,-2.05,false,1);addAnimal('dog-a','cachorro',-8.7,4.1,false,.9)
+const realAnimalSpecs={
+  'vaca-1':{url:'https://threejs.org/manual/resources/models/animals/Cow.gltf',scale:.64,interactive:true},
+  'pig-a':{url:'https://threejs.org/manual/resources/models/animals/Pig.gltf',scale:.58},
+  'pig-b':{url:'https://threejs.org/manual/resources/models/animals/Pig.gltf',scale:.53},
+  'sheep-a':{url:'https://threejs.org/manual/resources/models/animals/Sheep.gltf',scale:.60},
+  'sheep-b':{url:'https://threejs.org/manual/resources/models/animals/Sheep.gltf',scale:.55},
+  'horse-a':{url:'https://threejs.org/manual/resources/models/animals/Horse.gltf',scale:.62},
+  'dog-a':{url:'https://threejs.org/manual/resources/models/animals/Pug.gltf',scale:.62}
+}
+const animalMixers=[]
+async function upgradeAnimalModels(){
+  for(const [key,spec] of Object.entries(realAnimalSpecs)){
+    try{
+      const asset=await gltfLoader.loadAsync(spec.url),holder=animalMeshes.get(key);if(!holder)continue
+      const model=asset.scene;model.scale.setScalar(spec.scale)
+      model.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true;if(spec.interactive){o.userData={kind:'animal',id:key};interactive.push(o)}}})
+      holder.clear();holder.add(model)
+      if(asset.animations?.length){
+        const mixer=new THREE.AnimationMixer(model),clips={}
+        for(const clip of asset.animations)clips[clip.name.toLowerCase()]=mixer.clipAction(clip)
+        ;(clips.idle||clips.walkslow||Object.values(clips)[0])?.play()
+        animalMixers.push(mixer)
+      }
+    }catch(e){console.warn('Modelo natural de animal não carregou; mantendo fallback.',key,e)}
+  }
+}
+upgradeAnimalModels()
+
 
 // Interior da casa: sala + cozinha + jantar em escala real.
 let indoorFloor,exitDoor,sofaHit,eatHit
@@ -109,13 +137,40 @@ function buildInterior(){const floorMat=mat(0x9b704e,.88,floorTex),wallMat=mat(0
   exitDoor=M(rb(1.15,2.45,.14,.05),trim,0,1.28,3.88);exitDoor.userData={kind:'door-exit'};inside.add(exitDoor);interactive.push(exitDoor);inside.add(M(new THREE.SphereGeometry(.055,10,8),mat(0xc7a25b,.3),.4,1.3,3.78))
 }
 buildInterior()
+function polishInterior(){
+  const green=mat(0x557b4d,.9),ceramic=phys(0xe9e3d8,.3,.02),brass=phys(0xb78a45,.28,.5)
+  for(const x of [-4.35,4.35]){
+    const curtain=M(new THREE.PlaneGeometry(1.35,1.8),new THREE.MeshPhysicalMaterial({color:0xd9c7af,roughness:.9,transparent:true,opacity:.86,side:THREE.DoubleSide}),x,2.1,-3.72);inside.add(curtain)
+    inside.add(M(new THREE.CylinderGeometry(.2,.27,.34,18),mat(0xa76142,.85),x*.83,.28,-2.55))
+    for(let i=0;i<9;i++){const leaf=M(new THREE.SphereGeometry(.11,12,9),green,x*.83+(Math.random()-.5)*.35,.55+Math.random()*.55,-2.55+(Math.random()-.5)*.28);leaf.scale.set(.65,1.45,.45);leaf.rotation.z=(Math.random()-.5)*.8;inside.add(leaf)}
+  }
+  for(const [x,z,c] of [[-3.15,.2,0xd7b6a3],[-2.55,.25,0xb7c8a8],[-1.95,.2,0xd9c7b0]])inside.add(M(rb(.62,.3,.55,.12),mat(c,.8),x,.78,z))
+  inside.add(M(new THREE.CylinderGeometry(.48,.5,.05,30),darkWood,2.1,.91,1.25))
+  for(const x of [1.88,2.1,2.32])inside.add(M(new THREE.CylinderGeometry(.08,.095,.16,18),ceramic,x,1.02,1.25))
+  inside.add(M(new THREE.TorusGeometry(.13,.025,8,20),brass,-.8,2.65,-3.76))
+}
+polishInterior()
 
 function labelSprite(text,color){const c=document.createElement('canvas');c.width=448;c.height=112;const x=c.getContext('2d');x.font='800 35px system-ui';x.textAlign='center';x.textBaseline='middle';x.fillStyle='rgba(255,255,255,.94)';x.beginPath();x.roundRect(16,12,416,88,26);x.fill();x.fillStyle=color;x.fillText(text,224,57);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthTest:false}));s.scale.set(3.3,.82,1);return s}
 function fallbackHuman(key){const g=new THREE.Group(),skin=mat(0xe8b78e,.8),cloth=mat(key==='isa'?0xdb5b8e:0x4f91d2,.75),dark=mat(0x382923,.9);const body=M(new THREE.CapsuleGeometry(.24,.65,8,18),cloth,0,1.05,0);g.add(body);g.add(M(new THREE.SphereGeometry(.28,24,18),skin,0,1.72,0));for(const x of [-.15,.15])g.add(M(new THREE.CylinderGeometry(.05,.065,.65,10),dark,x,.48,0));return g}
 function makePlayer(key){const root=new THREE.Group();const modelRoot=new THREE.Group();root.add(modelRoot);modelRoot.add(fallbackHuman(key));const label=labelSprite(key==='isa'?'Isa':'Jogador 2',key==='isa'?'#c54b7d':'#3f79b7');label.position.y=2.55;root.add(label);outside.add(root);playerMeshes.set(key,{group:root,modelRoot,label,mixer:null,actions:{},current:'',loadedModel:false,walk:0,actionUntil:0})}
 makePlayer('isa');makePlayer('primo')
-const gltfLoader=new GLTFLoader();let soldierAsset=null
-async function loadHumans(){try{soldierAsset=await gltfLoader.loadAsync('https://threejs.org/examples/models/gltf/Soldier.glb');for(const [key,rec] of playerMeshes){const model=SkeletonUtils.clone(soldierAsset.scene);model.scale.setScalar(1.05);model.position.y=0;model.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true;if(o.material?.clone){o.material=o.material.clone();if(o.material.color&&!/(skin|head|face|hand)/i.test(o.material.name||'')){o.material.color.lerp(new THREE.Color(key==='isa'?0xc95286:0x4e88bf),.22)}}}});rec.modelRoot.clear();rec.modelRoot.add(model);rec.loadedModel=true;rec.label.position.y=2.4;rec.mixer=new THREE.AnimationMixer(model);for(const clip of soldierAsset.animations){rec.actions[clip.name.toLowerCase()]=rec.mixer.clipAction(clip)}setAnim(rec,'idle')}}catch(e){console.warn('Avatar humanoide 3D não carregou; mantendo fallback.',e)}}
+const gltfLoader=new GLTFLoader()
+async function installHuman(key,primary,fallback){
+  const rec=playerMeshes.get(key);if(!rec)return
+  let asset=null
+  try{asset=await gltfLoader.loadAsync(primary)}catch{asset=await gltfLoader.loadAsync(fallback)}
+  const model=SkeletonUtils.clone(asset.scene);model.scale.setScalar(key==='isa'?1.03:1.02);model.position.y=0
+  model.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true;if(o.material?.clone){o.material=o.material.clone();if(o.material.color&&!/(skin|head|face|hand)/i.test(o.material.name||''))o.material.color.lerp(new THREE.Color(key==='isa'?0xc95286:0x4e88bf),.12)}}})
+  rec.modelRoot.clear();rec.modelRoot.add(model);rec.loadedModel=true;rec.label.position.y=2.42;rec.actions={};rec.mixer=null
+  if(asset.animations?.length){rec.mixer=new THREE.AnimationMixer(model);for(const clip of asset.animations)rec.actions[clip.name.toLowerCase()]=rec.mixer.clipAction(clip);setAnim(rec,'idle')}
+}
+async function loadHumans(){
+  await Promise.allSettled([
+    installHuman('isa','https://threejs.org/examples/models/gltf/Michelle.glb','https://threejs.org/examples/models/gltf/Soldier.glb'),
+    installHuman('primo','https://threejs.org/examples/models/gltf/Soldier.glb','https://threejs.org/examples/models/gltf/Xbot.glb')
+  ])
+}
 function setAnim(rec,name){if(!rec?.mixer)return;const wanted=rec.actions[name]||rec.actions[name==='walk'?'run':'idle']||Object.values(rec.actions)[0];if(!wanted||rec.current===name)return;for(const a of Object.values(rec.actions))a.fadeOut(.18);wanted.reset().fadeIn(.18).play();rec.current=name}
 loadHumans()
 
@@ -177,5 +232,5 @@ function movementVector(dt){const rec=playerMeshes.get(player),speed=4.2*dt;let 
 function updateCamera(dt){const rec=playerMeshes.get(player);if(!rec)return;const p=rec.group.position;if(cameraMode==='orbit'){orbit.target.lerp(new THREE.Vector3(p.x,p.y+1.1,p.z),.12);orbit.update();return}if(cameraMode==='eye'){const yaw=rec.group.rotation.y+eyeYaw,dir=new THREE.Vector3(Math.sin(yaw)*Math.cos(eyePitch),Math.sin(eyePitch),Math.cos(yaw)*Math.cos(eyePitch));camera.position.lerp(new THREE.Vector3(p.x,p.y+1.65,p.z),.45);camera.lookAt(camera.position.clone().add(dir));return}const yaw=rec.group.rotation.y,back=new THREE.Vector3(-Math.sin(yaw)*6.2,4.8,-Math.cos(yaw)*6.2),desired=p.clone().add(back);if(locationMode==='inside'){back.multiplyScalar(.63);back.y=3.1;desired.copy(p).add(back)}camera.position.lerp(desired,1-Math.pow(.001,dt));camera.lookAt(p.x,p.y+1.05,p.z)}
 
 const clock=new THREE.Clock()
-function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.035),mv=movementVector(dt);if(mv.x||mv.z)moveLocal(mv.x,mv.z);else if(own.target){const vx=own.target.x-own.x,vz=own.target.z-own.z,d=Math.hypot(vx,vz);if(d<.07){own.target=null;if(locationMode==='outside')queueMove(true)}else{const s=Math.min(4.6*dt,d);moveLocal(vx/d*s,vz/d*s,true)}}const rec=playerMeshes.get(player);if(rec){const moving=!!(mv.x||mv.z||own.target);if(moving){const vx=mv.x||((own.target?.x??own.x)-own.x),vz=mv.z||((own.target?.z??own.z)-own.z);if(cameraMode!=='eye'&&Math.abs(vx)+Math.abs(vz)>.001)rec.group.rotation.y=Math.atan2(vx,vz);setAnim(rec,'walk')}else setAnim(rec,'idle');rec.mixer?.update(dt)}for(const [key,r] of playerMeshes)if(key!==player)r.mixer?.update(dt);const t=performance.now()*.001;animalMeshes.forEach(g=>{const ph=g.userData.phase||0;if(g.userData.kind==='decor'){g.rotation.y=Math.sin(t*.2+ph)*.25;g.position.x=g.userData.baseX+Math.sin(t*.17+ph)*.1;g.position.z=g.userData.baseZ+Math.cos(t*.15+ph)*.08}else g.rotation.y=Math.sin(t*.26+ph)*.12});windBlades.rotation.z-=dt*.42;for(const [i,f] of fishies.entries()){f.position.x=-10.2+Math.sin(t*.35+f.userData.phase)*2.4;f.position.z=-7.4+Math.cos(t*.29+f.userData.phase)*1.4;f.rotation.y=Math.atan2(Math.cos(t*.35+f.userData.phase),-Math.sin(t*.29+f.userData.phase))}waterMat.opacity=.79+Math.sin(t*.8)*.025;const now=performance.now();for(let i=fx.length-1;i>=0;i--){const f=fx[i],elapsed=now-f.born;if(elapsed<0)continue;const q=Math.min(1,elapsed/f.duration);if(f.puff){f.m.position.x+=f.dx*dt;f.m.position.z+=f.dz*dt;f.m.position.y+=.35*dt;f.m.material.opacity=(1-q)*.65;f.m.scale.setScalar(1+q*1.6)}else if(f.float){f.m.position.y+=.9*dt;f.m.rotation.y+=2*dt;f.m.scale.setScalar(1+Math.sin(q*Math.PI)*.35)}else{f.m.position.lerpVectors(f.start,f.end,q);f.m.position.y+=Math.sin(q*Math.PI)*f.arc}if(q>=1){scene.remove(f.m);fx.splice(i,1)}}updateCamera(dt);renderer.render(scene,camera)}
+function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.035),mv=movementVector(dt);if(mv.x||mv.z)moveLocal(mv.x,mv.z);else if(own.target){const vx=own.target.x-own.x,vz=own.target.z-own.z,d=Math.hypot(vx,vz);if(d<.07){own.target=null;if(locationMode==='outside')queueMove(true)}else{const s=Math.min(4.6*dt,d);moveLocal(vx/d*s,vz/d*s,true)}}const rec=playerMeshes.get(player);if(rec){const moving=!!(mv.x||mv.z||own.target);if(moving){const vx=mv.x||((own.target?.x??own.x)-own.x),vz=mv.z||((own.target?.z??own.z)-own.z);if(cameraMode!=='eye'&&Math.abs(vx)+Math.abs(vz)>.001)rec.group.rotation.y=Math.atan2(vx,vz);setAnim(rec,'walk')}else setAnim(rec,'idle');rec.mixer?.update(dt)}for(const [key,r] of playerMeshes)if(key!==player)r.mixer?.update(dt);for(const mixer of animalMixers)mixer.update(dt);const t=performance.now()*.001;animalMeshes.forEach(g=>{const ph=g.userData.phase||0;if(g.userData.kind==='decor'){g.rotation.y=Math.sin(t*.2+ph)*.25;g.position.x=g.userData.baseX+Math.sin(t*.17+ph)*.1;g.position.z=g.userData.baseZ+Math.cos(t*.15+ph)*.08}else g.rotation.y=Math.sin(t*.26+ph)*.12});windBlades.rotation.z-=dt*.42;for(const [i,f] of fishies.entries()){f.position.x=-10.2+Math.sin(t*.35+f.userData.phase)*2.4;f.position.z=-7.4+Math.cos(t*.29+f.userData.phase)*1.4;f.rotation.y=Math.atan2(Math.cos(t*.35+f.userData.phase),-Math.sin(t*.29+f.userData.phase))}waterMat.opacity=.79+Math.sin(t*.8)*.025;const now=performance.now();for(let i=fx.length-1;i>=0;i--){const f=fx[i],elapsed=now-f.born;if(elapsed<0)continue;const q=Math.min(1,elapsed/f.duration);if(f.puff){f.m.position.x+=f.dx*dt;f.m.position.z+=f.dz*dt;f.m.position.y+=.35*dt;f.m.material.opacity=(1-q)*.65;f.m.scale.setScalar(1+q*1.6)}else if(f.float){f.m.position.y+=.9*dt;f.m.rotation.y+=2*dt;f.m.scale.setScalar(1+Math.sin(q*Math.PI)*.35)}else{f.m.position.lerpVectors(f.start,f.end,q);f.m.position.y+=Math.sin(q*Math.PI)*f.arc}if(q>=1){scene.remove(f.m);fx.splice(i,1)}}updateCamera(dt);renderer.render(scene,camera)}
 animate();boot()
