@@ -33,7 +33,7 @@ async function loadCoreExtras(){
   if(isKeise()){
     jobs.push(loadOnce('keise-access-settings','./keise-access-settings.js?v=1-edit-login'))
     jobs.push(loadOnce('keise-alan-studio-control','./keise-alan-studio-control.js?v=1-master-lock'))
-    jobs.push(loadOnce('keise-game-test','./keise-game-test.js?v=2-real-preview'))
+    jobs.push(loadOnce('keise-game-test','./keise-game-test.js?v=4-farm-private-test'))
   }
 
   if(isAlan()){
@@ -52,7 +52,7 @@ async function loadCoreExtras(){
     jobs.push(loadOnce('isa-tools','./isa-tools.js?v=9-study-fix'))
     jobs.push(loadOnce('games','./games-menu.js?v=3-mobile-games'))
     jobs.push(loadOnce('snake-game','./games-menu-snake.js?v=1'))
-    jobs.push(loadOnce('farm-game','./games-menu-farm.js?v=13-stable-roofs'))
+    // Fazendinha temporariamente desativada para Isa. A prévia fica só em Keise → Teste Jogo.
     if(!dedicatedMobile)jobs.push(loadOnce('games-notebook-fit','./games-notebook-fit.js?v=1'))
   }
   const result=await Promise.allSettled(jobs)
