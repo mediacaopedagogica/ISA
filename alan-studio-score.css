@@ -1,0 +1,23 @@
+#alanStudioScoreSection .ass-layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(260px,.58fr);gap:15px}
+#alanStudioScoreSection .ass-card{background:linear-gradient(145deg,rgba(255,255,255,.115),rgba(255,255,255,.055));border:1px solid rgba(255,255,255,.12);box-shadow:0 15px 35px rgba(0,0,0,.18);border-radius:20px;padding:17px}
+#alanStudioScoreSection .ass-pagebar,#alanStudioScoreSection .ass-settings,#alanStudioScoreSection .ass-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+#alanStudioScoreSection .ass-pagebar select{flex:1;min-width:220px}
+#alanStudioScoreSection .ass-settings label{display:flex;gap:6px;align-items:center;font-size:12px;color:#d8c9bd;font-weight:800}
+#alanStudioScoreSection .ass-settings select,#alanStudioScoreSection .ass-pagebar select{border:1px solid rgba(255,255,255,.13);background:rgba(10,8,13,.42);color:#fff;border-radius:10px;padding:8px}
+#alanStudioScoreSection .ass-check{padding:7px 9px;border-radius:10px;background:rgba(255,255,255,.06)}
+#alanStudioScoreSection .ass-tools button,#alanStudioScoreSection .ass-pagebar button,#alanStudioScoreSection .ass-side button{border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.08);color:#fff;border-radius:10px;padding:8px 10px;font-weight:800;cursor:pointer}
+#alanStudioScoreSection .ass-tools button.active{background:#d9a15d;color:#2a1b10}
+#alanStudioScoreSection .ass-pagebar .danger{background:rgba(211,89,89,.16);color:#ffd9d9;border-color:rgba(255,130,130,.2)}
+#alanStudioScoreSection .ass-paper{background:#fffaf0;color:#2e2721;border-radius:17px;padding:12px;box-shadow:0 15px 34px #0004}
+#alanStudioScoreSection .ass-title{width:100%;box-sizing:border-box;border:0;border-bottom:1px solid #d8cebf;background:transparent;padding:8px 4px 10px;font-size:19px;font-weight:900;color:#2e2721;outline:none}
+#alanStudioScoreSection .ass-canvas-wrap{position:relative;overflow:auto;margin-top:8px;border:1px solid #e2d8ca;border-radius:12px;background:#fff}
+#alanStudioScoreSection canvas{display:block;width:100%;min-width:760px;height:auto;touch-action:none;cursor:crosshair}
+#alanStudioScoreSection .ass-hint{position:sticky;left:12px;bottom:10px;width:max-content;max-width:80%;padding:6px 9px;background:rgba(55,44,35,.78);color:#fff;border-radius:9px;font-size:11px;pointer-events:none}
+#alanStudioScoreSection .ass-paper textarea{width:100%;box-sizing:border-box;min-height:120px;margin-top:9px;border:1px solid #ddd2c4;border-radius:10px;padding:10px;background:#fffefb;color:#302820;resize:vertical;font:14px/1.5 system-ui}
+#alanStudioScoreSection .ass-side{align-self:start;position:sticky;top:12px}
+#alanStudioScoreSection .ass-help{font-size:13px;line-height:1.55;color:#d8c8bc}
+#alanStudioScoreSection .ass-selected{margin:12px 0;padding:10px;border-radius:12px;background:rgba(216,162,91,.12);border:1px solid rgba(216,162,91,.19);color:#f0ca95;font-weight:850}
+#alanStudioScoreSection .ass-side button{width:100%;margin-top:8px}
+#alanStudioScoreSection .ass-note{font-size:12px;color:#c7b7aa;line-height:1.5;margin-top:10px}
+@media(max-width:900px){#alanStudioScoreSection .ass-layout{grid-template-columns:1fr}#alanStudioScoreSection .ass-side{position:static}#alanStudioScoreSection .ass-tools,#alanStudioScoreSection .ass-settings{overflow-x:auto;flex-wrap:nowrap;padding-bottom:5px}#alanStudioScoreSection .ass-tools button,#alanStudioScoreSection .ass-settings label{flex:0 0 auto}}
+@media print{#alanStudioScoreSection .ass-pagebar,#alanStudioScoreSection .ass-settings,#alanStudioScoreSection .ass-tools,#alanStudioScoreSection .ass-side,#alanStudioScoreSection .ass-hint{display:none!important}#alanStudioScoreSection .ass-layout{display:block}#alanStudioScoreSection .ass-card{background:#fff;color:#000;border:0;box-shadow:none;padding:0}#alanStudioScoreSection .ass-paper{box-shadow:none;padding:0}#alanStudioScoreSection textarea{border:0!important}}
