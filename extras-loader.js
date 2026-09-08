@@ -15,7 +15,7 @@ function mainReady(){
 }
 function isIsa(){return who()==='isa'}
 function isKeise(){return who()==='keise'}
-function isParent(){return who()==='keise'||who()==='alan'}
+function isParent(){return who()==='keise'}
 function isAlan(){return who()==='alan'}
 const dedicatedMobile=new URLSearchParams(location.search).get('mobile')==='1'
 
@@ -32,10 +32,11 @@ async function loadCoreExtras(){
 
   if(isKeise()){
     jobs.push(loadOnce('keise-alan-studio-control','./keise-alan-studio-control.js?v=1-master-lock'))
-    jobs.push(loadOnce('keise-game-test','./keise-game-test.js?v=1-private-preview'))
+    jobs.push(loadOnce('keise-game-test','./keise-game-test.js?v=2-real-preview'))
   }
 
   if(isAlan()){
+    jobs.push(loadOnce('alan-supervision-only','./alan-supervision-only.js?v=1-supervision-only'))
     const accessModule=await loadOnce('alan-studio-access','./alan-studio-access.js?v=1-master-lock')
     const studioEnabled=await accessModule.isAlanStudioEnabled()
     if(studioEnabled){
