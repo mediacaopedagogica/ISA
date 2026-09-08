@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#75512e">
   <title>Fazendinha Família Feliz • Em construção</title>
   <link rel="stylesheet" href="./fazendinha-multiplayer.css?v=5-realismo-vivo">
+  <link rel="stylesheet" href="./fazendinha-experience-v6.css?v=6-camera-casa-pesca">
 </head>
 <body>
 <main class="farm-app">
@@ -21,11 +22,17 @@
         <div class="score primo locked"><b>💙 <span id="primoName">Jogador 2 🔒</span></b><strong id="primoScore">0</strong><small>em breve</small></div>
       </div>
       <div class="farm-actions-top">
+        <button id="camera360Btn" class="round-btn camera-btn" type="button" title="Câmera 360°">🧭</button>
+        <button id="eyeCameraBtn" class="round-btn camera-btn" type="button" title="Visão no nível dos olhos">👁️</button>
         <button id="renameBtn" class="round-btn" type="button" title="Editar Nick">✏️</button>
         <button id="voiceBtn" class="round-btn muted-build" type="button" title="Microfone multiplayer em breve">🎤</button>
+        <div class="energy-pill" title="Energia do jogador">⚡ <strong id="energyValue">100</strong>%</div>
         <div id="connectionBadge" class="connection-badge">Conectando…</div>
       </div>
     </header>
+
+    <div id="locationLabel" class="location-pill">🌾 Área externa</div>
+    <div id="cameraHelp" class="camera-help"></div>
 
     <nav class="farm-side-menu" aria-label="Áreas futuras">
       <button type="button" data-soon="Inventário"><span>🎒</span>Inventário</button>
@@ -36,13 +43,13 @@
 
     <aside class="mission-board">
       <strong>📋 Missões de teste</strong>
-      <span>□ Regar uma plantação</span>
-      <span>□ Colher quando estiver pronta</span>
-      <span>□ Alimentar a Mimosa ou a Pipoca</span>
-      <span>□ Caminhar pela fazenda</span>
+      <span>□ Usar a câmera 360°</span>
+      <span>□ Entrar na casa e descansar</span>
+      <span>□ Regar ou colher na horta</span>
+      <span>□ Pescar no laguinho</span>
     </aside>
 
-    <div id="loadingCard" class="loading-card"><div class="spinner"></div><strong>Entrando na Fazendinha Família Feliz…</strong><span>Renderizando o cenário 3D detalhado</span></div>
+    <div id="loadingCard" class="loading-card"><div class="spinner"></div><strong>Entrando na Fazendinha Família Feliz…</strong><span>Carregando cenário, personagens humanoides e interior da casa</span></div>
     <div id="toast" class="toast hidden"></div>
     <div id="voiceState" class="voice-state hidden">🎤 Microfone ligado</div>
     <div class="construction-ribbon">🚧 EM CONSTRUÇÃO • teste exclusivo da Isa</div>
@@ -56,7 +63,7 @@
     <aside id="tipCard" class="tip-card">
       <button id="tipClose" type="button">×</button>
       <strong>Como testar</strong>
-      <p><b>Andar:</b> clique no chão ou use WASD/setas. <b>Interagir:</b> escolha uma ferramenta e clique no canteiro ou animal. O personagem caminha até o local e executa a ação no cenário.</p>
+      <p><b>360°:</b> use 🧭 e arraste. <b>Visão do Nick:</b> use 👁️. Clique na porta da casa para entrar. Dentro dela, clique no sofá para descansar ou na mesa para comer. Para pescar, selecione 🎣 e clique no lago.</p>
     </aside>
   </section>
 
@@ -67,6 +74,7 @@
     <button class="tool" data-tool="harvest" type="button">🧺<span>Colher</span></button>
     <button class="tool" data-tool="feed" type="button">🌾<span>Alimentar</span></button>
     <button class="tool" data-tool="collect" type="button">🥚<span>Coletar</span></button>
+    <button class="tool" data-tool="fish" type="button">🎣<span>Pescar</span></button>
     <div class="coins">🪙 <strong id="myCoins">50</strong></div>
   </section>
 
@@ -80,7 +88,7 @@
   </section>
   <audio id="remoteAudio" autoplay playsinline></audio>
 </main>
-<script type="module" src="./fazendinha-realismo-v5.js?v=5-realismo-vivo"></script>
+<script type="module" src="./fazendinha-experience-v6.js?v=6-camera-casa-pesca"></script>
 <script>document.querySelectorAll('[data-soon]').forEach(b=>b.addEventListener('click',()=>{const t=document.getElementById('toast');t.textContent='🚧 '+b.dataset.soon+' será liberado nas próximas etapas.';t.classList.remove('hidden');clearTimeout(t._hide);t._hide=setTimeout(()=>t.classList.add('hidden'),1800)}))</script>
 </body>
 </html>
