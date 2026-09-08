@@ -17,148 +17,26 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Build v7 from stable v6
+      - name: Build natural-model upgrade
+        run: python scripts/upgrade-farm-v7.py
+      - name: Verify farm before commit
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          import re
-
-          src=Path('jogos/fazendinha-experience-v6.js').read_text(encoding='utf-8')
-          s=src
-
-          # Render quality: keep the stable engine, but improve density and exposure.
-          s=s.replace("renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.75))","renderer.setPixelRatio(Math.min(devicePixelRatio||1,2))")
-          s=s.replace("renderer.toneMappingExposure=1.05","renderer.toneMappingExposure=.98")
-          s=s.replace("orbit.minDistance=4;orbit.maxDistance=27","orbit.minDistance=2.8;orbit.maxDistance=30")
-
-          # Human avatars: prefer a human-looking Michelle model for Isa, with animated Soldier fallback.
-          human_pattern=r"const gltfLoader=new GLTFLoader\(\);let soldierAsset=null\nasync function loadHumans\(\)\{.*?\}\n(?=function setAnim)"
-          human_repl="""const gltfLoader=new GLTFLoader()
-async function installHuman(key,primary,fallback){
-  const rec=playerMeshes.get(key);if(!rec)return
-  let asset=null
-  try{asset=await gltfLoader.loadAsync(primary)}catch{asset=await gltfLoader.loadAsync(fallback)}
-  const model=SkeletonUtils.clone(asset.scene);model.scale.setScalar(key==='isa'?1.03:1.02);model.position.y=0
-  model.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true;if(o.material?.clone){o.material=o.material.clone();if(o.material.color&&!/(skin|head|face|hand)/i.test(o.material.name||''))o.material.color.lerp(new THREE.Color(key==='isa'?0xc95286:0x4e88bf),.12)}}})
-  rec.modelRoot.clear();rec.modelRoot.add(model);rec.loadedModel=true;rec.label.position.y=2.42;rec.actions={};rec.mixer=null
-  if(asset.animations?.length){rec.mixer=new THREE.AnimationMixer(model);for(const clip of asset.animations)rec.actions[clip.name.toLowerCase()]=rec.mixer.clipAction(clip);setAnim(rec,'idle')}
-}
-async function loadHumans(){
-  await Promise.allSettled([
-    installHuman('isa','https://threejs.org/examples/models/gltf/Michelle.glb','https://threejs.org/examples/models/gltf/Soldier.glb'),
-    installHuman('primo','https://threejs.org/examples/models/gltf/Soldier.glb','https://threejs.org/examples/models/gltf/Xbot.glb')
-  ])
-}
-"""
-          s,n=re.subn(human_pattern,human_repl,s,flags=re.S)
-          if n!=1: raise SystemExit(f'Human patch mismatch: {n}')
-
-          # Replace the most geometric animals with real glTF animal models. Existing procedural models remain as fallbacks.
-          marker="addAnimal('vaca-1','vaca',9.3,.2,true,1.05);addAnimal('galinha-1','galinha',6.1,-.75,true,.95);addAnimal('pig-a','porco',13.1,1.35,false,.9);addAnimal('pig-b','porco',14.2,.35,false,.85);addAnimal('sheep-a','ovelha',12.2,-1.2,false,.92);addAnimal('sheep-b','ovelha',13.6,-1.65,false,.86);addAnimal('horse-a','cavalo',5.25,-2.05,false,1);addAnimal('dog-a','cachorro',-8.7,4.1,false,.9)"
-          if marker not in s: raise SystemExit('Animal marker missing')
-          animal_upgrade=r'''
-const realAnimalSpecs={
-  'vaca-1':{url:'https://threejs.org/manual/resources/models/animals/Cow.gltf',scale:.64,interactive:true},
-  'pig-a':{url:'https://threejs.org/manual/resources/models/animals/Pig.gltf',scale:.58},
-  'pig-b':{url:'https://threejs.org/manual/resources/models/animals/Pig.gltf',scale:.53},
-  'sheep-a':{url:'https://threejs.org/manual/resources/models/animals/Sheep.gltf',scale:.6},
-  'sheep-b':{url:'https://threejs.org/manual/resources/models/animals/Sheep.gltf',scale:.55},
-  'horse-a':{url:'https://threejs.org/manual/resources/models/animals/Horse.gltf',scale:.62},
-  'dog-a':{url:'https://threejs.org/manual/resources/models/animals/Pug.gltf',scale:.62}
-}
-const animalMixers=[]
-async function upgradeAnimalModels(){
-  for(const [key,spec] of Object.entries(realAnimalSpecs)){
-    try{
-      const asset=await gltfLoader.loadAsync(spec.url),holder=animalMeshes.get(key);if(!holder)continue
-      const model=asset.scene;model.scale.setScalar(spec.scale);model.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true;if(spec.interactive){o.userData={kind:'animal',id:key};interactive.push(o)}}})
-      holder.clear();holder.add(model)
-      if(asset.animations?.length){const mixer=new THREE.AnimationMixer(model);const clips={};for(const clip of asset.animations)clips[clip.name.toLowerCase()]=mixer.clipAction(clip);(clips.idle||clips.walkslow||Object.values(clips)[0])?.play();animalMixers.push(mixer)}
-    }catch(e){console.warn('Modelo natural de animal não carregou; mantendo fallback.',key,e)}
-  }
-}
-upgradeAnimalModels()
-'''
-          s=s.replace(marker,marker+animal_upgrade)
-
-          # More lived-in interior: soft furnishings, tableware, curtains and plants.
-          interior_marker="buildInterior()\n\nfunction labelSprite"
-          if interior_marker not in s: raise SystemExit('Interior marker missing')
-          interior_upgrade=r'''
-function polishInterior(){
-  const textile=mat(0xcbb89b,.88),green=mat(0x557b4d,.9),ceramic=phys(0xe9e3d8,.3,.02),brass=phys(0xb78a45,.28,.5)
-  for(const x of [-4.35,4.35]){
-    const curtain=M(new THREE.PlaneGeometry(1.35,1.8),new THREE.MeshPhysicalMaterial({color:0xd9c7af,roughness:.9,transparent:true,opacity:.86,side:THREE.DoubleSide}),x,2.1,-3.72);inside.add(curtain)
-    const pot=M(new THREE.CylinderGeometry(.2,.27,.34,18),mat(0xa76142,.85),x*.83,.28,-2.55);inside.add(pot)
-    for(let i=0;i<9;i++){const leaf=M(new THREE.SphereGeometry(.11,12,9),green,x*.83+(Math.random()-.5)*.35,.55+Math.random()*.55,-2.55+(Math.random()-.5)*.28);leaf.scale.set(.65,1.45,.45);leaf.rotation.z=(Math.random()-.5)*.8;inside.add(leaf)}
-  }
-  for(const [x,z,c] of [[-3.15,.2,0xd7b6a3],[-2.55,.25,0xb7c8a8],[-1.95,.2,0xd9c7b0]])inside.add(M(rb(.62,.3,.55,.12),mat(c,.8),x,.78,z))
-  const tray=M(new THREE.CylinderGeometry(.48,.5,.05,30),darkWood,2.1,.91,1.25);inside.add(tray)
-  for(const x of [1.88,2.1,2.32])inside.add(M(new THREE.CylinderGeometry(.08,.095,.16,18),ceramic,x,1.02,1.25))
-  inside.add(M(new THREE.TorusGeometry(.13,.025,8,20),brass,-.8,2.65,-3.76))
-  inside.add(M(new THREE.BoxGeometry(.03,.42,.03),brass,-.8,2.65,-3.72))
-}
-polishInterior()
-
-function labelSprite'''
-          s=s.replace(interior_marker,"buildInterior()\n"+interior_upgrade)
-
-          # Update animation loop so real animal animations run too.
-          loop_marker="for(const [key,r] of playerMeshes)if(key!==player)r.mixer?.update(dt);"
-          if loop_marker not in s: raise SystemExit('Loop marker missing')
-          s=s.replace(loop_marker,loop_marker+"for(const mixer of animalMixers)mixer.update(dt);")
-
-          Path('jogos/fazendinha-experience-v7.js').write_text(s,encoding='utf-8')
-
-          # Wire v7 without touching any external-family portal.
-          p=Path('jogos/fazendinha-multiplayer.html');h=p.read_text(encoding='utf-8')
-          h=h.replace('fazendinha-experience-v6.css?v=6-camera-casa-pesca','fazendinha-experience-v6.css?v=7-natural-models')
-          h=h.replace('fazendinha-experience-v6.js?v=6-camera-casa-pesca','fazendinha-experience-v7.js?v=7-natural-models')
-          h=h.replace('Carregando cenário, personagens humanoides e interior da casa','Carregando cenário, personagens humanoides e animais 3D detalhados')
-          p.write_text(h,encoding='utf-8')
-
-          p=Path('games-menu-farm.js');g=p.read_text(encoding='utf-8')
-          g=g.replace('v=6-camera-casa-pesca','v=7-natural-models')
-          g=g.replace('Teste da Isa com câmera 360°, visão dos olhos, casa explorável e pesca.','Teste da Isa com modelos 3D naturais, câmera 360°, visão dos olhos, casa explorável e pesca.')
-          p.write_text(g,encoding='utf-8')
-
-          p=Path('extras-loader.js');e=p.read_text(encoding='utf-8').replace("games-menu-farm.js?v=6-camera-casa-pesca","games-menu-farm.js?v=7-natural-models")
-          p.write_text(e,encoding='utf-8')
-
-          p=Path('postboot-loader.js');q=p.read_text(encoding='utf-8').replace('extras-loader.js?v=25-farm-v6','extras-loader.js?v=26-farm-v7')
-          p.write_text(q,encoding='utf-8')
-
-          p=Path('index.html');i=p.read_text(encoding='utf-8').replace('postboot-loader.js?v=18-farm-v6','postboot-loader.js?v=19-farm-v7')
-          p.write_text(i,encoding='utf-8')
-
-          p=Path('.github/workflows/validate-farm-multiplayer.yml');v=p.read_text(encoding='utf-8')
-          v=v.replace("      - 'jogos/fazendinha-experience-v6.js'","      - 'jogos/fazendinha-experience-v6.js'\n      - 'jogos/fazendinha-experience-v7.js'")
-          v=v.replace('node --check jogos/fazendinha-experience-v6.js','node --check jogos/fazendinha-experience-v7.js')
-          v=v.replace('test -s jogos/fazendinha-experience-v6.js','test -s jogos/fazendinha-experience-v7.js')
-          v=v.replace("grep -q 'fazendinha-experience-v6.js?v=6-camera-casa-pesca' jogos/fazendinha-multiplayer.html","grep -q 'fazendinha-experience-v7.js?v=7-natural-models' jogos/fazendinha-multiplayer.html")
-          v=v.replace("grep -q 'GLTFLoader' jogos/fazendinha-experience-v6.js","grep -q 'GLTFLoader' jogos/fazendinha-experience-v7.js")
-          v=v.replace("grep -q 'Soldier.glb' jogos/fazendinha-experience-v6.js","grep -q 'Michelle.glb' jogos/fazendinha-experience-v7.js\n          grep -q 'Cow.gltf' jogos/fazendinha-experience-v7.js\n          grep -q 'Pig.gltf' jogos/fazendinha-experience-v7.js\n          grep -q 'Sheep.gltf' jogos/fazendinha-experience-v7.js\n          grep -q 'Horse.gltf' jogos/fazendinha-experience-v7.js\n          grep -q 'Pug.gltf' jogos/fazendinha-experience-v7.js")
-          v=v.replace("jogos/fazendinha-experience-v6.js\n          grep -q \"locationMode='inside'\" jogos/fazendinha-experience-v6.js","jogos/fazendinha-experience-v7.js\n          grep -q \"locationMode='inside'\" jogos/fazendinha-experience-v7.js")
-          v=v.replace('jogos/fazendinha-experience-v6.js','jogos/fazendinha-experience-v7.js')
-          v=v.replace("grep -q 'v=6-camera-casa-pesca' games-menu-farm.js","grep -q 'v=7-natural-models' games-menu-farm.js")
-          v=v.replace("loadOnce('farm-game','./games-menu-farm.js?v=6-camera-casa-pesca')","loadOnce('farm-game','./games-menu-farm.js?v=7-natural-models')")
-          v=v.replace("grep -q 'postboot-loader.js?v=18-farm-v6' index.html","grep -q 'postboot-loader.js?v=19-farm-v7' index.html")
-          p.write_text(v,encoding='utf-8')
-          PY
-      - name: Verify generated v7
-        run: |
-          node --check jogos/fazendinha-experience-v7.js
-          grep -q 'Michelle.glb' jogos/fazendinha-experience-v7.js
-          grep -q 'Cow.gltf' jogos/fazendinha-experience-v7.js
-          grep -q 'polishInterior' jogos/fazendinha-experience-v7.js
-          grep -q 'fazendinha-experience-v7.js?v=7-natural-models' jogos/fazendinha-multiplayer.html
+          node --check jogos/fazendinha-experience-v6.js
+          grep -q 'Michelle.glb' jogos/fazendinha-experience-v6.js
+          grep -q 'Cow.gltf' jogos/fazendinha-experience-v6.js
+          grep -q 'Pig.gltf' jogos/fazendinha-experience-v6.js
+          grep -q 'polishInterior' jogos/fazendinha-experience-v6.js
           grep -q 'camera360Btn' jogos/fazendinha-multiplayer.html
           grep -q 'eyeCameraBtn' jogos/fazendinha-multiplayer.html
           grep -q 'data-tool="fish"' jogos/fazendinha-multiplayer.html
-      - name: Commit v7
+          grep -q 'v=7-natural-models' games-menu-farm.js
+          grep -q "function eligible(){return currentName()==='isa'}" games-menu-farm.js
+          ! grep -q 'games-menu-farm.js' acesso.html
+          ! grep -q 'games-menu-farm.js' acesso-mobile.html
+      - name: Commit upgraded farm
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add jogos/fazendinha-experience-v7.js jogos/fazendinha-multiplayer.html games-menu-farm.js extras-loader.js postboot-loader.js index.html .github/workflows/validate-farm-multiplayer.yml
+          git add jogos/fazendinha-experience-v6.js jogos/fazendinha-multiplayer.html games-menu-farm.js extras-loader.js postboot-loader.js index.html .github/workflows/validate-farm-multiplayer.yml
           git diff --cached --quiet || git commit -m 'Upgrade Fazendinha to natural 3D models v7'
           git push
