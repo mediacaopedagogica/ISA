@@ -1,0 +1,93 @@
+name: Fix Dupla raycast vehicle physics v1.0
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-dupla-raycast-v10.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace custom steering with raycast vehicle physics
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p=Path('jogos/dupla-na-pista-teste.html')
+          s=p.read_text()
+
+          s=s.replace('pista viva v0.9 • física natural + aderência','pista viva v1.0 • suspensão + pneus raycast')
+          s=s.replace('🧪 TESTE JOGO • KEISE • v0.9','🧪 TESTE JOGO • KEISE • v1.0')
+          s=s.replace('A direção usa esterço progressivo e inércia. O carro só anda quando o jogador acelera.','A direção agora usa suspensão e pneus raycast. O carro só anda quando o jogador acelera.')
+
+          imp="import * as THREE from 'three';import {OrbitControls} from 'three/addons/controls/OrbitControls.js';import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';"
+          assert imp in s, 'imports marker not found'
+          if "cannon-es@0.20.0" not in s:
+              s=s.replace(imp,imp+"import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/+esm';",1)
+
+          marker='let race=RACES[0];'
+          assert marker in s, 'race marker not found'
+          if 'const physicsWorld=new CANNON.World' not in s:
+              physics=r"""
+const physicsWorld=new CANNON.World({gravity:new CANNON.Vec3(0,-9.82,0)});physicsWorld.broadphase=new CANNON.SAPBroadphase(physicsWorld);physicsWorld.allowSleep=true;physicsWorld.defaultContactMaterial.friction=.05;physicsWorld.defaultContactMaterial.restitution=.01;const roadPhysMat=new CANNON.Material('road'),barrierPhysMat=new CANNON.Material('barrier'),chassisPhysMat=new CANNON.Material('chassis');physicsWorld.addContactMaterial(new CANNON.ContactMaterial(chassisPhysMat,roadPhysMat,{friction:.18,restitution:.01,contactEquationStiffness:1e7,contactEquationRelaxation:3}));physicsWorld.addContactMaterial(new CANNON.ContactMaterial(chassisPhysMat,barrierPhysMat,{friction:.015,restitution:.08,contactEquationStiffness:2e7,contactEquationRelaxation:2}));physicsWorld.addContactMaterial(new CANNON.ContactMaterial(chassisPhysMat,chassisPhysMat,{friction:.08,restitution:.06,contactEquationStiffness:1e7,contactEquationRelaxation:3}));
+function segQuat(q0,q1){const dx=q1.x-q0.x,dy=q1.y-q0.y,dz=q1.z-q0.z,h=Math.hypot(dx,dz)||.001,yaw=Math.atan2(dx,dz),pitch=-Math.atan2(dy,h),q=new CANNON.Quaternion();q.setFromEuler(pitch,yaw,0,'XYZ');return q}
+function buildPhysicalTrack(track){const N=isMobile()?96:144;for(let i=0;i<N;i++){const t0=i/N,t1=(i+1)/N,q0=roadPoint(t0,track,0,.035),q1=roadPoint(t1,track,0,.035),len=Math.max(.5,Math.hypot(q1.x-q0.x,q1.y-q0.y,q1.z-q0.z)),body=new CANNON.Body({mass:0,material:roadPhysMat});body.position.set((q0.x+q1.x)/2,(q0.y+q1.y)/2,(q0.z+q1.z)/2);body.quaternion.copy(segQuat(q0,q1));body.addShape(new CANNON.Box(new CANNON.Vec3(12,.08,len/2+.24)),new CANNON.Vec3(0,-.24,0));body.addShape(new CANNON.Box(new CANNON.Vec3(4.72,.11,len/2+.26)),new CANNON.Vec3(0,-.10,0));const left=new CANNON.Box(new CANNON.Vec3(.16,.78,len/2+.28)),right=new CANNON.Box(new CANNON.Vec3(.16,.78,len/2+.28));body.addShape(left,new CANNON.Vec3(-5.08,.67,0));body.addShape(right,new CANNON.Vec3(5.08,.67,0));physicsWorld.addBody(body)}}buildPhysicalTrack(TRACK_A);buildPhysicalTrack(TRACK_B);
+let vehiclePhysics=[];const modelFix=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),Math.PI);
+function makePhysicsVehicle(i){const t=i?.022:.012,f=frameAt(t),q=roadPoint(t,tracks[i],0,.035),yaw=Math.atan2(f.tan.x,f.tan.z),body=new CANNON.Body({mass:1650,material:chassisPhysMat,linearDamping:.012,angularDamping:.42,allowSleep:false});body.addShape(new CANNON.Box(new CANNON.Vec3(1.04,.43,2.38)),new CANNON.Vec3(0,.12,0));body.position.set(q.x,q.y+1.15,q.z);body.quaternion.setFromEuler(0,yaw,0,'XYZ');const rv=new CANNON.RaycastVehicle({chassisBody:body,indexRightAxis:0,indexForwardAxis:2,indexUpAxis:1}),base={radius:.43,directionLocal:new CANNON.Vec3(0,-1,0),suspensionStiffness:48,suspensionRestLength:.34,frictionSlip:4.4,dampingRelaxation:2.5,dampingCompression:4.6,maxSuspensionForce:120000,rollInfluence:.055,axleLocal:new CANNON.Vec3(-1,0,0),maxSuspensionTravel:.28,customSlidingRotationalSpeed:-30,useCustomSlidingRotationalSpeed:true};for(const pt of [[-.9,0,-1.48],[.9,0,-1.48],[-.9,0,1.48],[.9,0,1.48]])rv.addWheel({...base,chassisConnectionPointLocal:new CANNON.Vec3(...pt)});rv.addToWorld(physicsWorld);return{body,vehicle:rv,steer:0}}
+vehiclePhysics=[makePhysicsVehicle(0),makePhysicsVehicle(1)];
+function physicsForward(pv){const v=new CANNON.Vec3(0,0,1);pv.body.quaternion.vmult(v,v);return v}
+function syncPhysicsState(i){const pv=vehiclePhysics[i],b=pv.body,s=states[i],fw=physicsForward(pv);s.x=b.position.x;s.z=b.position.z;s.vx=b.velocity.x;s.vz=b.velocity.z;s.yaw=Math.atan2(fw.x,-fw.z);const near=nearestRoadState(s,tracks[i]);s.t=near.t;s.lat=near.lat;s.speed=b.velocity.x*fw.x+b.velocity.y*fw.y+b.velocity.z*fw.z;return near}
+function setRaycastInput(i,enabled,dt=.016){const pv=vehiclePhysics[i],rv=pv.vehicle,b=pv.body,s=states[i],fw=physicsForward(pv),signed=b.velocity.dot(fw),kmh=Math.abs(signed)*3.6,left=enabled&&(keys.ArrowLeft||keys.a||keys.A),right=enabled&&(keys.ArrowRight||keys.d||keys.D),acc=enabled&&(keys.ArrowUp||keys.w||keys.W),down=enabled&&(keys.ArrowDown||keys.s||keys.S),steerIn=(left?1:0)-(right?1:0),maxSteer=THREE.MathUtils.degToRad(30-21*THREE.MathUtils.clamp(kmh/125,0,1)),target=steerIn*maxSteer;pv.steer=THREE.MathUtils.lerp(pv.steer,target,1-Math.exp(-(steerIn?6.5:9.5)*dt));rv.setSteeringValue(pv.steer,0);rv.setSteeringValue(pv.steer,1);let engine=0,brake=0;if(!enabled){brake=420}else if(acc){if(signed<-.8)brake=300;else engine=7600*Math.max(.35,s.motor/100)*Math.max(.14,1-kmh/165)}else if(down){if(signed>1)brake=310;else engine=-4100*Math.max(.35,s.motor/100)*Math.max(.22,1-kmh/55)}else brake=6;for(let w=0;w<4;w++){rv.setBrake(brake,w);rv.wheelInfos[w].frictionSlip=(Math.abs(s.lat)<4.15?4.45:2.15)*THREE.MathUtils.clamp(s.tires/100,.55,1)}rv.applyEngineForce(engine,2);rv.applyEngineForce(engine,3);rv.applyEngineForce(0,0);rv.applyEngineForce(0,1)}
+"""
+              s=s.replace(marker,marker+physics,1)
+
+          orient=re.search(r"function orientCar\(i\)\{.*?return f\}",s,re.S)
+          assert orient, 'orientCar not found'
+          new_orient=r"""function orientCar(i){const s=states[i],pv=vehiclePhysics?.[i];if(pv){const b=pv.body,near=syncPhysicsState(i),q=new THREE.Quaternion(b.quaternion.x,b.quaternion.y,b.quaternion.z,b.quaternion.w);cars[i].position.set(b.position.x,b.position.y-.58,b.position.z);cars[i].quaternion.copy(q).multiply(modelFix);s.bodyRoll=0;return near.f}const f=frameAt(s.t),center=roadPoint(s.t,tracks[i],0,.035);cars[i].position.set(s.x,center.y+.035,s.z);return f}"""
+          s=s[:orient.start()]+new_orient+s[orient.end():]
+
+          reset=re.search(r"function resetState\(i\)\{.*?\}\)\}",s,re.S)
+          assert reset, 'resetState not found'
+          new_reset=r"""function resetState(i){const t=i?.022:.012,f=frameAt(t),q=roadPoint(t,tracks[i],0,.035),yaw=Math.atan2(f.tan.x,f.tan.z);Object.assign(states[i],{t,lat:0,x:q.x,z:q.z,yaw:Math.atan2(f.tan.x,-f.tan.z),speed:0,vx:0,vz:0,yawRate:0,lap:1,totalKm:0,turbo:72,steer:0,steerAngle:0,heading:0,bodyRoll:0,impact:0,latVel:0,collisionCooldown:0,prevT:t,prevLapT:t});const pv=vehiclePhysics?.[i];if(pv){pv.body.position.set(q.x,q.y+1.15,q.z);pv.body.quaternion.setFromEuler(0,yaw,0,'XYZ');pv.body.velocity.set(0,0,0);pv.body.angularVelocity.set(0,0,0);pv.body.force.set(0,0,0);pv.body.torque.set(0,0,0);pv.steer=0;pv.vehicle.setSteeringValue(0,0);pv.vehicle.setSteeringValue(0,1);for(let w=0;w<4;w++){pv.vehicle.applyEngineForce(0,w);pv.vehicle.setBrake(420,w)}}}"""
+          s=s[:reset.start()]+new_reset+s[reset.end():]
+
+          turbo=re.search(r"function turbo\(\)\{.*?\}\$\('turboBtn'\)\.onclick=turbo;",s,re.S)
+          assert turbo, 'turbo not found'
+          new_turbo=r"""function turbo(){const s=states[active],pv=vehiclePhysics?.[active];if(!driving)return msg('Vá para a largada primeiro');if(s.turbo<18)return msg('⚡ Turbo recarregando');if(pv){const f=physicsForward(pv),imp=3700;pv.body.applyImpulse(new CANNON.Vec3(f.x*imp,0,f.z*imp),pv.body.position)}s.turbo-=18;msg('⚡ TURBO!')}$('turboBtn').onclick=turbo;"""
+          s=s[:turbo.start()]+new_turbo+s[turbo.end():]
+
+          s=s.replace("const stopped=s.speed<1.1;","const stopped=Math.abs(s.speed)<1.1;")
+          s=s.replace("states[active].speed>=1.1","Math.abs(states[active].speed)>=1.1")
+
+          anim=re.search(r"const clock=new THREE\.Clock\(\);function animate\(\)\{.*?\}animate\(\);addEventListener\('resize'",s,re.S)
+          assert anim, 'animate not found'
+          new_anim=r"""const clock=new THREE.Clock();function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.033),time=performance.now()*.001;for(const p of crowd)p.position.y=p.userData.baseY+Math.sin(time*5+p.userData.phase)*.12;for(const c of cows){c.position.x=c.userData.base.x+Math.sin(time*.45+c.userData.phase)*.18;c.position.z=c.userData.base.z+Math.cos(time*.32+c.userData.phase)*.12}for(let i=smoke.length-1;i>=0;i--){const sp=smoke[i];sp.userData.life-=dt;sp.position.y+=dt*.75;sp.scale.multiplyScalar(1+dt*.35);sp.material.opacity=Math.max(0,sp.userData.life/1.7*.45);if(sp.userData.life<=0){scene.remove(sp);sp.material.dispose();smoke.splice(i,1)}}syncPhysicsState(0);syncPhysicsState(1);setRaycastInput(0,driving&&!serviceOpen&&!counting&&active===0,dt);setRaycastInput(1,driving&&!serviceOpen&&!counting&&active===1,dt);physicsWorld.step(1/60,dt,4);const near0=syncPhysicsState(0),near1=syncPhysicsState(1);for(let i=0;i<2;i++){const s=states[i],pv=vehiclePhysics[i],near=i===0?near0:near1;if(Math.abs(s.lat)>4.78){const sg=Math.sign(s.lat)||1,nx=-near.f.side.x*sg,nz=-near.f.side.z*sg,push=Math.min(2.8,(Math.abs(s.lat)-4.78)*5.5);pv.body.velocity.x+=nx*push*dt;pv.body.velocity.z+=nz*push*dt;if(Math.abs(s.lat)>5.35){pv.body.position.x+=nx*.035;pv.body.position.z+=nz*.035}}if(pv.body.position.y<near.q.y-.8||Math.abs(s.lat)>13){const q=roadPoint(s.t,tracks[i],THREE.MathUtils.clamp(s.lat,-2.5,2.5),.035),yaw=Math.atan2(near.f.tan.x,near.f.tan.z);pv.body.position.set(q.x,q.y+1.15,q.z);pv.body.quaternion.setFromEuler(0,yaw,0,'XYZ');pv.body.velocity.set(0,0,0);pv.body.angularVelocity.set(0,0,0);msg('↺ Veículo reposicionado na pista')}}const f=orientCar(active);orientCar(1-active);if(driving&&!serviceOpen&&!counting){const s=states[active],pv=vehiclePhysics[active],car=cars[active],fw=physicsForward(pv),headingWorld=new THREE.Vector3(fw.x,0,fw.z).normalize(),side=new THREE.Vector3(headingWorld.z,0,-headingWorld.x).normalize();let routeDelta=s.t-(s.prevT??s.t);if(routeDelta<-.5)routeDelta+=1;if(routeDelta>.5)routeDelta-=1;s.prevT=s.t;const delta=Math.max(0,routeDelta);s.totalKm+=delta*race.km;if((s.prevLapT??s.t)>.97&&s.t<.03&&s.speed>0){if(s.lap<race.laps){s.lap++;msg(`🔁 Volta ${s.lap}/${race.laps}`)}else{finish();s.t=.999}}s.prevLapT=s.t;if(Math.abs(s.speed)>1)s.fuel=Math.max(0,s.fuel-Math.abs(s.speed)*dt*.00125);s.turbo=Math.min(100,s.turbo+dt*1.15);if(s.fuel<=0){pv.vehicle.applyEngineForce(0,2);pv.vehicle.applyEngineForce(0,3)}const slip=pv.vehicle.sliding?1:.05;let desired,target;if(cameraMode===0){desired=car.position.clone().addScaledVector(headingWorld,isMobile()?-6.9:-8.8).add(new THREE.Vector3(0,isMobile()?2.5:3.3,0));target=car.position.clone().addScaledVector(headingWorld,isMobile()?8.5:10.5).add(new THREE.Vector3(0,.85,0))}else if(cameraMode===1){desired=car.position.clone().addScaledVector(headingWorld,-3.2).add(new THREE.Vector3(0,1.72,0));target=car.position.clone().addScaledVector(headingWorld,12).add(new THREE.Vector3(0,.9,0))}else{desired=car.position.clone().addScaledVector(side,-5.8).add(new THREE.Vector3(0,2.6,0));target=car.position.clone().add(new THREE.Vector3(0,.85,0))}camera.position.lerp(desired,1-Math.pow(.0017,dt));camera.lookAt(target);emitSmoke(car,s);updateAudio(s,slip);checkService();ui()}else{if(!serviceOpen&&!counting)orbit.update();if(audioCtx)updateAudio(states[active],0);ui()}renderer.render(scene,camera)}animate();addEventListener('resize'"""
+          s=s[:anim.start()]+new_anim+s[anim.end():]
+
+          s=s.replace("function switchPilot(i){states[active].speed=0;states[active].vx=0;states[active].vz=0;states[active].yawRate=0;active=i;states[active].speed=0;states[active].vx=0;states[active].vz=0;states[active].yawRate=0;", "function switchPilot(i){const old=vehiclePhysics?.[active];if(old){old.body.velocity.set(0,0,0);old.body.angularVelocity.set(0,0,0)}states[active].speed=0;active=i;const cur=vehiclePhysics?.[active];if(cur){cur.body.velocity.set(0,0,0);cur.body.angularVelocity.set(0,0,0)}states[active].speed=0;")
+
+          p.write_text(s)
+          PY
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('jogos/dupla-na-pista-teste.html').read_text()
+          assert 'pista viva v1.0 • suspensão + pneus raycast' in s
+          assert "cannon-es@0.20.0" in s
+          assert 'const physicsWorld=new CANNON.World' in s
+          assert 'new CANNON.RaycastVehicle' in s
+          assert 'physicsWorld.step(1/60,dt,4)' in s
+          mods=re.findall(r'<script type="module">(.*?)</script>',s,re.S)
+          assert mods
+          Path('/tmp/dupla.mjs').write_text(mods[-1])
+          PY
+          node --check /tmp/dupla.mjs
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add jogos/dupla-na-pista-teste.html
+          git commit -m 'fix: raycast suspension tire grip and solid guardrails'
+          git push
