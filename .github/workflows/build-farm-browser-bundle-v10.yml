@@ -82,17 +82,6 @@ jobs:
           i=Path('index.html')
           x=i.read_text().replace('postboot-loader.js?v=20-farm-v7b','postboot-loader.js?v=22-farm-v10')
           i.write_text(x)
-
-          v=Path('.github/workflows/validate-farm-multiplayer.yml')
-          x=v.read_text()
-          x=x.replace("      - 'jogos/fazendinha-experience-v6.js'", "      - 'jogos/fazendinha-experience-v6.js'\n      - 'jogos/fazendinha-bundle-v10.js'")
-          x=x.replace('node --check jogos/fazendinha-experience-v6.js','node --check jogos/fazendinha-experience-v6.js\n          node --check jogos/fazendinha-bundle-v10.js')
-          x=x.replace('test -s jogos/fazendinha-experience-v6.js','test -s jogos/fazendinha-experience-v6.js\n          test -s jogos/fazendinha-bundle-v10.js')
-          x=re.sub(r"grep -q 'fazendinha-experience-v6\.js\?v=[^']+' jogos/fazendinha-multiplayer\.html", "grep -q 'fazendinha-bundle-v10.js?v=10-browser-bundle' jogos/fazendinha-multiplayer.html", x)
-          x=re.sub(r"grep -q 'v=[^']+' games-menu-farm\.js", "grep -q 'v=10-browser-bundle' games-menu-farm.js", x)
-          x=re.sub(r"grep -q \"loadOnce\('farm-game','\./games-menu-farm\.js\?v=[^']+'\)\" extras-loader\.js", "grep -q \"loadOnce('farm-game','./games-menu-farm.js?v=10-browser-bundle')\" extras-loader.js", x)
-          x=re.sub(r"grep -q 'postboot-loader\.js\?v=[^']+' index\.html", "grep -q 'postboot-loader.js?v=22-farm-v10' index.html", x)
-          v.write_text(x)
           PY
       - name: Validar runtime final
         run: |
@@ -104,10 +93,13 @@ jobs:
           grep -q 'fazendinha-bundle-v10.js?v=10-browser-bundle' jogos/fazendinha-multiplayer.html
           ! grep -q 'type="importmap"' jogos/fazendinha-multiplayer.html
           grep -q 'cb=${Date.now()}' games-menu-farm.js
+          grep -q "loadOnce('farm-game','./games-menu-farm.js?v=10-browser-bundle')" extras-loader.js
+          grep -q 'extras-loader.js?v=30-farm-v10' postboot-loader.js
+          grep -q 'postboot-loader.js?v=22-farm-v10' index.html
       - name: Publicar bundle compatível
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add jogos/fazendinha-bundle-v10.js jogos/fazendinha-multiplayer.html games-menu-farm.js extras-loader.js postboot-loader.js index.html .github/workflows/validate-farm-multiplayer.yml
+          git add jogos/fazendinha-bundle-v10.js jogos/fazendinha-multiplayer.html games-menu-farm.js extras-loader.js postboot-loader.js index.html
           git commit -m 'Bundle Fazendinha 3D for notebook browser'
           git push
