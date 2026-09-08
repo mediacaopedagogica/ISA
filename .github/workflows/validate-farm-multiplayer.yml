@@ -6,10 +6,12 @@ on:
     paths:
       - 'jogos/fazendinha-multiplayer.html'
       - 'jogos/fazendinha-multiplayer.css'
-      - 'jogos/fazendinha-multiplayer.js'
+      - 'jogos/fazendinha-experience-v6.css'
+      - 'jogos/fazendinha-experience-v6.js'
       - 'games-menu-farm.js'
       - 'extras-loader.js'
       - 'postboot-loader.js'
+      - 'index.html'
       - 'acesso.html'
       - 'acesso-mobile.html'
       - '.github/workflows/validate-farm-multiplayer.yml'
@@ -25,7 +27,7 @@ jobs:
           node-version: '20'
       - name: Verificar sintaxe
         run: |
-          node --check jogos/fazendinha-multiplayer.js
+          node --check jogos/fazendinha-experience-v6.js
           node --check games-menu-farm.js
           node --check extras-loader.js
           node --check postboot-loader.js
@@ -33,30 +35,29 @@ jobs:
         run: |
           test -s jogos/fazendinha-multiplayer.html
           test -s jogos/fazendinha-multiplayer.css
-          test -s jogos/fazendinha-multiplayer.js
-          test -s games-menu-farm.js
+          test -s jogos/fazendinha-experience-v6.css
+          test -s jogos/fazendinha-experience-v6.js
           grep -q 'Fazendinha Família Feliz' jogos/fazendinha-multiplayer.html
-          grep -q 'v=4-realismo-movimento' jogos/fazendinha-multiplayer.html
-          grep -q 'teste exclusivo da Isa' jogos/fazendinha-multiplayer.html
-          grep -q 'Editar Nick' jogos/fazendinha-multiplayer.html
-          grep -q 'farm_game_bootstrap' jogos/fazendinha-multiplayer.js
-          grep -q 'farm_game_snapshot' jogos/fazendinha-multiplayer.js
-          grep -q 'farm_game_action' jogos/fazendinha-multiplayer.js
-          grep -q 'function moveLocal' jogos/fazendinha-multiplayer.js
-          grep -q 'function queueMove' jogos/fazendinha-multiplayer.js
-          grep -q 'function groundTarget' jogos/fazendinha-multiplayer.js
-          grep -q 'function spawnParticle' jogos/fazendinha-multiplayer.js
-          grep -q 'function addHouse' jogos/fazendinha-multiplayer.js
-          grep -q 'function addBarn' jogos/fazendinha-multiplayer.js
-          grep -q 'function addSilo' jogos/fazendinha-multiplayer.js
-          grep -q 'function addWindmill' jogos/fazendinha-multiplayer.js
-          grep -q "addAnimal('pig-a'" jogos/fazendinha-multiplayer.js
-          grep -q "addAnimal('sheep-a'" jogos/fazendinha-multiplayer.js
-          grep -q "addAnimal('horse-a'" jogos/fazendinha-multiplayer.js
-          grep -q "addAnimal('dog-a'" jogos/fazendinha-multiplayer.js
+          grep -q 'fazendinha-experience-v6.js?v=6-camera-casa-pesca' jogos/fazendinha-multiplayer.html
+          grep -q 'camera360Btn' jogos/fazendinha-multiplayer.html
+          grep -q 'eyeCameraBtn' jogos/fazendinha-multiplayer.html
+          grep -q 'data-tool="fish"' jogos/fazendinha-multiplayer.html
+          grep -q 'GLTFLoader' jogos/fazendinha-experience-v6.js
+          grep -q 'Soldier.glb' jogos/fazendinha-experience-v6.js
+          grep -q 'OrbitControls' jogos/fazendinha-experience-v6.js
+          grep -q "locationMode='inside'" jogos/fazendinha-experience-v6.js
+          grep -q "kind:'door-enter'" jogos/fazendinha-experience-v6.js
+          grep -q "kind:'rest'" jogos/fazendinha-experience-v6.js
+          grep -q "kind:'eat'" jogos/fazendinha-experience-v6.js
+          grep -q "kind:'fishspot'" jogos/fazendinha-experience-v6.js
+          grep -q "doAction('fish'" jogos/fazendinha-experience-v6.js
+          grep -q 'farm_game_bootstrap' jogos/fazendinha-experience-v6.js
+          grep -q 'farm_game_snapshot' jogos/fazendinha-experience-v6.js
+          grep -q 'farm_game_action' jogos/fazendinha-experience-v6.js
           grep -q "function eligible(){return currentName()==='isa'}" games-menu-farm.js
-          grep -q 'v=4-realismo-movimento' games-menu-farm.js
-          grep -q "loadOnce('farm-game','./games-menu-farm.js?v=4-realismo-movimento')" extras-loader.js
+          grep -q 'v=6-camera-casa-pesca' games-menu-farm.js
+          grep -q "loadOnce('farm-game','./games-menu-farm.js?v=6-camera-casa-pesca')" extras-loader.js
+          grep -q 'postboot-loader.js?v=18-farm-v6' index.html
           ! grep -q 'games-menu-farm.js' acesso.html
           ! grep -q 'games-menu-farm.js' acesso-mobile.html
           ! grep -q 'Isa no notebook e Primo no celular' games-menu-farm.js
