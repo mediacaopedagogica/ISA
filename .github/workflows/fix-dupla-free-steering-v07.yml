@@ -1,0 +1,73 @@
+name: Fix Dupla free steering v0.7
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-dupla-free-steering-v07.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace rail-follow steering with free vehicle steering
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('jogos/dupla-na-pista-teste.html')
+          s=p.read_text()
+          s=s.replace('pista viva v0.6 • direção manual','pista viva v0.7 • direção livre')
+          s=s.replace('🧪 TESTE JOGO • KEISE • v0.6','🧪 TESTE JOGO • KEISE • v0.7')
+
+          old_orient=re.search(r"function orientCar\(i\)\{.*?return f\}",s,re.S)
+          assert old_orient, 'orientCar não encontrado'
+          new_orient="""function orientCar(i){const s=states[i],f=frameAt(s.t),center=roadPoint(s.t,tracks[i],0,.035),pitch=Math.atan2(f.tan.y,Math.hypot(f.tan.x,f.tan.z));if(!Number.isFinite(s.x)||!Number.isFinite(s.z)){s.x=center.x;s.z=center.z;s.yaw=Math.atan2(f.tan.x,-f.tan.z)}cars[i].position.set(s.x,center.y+f.bank*s.lat,s.z);cars[i].rotation.set(pitch,s.yaw+Math.PI,s.bodyRoll,'YXZ');return f}"""
+          s=s[:old_orient.start()]+new_orient+s[old_orient.end():]
+
+          old_reset=re.search(r"function resetState\(i\)\{.*?\}\)\}",s,re.S)
+          assert old_reset, 'resetState não encontrado'
+          new_reset="""function resetState(i){const t=i?.022:.012,f=frameAt(t),q=roadPoint(t,tracks[i],0,.035),yaw=Math.atan2(f.tan.x,-f.tan.z);Object.assign(states[i],{t,lat:0,x:q.x,z:q.z,yaw,speed:0,lap:1,totalKm:0,turbo:72,steer:0,steerAngle:0,heading:0,bodyRoll:0,impact:0,latVel:0})}"""
+          s=s[:old_reset.start()]+new_reset+s[old_reset.end():]
+
+          anchor='function checkService()'
+          idx=s.find(anchor)
+          assert idx!=-1
+          helper="""function nearestRoadState(s,track){let bestT=s.t,bestD=Infinity,bestF=null,bestQ=null;let span=.02;for(let pass=0;pass<3;pass++){const base=bestT;bestD=Infinity;for(let j=-10;j<=10;j++){const tt=(base+(j/10)*span+1)%1,q=roadPoint(tt,track,0,.035),dx=s.x-q.x,dz=s.z-q.z,d=dx*dx+dz*dz;if(d<bestD){bestD=d;bestT=tt;bestQ=q;bestF=frameAt(tt)}}span*=.18}const rel=new THREE.Vector3(s.x-bestQ.x,0,s.z-bestQ.z);return{t:bestT,lat:rel.dot(bestF.side),f:bestF,q:bestQ,dist:Math.sqrt(bestD)}}"""
+          s=s[:idx]+helper+s[idx:]
+
+          pattern=r"const steerInput=\(left\?1:0\)\+\(right\?-1:0\).*?const offRoad=Math\.abs\(s\.lat\)>3\.95;"
+          m=re.search(pattern,s,re.S)
+          assert m, 'bloco de direção v0.6 não encontrado'
+          new_drive="""const steerInput=(right?1:0)-(left?1:0),speedFactor=THREE.MathUtils.clamp(s.speed/32,0,1),maxSteer=THREE.MathUtils.degToRad(31-18*speedFactor);s.steer=THREE.MathUtils.lerp(s.steer,steerInput,Math.min(1,dt*(steerInput?5.5:8.5)));s.steerAngle=THREE.MathUtils.lerp(s.steerAngle,s.steer*maxSteer,Math.min(1,dt*(steerInput?6.5:10)));const wheelBase=3.15,yawRate=s.speed>0.15?(s.speed/wheelBase)*Math.tan(s.steerAngle):0;s.yaw+=yawRate*dt;const forwardX=Math.sin(s.yaw),forwardZ=-Math.cos(s.yaw),oldT=s.t;s.x+=forwardX*s.speed*dt;s.z+=forwardZ*s.speed*dt;const near=nearestRoadState(s,tracks[active]);s.t=near.t;s.lat=near.lat;let routeDelta=s.t-oldT;if(routeDelta<-.5)routeDelta+=1;if(routeDelta>.5)routeDelta-=1;const delta=Math.max(0,routeDelta);const offRoad=Math.abs(s.lat)>4.3;"""
+          s=s[:m.start()]+new_drive+s[m.end():]
+
+          s=s.replace("const slip=Math.abs(s.heading)+Math.abs(s.steerAngle)*speedFactor*.55;","const slip=Math.abs(s.steerAngle)*speedFactor*.7;")
+          s=s.replace("s.bodyRoll=THREE.MathUtils.lerp(s.bodyRoll,-s.steer*speedFactor*.042+THREE.MathUtils.clamp(s.heading,-.16,.16)*.035,Math.min(1,dt*7));","s.bodyRoll=THREE.MathUtils.lerp(s.bodyRoll,-s.steer*speedFactor*.045,Math.min(1,dt*7));")
+          s=s.replace("const car=cars[active],headingWorld=new THREE.Vector3(Math.sin(Math.atan2(f.tan.x,-f.tan.z)+s.heading),0,-Math.cos(Math.atan2(f.tan.x,-f.tan.z)+s.heading)).normalize(),side=f.side.clone();","const car=cars[active],headingWorld=new THREE.Vector3(Math.sin(s.yaw),0,-Math.cos(s.yaw)).normalize(),side=new THREE.Vector3(-headingWorld.z,0,headingWorld.x).normalize();")
+
+          # Remove any residual artificial lateral-velocity steering from v0.6.
+          assert 'targetLatVel=' not in s
+          assert 's.lat+=s.latVel*dt' not in s
+          assert 's.heading+=' not in s
+          p.write_text(s)
+          PY
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('jogos/dupla-na-pista-teste.html').read_text()
+          assert 'pista viva v0.7 • direção livre' in s
+          assert 'nearestRoadState' in s
+          assert 's.x+=forwardX*s.speed*dt' in s
+          assert 'targetLatVel=' not in s
+          m=re.findall(r'<script type="module">(.*?)</script>',s,re.S)
+          assert m
+          Path('/tmp/dupla.mjs').write_text(m[-1])
+          PY
+          node --check /tmp/dupla.mjs
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add jogos/dupla-na-pista-teste.html
+          git commit -m 'fix: true free steering without lateral rail pull'
+          git push
