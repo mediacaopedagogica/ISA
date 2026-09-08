@@ -1,0 +1,70 @@
+name: Fix Fazendinha v7 loading
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-farm-loading-v7.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Corrigir carregamento e atualizar cache
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p=Path('jogos/fazendinha-experience-v6.js')
+          s=p.read_text(encoding='utf-8')
+          old='\nupgradeAnimalModels()\n'
+          if old not in s:
+              raise SystemExit('Chamada imediata de upgradeAnimalModels não encontrada')
+          s=s.replace(old,'\nqueueMicrotask(()=>upgradeAnimalModels())\n',1)
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('jogos/fazendinha-multiplayer.html')
+          s=p.read_text(encoding='utf-8').replace('v=7-natural-models','v=7b-loading-fix')
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('games-menu-farm.js')
+          s=p.read_text(encoding='utf-8').replace('v=7-natural-models','v=7b-loading-fix')
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('extras-loader.js')
+          s=p.read_text(encoding='utf-8').replace('games-menu-farm.js?v=7-natural-models','games-menu-farm.js?v=7b-loading-fix')
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('postboot-loader.js')
+          s=p.read_text(encoding='utf-8').replace('extras-loader.js?v=26-farm-v7','extras-loader.js?v=27-farm-v7b')
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8').replace('postboot-loader.js?v=19-farm-v7','postboot-loader.js?v=20-farm-v7b')
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Validar correção
+        run: |
+          node --check jogos/fazendinha-experience-v6.js
+          grep -q 'queueMicrotask(()=>upgradeAnimalModels())' jogos/fazendinha-experience-v6.js
+          grep -q 'fazendinha-experience-v6.js?v=7b-loading-fix' jogos/fazendinha-multiplayer.html
+          grep -q 'v=7b-loading-fix' games-menu-farm.js
+          grep -q 'games-menu-farm.js?v=7b-loading-fix' extras-loader.js
+          grep -q 'postboot-loader.js?v=20-farm-v7b' index.html
+          grep -q 'camera360Btn' jogos/fazendinha-multiplayer.html
+          grep -q 'eyeCameraBtn' jogos/fazendinha-multiplayer.html
+          grep -q 'data-tool="fish"' jogos/fazendinha-multiplayer.html
+      - name: Publicar correção
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add jogos/fazendinha-experience-v6.js jogos/fazendinha-multiplayer.html games-menu-farm.js extras-loader.js postboot-loader.js index.html
+          git diff --cached --quiet || git commit -m 'Fix Fazendinha v7 endless loading'
+          git push
