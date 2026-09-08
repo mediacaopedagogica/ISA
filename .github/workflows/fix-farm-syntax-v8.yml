@@ -1,0 +1,59 @@
+name: Fix Fazendinha syntax v8
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-farm-syntax-v8.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Corrigir sintaxe do motor 3D
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('jogos/fazendinha-experience-v6.js')
+          s=p.read_text()
+          old='bumpScale:map?.02||0'
+          new='bumpScale:map ? .02 : 0'
+          if old not in s:
+              raise SystemExit('Trecho de sintaxe esperado não encontrado')
+          s=s.replace(old,new)
+          p.write_text(s)
+
+          h=Path('jogos/fazendinha-multiplayer.html')
+          t=h.read_text()
+          t=t.replace('v=8-notebook-importmap','v=9-syntax-fix')
+          h.write_text(t)
+
+          g=Path('games-menu-farm.js')
+          x=g.read_text().replace('v=7b-loading-fix','v=9-syntax-fix').replace('v=8-notebook-importmap','v=9-syntax-fix')
+          g.write_text(x)
+
+          e=Path('extras-loader.js')
+          x=e.read_text().replace('games-menu-farm.js?v=7b-loading-fix','games-menu-farm.js?v=9-syntax-fix').replace('games-menu-farm.js?v=8-notebook-importmap','games-menu-farm.js?v=9-syntax-fix')
+          e.write_text(x)
+          PY
+      - name: Validar sintaxe real
+        run: |
+          node --check jogos/fazendinha-experience-v6.js
+          node --check games-menu-farm.js
+          grep -q 'bumpScale:map ? .02 : 0' jogos/fazendinha-experience-v6.js
+          grep -q 'fazendinha-experience-v6.js?v=9-syntax-fix' jogos/fazendinha-multiplayer.html
+      - name: Publicar correção
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add jogos/fazendinha-experience-v6.js jogos/fazendinha-multiplayer.html games-menu-farm.js extras-loader.js
+          git commit -m 'Fix Fazendinha 3D syntax error'
+          git push
