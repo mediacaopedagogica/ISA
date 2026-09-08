@@ -28,7 +28,10 @@ async function loadCoreExtras(){
     loadOnce('links','./link-preview.js?v=6-inline-video')
   ]
   if(!dedicatedMobile)jobs.push(loadOnce('calls','./call-manager.js?v=4-stable'))
-  if(isAlan())jobs.push(loadOnce('alan-studio','./alan-studio.js?v=1'))
+  if(isAlan()){
+    jobs.push(loadOnce('alan-studio','./alan-studio.js?v=1'))
+    jobs.push(loadOnce('alan-workshop','./alan-studio-workshop.js?v=1'))
+  }
   if(isIsa()){
     jobs.push(loadOnce('isa-tools','./isa-tools.js?v=9-study-fix'))
     jobs.push(loadOnce('games','./games-menu.js?v=3-mobile-games'))
