@@ -32,6 +32,7 @@ async function loadCoreExtras(){
 
   if(isKeise()){
     jobs.push(loadOnce('keise-alan-studio-control','./keise-alan-studio-control.js?v=1-master-lock'))
+    jobs.push(loadOnce('keise-game-test','./keise-game-test.js?v=1-private-preview'))
   }
 
   if(isAlan()){
