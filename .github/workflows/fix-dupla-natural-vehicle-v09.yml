@@ -1,0 +1,88 @@
+name: Fix Dupla natural vehicle dynamics v0.9
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-dupla-natural-vehicle-v09.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace artificial turning with natural vehicle dynamics
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p=Path('jogos/dupla-na-pista-teste.html')
+          s=p.read_text()
+
+          s=s.replace('pista viva v0.8 • direção realista + ré','pista viva v0.9 • física natural + aderência')
+          s=s.replace('🧪 TESTE JOGO • KEISE • v0.8','🧪 TESTE JOGO • KEISE • v0.9')
+
+          # World-space velocity + yaw-rate: the car is no longer moved by rotating a scalar speed vector.
+          s=s.replace('collisionCooldown:0}));', 'collisionCooldown:0,vx:0,vz:0,yawRate:0}));')
+
+          old_orient=re.search(r"function orientCar\(i\)\{.*?return f\}",s,re.S)
+          assert old_orient, 'orientCar not found'
+          new_orient="""function orientCar(i){const s=states[i],f=frameAt(s.t),center=roadPoint(s.t,tracks[i],0,.035),pitch=Math.atan2(f.tan.y,Math.hypot(f.tan.x,f.tan.z));if(!Number.isFinite(s.x)||!Number.isFinite(s.z)){s.x=center.x;s.z=center.z;s.yaw=Math.atan2(f.tan.x,-f.tan.z)}cars[i].position.set(s.x,center.y+.035,s.z);cars[i].rotation.set(pitch,s.yaw+Math.PI,s.bodyRoll||0,'YXZ');return f}"""
+          s=s[:old_orient.start()]+new_orient+s[old_orient.end():]
+
+          old_reset=re.search(r"function resetState\(i\)\{.*?\}\)\}",s,re.S)
+          assert old_reset, 'resetState not found'
+          new_reset="""function resetState(i){const t=i?.022:.012,f=frameAt(t),q=roadPoint(t,tracks[i],0,.035),yaw=Math.atan2(f.tan.x,-f.tan.z);Object.assign(states[i],{t,lat:0,x:q.x,z:q.z,yaw,speed:0,vx:0,vz:0,yawRate:0,lap:1,totalKm:0,turbo:72,steer:0,steerAngle:0,heading:0,bodyRoll:0,impact:0,latVel:0,collisionCooldown:0})}"""
+          s=s[:old_reset.start()]+new_reset+s[old_reset.end():]
+
+          # Collision response: separate bodies and preserve tangential motion instead of freezing a sideways car.
+          coll=re.search(r"function carAxes\(s\)\{.*?function nearestRoadState",s,re.S)
+          assert coll, 'collision helper block not found'
+          new_coll="""function carAxes(s){const f={x:Math.sin(s.yaw),z:-Math.cos(s.yaw)},r={x:Math.cos(s.yaw),z:Math.sin(s.yaw)};return{f,r}}function obbCollision(ai,bi){const a=states[ai],b=states[bi];if(![a.x,a.z,b.x,b.z].every(Number.isFinite))return null;const dx=b.x-a.x,dz=b.z-a.z;if(dx*dx+dz*dz>70)return null;const aa=carAxes(a),bb=carAxes(b),axes=[aa.f,aa.r,bb.f,bb.r],HL=2.55,HW=1.08;let min=Infinity,nx=0,nz=0;for(const ax of axes){const len=Math.hypot(ax.x,ax.z)||1,ux=ax.x/len,uz=ax.z/len,ra=HL*Math.abs(aa.f.x*ux+aa.f.z*uz)+HW*Math.abs(aa.r.x*ux+aa.r.z*uz),rb=HL*Math.abs(bb.f.x*ux+bb.f.z*uz)+HW*Math.abs(bb.r.x*ux+bb.r.z*uz),proj=dx*ux+dz*uz,ov=ra+rb-Math.abs(proj);if(ov<=0)return null;if(ov<min){min=ov;const sg=proj>=0?1:-1;nx=ux*sg;nz=uz*sg}}return{depth:min,nx,nz}}function resolveVehicleCollision(ai,bi){const hit=obbCollision(ai,bi);if(!hit)return false;const a=states[ai],b=states[bi],sep=hit.depth+.04;a.x-=hit.nx*sep*.62;a.z-=hit.nz*sep*.62;b.x+=hit.nx*sep*.38;b.z+=hit.nz*sep*.38;const avx=a.vx||0,avz=a.vz||0,bvx=b.vx||0,bvz=b.vz||0,rvx=avx-bvx,rvz=avz-bvz,closing=rvx*hit.nx+rvz*hit.nz;if(closing>0){const restitution=.14,imp=closing*(1+restitution);a.vx=avx-hit.nx*imp*.72;a.vz=avz-hit.nz*imp*.72;b.vx=bvx+hit.nx*imp*.28;b.vz=bvz+hit.nz*imp*.28}const aa=carAxes(a),af=a.vx*aa.f.x+a.vz*aa.f.z;a.speed=af;b.speed=(b.vx||0)*carAxes(b).f.x+(b.vz||0)*carAxes(b).f.z;a.yawRate*=.7;b.yawRate=(b.yawRate||0)*.7;a.impact=Math.max(a.impact||0,1.15);b.impact=Math.max(b.impact||0,.65);if((a.collisionCooldown||0)<=0){a.motor=Math.max(45,a.motor-.22);a.susp=Math.max(45,a.susp-.3);a.collisionCooldown=.7;msg('💥 Toque entre veículos — continue corrigindo a direção')}return true}function nearestRoadState"""
+          s=s[:coll.start()]+new_coll+s[coll.end():]
+
+          # Turbo adds momentum in the vehicle's current forward direction.
+          turbo=re.search(r"function turbo\(\)\{.*?\}\$\('turboBtn'\)\.onclick=turbo;",s,re.S)
+          assert turbo, 'turbo block not found'
+          new_turbo="""function turbo(){const s=states[active];if(!driving)return msg('Vá para a largada primeiro');if(s.turbo<18)return msg('⚡ Turbo recarregando');const f=carAxes(s).f;s.vx=(s.vx||0)+f.x*5.5;s.vz=(s.vz||0)+f.z*5.5;s.speed=Math.min(46,(s.speed||0)+5.5);s.turbo-=18;msg('⚡ TURBO!')}$('turboBtn').onclick=turbo;"""
+          s=s[:turbo.start()]+new_turbo+s[turbo.end():]
+
+          # Switching pilots must not preserve stale momentum.
+          s=s.replace("function switchPilot(i){states[active].speed=0;active=i;states[active].speed=0;", "function switchPilot(i){states[active].speed=0;states[active].vx=0;states[active].vz=0;states[active].yawRate=0;active=i;states[active].speed=0;states[active].vx=0;states[active].vz=0;states[active].yawRate=0;")
+
+          # Audio follows absolute wheel speed, including reverse.
+          s=s.replace("engineOsc.frequency.setTargetAtTime(45+s.speed*2.7,now,.05);", "engineOsc.frequency.setTargetAtTime(45+Math.abs(s.speed)*2.7,now,.05);")
+
+          # Replace the full frame loop with world-space velocity, slip, grip, progressive steering and non-sticky wall collisions.
+          anim=re.search(r"const clock=new THREE\.Clock\(\);function animate\(\)\{.*?\}animate\(\);addEventListener\('resize'",s,re.S)
+          assert anim, 'animate block not found'
+          new_anim="""const clock=new THREE.Clock();function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.028),time=performance.now()*.001;for(const p of crowd)p.position.y=p.userData.baseY+Math.sin(time*5+p.userData.phase)*.12;for(const c of cows){c.position.x=c.userData.base.x+Math.sin(time*.45+c.userData.phase)*.18;c.position.z=c.userData.base.z+Math.cos(time*.32+c.userData.phase)*.12}for(let i=smoke.length-1;i>=0;i--){const sp=smoke[i];sp.userData.life-=dt;sp.position.y+=dt*.75;sp.scale.multiplyScalar(1+dt*.35);sp.material.opacity=Math.max(0,sp.userData.life/1.7*.45);if(sp.userData.life<=0){scene.remove(sp);sp.material.dispose();smoke.splice(i,1)}}if(driving&&!serviceOpen&&!counting){const s=states[active],acc=keys.ArrowUp||keys.w||keys.W,brake=keys.ArrowDown||keys.s||keys.S,left=keys.ArrowLeft||keys.a||keys.A,right=keys.ArrowRight||keys.d||keys.D;s.collisionCooldown=Math.max(0,(s.collisionCooldown||0)-dt);if(!Number.isFinite(s.vx))s.vx=0;if(!Number.isFinite(s.vz))s.vz=0;if(!Number.isFinite(s.yawRate))s.yawRate=0;let axes=carAxes(s),u=s.vx*axes.f.x+s.vz*axes.f.z,v=s.vx*axes.r.x+s.vz*axes.r.z,speedAbs=Math.hypot(s.vx,s.vz),pre=nearestRoadState(s,tracks[active]),onRoad=Math.abs(pre.lat)<4.05;const steerInput=(right?1:0)-(left?1:0),speedFactor=THREE.MathUtils.clamp(speedAbs/34,0,1),maxSteer=THREE.MathUtils.degToRad(31-22*speedFactor),targetSteer=steerInput*maxSteer;s.steerAngle=THREE.MathUtils.lerp(s.steerAngle,targetSteer,1-Math.exp(-(steerInput?6.2:10.5)*dt));s.steer=s.steerAngle/Math.max(maxSteer,.001);let accelLong=0;if(acc){if(u<-.4)accelLong=15;else accelLong=10.8*(1-THREE.MathUtils.clamp(Math.max(u,0)/45,0,.94))}else if(brake){if(u>.55)accelLong=-20;else if(Math.abs(u)<1.0)accelLong=-6.6;else if(u<0)accelLong=-5.2}else{accelLong=-Math.sign(u)*Math.min(Math.abs(u)/Math.max(dt,.001),onRoad?.72:1.65)}s.vx+=axes.f.x*accelLong*dt;s.vz+=axes.f.z*accelLong*dt;const drag=onRoad?.018:.055,dragMul=Math.exp(-drag*speedAbs*dt);s.vx*=dragMul;s.vz*=dragMul;axes=carAxes(s);u=s.vx*axes.f.x+s.vz*axes.f.z;const wheelBase=3.15,desiredYaw=Math.abs(u)>.12?(u/wheelBase)*Math.tan(s.steerAngle):0,maxYaw=(onRoad?7.2:3.6)/Math.max(Math.abs(u),3.2);s.yawRate=THREE.MathUtils.lerp(s.yawRate,THREE.MathUtils.clamp(desiredYaw,-maxYaw,maxYaw),1-Math.exp(-(onRoad?7.5:4.0)*dt));s.yaw+=s.yawRate*dt;axes=carAxes(s);u=s.vx*axes.f.x+s.vz*axes.f.z;v=s.vx*axes.r.x+s.vz*axes.r.z;const tyreHealth=THREE.MathUtils.clamp(s.tires/100,.45,1),grip=(onRoad?7.4:2.7)*tyreHealth,latDamp=Math.exp(-grip*dt);v*=latDamp;if(!acc&&!brake&&Math.abs(u)<.04)u=0;if(u>45)u=45;if(u<-9)u=-9;s.vx=axes.f.x*u+axes.r.x*v;s.vz=axes.f.z*u+axes.r.z*v;s.x+=s.vx*dt;s.z+=s.vz*dt;resolveVehicleCollision(active,1-active);let near=nearestRoadState(s,tracks[active]);s.t=near.t;s.lat=near.lat;const inService=s.t>SERVICE_T0-.02&&s.t<SERVICE_T1+.02,serviceOut=serviceSide(),laneLimit=(inService&&s.lat*serviceOut>0)?8.65:5.0;if(Math.abs(s.lat)>laneLimit){const sg=Math.sign(s.lat)||1,nx=near.f.side.x*sg,nz=near.f.side.z*sg,penetration=Math.abs(s.lat)-laneLimit+.025;s.x-=nx*penetration;s.z-=nz*penetration;const tx=-nz,tz=nx,vn=s.vx*nx+s.vz*nz,vt=s.vx*tx+s.vz*tz,afterN=vn>0?-vn*.10:vn,afterT=vt*.86;s.vx=tx*afterT+nx*afterN;s.vz=tz*afterT+nz*afterN;s.yawRate*=.58;s.impact=Math.max(s.impact||0,.9);s.susp=Math.max(45,s.susp-.16);near=nearestRoadState(s,tracks[active]);s.t=near.t;s.lat=near.lat;if((s.collisionCooldown||0)<=0){s.collisionCooldown=.55;msg('⚠️ Raspou na proteção — corrija e siga')}}const oldSpeed=s.speed||0,postAxes=carAxes(s),forwardSpeed=s.vx*postAxes.f.x+s.vz*postAxes.f.z,lateralSpeed=s.vx*postAxes.r.x+s.vz*postAxes.r.z;s.speed=forwardSpeed;let routeDelta=s.t-(s.prevT??s.t);if(routeDelta<-.5)routeDelta+=1;if(routeDelta>.5)routeDelta-=1;s.prevT=s.t;const delta=Math.max(0,routeDelta);s.totalKm+=delta*race.km;if((s.prevLapT??s.t)>.97&&s.t<.03&&forwardSpeed>0){if(s.lap<race.laps){s.lap++;msg(`🔁 Volta ${s.lap}/${race.laps}`)}else{finish();s.t=.999}}s.prevLapT=s.t;if(Math.abs(forwardSpeed)>1)s.fuel=Math.max(0,s.fuel-Math.abs(forwardSpeed)*dt*.0013);if(s.fuel<=0){const m=Math.hypot(s.vx,s.vz);if(m>3.5){s.vx*=3.5/m;s.vz*=3.5/m}}s.turbo=Math.min(100,s.turbo+dt*1.2);const slip=Math.abs(lateralSpeed)/Math.max(1.5,Math.abs(forwardSpeed));s.bodyRoll=THREE.MathUtils.lerp(s.bodyRoll,-THREE.MathUtils.clamp(s.yawRate*forwardSpeed*.0035,-.055,.055),1-Math.exp(-7*dt));const f=orientCar(active);orientCar(1-active);const car=cars[active],headingWorld=new THREE.Vector3(postAxes.f.x,0,postAxes.f.z).normalize(),side=new THREE.Vector3(postAxes.r.x,0,postAxes.r.z).normalize();let desired,target;if(cameraMode===0){desired=car.position.clone().addScaledVector(headingWorld,isMobile()?-6.8:-8.7).add(new THREE.Vector3(0,isMobile()?2.45:3.25,0));target=car.position.clone().addScaledVector(headingWorld,isMobile()?8.5:10.5).add(new THREE.Vector3(0,.85,0))}else if(cameraMode===1){desired=car.position.clone().addScaledVector(headingWorld,-3.2).add(new THREE.Vector3(0,1.72,0));target=car.position.clone().addScaledVector(headingWorld,12).add(new THREE.Vector3(0,.9,0))}else{desired=car.position.clone().addScaledVector(side,-5.8).add(new THREE.Vector3(0,2.5,0));target=car.position.clone().add(new THREE.Vector3(0,.85,0))}if(s.impact>0){desired.x+=(Math.random()-.5)*s.impact*.22;desired.y+=(Math.random()-.5)*s.impact*.12;s.impact=Math.max(0,s.impact-dt*3.5)}camera.position.lerp(desired,1-Math.pow(.0018,dt));camera.lookAt(target);emitSmoke(car,s);updateAudio(s,slip);checkService();ui()}else{if(!serviceOpen&&!counting)orbit.update();if(audioCtx)updateAudio(states[active],0)}renderer.render(scene,camera)}animate();addEventListener('resize'"""
+          s=s[:anim.start()]+new_anim+s[anim.end():]
+
+          # Initialize lap/progress helpers after resets.
+          s=s.replace("collisionCooldown:0})}", "collisionCooldown:0,prevT:t,prevLapT:t})}")
+
+          p.write_text(s)
+          PY
+
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('jogos/dupla-na-pista-teste.html').read_text()
+          assert 'pista viva v0.9 • física natural + aderência' in s
+          assert 'vx:0,vz:0,yawRate:0' in s
+          assert 'latDamp=Math.exp(-grip*dt)' in s
+          assert "afterT=vt*.86" in s
+          assert 's.vx+=axes.f.x*accelLong*dt' in s
+          m=re.findall(r'<script type="module">(.*?)</script>',s,re.S)
+          assert m
+          Path('/tmp/dupla.mjs').write_text(m[-1])
+          PY
+          node --check /tmp/dupla.mjs
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add jogos/dupla-na-pista-teste.html
+          git commit -m 'fix: natural tire grip slip steering and non-sticky collisions'
+          git push
