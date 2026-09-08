@@ -1,0 +1,42 @@
+name: Fix Dupla loader and access cache
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-dupla-loader-access-cache.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch game loader and cache bust
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          game=Path('jogos/dupla-na-pista-teste.html')
+          s=game.read_text(encoding='utf-8')
+          old="""<script type=\"module\">\nimport * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js';\nimport {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/controls/OrbitControls.js';"""
+          new="""<script type=\"importmap\">\n{\"imports\":{\"three\":\"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js\"}}\n</script>\n<script>\nwindow.addEventListener('error',function(e){\n  const status=document.getElementById('loadStatus');\n  const loading=document.getElementById('loading');\n  if(status&&loading&&!loading.classList.contains('hide')) status.textContent='Falha ao iniciar o 3D. Recarregue a cena.';\n});\nsetTimeout(function(){\n  const status=document.getElementById('loadStatus');\n  const loading=document.getElementById('loading');\n  if(status&&loading&&!loading.classList.contains('hide')&&status.textContent==='Preparando garagem...') status.textContent='O 3D demorou para iniciar. Atualize esta cena.';\n},9000);\n</script>\n<script type=\"module\">\nimport * as THREE from 'three';\nimport {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/controls/OrbitControls.js';"""
+          if old in s:
+              s=s.replace(old,new,1)
+          elif "import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js';" in s:
+              s=s.replace("<script type=\"module\">", "<script type=\"importmap\">\n{\"imports\":{\"three\":\"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js\"}}\n</script>\n<script type=\"module\">",1)
+              s=s.replace("import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js';", "import * as THREE from 'three';",1)
+          game.write_text(s,encoding='utf-8')
+
+          index=Path('index.html')
+          x=index.read_text(encoding='utf-8')
+          x=x.replace('./postboot-loader.js?v=22-alan-supervision-game','./postboot-loader.js?v=23-access-and-dupla-fix')
+          index.write_text(x,encoding='utf-8')
+          PY
+          grep -q 'type="importmap"' jogos/dupla-na-pista-teste.html
+          grep -q "import \* as THREE from 'three'" jogos/dupla-na-pista-teste.html
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add jogos/dupla-na-pista-teste.html index.html
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'fix: start Dupla 3D loader and refresh Keise settings'
+          git push
