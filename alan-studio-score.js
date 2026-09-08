@@ -1,0 +1,110 @@
+import { CONFIG } from './config.js'
+
+const $=id=>document.getElementById(id)
+const norm=v=>String(v||'').trim().toLowerCase()
+if(norm($('myName')?.textContent)!=='alan') throw new Error('alan-studio-score: perfil não autorizado')
+
+const css=document.createElement('link')
+css.rel='stylesheet';css.href='./alan-studio-score.css?v=1';document.head.appendChild(css)
+
+const DEFAULT={version:3,pages:[{id:'score-1',title:'Estudo de partitura',clef:'treble',meter:'4/4',key:'C',symbols:[],strokes:[],notes:''}],active:'score-1'}
+let state=structuredClone(DEFAULT),loaded=false,saveTimer=null,tool='quarter',snap=true,drawing=false,currentStroke=null,dragId=null,dragOffset={x:0,y:0},audioCtx=null
+const STAFFS=[92,218,344,470,596]
+const DIATONIC=['C','D','E','F','G','A','B']
+const NOTE_SEMI={C:0,D:2,E:4,F:5,G:7,A:9,B:11}
+
+function getAuth(){const seek=o=>{if(!o||typeof o!=='object')return'';if(typeof o.access_token==='string')return o.access_token;for(const v of Object.values(o)){const t=seek(v);if(t)return t}return''};for(const store of [localStorage,sessionStorage]){try{for(let i=0;i<store.length;i++){const k=store.key(i)||'';if(!/auth-token/i.test(k))continue;let raw=store.getItem(k)||'';if(raw.startsWith('base64-')){try{raw=atob(raw.slice(7))}catch{}}try{const t=seek(JSON.parse(raw));if(t)return t}catch{}}}catch{}}return''}
+async function rpc(name,args={}){const token=getAuth();if(!token)throw new Error('Sessão do Alan não encontrada.');const r=await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/rpc/${name}`,{method:'POST',cache:'no-store',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify(args)});let data=null;try{data=await r.json()}catch{}if(!r.ok)throw new Error(data?.message||'Não foi possível acessar Partitura & Caderno.');return data}
+function merge(d){d=d&&typeof d==='object'?d:{};state={...structuredClone(DEFAULT),...d};state.pages=Array.isArray(state.pages)&&state.pages.length?state.pages:structuredClone(DEFAULT.pages);state.pages=state.pages.map(p=>({...DEFAULT.pages[0],...p,symbols:Array.isArray(p.symbols)?p.symbols:[],strokes:Array.isArray(p.strokes)?p.strokes:[]}));if(!state.pages.some(p=>p.id===state.active))state.active=state.pages[0].id}
+function saveSoon(){const e=$('assSave');if(e)e.textContent='Salvando…';clearTimeout(saveTimer);saveTimer=setTimeout(async()=>{try{await rpc('alan_score_study_save',{p_data:state});if(e)e.textContent='Salvo ✓'}catch(err){console.warn(err);if(e)e.textContent='Não salvou'}},420)}
+const uid=p=>`${p}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`
+const page=()=>state.pages.find(p=>p.id===state.active)||state.pages[0]
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v))
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+
+function purgeLegacy(){
+  for(const id of ['alanWorkshopEntry','alanGenreStudiosEntry','alanWorkshopOverlay','alanGenreStudiosOverlay']) document.getElementById(id)?.remove()
+}
+function cleanStudio(overlay){
+  for(const name of ['repertoire','setlist','agenda','finance']){
+    overlay.querySelector(`.alan-studio-side [data-alan-view="${name}"]`)?.remove()
+    overlay.querySelector(`.alan-studio-main .alan-view[data-view="${name}"]`)?.remove()
+  }
+  const quick=overlay.querySelector('.alan-quick')
+  if(quick&&!quick.dataset.cleaned){
+    quick.dataset.cleaned='1'
+    quick.innerHTML='<button type="button" data-clean-open="metronome"><span>⏱️</span>Metrônomo</button><button type="button" data-clean-open="score"><span>🎼</span>Partitura & Caderno</button><button type="button" data-clean-open="management"><span>🎛️</span>Gestão da Banda</button>'
+    quick.querySelector('[data-clean-open="metronome"]')?.addEventListener('click',()=>overlay.querySelector('[data-alan-view="metronome"]')?.click())
+    quick.querySelector('[data-clean-open="score"]')?.addEventListener('click',()=>document.getElementById('alanStudioScoreNav')?.click())
+    quick.querySelector('[data-clean-open="management"]')?.addEventListener('click',()=>overlay.querySelector('.alan-band-nav')?.click())
+  }
+}
+
+function attach(){
+  purgeLegacy()
+  const overlay=$('alanStudioOverlay')
+  if(!overlay)return false
+  cleanStudio(overlay)
+  if($('alanStudioScoreSection'))return true
+  const nav=overlay.querySelector('.alan-studio-side'),main=overlay.querySelector('.alan-studio-main')
+  if(!nav||!main)return false
+  const btn=document.createElement('button')
+  btn.type='button';btn.id='alanStudioScoreNav';btn.dataset.alanView='score-notebook';btn.innerHTML='🎼 Partitura & Caderno'
+  const metro=nav.querySelector('[data-alan-view="metronome"]')
+  if(metro?.nextSibling)nav.insertBefore(btn,metro.nextSibling);else nav.appendChild(btn)
+  const section=document.createElement('section')
+  section.id='alanStudioScoreSection';section.className='alan-view';section.dataset.view='score-notebook'
+  section.innerHTML=`<div class="alan-view-head"><div><h2>Partitura & Caderno 🎼✍️</h2><p>Estude colocando cada nota manualmente nas linhas e espaços, escreva à mão e registre suas anotações.</p></div><span id="assSave" class="alan-save-state">Salvo ✓</span></div>
+  <div class="ass-layout"><div class="ass-card"><div class="ass-pagebar"><select id="assPage"></select><button id="assNew" type="button">＋ Página</button><button id="assDelete" class="danger" type="button">Excluir</button><button id="assPrint" type="button">🖨️ Imprimir</button></div>
+  <div class="ass-settings"><label>Clave<select id="assClef"><option value="treble">𝄞 Sol</option><option value="bass">𝄢 Fá</option></select></label><label>Compasso<select id="assMeter"><option>2/4</option><option>3/4</option><option>4/4</option><option>6/8</option></select></label><label>Tonalidade<select id="assKey"><option>C</option><option>G</option><option>D</option><option>A</option><option>E</option><option>F</option><option>Bb</option><option>Eb</option></select></label><label class="ass-check"><input id="assSnap" type="checkbox" checked> Encaixar nas linhas/espaços</label></div>
+  <div class="ass-tools"><button data-ass-tool="select">☝️ Mover</button><button data-ass-tool="quarter" class="active">♩ Semínima</button><button data-ass-tool="eighth">♪ Colcheia</button><button data-ass-tool="half">𝅗𝅥 Mínima</button><button data-ass-tool="whole">𝅝 Semibreve</button><button data-ass-tool="rest">𝄽 Pausa</button><button data-ass-tool="sharp">♯ Sustenido</button><button data-ass-tool="flat">♭ Bemol</button><button data-ass-tool="natural">♮ Bequadro</button><button data-ass-tool="bar">│ Barra</button><button data-ass-tool="dot">· Ponto</button><button data-ass-tool="pencil">✏️ Escrever à mão</button><button data-ass-tool="eraser">⌫ Borracha</button><button id="assUndo">↶ Desfazer</button><button id="assClear">🧹 Limpar</button></div>
+  <div class="ass-paper"><input id="assTitle" class="ass-title" placeholder="Título da partitura"><div class="ass-canvas-wrap"><canvas id="assCanvas" width="1100" height="720"></canvas><div id="assHint" class="ass-hint">Escolha uma nota e toque exatamente na linha ou no espaço onde quer colocá-la.</div></div><textarea id="assNotes" placeholder="Caderno: escreva teoria, contagem, dinâmica, dedilhado, dúvidas, exercícios, cifras ou observações do estudo..."></textarea></div></div>
+  <aside class="ass-card ass-side"><h3>📖 Estudo manual</h3><div class="ass-help"><p><b>1.</b> Escolha a figura musical.</p><p><b>2.</b> Clique ou toque na linha/espaço da pauta.</p><p><b>3.</b> Em <b>Mover</b>, arraste a nota para corrigir a posição.</p><p><b>4.</b> Use <b>Escrever à mão</b> para anotar diretamente na folha.</p><p><b>5.</b> Desative o encaixe se quiser posicionamento totalmente livre.</p></div><div id="assSelected" class="ass-selected">Nenhum símbolo selecionado.</div><button id="assPlayAll" type="button">▶ Ouvir notas da página</button><button id="assShowNames" type="button">🔤 Mostrar nomes das notas</button><p class="ass-note">O som serve apenas como referência de altura para o estudo da leitura musical.</p></aside></div>`
+  main.appendChild(section)
+  btn.onclick=async()=>{
+    overlay.querySelectorAll('.alan-studio-side button').forEach(x=>x.classList.remove('active'))
+    overlay.querySelectorAll('.alan-view').forEach(x=>x.classList.remove('active'))
+    btn.classList.add('active');section.classList.add('active')
+    if(!loaded){try{merge(await rpc('alan_score_study_load'));loaded=true}catch(e){console.warn(e);merge({})}}
+    render()
+  }
+  wire();return true
+}
+
+function wire(){
+  const c=$('assCanvas')
+  $('assPage').onchange=e=>{state.active=e.target.value;render();saveSoon()}
+  $('assNew').onclick=()=>{const p={id:uid('score'),title:`Página ${state.pages.length+1}`,clef:page().clef,meter:page().meter,key:page().key,symbols:[],strokes:[],notes:''};state.pages.push(p);state.active=p.id;render();saveSoon()}
+  $('assDelete').onclick=()=>{if(state.pages.length<=1)return;if(!confirm('Excluir esta página?'))return;state.pages=state.pages.filter(p=>p.id!==state.active);state.active=state.pages[0].id;render();saveSoon()}
+  $('assTitle').oninput=e=>{page().title=e.target.value;saveSoon()};$('assNotes').oninput=e=>{page().notes=e.target.value;saveSoon()}
+  $('assClef').onchange=e=>{page().clef=e.target.value;draw();saveSoon()};$('assMeter').onchange=e=>{page().meter=e.target.value;draw();saveSoon()};$('assKey').onchange=e=>{page().key=e.target.value;draw();saveSoon()};$('assSnap').onchange=e=>{snap=e.target.checked}
+  document.querySelectorAll('#alanStudioScoreSection [data-ass-tool]').forEach(b=>b.onclick=()=>{tool=b.dataset.assTool;document.querySelectorAll('#alanStudioScoreSection [data-ass-tool]').forEach(x=>x.classList.toggle('active',x===b));$('assHint').textContent=tool==='select'?'Arraste uma nota ou símbolo para reposicionar.':tool==='pencil'?'Escreva livremente sobre a folha.':tool==='eraser'?'Toque no símbolo ou traço que deseja apagar.':'Toque na pauta para colocar o símbolo.'})
+  $('assUndo').onclick=undo;$('assClear').onclick=()=>{if(!confirm('Limpar símbolos e escrita desta página?'))return;page().symbols=[];page().strokes=[];draw();saveSoon()};$('assPrint').onclick=printScore;$('assPlayAll').onclick=playAll;$('assShowNames').onclick=()=>{c.dataset.names=c.dataset.names==='1'?'0':'1';$('assShowNames').textContent=c.dataset.names==='1'?'🔤 Ocultar nomes':'🔤 Mostrar nomes das notas';draw()}
+  c.addEventListener('pointerdown',down);c.addEventListener('pointermove',move);window.addEventListener('pointerup',up);c.addEventListener('dblclick',dbl)
+}
+function render(){const p=page(),sel=$('assPage');if(!sel)return;sel.innerHTML=state.pages.map((x,i)=>`<option value="${x.id}" ${x.id===state.active?'selected':''}>${i+1}. ${esc(x.title||'Página')}</option>`).join('');$('assTitle').value=p.title||'';$('assNotes').value=p.notes||'';$('assClef').value=p.clef;$('assMeter').value=p.meter;$('assKey').value=p.key;$('assSnap').checked=snap;draw()}
+function point(ev){const c=$('assCanvas'),r=c.getBoundingClientRect();return{x:(ev.clientX-r.left)*c.width/r.width,y:(ev.clientY-r.top)*c.height/r.height}}
+function nearestStaff(y){let best=STAFFS[0],d=Infinity;for(const s of STAFFS){const dd=Math.abs(y-(s+36));if(dd<d){d=dd;best=s}}return best}
+function snapPoint(p){if(!snap)return{x:clamp(p.x,85,1060),y:clamp(p.y,35,685)};const staff=nearestStaff(p.y),step=9;return{x:Math.round(clamp(p.x,105,1050)/12)*12,y:staff+Math.round((p.y-staff)/step)*step}}
+function shiftDiatonic(anchor,stepsDown){const m=/^([A-G])(\d)$/.exec(anchor);if(!m)return anchor;let letter=DIATONIC.indexOf(m[1]),oct=Number(m[2]);const dir=stepsDown>=0?-1:1;for(let i=0;i<Math.abs(stepsDown);i++){letter+=dir;if(letter<0){letter=6;oct--}else if(letter>6){letter=0;oct++}}return `${DIATONIC[letter]}${oct}`}
+function pitchFor(y){const staff=nearestStaff(y),steps=Math.round((y-staff)/9),anchor=page().clef==='bass'?'A3':'F5';return shiftDiatonic(anchor,steps)}
+function down(ev){ev.preventDefault();const raw=point(ev),p=snapPoint(raw);if(tool==='pencil'){drawing=true;currentStroke=[raw];page().strokes.push(currentStroke);draw();return}if(tool==='eraser'){erase(raw);return}if(tool==='select'){const hit=findSymbol(raw);if(hit){dragId=hit.id;dragOffset={x:raw.x-hit.x,y:raw.y-hit.y};select(hit)}return}const s={id:uid('sym'),kind:tool,x:p.x,y:p.y,pitch:['quarter','eighth','half','whole'].includes(tool)?pitchFor(p.y):''};page().symbols.push(s);select(s);draw();if(s.pitch)playPitch(s.pitch,.34);saveSoon()}
+function move(ev){const raw=point(ev);if(drawing&&tool==='pencil'){currentStroke.push(raw);draw();return}if(dragId){const s=page().symbols.find(x=>x.id===dragId);if(!s)return;const p=snapPoint({x:raw.x-dragOffset.x,y:raw.y-dragOffset.y});s.x=p.x;s.y=p.y;if(['quarter','eighth','half','whole'].includes(s.kind))s.pitch=pitchFor(s.y);select(s);draw()}}
+function up(){if(drawing){drawing=false;currentStroke=null;saveSoon()}if(dragId){dragId=null;saveSoon()}}
+function dbl(ev){const s=findSymbol(point(ev));if(s?.pitch)playPitch(s.pitch,.7)}
+function findSymbol(p){let best=null,d=28;for(const s of page().symbols){const dd=Math.hypot(s.x-p.x,s.y-p.y);if(dd<d){d=dd;best=s}}return best}
+function erase(p){const s=findSymbol(p);if(s)page().symbols=page().symbols.filter(x=>x.id!==s.id);else{let si=-1,dist=22;page().strokes.forEach((st,i)=>st.forEach(pt=>{const d=Math.hypot(pt.x-p.x,pt.y-p.y);if(d<dist){dist=d;si=i}}));if(si>=0)page().strokes.splice(si,1)}draw();saveSoon()}
+function undo(){const p=page();if(p.strokes.length)p.strokes.pop();else p.symbols.pop();draw();saveSoon()}
+function select(s){const e=$('assSelected');if(e)e.textContent=s?.pitch?`Selecionada: ${s.pitch} • ${labelKind(s.kind)}`:`Selecionado: ${labelKind(s?.kind)}`}
+function labelKind(k){return({quarter:'Semínima',eighth:'Colcheia',half:'Mínima',whole:'Semibreve',rest:'Pausa',sharp:'Sustenido',flat:'Bemol',natural:'Bequadro',bar:'Barra',dot:'Ponto'}[k]||k||'—')}
+function draw(){const c=$('assCanvas');if(!c)return;const ctx=c.getContext('2d'),p=page();ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle='#fffdf8';ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle='#3a3029';ctx.font='15px system-ui';ctx.fillText(`${p.key} • ${p.meter}`,88,38);for(const y of STAFFS)drawStaff(ctx,y,p);for(const s of p.symbols)drawSymbol(ctx,s,c.dataset.names==='1');ctx.strokeStyle='#3a3029';ctx.lineWidth=2.1;ctx.lineCap='round';ctx.lineJoin='round';for(const st of p.strokes){if(!st.length)continue;ctx.beginPath();ctx.moveTo(st[0].x,st[0].y);for(const q of st.slice(1))ctx.lineTo(q.x,q.y);ctx.stroke()}}
+function drawStaff(ctx,y,p){ctx.strokeStyle='#5c5149';ctx.lineWidth=1.25;for(let i=0;i<5;i++){ctx.beginPath();ctx.moveTo(88,y+i*18);ctx.lineTo(1065,y+i*18);ctx.stroke()}ctx.fillStyle='#2c251f';ctx.font='51px serif';ctx.fillText(p.clef==='bass'?'𝄢':'𝄞',27,y+56);ctx.font='24px serif';ctx.fillText(p.meter,64,y+43);for(let x=260;x<1050;x+=192){ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,y+72);ctx.stroke()}}
+function drawSymbol(ctx,s,names){ctx.save();ctx.fillStyle='#26211d';ctx.strokeStyle='#26211d';ctx.lineWidth=2;if(s.kind==='bar'){ctx.lineWidth=2.4;ctx.beginPath();ctx.moveTo(s.x,s.y-36);ctx.lineTo(s.x,s.y+36);ctx.stroke();ctx.restore();return}if(s.kind==='dot'){ctx.beginPath();ctx.arc(s.x,s.y,3.3,0,Math.PI*2);ctx.fill();ctx.restore();return}if(['sharp','flat','natural','rest'].includes(s.kind)){ctx.font=s.kind==='rest'?'28px serif':'30px serif';ctx.fillText(s.kind==='sharp'?'♯':s.kind==='flat'?'♭':s.kind==='natural'?'♮':'𝄽',s.x-10,s.y+10);ctx.restore();return}ctx.beginPath();ctx.ellipse(s.x,s.y,10,7,-.3,0,Math.PI*2);if(s.kind==='half'||s.kind==='whole')ctx.stroke();else ctx.fill();if(s.kind!=='whole'){ctx.beginPath();ctx.moveTo(s.x+8,s.y);ctx.lineTo(s.x+8,s.y-43);ctx.stroke();if(s.kind==='eighth'){ctx.beginPath();ctx.moveTo(s.x+8,s.y-43);ctx.quadraticCurveTo(s.x+27,s.y-34,s.x+19,s.y-20);ctx.stroke()}}if(names&&s.pitch){ctx.font='12px system-ui';ctx.fillStyle='#8b5d3d';ctx.fillText(s.pitch,s.x-12,s.y+24)}ctx.restore()}
+function pitchFreq(p){const m=/^([A-G])([#b]?)(\d)$/.exec(p||'');if(!m)return 440;let semi=NOTE_SEMI[m[1]]+(m[2]==='#'?1:m[2]==='b'?-1:0),midi=(Number(m[3])+1)*12+semi;return 440*Math.pow(2,(midi-69)/12)}
+function playPitch(pitch,dur=.45,delay=0){if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();const C=audioCtx;if(C.state==='suspended')C.resume();const o=C.createOscillator(),g=C.createGain(),t=C.currentTime+delay;o.type='sine';o.frequency.value=pitchFreq(pitch);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.08,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(C.destination);o.start(t);o.stop(t+dur+.03)}
+function playAll(){const notes=page().symbols.filter(s=>s.pitch).sort((a,b)=>a.x-b.x||a.y-b.y);notes.forEach((s,i)=>playPitch(s.pitch,.34,i*.4))}
+function printScore(){const c=$('assCanvas'),title=page().title||'Partitura';const w=window.open('','_blank','width=1100,height=850');if(!w)return;const img=c.toDataURL('image/png');w.document.write(`<meta charset="utf-8"><title>${esc(title)}</title><style>body{font-family:system-ui;padding:24px;color:#222}img{width:100%;max-width:1050px}pre{white-space:pre-wrap;font:14px/1.5 system-ui}</style><h1>${esc(title)}</h1><img src="${img}"><pre>${esc(page().notes||'')}</pre>`);w.document.close();w.onload=()=>w.print()}
+
+purgeLegacy()
+const legacyObs=new MutationObserver(()=>purgeLegacy());legacyObs.observe(document.body,{childList:true,subtree:true});setTimeout(()=>legacyObs.disconnect(),8000)
+const obs=new MutationObserver(()=>attach());obs.observe(document.body,{childList:true,subtree:true});let tries=0;const start=()=>{if(attach()){obs.disconnect();return}if(++tries<120)setTimeout(start,150)};start()
