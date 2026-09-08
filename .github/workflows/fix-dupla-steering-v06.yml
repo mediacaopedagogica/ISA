@@ -1,0 +1,74 @@
+name: Fix Dupla steering v0.6
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-dupla-steering-v06.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch steering, start gate and terrain
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('jogos/dupla-na-pista-teste.html')
+          s=p.read_text()
+
+          s=s.replace('pista viva v0.5','pista viva v0.6')
+          s=s.replace('• v0.5','• v0.6')
+
+          # Estado adicional para deslocamento lateral suave.
+          s=s.replace('impact:0}))','impact:0,latVel:0}))')
+          s=s.replace('impact:0})}function resetAll','impact:0,latVel:0})}function resetAll')
+
+          # Troca o giro artificial do corpo por uma direção progressiva:
+          # esterço -> velocidade lateral pequena -> ângulo visual curto -> retorno ao centro.
+          pattern=r"const steerInput=.*?const offRoad="
+          replacement="""const steerInput=(left?1:0)+(right?-1:0),speedFactor=THREE.MathUtils.clamp(s.speed/30,0,1),maxSteer=THREE.MathUtils.degToRad(30-17*speedFactor);s.steer=THREE.MathUtils.lerp(s.steer,steerInput,Math.min(1,dt*(s.speed<8?7:4.5)));s.steerAngle=THREE.MathUtils.lerp(s.steerAngle,s.steer*maxSteer,Math.min(1,dt*6.2));const f0=frameAt(s.t),wheelBase=3.15,targetLatVel=THREE.MathUtils.clamp(Math.tan(s.steerAngle)*s.speed*.58,-4.6,4.6);s.latVel=THREE.MathUtils.lerp(s.latVel,targetLatVel,Math.min(1,dt*(steerInput?4.4:6.8)));if(!steerInput)s.latVel*=Math.max(0,1-dt*3.8);const visualMax=THREE.MathUtils.degToRad(THREE.MathUtils.lerp(15,7,speedFactor));s.heading=THREE.MathUtils.clamp(Math.atan2(s.latVel,Math.max(2.5,s.speed)),-visualMax,visualMax);const delta=Math.max(0,s.speed*Math.cos(s.heading))*dt/routeLength,oldT=s.t;s.t=(s.t+delta)%1;s.lat+=s.latVel*dt;const offRoad="""
+          s,n=re.subn(pattern,replacement,s,count=1,flags=re.S)
+          assert n==1, 'steering block not found'
+
+          # Ao tocar guard-rail, perde energia lateral em vez de inverter o carro.
+          s=s.replace('s.speed*=.72;s.heading*=-.35;s.impact=1;','s.speed*=.72;s.latVel*=-.22;s.heading*=.2;s.impact=1;')
+
+          # Corpo inclina pouco e retorna rápido; não fica atravessado.
+          s=s.replace("s.bodyRoll=THREE.MathUtils.lerp(s.bodyRoll,-s.steer*speedFactor*.055+THREE.MathUtils.clamp(s.heading,-.2,.2)*.07,Math.min(1,dt*5))","s.bodyRoll=THREE.MathUtils.lerp(s.bodyRoll,-s.steer*speedFactor*.042+THREE.MathUtils.clamp(s.heading,-.16,.16)*.035,Math.min(1,dt*7))")
+
+          # Vale mais aberto: montanhas começam bem mais longe da pista.
+          old="if(dist>24)y+=Math.pow((dist-24)/33,1.18)*2.25+noise*.65;if(dist>80)y+=Math.pow((dist-80)/42,1.24)*5.8+noise*1.15;if(dist>170)y+=Math.pow((dist-170)/70,1.12)*9.5;"
+          new="if(dist>42)y+=Math.pow((dist-42)/50,1.12)*1.3+noise*.45;if(dist>125)y+=Math.pow((dist-125)/72,1.18)*3.2+noise*.8;if(dist>260)y+=Math.pow((dist-260)/120,1.08)*6.2;"
+          assert old in s, 'terrain block not found'
+          s=s.replace(old,new)
+
+          # Pórtico menor e linha quadriculada no chão, sem faixa atravessando a visão.
+          s=s.replace("new THREE.PlaneGeometry(15,3)","new THREE.PlaneGeometry(10,1.35)")
+          s=s.replace("banner.position.set(0,5.7,.32)","banner.position.set(0,6.25,.32)")
+          old_r="const startRibbon=new THREE.Mesh(new THREE.PlaneGeometry(26,.8),ribbonMat);startRibbon.position.set(0,1.15,.18);startGate.add(startRibbon);"
+          new_r="const startRibbon=new THREE.Mesh(new THREE.PlaneGeometry(24,.62),ribbonMat);startRibbon.rotation.x=-Math.PI/2;startRibbon.position.set(0,.08,0);startGate.add(startRibbon);"
+          assert old_r in s, 'start ribbon not found'
+          s=s.replace(old_r,new_r)
+
+          # Remove bonecos-billboard provisórios; torcida visual volta só com personagens 3D adequados.
+          s,n=re.subn(r"const crowd=\[\];for\(const t of\[\.004,\.009,\.016,\.022,\.055,\.061\]\).*?function cowSprite", "const crowd=[];function cowSprite", s, count=1, flags=re.S)
+          assert n==1, 'crowd block not found'
+
+          # Câmera inicial mais baixa e próxima do veículo.
+          s=s.replace("addScaledVector(f.tan,isMobile()?-7:-9).add(new THREE.Vector3(0,isMobile()?3.2:5,0))","addScaledVector(f.tan,isMobile()?-6.2:-7).add(new THREE.Vector3(0,isMobile()?2.4:2.9,0))")
+
+          p.write_text(s)
+          m=re.findall(r'<script type=\"module\">(.*?)</script>',s,re.S)
+          assert m
+          Path('/tmp/dupla.mjs').write_text(m[-1])
+          PY
+          node --check /tmp/dupla.mjs
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add jogos/dupla-na-pista-teste.html
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'fix: natural steering and cleaner start scene'
+          git push
