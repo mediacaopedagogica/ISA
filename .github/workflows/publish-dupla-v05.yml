@@ -16,6 +16,7 @@ jobs:
           cat .build/dupla-v05/part1.txt \
               .build/dupla-v05/part2.txt \
               .build/dupla-v05/part3.txt \
+              .build/dupla-v05/part3b.txt \
               .build/dupla-v05/part4.txt \
               .build/dupla-v05/part5.txt \
               .build/dupla-v05/part6.txt \
