@@ -7,10 +7,9 @@ if(norm($('myName')?.textContent)!=='alan') throw new Error('alan-score-study: p
 const css=document.createElement('link');css.rel='stylesheet';css.href='./alan-score-study-v2.css?v=2';document.head.appendChild(css)
 
 const DEFAULT={version:2,pages:[{id:'score-1',title:'Estudo de partitura',clef:'treble',meter:'4/4',key:'C',symbols:[],strokes:[],notes:''}],active:'score-1'}
-let state=structuredClone(DEFAULT),loaded=false,saveTimer=null,tool='quarter',snap=true,drawing=false,currentStroke=null,dragId=null,dragOffset={x:0,y:0}
+let state=structuredClone(DEFAULT),loaded=false,saveTimer=null,tool='quarter',snap=true,drawing=false,currentStroke=null,dragId=null,dragOffset={x:0,y:0},scoreAudioCtx=null
 const STAFFS=[92,218,344,470,596]
-const PITCH_TREBLE=['F5','E5','D5','C5','B4','A4','G4','F4','E4','D4','C4','B3','A3']
-const PITCH_BASS=['A3','G3','F3','E3','D3','C3','B2','A2','G2','F2','E2','D2','C2']
+const DIATONIC=['C','D','E','F','G','A','B']
 
 function getAuth(){const seek=o=>{if(!o||typeof o!=='object')return'';if(typeof o.access_token==='string')return o.access_token;for(const v of Object.values(o)){const t=seek(v);if(t)return t}return''};for(const store of [localStorage,sessionStorage]){try{for(let i=0;i<store.length;i++){const k=store.key(i)||'';if(!/auth-token/i.test(k))continue;let raw=store.getItem(k)||'';if(raw.startsWith('base64-')){try{raw=atob(raw.slice(7))}catch{}}try{const t=seek(JSON.parse(raw));if(t)return t}catch{}}}catch{}}return''}
 async function rpc(name,args={}){const token=getAuth();if(!token)throw new Error('Sessão do Alan não encontrada.');const r=await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/rpc/${name}`,{method:'POST',cache:'no-store',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify(args)});let data=null;try{data=await r.json()}catch{}if(!r.ok)throw new Error(data?.message||'Não foi possível acessar o estudo de partitura.');return data}
@@ -30,7 +29,8 @@ function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 function point(ev){const c=$('assCanvas'),r=c.getBoundingClientRect();return{x:(ev.clientX-r.left)*c.width/r.width,y:(ev.clientY-r.top)*c.height/r.height}}
 function nearestStaff(y){let best=STAFFS[0],d=Infinity;for(const s of STAFFS){const dd=Math.abs(y-(s+36));if(dd<d){d=dd;best=s}}return best}
 function snapPoint(p){if(!snap)return{x:clamp(p.x,85,1060),y:clamp(p.y,35,685)};const staff=nearestStaff(p.y),step=9;return{x:Math.round(clamp(p.x,105,1050)/12)*12,y:staff+Math.round((p.y-staff)/step)*step}}
-function pitchFor(y){const staff=nearestStaff(y),idx=clamp(Math.round((staff+72-y)/9),0,12),arr=page().clef==='bass'?PITCH_BASS:PITCH_TREBLE;return arr[idx]||''}
+function shiftDiatonic(anchor,stepsDown){const m=/^([A-G])(\d)$/.exec(anchor);if(!m)return anchor;let letter=DIATONIC.indexOf(m[1]),oct=Number(m[2]);const dir=stepsDown>=0?-1:1;for(let i=0;i<Math.abs(stepsDown);i++){letter+=dir;if(letter<0){letter=6;oct--}else if(letter>6){letter=0;oct++}}return `${DIATONIC[letter]}${oct}`}
+function pitchFor(y){const staff=nearestStaff(y),steps=Math.round((y-staff)/9),anchor=page().clef==='bass'?'A3':'F5';return shiftDiatonic(anchor,steps)}
 function down(ev){ev.preventDefault();const raw=point(ev),p=snapPoint(raw);if(tool==='pencil'){drawing=true;currentStroke=[raw];page().strokes.push(currentStroke);draw();return}if(tool==='eraser'){erase(raw);return}if(tool==='select'){const hit=findSymbol(raw);if(hit){dragId=hit.id;dragOffset={x:raw.x-hit.x,y:raw.y-hit.y};select(hit)}return}const s={id:uid('sym'),kind:tool,x:p.x,y:p.y,pitch:['quarter','eighth','half','whole'].includes(tool)?pitchFor(p.y):''};page().symbols.push(s);select(s);draw();if(s.pitch)playPitch(s.pitch,.42);saveSoon()}
 function move(ev){const raw=point(ev);if(drawing&&tool==='pencil'){currentStroke.push(raw);draw();return}if(dragId){const s=page().symbols.find(x=>x.id===dragId);if(!s)return;const p=snapPoint({x:raw.x-dragOffset.x,y:raw.y-dragOffset.y});s.x=p.x;s.y=p.y;if(['quarter','eighth','half','whole'].includes(s.kind))s.pitch=pitchFor(s.y);select(s);draw()}}
 function up(){if(drawing){drawing=false;currentStroke=null;saveSoon()}if(dragId){dragId=null;saveSoon()}}
@@ -46,7 +46,7 @@ function drawSymbol(ctx,s,names){ctx.save();ctx.fillStyle='#26211d';ctx.strokeSt
 
 const NOTE_SEMI={C:0,D:2,E:4,F:5,G:7,A:9,B:11}
 function pitchFreq(p){const m=/^([A-G])([#b]?)(\d)$/.exec(p||'');if(!m)return 440;let semi=NOTE_SEMI[m[1]]+(m[2]==='#'?1:m[2]==='b'?-1:0),midi=(Number(m[3])+1)*12+semi;return 440*Math.pow(2,(midi-69)/12)}
-function playPitch(pitch,dur=.5,delay=0){const C=new (window.AudioContext||window.webkitAudioContext)(),o=C.createOscillator(),g=C.createGain(),t=C.currentTime+delay;o.type='sine';o.frequency.value=pitchFreq(pitch);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.11,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(C.destination);o.start(t);o.stop(t+dur+.03);setTimeout(()=>C.close(),(delay+dur+.2)*1000)}
+function playPitch(pitch,dur=.5,delay=0){if(!scoreAudioCtx)scoreAudioCtx=new (window.AudioContext||window.webkitAudioContext)();const C=scoreAudioCtx;if(C.state==='suspended')C.resume();const o=C.createOscillator(),g=C.createGain(),t=C.currentTime+delay;o.type='sine';o.frequency.value=pitchFreq(pitch);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.11,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(C.destination);o.start(t);o.stop(t+dur+.03)}
 function playAll(){const notes=page().symbols.filter(s=>s.pitch).sort((a,b)=>a.x-b.x||a.y-b.y);notes.forEach((s,i)=>playPitch(s.pitch,.42,i*.48))}
 function printScore(){const c=$('assCanvas'),title=page().title||'Partitura';const w=window.open('','_blank','width=1100,height=850');if(!w)return;const img=c.toDataURL('image/png');w.document.write(`<meta charset="utf-8"><title>${esc(title)}</title><style>body{font-family:system-ui;padding:24px;color:#222}img{width:100%;max-width:1050px}pre{white-space:pre-wrap;font:14px/1.5 system-ui}</style><h1>${esc(title)}</h1><img src="${img}"><pre>${esc(page().notes||'')}</pre>`);w.document.close();w.onload=()=>w.print()}
 
