@@ -1,0 +1,54 @@
+name: Publish Alan musical workshop v1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-alan-workshop-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Validate workshop syntax
+        run: |
+          node --check alan-studio-workshop.js
+          grep -q "alan_music_lab_load" alan-studio-workshop.js
+          grep -q "alan_music_lab_save" alan-studio-workshop.js
+          grep -q "Caderno de Partitura Digital" alan-studio-workshop.js
+          grep -q "Piano Virtual" alan-studio-workshop.js
+          grep -q "Bateria Virtual" alan-studio-workshop.js
+          grep -q "Violão & Guitarra" alan-studio-workshop.js
+          grep -q "Violino & Cello" alan-studio-workshop.js
+          grep -q "Gaita Diatônica" alan-studio-workshop.js
+          grep -q "alan-studio-workshop.js?v=1" extras-loader.js
+      - name: Refresh postboot cache in index
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old="./postboot-loader.js?v=14-alan-studio"
+          new="./postboot-loader.js?v=15-alan-workshop"
+          if old in s:
+              s=s.replace(old,new)
+          elif new not in s:
+              raise SystemExit('postboot cache marker not found')
+          p.write_text(s)
+          PY
+      - name: Commit cache refresh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Publish Alan musical workshop v1"
+          git push
