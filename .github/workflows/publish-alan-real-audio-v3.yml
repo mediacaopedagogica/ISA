@@ -1,0 +1,57 @@
+name: Publish Alan real audio v3
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'alan-real-audio.js'
+      - 'scripts/build-alan-real-samples-v1.py'
+      - 'scripts/patch-alan-real-audio-v3.py'
+      - '.github/workflows/publish-alan-real-audio-v3.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build-validate-publish:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build local real instrument samples
+        run: python scripts/build-alan-real-samples-v1.py
+      - name: Patch Alan instrument engines
+        run: python scripts/patch-alan-real-audio-v3.py
+      - name: Validate JavaScript
+        run: |
+          node --check alan-real-audio.js
+          node --check alan-real-samples-v1.js
+          node --check alan-genre-studios.js
+          node --check alan-studio-workshop.js
+          node --check extras-loader.js
+          node --check postboot-loader.js
+      - name: Validate local real sample package
+        run: |
+          test -s alan-real-samples-v1.js
+          grep -q 'acoustic_grand_piano' alan-real-samples-v1.js
+          grep -q 'acoustic_guitar_steel' alan-real-samples-v1.js
+          grep -q 'electric_guitar_clean' alan-real-samples-v1.js
+          grep -q 'violin' alan-real-samples-v1.js
+          grep -q 'cello' alan-real-samples-v1.js
+          grep -q 'harmonica' alan-real-samples-v1.js
+          grep -q 'accordion' alan-real-samples-v1.js
+          grep -q 'synth_drum' alan-real-samples-v1.js
+          grep -q 'Não foi usado som artificial' alan-genre-studios.js
+          grep -q 'alan-studio-workshop.js?v=3-real-audio' extras-loader.js
+          grep -q 'postboot-loader.js?v=19-alan-real-audio' index.html
+      - name: Commit local samples and runtime patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add alan-real-samples-v1.js alan-genre-studios.js alan-studio-workshop.js extras-loader.js postboot-loader.js index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish Alan local real instrument samples v3"
+            git push
+          fi
