@@ -28,8 +28,23 @@
 <div id="driveHelp">WASD / setas • ↑ acelera • ↓ freia/ré • ← → direção</div>
 <button id="cameraBtn">🎥 Câmera</button>
 <div class="mobile"><div class="cluster"><button data-key="ArrowLeft">◀</button><button data-key="ArrowRight">▶</button></div><div class="cluster"><button data-key="ArrowDown">▼</button><button data-key="ArrowUp">▲</button></div></div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js"}}
+</script>
+<script>
+window.addEventListener('error',function(e){
+  const status=document.getElementById('loadStatus');
+  const loading=document.getElementById('loading');
+  if(status&&loading&&!loading.classList.contains('hide')) status.textContent='Falha ao iniciar o 3D. Recarregue a cena.';
+});
+setTimeout(function(){
+  const status=document.getElementById('loadStatus');
+  const loading=document.getElementById('loading');
+  if(status&&loading&&!loading.classList.contains('hide')&&status.textContent==='Preparando garagem...') status.textContent='O 3D demorou para iniciar. Atualize esta cena.';
+},9000);
+</script>
 <script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js';
+import * as THREE from 'three';
 import {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/controls/OrbitControls.js';
 
 const params=new URLSearchParams(location.search);document.getElementById('pilot').textContent=params.get('nickA')||'Piloto 1';
