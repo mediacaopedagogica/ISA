@@ -5,7 +5,7 @@ const norm=v=>String(v||'').trim().toLowerCase()
 if(norm($('myName')?.textContent)!=='alan') throw new Error('alan-studio-score: perfil não autorizado')
 
 const css=document.createElement('link')
-css.rel='stylesheet';css.href='./alan-studio-score.css?v=1';document.head.appendChild(css)
+css.rel='stylesheet';css.href='./alan-studio-score.css?v=2';document.head.appendChild(css)
 
 const DEFAULT={version:3,pages:[{id:'score-1',title:'Estudo de partitura',clef:'treble',meter:'4/4',key:'C',symbols:[],strokes:[],notes:''}],active:'score-1'}
 let state=structuredClone(DEFAULT),loaded=false,saveTimer=null,tool='quarter',snap=true,drawing=false,currentStroke=null,dragId=null,dragOffset={x:0,y:0},audioCtx=null
@@ -25,27 +25,17 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 function purgeLegacy(){
   for(const id of ['alanWorkshopEntry','alanGenreStudiosEntry','alanWorkshopOverlay','alanGenreStudiosOverlay']) document.getElementById(id)?.remove()
 }
-function cleanStudio(overlay){
-  for(const name of ['repertoire','setlist','agenda','finance']){
-    overlay.querySelector(`.alan-studio-side [data-alan-view="${name}"]`)?.remove()
-    overlay.querySelector(`.alan-studio-main .alan-view[data-view="${name}"]`)?.remove()
-  }
+function addScoreShortcut(overlay){
   const quick=overlay.querySelector('.alan-quick')
-  if(quick&&!quick.dataset.cleaned){
-    quick.dataset.cleaned='1'
-    quick.innerHTML='<button type="button" data-clean-open="metronome"><span>⏱️</span>Metrônomo</button><button type="button" data-clean-open="score"><span>🎼</span>Partitura & Caderno</button><button type="button" data-clean-open="management"><span>🎛️</span>Gestão da Banda</button>'
-    quick.querySelector('[data-clean-open="metronome"]')?.addEventListener('click',()=>overlay.querySelector('[data-alan-view="metronome"]')?.click())
-    quick.querySelector('[data-clean-open="score"]')?.addEventListener('click',()=>document.getElementById('alanStudioScoreNav')?.click())
-    quick.querySelector('[data-clean-open="management"]')?.addEventListener('click',()=>overlay.querySelector('.alan-band-nav')?.click())
-  }
+  if(!quick||quick.querySelector('[data-open-score-notebook]'))return
+  const b=document.createElement('button');b.type='button';b.dataset.openScoreNotebook='1';b.innerHTML='<span>🎼</span>Partitura & Caderno';b.onclick=()=>document.getElementById('alanStudioScoreNav')?.click();quick.appendChild(b)
 }
 
 function attach(){
   purgeLegacy()
   const overlay=$('alanStudioOverlay')
   if(!overlay)return false
-  cleanStudio(overlay)
-  if($('alanStudioScoreSection'))return true
+  if($('alanStudioScoreSection')){addScoreShortcut(overlay);return true}
   const nav=overlay.querySelector('.alan-studio-side'),main=overlay.querySelector('.alan-studio-main')
   if(!nav||!main)return false
   const btn=document.createElement('button')
@@ -61,6 +51,7 @@ function attach(){
   <div class="ass-paper"><input id="assTitle" class="ass-title" placeholder="Título da partitura"><div class="ass-canvas-wrap"><canvas id="assCanvas" width="1100" height="720"></canvas><div id="assHint" class="ass-hint">Escolha uma nota e toque exatamente na linha ou no espaço onde quer colocá-la.</div></div><textarea id="assNotes" placeholder="Caderno: escreva teoria, contagem, dinâmica, dedilhado, dúvidas, exercícios, cifras ou observações do estudo..."></textarea></div></div>
   <aside class="ass-card ass-side"><h3>📖 Estudo manual</h3><div class="ass-help"><p><b>1.</b> Escolha a figura musical.</p><p><b>2.</b> Clique ou toque na linha/espaço da pauta.</p><p><b>3.</b> Em <b>Mover</b>, arraste a nota para corrigir a posição.</p><p><b>4.</b> Use <b>Escrever à mão</b> para anotar diretamente na folha.</p><p><b>5.</b> Desative o encaixe se quiser posicionamento totalmente livre.</p></div><div id="assSelected" class="ass-selected">Nenhum símbolo selecionado.</div><button id="assPlayAll" type="button">▶ Ouvir notas da página</button><button id="assShowNames" type="button">🔤 Mostrar nomes das notas</button><p class="ass-note">O som serve apenas como referência de altura para o estudo da leitura musical.</p></aside></div>`
   main.appendChild(section)
+  addScoreShortcut(overlay)
   btn.onclick=async()=>{
     overlay.querySelectorAll('.alan-studio-side button').forEach(x=>x.classList.remove('active'))
     overlay.querySelectorAll('.alan-view').forEach(x=>x.classList.remove('active'))
