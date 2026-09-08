@@ -15,11 +15,11 @@ const paths=dedicatedMobile?[
   './call-manager.js?v=7-mobile-fast',
   './mobile-native.js?v=3-no-blank',
   './notifications-v2.js?v=9-stable',
-  './extras-loader.js?v=35-alan-workshop'
+  './extras-loader.js?v=36-alan-band-management'
 ]:[
   './mobile-responsive-v2.js?v=15-android-touch',
   './notifications-v2.js?v=9-stable',
-  './extras-loader.js?v=35-alan-workshop'
+  './extras-loader.js?v=36-alan-band-management'
 ]
 const results=await Promise.allSettled(paths.map(loadWithRetry))
 window.__ISA_EXTRAS_READY__=true
