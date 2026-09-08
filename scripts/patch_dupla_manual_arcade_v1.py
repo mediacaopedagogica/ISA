@@ -1,0 +1,32 @@
+from pathlib import Path
+import re
+
+p = Path('jogos/dupla-na-pista-teste.html')
+s = p.read_text()
+
+s = s.replace('Build privada • circuito longo fechado • direção 100% manual',
+              'Build privada • direção manual v0.4 • sem piloto automático')
+s = s.replace('🧪 TESTE JOGO • KEISE', '🧪 TESTE JOGO • KEISE • manual v0.4')
+
+old_state = "const names=[params.get('nickA')||'Piloto 1',params.get('nickB')||'Piloto 2'],cars=[vehicleA,vehicleB],tracks=[TRACK_A,TRACK_B],paintLists=[paintA,paintB],states=[{t:.012,lat:0,speed:0,fuel:78,coins:240,motor:92,tires:88,susp:85,lap:1,turbo:72,totalKm:0},{t:.022,lat:0,speed:0,fuel:78,coins:240,motor:92,tires:88,susp:85,lap:1,turbo:72,totalKm:0}];let active=0,driving=false,cameraMode=0,serviceOpen=false,started=false;const keys={};"
+new_state = "const names=[params.get('nickA')||'Piloto 1',params.get('nickB')||'Piloto 2'],cars=[vehicleA,vehicleB],tracks=[TRACK_A,TRACK_B],paintLists=[paintA,paintB],states=[{t:.012,lat:0,speed:0,fuel:78,coins:240,motor:92,tires:88,susp:85,lap:1,turbo:72,totalKm:0,steer:0,visualYaw:0,bodyRoll:0},{t:.022,lat:0,speed:0,fuel:78,coins:240,motor:92,tires:88,susp:85,lap:1,turbo:72,totalKm:0,steer:0,visualYaw:0,bodyRoll:0}];let active=0,driving=false,cameraMode=0,serviceOpen=false,started=false;const keys={};"
+if old_state in s:
+    s = s.replace(old_state, new_state, 1)
+
+old_orient = "function zoneAt(t){if(t<.13||t>.92)return'Cidade Norte';if(t<.33)return'Serra Verde';if(t<.48)return'Estrada Rural';if(t<.61)return'Cidade Sul';if(t<.82)return'Vale';return'Retorno Norte'}function orientCar(i){const s=states[i],f=frameAt(s.t),q=roadPoint(s.t,tracks[i],s.lat,.035),yaw=Math.atan2(f.tan.x,-f.tan.z),pitch=Math.atan2(f.tan.y,Math.hypot(f.tan.x,f.tan.z));cars[i].position.copy(q);cars[i].rotation.set(pitch,yaw+Math.PI,f.bank,'YXZ');return f}"
+new_orient = "function zoneAt(t){if(t<.13||t>.92)return'Cidade Norte';if(t<.33)return'Serra Verde';if(t<.48)return'Estrada Rural';if(t<.61)return'Cidade Sul';if(t<.82)return'Vale';return'Retorno Norte'}function orientCar(i){const s=states[i],f=frameAt(s.t),q=roadPoint(s.t,tracks[i],s.lat,.035),yaw=Math.atan2(f.tan.x,-f.tan.z),pitch=Math.atan2(f.tan.y,Math.hypot(f.tan.x,f.tan.z));cars[i].position.copy(q);cars[i].rotation.set(pitch,yaw+Math.PI+(s.visualYaw||0),f.bank+(s.bodyRoll||0),'YXZ');return f}"
+if old_orient in s:
+    s = s.replace(old_orient, new_orient, 1)
+
+s = s.replace("function resetState(i){Object.assign(states[i],{t:i?.022:.012,lat:0,speed:0,lap:1,totalKm:0,turbo:72})}",
+              "function resetState(i){Object.assign(states[i],{t:i?.022:.012,lat:0,speed:0,lap:1,totalKm:0,turbo:72,steer:0,visualYaw:0,bodyRoll:0})}")
+
+pat = re.compile(r"const clock=new THREE\.Clock\(\);function animate\(\)\{.*?\}animate\(\);\naddEventListener\('resize'", re.S)
+replacement = """const clock=new THREE.Clock();function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.034);if(driving&&!serviceOpen){const s=states[active],acc=keys.ArrowUp||keys.w||keys.W,brake=keys.ArrowDown||keys.s||keys.S,left=keys.ArrowLeft||keys.a||keys.A,right=keys.ArrowRight||keys.d||keys.D;if(acc)s.speed=Math.min(42,s.speed+13.2*dt);else s.speed=Math.max(0,s.speed-6.2*dt);if(brake)s.speed=Math.max(0,s.speed-24*dt);const steerTarget=(left?1:0)+(right?-1:0);s.steer=THREE.MathUtils.lerp(s.steer,steerTarget,Math.min(1,dt*(s.speed<5?7:5)));const response=Math.min(s.speed/10,1),sideSign=serviceSide(),inService=s.t>SERVICE_T0-.018&&s.t<SERVICE_T1+.018,limitOuter=inService?7.3:2.8;s.lat+=s.steer*response*dt*2.0;if(sideSign>0)s.lat=THREE.MathUtils.clamp(s.lat,-2.8,limitOuter);else s.lat=THREE.MathUtils.clamp(s.lat,-limitOuter,2.8);s.visualYaw=THREE.MathUtils.lerp(s.visualYaw,-s.steer*response*.09,Math.min(1,dt*6));s.bodyRoll=THREE.MathUtils.lerp(s.bodyRoll,s.steer*response*.035,Math.min(1,dt*5));const oldT=s.t,delta=s.speed*dt/routeLength;s.t=(s.t+delta)%1;s.totalKm+=delta*race.km;if(oldT>.97&&s.t<.03&&s.speed>0){if(s.lap<race.laps){s.lap++;msg(`🔁 Volta ${s.lap}/${race.laps}`)}else{finish();s.t=.999}}if(s.speed>1)s.fuel=Math.max(0,s.fuel-s.speed*dt*.00135);if(s.fuel<=0)s.speed=Math.min(s.speed,3.5);s.turbo=Math.min(100,s.turbo+dt*1.25);const f=orientCar(active);orientCar(1-active);const car=cars[active],forward=f.tan.clone().normalize(),side=f.side.clone();let desired,target;if(cameraMode===0){desired=car.position.clone().addScaledVector(forward,isMobile()?-6.3:-8.2).add(new THREE.Vector3(0,isMobile()?2.35:3.1,0));target=car.position.clone().addScaledVector(forward,isMobile()?9:10).add(new THREE.Vector3(0,.85,0))}else if(cameraMode===1){desired=car.position.clone().addScaledVector(forward,-3.2).add(new THREE.Vector3(0,1.7,0));target=car.position.clone().addScaledVector(forward,12).add(new THREE.Vector3(0,.9,0))}else{desired=car.position.clone().addScaledVector(side,-5.8).add(new THREE.Vector3(0,2.5,0));target=car.position.clone().add(new THREE.Vector3(0,.85,0))}camera.position.lerp(desired,1-Math.pow(.0018,dt));camera.lookAt(target);checkService();ui()}else if(!serviceOpen)orbit.update();renderer.render(scene,camera)}animate();
+addEventListener('resize'"""
+s, n = pat.subn(replacement, s, count=1)
+if n != 1:
+    raise SystemExit('animate block not found')
+
+p.write_text(s)
+print('patched', p)
