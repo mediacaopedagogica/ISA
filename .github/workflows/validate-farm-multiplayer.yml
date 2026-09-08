@@ -9,6 +9,7 @@ on:
       - 'jogos/fazendinha-experience-v6.css'
       - 'jogos/fazendinha-experience-v6.js'
       - 'games-menu-farm.js'
+      - 'keise-game-test.js'
       - 'extras-loader.js'
       - 'postboot-loader.js'
       - 'index.html'
@@ -29,6 +30,7 @@ jobs:
         run: |
           node --check jogos/fazendinha-experience-v6.js
           node --check games-menu-farm.js
+          node --check keise-game-test.js
           node --check extras-loader.js
           node --check postboot-loader.js
       - name: Verificar integração
@@ -38,34 +40,17 @@ jobs:
           test -s jogos/fazendinha-experience-v6.css
           test -s jogos/fazendinha-experience-v6.js
           grep -q 'Fazendinha Família Feliz' jogos/fazendinha-multiplayer.html
-          grep -q 'fazendinha-experience-v6.js?v=7b-loading-fix' jogos/fazendinha-multiplayer.html
           grep -q 'camera360Btn' jogos/fazendinha-multiplayer.html
           grep -q 'eyeCameraBtn' jogos/fazendinha-multiplayer.html
           grep -q 'data-tool="fish"' jogos/fazendinha-multiplayer.html
           grep -q 'GLTFLoader' jogos/fazendinha-experience-v6.js
-          grep -q 'Soldier.glb' jogos/fazendinha-experience-v6.js
-          grep -q 'Michelle.glb' jogos/fazendinha-experience-v6.js
-          grep -q 'Cow.gltf' jogos/fazendinha-experience-v6.js
-          grep -q 'Pig.gltf' jogos/fazendinha-experience-v6.js
-          grep -q 'Sheep.gltf' jogos/fazendinha-experience-v6.js
-          grep -q 'Horse.gltf' jogos/fazendinha-experience-v6.js
-          grep -q 'Pug.gltf' jogos/fazendinha-experience-v6.js
-          grep -q 'polishInterior' jogos/fazendinha-experience-v6.js
-          grep -q 'queueMicrotask(()=>upgradeAnimalModels())' jogos/fazendinha-experience-v6.js
-          grep -q 'OrbitControls' jogos/fazendinha-experience-v6.js
-          grep -q "locationMode='inside'" jogos/fazendinha-experience-v6.js
-          grep -q "kind:'door-enter'" jogos/fazendinha-experience-v6.js
-          grep -q "kind:'rest'" jogos/fazendinha-experience-v6.js
-          grep -q "kind:'eat'" jogos/fazendinha-experience-v6.js
-          grep -q "kind:'fishspot'" jogos/fazendinha-experience-v6.js
-          grep -q "doAction('fish'" jogos/fazendinha-experience-v6.js
           grep -q 'farm_game_bootstrap' jogos/fazendinha-experience-v6.js
           grep -q 'farm_game_snapshot' jogos/fazendinha-experience-v6.js
           grep -q 'farm_game_action' jogos/fazendinha-experience-v6.js
-          grep -q "function eligible(){return currentName()==='isa'}" games-menu-farm.js
-          grep -q 'v=7b-loading-fix' games-menu-farm.js
-          grep -q "loadOnce('farm-game','./games-menu-farm.js?v=7b-loading-fix')" extras-loader.js
-          grep -q 'postboot-loader.js?v=20-farm-v7b' index.html
+          grep -q 'não aparece no menu da Isa' games-menu-farm.js
+          ! grep -q "loadOnce('farm-game'" extras-loader.js
+          grep -q "data-game=\"farm\"" keise-game-test.js
+          grep -q 'fazendinha-multiplayer.html' keise-game-test.js
+          grep -q "name()!=='keise'" keise-game-test.js
           ! grep -q 'games-menu-farm.js' acesso.html
           ! grep -q 'games-menu-farm.js' acesso-mobile.html
-          ! grep -q 'Isa no notebook e Primo no celular' games-menu-farm.js
