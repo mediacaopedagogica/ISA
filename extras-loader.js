@@ -30,7 +30,7 @@ async function loadCoreExtras(){
   if(!dedicatedMobile)jobs.push(loadOnce('calls','./call-manager.js?v=4-stable'))
   if(isAlan()){
     jobs.push(loadOnce('alan-studio','./alan-studio.js?v=1'))
-    jobs.push(loadOnce('alan-score','./alan-studio-score.js?v=1-clean-studio'))
+    jobs.push(loadOnce('alan-score','./alan-studio-score.js?v=2-inside-full-studio'))
     jobs.push(loadOnce('alan-band-management','./alan-band-management.js?v=1-edital'))
     jobs.push(loadOnce('alan-band-operations','./alan-band-operations.js?v=1-production'))
   }
