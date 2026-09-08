@@ -1,0 +1,113 @@
+name: Build Fazendinha browser bundle v10
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-farm-browser-bundle-v10.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Preparar entrada compatível com navegador
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('jogos/fazendinha-experience-v6.js')
+          s=p.read_text()
+          repl={
+            "import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js'":"import * as THREE from 'three'",
+            "import { Sky } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/objects/Sky.js'":"import { Sky } from 'three/addons/objects/Sky.js'",
+            "import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/controls/OrbitControls.js'":"import { OrbitControls } from 'three/addons/controls/OrbitControls.js'",
+            "import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js'":"import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'",
+            "import { RGBELoader } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/RGBELoader.js'":"import { RGBELoader } from 'three/addons/loaders/RGBELoader.js'",
+            "import * as SkeletonUtils from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/utils/SkeletonUtils.js'":"import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js'",
+            "import { RoundedBoxGeometry } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/geometries/RoundedBoxGeometry.js'":"import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'",
+          }
+          for a,b in repl.items():
+              if a not in s:
+                  raise SystemExit(f'Import esperado não encontrado: {a}')
+              s=s.replace(a,b)
+          Path('jogos/.fazendinha-entry-v10.js').write_text(s)
+          PY
+      - name: Gerar bundle único do motor 3D
+        run: |
+          npm install --no-save three@0.180.0 esbuild@0.25.9
+          npx esbuild jogos/.fazendinha-entry-v10.js --bundle --format=iife --target=es2020 --outfile=jogos/fazendinha-bundle-v10.js --log-level=info
+          node --check jogos/fazendinha-bundle-v10.js
+          rm -f jogos/.fazendinha-entry-v10.js package-lock.json
+          rm -rf node_modules
+      - name: Trocar runtime e forçar cache novo
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          h=Path('jogos/fazendinha-multiplayer.html')
+          s=h.read_text()
+          s=re.sub(r'\s*<script type="importmap">.*?</script>\s*', '\n', s, flags=re.S)
+          s=s.replace('fazendinha-experience-v6.css?v=9-syntax-fix','fazendinha-experience-v6.css?v=10-browser-bundle')
+          s=s.replace('<script type="module" src="./fazendinha-experience-v6.js?v=9-syntax-fix"></script>','<script defer src="./fazendinha-bundle-v10.js?v=10-browser-bundle"></script>')
+          old="""  const showBootError=(message)=>{\n    const card=document.getElementById('loadingCard');\n    if(!card||card.classList.contains('hidden'))return;\n    card.innerHTML='<strong>Falha ao iniciar o 3D</strong><span>'+String(message||'Erro de carregamento')+'</span>';\n  };\n  window.addEventListener('error',e=>showBootError(e.message));\n  window.addEventListener('unhandledrejection',e=>showBootError(e.reason?.message||e.reason));"""
+          new="""  const showBootError=(message,source,line,col)=>{\n    const card=document.getElementById('loadingCard');\n    if(!card||card.classList.contains('hidden'))return;\n    const where=source ? ' • '+source.split('/').pop()+(line?':'+line+(col?':'+col:''):'') : '';\n    card.innerHTML='<strong>Falha ao iniciar o 3D</strong><span>'+String(message||'Erro de carregamento')+where+'</span>';\n  };\n  window.__FARM_BOOT_ERROR__=showBootError;\n  window.addEventListener('error',e=>showBootError(e.message,e.filename,e.lineno,e.colno));\n  window.addEventListener('unhandledrejection',e=>showBootError(e.reason?.stack||e.reason?.message||e.reason));"""
+          if old in s:
+              s=s.replace(old,new)
+          else:
+              raise SystemExit('Bloco de diagnóstico esperado não encontrado')
+          h.write_text(s)
+
+          g=Path('games-menu-farm.js')
+          x=g.read_text()
+          x=re.sub(r"function gameUrl\(\)\{return'\./jogos/fazendinha-multiplayer\.html\?v=[^']+'\}", "function gameUrl(){return`./jogos/fazendinha-multiplayer.html?v=10-browser-bundle&player=isa&embed=1&cb=${Date.now()}`}", x)
+          g.write_text(x)
+
+          e=Path('extras-loader.js')
+          x=e.read_text()
+          x=re.sub(r"games-menu-farm\.js\?v=[^']+", "games-menu-farm.js?v=10-browser-bundle", x)
+          e.write_text(x)
+
+          p=Path('postboot-loader.js')
+          x=p.read_text().replace('extras-loader.js?v=28-farm-v8','extras-loader.js?v=30-farm-v10')
+          p.write_text(x)
+
+          i=Path('index.html')
+          x=i.read_text().replace('postboot-loader.js?v=20-farm-v7b','postboot-loader.js?v=22-farm-v10')
+          i.write_text(x)
+
+          v=Path('.github/workflows/validate-farm-multiplayer.yml')
+          x=v.read_text()
+          x=x.replace("      - 'jogos/fazendinha-experience-v6.js'", "      - 'jogos/fazendinha-experience-v6.js'\n      - 'jogos/fazendinha-bundle-v10.js'")
+          x=x.replace('node --check jogos/fazendinha-experience-v6.js','node --check jogos/fazendinha-experience-v6.js\n          node --check jogos/fazendinha-bundle-v10.js')
+          x=x.replace('test -s jogos/fazendinha-experience-v6.js','test -s jogos/fazendinha-experience-v6.js\n          test -s jogos/fazendinha-bundle-v10.js')
+          x=re.sub(r"grep -q 'fazendinha-experience-v6\.js\?v=[^']+' jogos/fazendinha-multiplayer\.html", "grep -q 'fazendinha-bundle-v10.js?v=10-browser-bundle' jogos/fazendinha-multiplayer.html", x)
+          x=re.sub(r"grep -q 'v=[^']+' games-menu-farm\.js", "grep -q 'v=10-browser-bundle' games-menu-farm.js", x)
+          x=re.sub(r"grep -q \"loadOnce\('farm-game','\./games-menu-farm\.js\?v=[^']+'\)\" extras-loader\.js", "grep -q \"loadOnce('farm-game','./games-menu-farm.js?v=10-browser-bundle')\" extras-loader.js", x)
+          x=re.sub(r"grep -q 'postboot-loader\.js\?v=[^']+' index\.html", "grep -q 'postboot-loader.js?v=22-farm-v10' index.html", x)
+          v.write_text(x)
+          PY
+      - name: Validar runtime final
+        run: |
+          node --check jogos/fazendinha-bundle-v10.js
+          node --check games-menu-farm.js
+          node --check extras-loader.js
+          node --check postboot-loader.js
+          test -s jogos/fazendinha-bundle-v10.js
+          grep -q 'fazendinha-bundle-v10.js?v=10-browser-bundle' jogos/fazendinha-multiplayer.html
+          ! grep -q 'type="importmap"' jogos/fazendinha-multiplayer.html
+          grep -q 'cb=${Date.now()}' games-menu-farm.js
+      - name: Publicar bundle compatível
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add jogos/fazendinha-bundle-v10.js jogos/fazendinha-multiplayer.html games-menu-farm.js extras-loader.js postboot-loader.js index.html .github/workflows/validate-farm-multiplayer.yml
+          git commit -m 'Bundle Fazendinha 3D for notebook browser'
+          git push
