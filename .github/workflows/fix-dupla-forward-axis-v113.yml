@@ -1,0 +1,46 @@
+name: Fix Dupla forward axis v1.1.3
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-dupla-forward-axis-v113.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Align visual front, physics front and controls
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('jogos/dupla-na-pista-teste.html')
+          s = p.read_text(encoding='utf-8')
+          replacements = [
+            ("function physicsForward(pv){const v=new CANNON.Vec3(0,0,1);", "function physicsForward(pv){const v=new CANNON.Vec3(0,0,-1);"),
+            ("engine=force*motorHealth*speedFade", "engine=-force*motorHealth*speedFade"),
+            ("else engine=-6500*motorHealth*Math.max(.2,1-kmh/62)", "else engine=6500*motorHealth*Math.max(.2,1-kmh/62)"),
+            ("v1.1.2 • frente e comandos alinhados", "v1.1.3 • W/↑ frente • S/↓ ré"),
+            ("v1.1.2", "v1.1.3")
+          ]
+          for old, new in replacements:
+              if old in s:
+                  s = s.replace(old, new)
+          # Safety assertions: one canonical forward axis and correct engine signs.
+          assert "CANNON.Vec3(0,0,-1)" in s
+          assert "engine=-force*motorHealth*speedFade" in s
+          assert "else engine=6500*motorHealth*Math.max(.2,1-kmh/62)" in s
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit corrected controls
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add jogos/dupla-na-pista-teste.html
+          if git diff --cached --quiet; then
+            echo 'No changes needed'
+          else
+            git commit -m 'fix: W/up forward and S/down reverse v1.1.3'
+            git push
+          fi
