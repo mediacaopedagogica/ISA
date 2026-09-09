@@ -10,14 +10,12 @@ function loadOnce(key,path){
 }
 function who(){return String($('myName')?.textContent||'').trim().toLowerCase()}
 function requestedProfile(){return String(new URLSearchParams(location.search).get('perfil')||'').trim().toLowerCase()}
-function mainReady(){
-  const main=$('mainView')
-  return !!main&&!main.classList.contains('hidden')&&!!who()&&who()!=='família'
-}
+function mainReady(){const main=$('mainView');return !!main&&!main.classList.contains('hidden')&&!!who()&&who()!=='família'}
 function isIsa(){return who()==='isa'||requestedProfile()==='isa'}
 function isKeise(){return who()==='keise'||who().startsWith('keise ')||requestedProfile()==='keise'}
 function isParent(){return isKeise()}
 function isAlan(){return who()==='alan'||requestedProfile()==='alan'}
+function approvedDashboard(){return isKeise()||window.__ISA_APPROVED_PROFILE_DASHBOARD__===true||document.body.classList.contains('approved-family-dashboard')}
 const dedicatedMobile=new URLSearchParams(location.search).get('mobile')==='1'
 
 async function loadCoreExtras(){
@@ -27,12 +25,12 @@ async function loadCoreExtras(){
     loadOnce('pins','./conversation-pins.js?v=5-direct-pin'),
     loadOnce('paused-friends','./paused-friends-filter.js?v=3-stable'),
     loadOnce('links','./link-preview.js?v=6-inline-video'),
-    loadOnce('social-network','./social-network.js?v=6-keise-direct-api'),
-    loadOnce('games','./games-menu.js?v=6-all-profiles'),
+    loadOnce('social-network','./social-network.js?v=8-privacy'),
+    loadOnce('games','./games-menu.js?v=15-approved-profiles'),
     loadOnce('snake-game','./games-menu-snake.js?v=3-all-users')
   ]
-  // A ponte social antiga intercepta pointer/click/touch e não é necessária no dashboard aprovado da Keise.
-  if(!isKeise())jobs.push(loadOnce('social-network-bridge','./social-network-bridge-v2.js?v=3-touch-open'))
+  // A ponte social antiga intercepta pointer/click/touch. Dashboards aprovados chamam a API social diretamente.
+  if(!approvedDashboard())jobs.push(loadOnce('social-network-bridge','./social-network-bridge-v2.js?v=3-touch-open'))
   if(!dedicatedMobile)jobs.push(loadOnce('games-notebook-fit','./games-notebook-fit.js?v=2-all-profiles'))
 
   if(isKeise()){
@@ -42,27 +40,26 @@ async function loadCoreExtras(){
   }
 
   if(isAlan()){
-    jobs.push(loadOnce('alan-supervision-only','./alan-supervision-only.js?v=2-no-global-observer'))
-    const accessModule=await loadOnce('alan-studio-access','./alan-studio-access.js?v=1-master-lock')
+    // O dashboard aprovado do Alan não possui Supervisão. Mantemos apenas a lógica do Estúdio.
+    if(!approvedDashboard())jobs.push(loadOnce('alan-supervision-only','./alan-supervision-only.js?v=2-no-global-observer'))
+    const accessModule=await loadOnce('alan-studio-access','./alan-studio-access.js?v=2-approved-dashboard')
     const studioEnabled=await accessModule.isAlanStudioEnabled()
-    if(studioEnabled)jobs.push(loadOnce('alan-studio-launcher','./alan-studio-launcher.js?v=1-lazy-core-safe'))
+    if(studioEnabled)jobs.push(loadOnce('alan-studio-launcher','./alan-studio-launcher.js?v=2-approved-dashboard'))
   }
   if(isIsa())jobs.push(loadOnce('isa-tools','./isa-tools.js?v=9-study-fix'))
+  jobs.push(loadOnce('social-privacy','./social-privacy-guard.js?v=1-family-rules'))
   const result=await Promise.allSettled(jobs)
   result.forEach((r,i)=>{if(r.status==='rejected')console.warn('Módulo extra não carregou',i,r.reason)})
+  window.__ISA_SOCIAL_PRIVACY__?.apply?.()
 }
-async function loadSupervisionExtras(){
-  if(!isParent())return
-  await Promise.allSettled([loadOnce('diary-parent','./diary-parent.js?v=5-stable')])
-}
+async function loadSupervisionExtras(){if(!isParent())return;await Promise.allSettled([loadOnce('diary-parent','./diary-parent.js?v=5-stable')])}
 function wire(){
   if(wired||!mainReady())return false
   wired=true
   loadCoreExtras().then(()=>{window.__ISA_FEATURES_READY__=true}).catch(console.error)
   const supervision=document.querySelector('[data-tab="supervision"]')
   if(supervision&&!supervision.dataset.extraLoaderStable){
-    supervision.dataset.extraLoaderStable='1'
-    supervision.addEventListener('click',()=>loadSupervisionExtras().catch(()=>{}))
+    supervision.dataset.extraLoaderStable='1';supervision.addEventListener('click',()=>loadSupervisionExtras().catch(()=>{}))
   }
   return true
 }
@@ -70,8 +67,6 @@ function start(){
   if(wire())return
   const main=$('mainView')
   if(main){const obs=new MutationObserver(()=>{if(wire())obs.disconnect()});obs.observe(main,{attributes:true,attributeFilter:['class']})}
-  let tries=0
-  const retry=()=>{if(wire()||++tries>=80)return;setTimeout(retry,150)}
-  retry()
+  let tries=0;const retry=()=>{if(wire()||++tries>=80)return;setTimeout(retry,150)};retry()
 }
 start()
