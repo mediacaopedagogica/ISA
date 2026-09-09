@@ -37,15 +37,14 @@ async function loadCoreExtras(){
   }
 
   if(isAlan()){
-    jobs.push(loadOnce('alan-supervision-only','./alan-supervision-only.js?v=1-supervision-only'))
+    // Mantém o núcleo do Cantinho leve: chat, calendário e Sair precisam responder primeiro.
+    // A proteção de permissões agora observa apenas seus próprios controles.
+    jobs.push(loadOnce('alan-supervision-only','./alan-supervision-only.js?v=2-no-global-observer'))
     const accessModule=await loadOnce('alan-studio-access','./alan-studio-access.js?v=1-master-lock')
     const studioEnabled=await accessModule.isAlanStudioEnabled()
     if(studioEnabled){
-      jobs.push(loadOnce('alan-studio','./alan-studio.js?v=1'))
-      jobs.push(loadOnce('alan-score','./alan-studio-score.js?v=2-inside-full-studio'))
-      jobs.push(loadOnce('alan-band-management','./alan-band-management.js?v=1-edital'))
-      jobs.push(loadOnce('alan-band-operations','./alan-band-operations.js?v=1-production'))
-      jobs.push(loadOnce('alan-genre-studios','./alan-genre-studios.js?v=2-real-samples'))
+      // Os módulos pesados do Estúdio só carregam quando Alan clicar em "Meu Estúdio".
+      jobs.push(loadOnce('alan-studio-launcher','./alan-studio-launcher.js?v=1-lazy-core-safe'))
     }
   }
   if(isIsa()){
