@@ -1,0 +1,40 @@
+name: Fix Dupla progressive throttle v1.0.2
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-dupla-progressive-throttle-v102.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add progressive acceleration and higher top speed
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p=Path('jogos/dupla-na-pista-teste.html')
+          s=p.read_text()
+          s=s.replace('pista viva v1.0.1 • frente corrigida','pista viva v1.0.2 • acelerador progressivo')
+          s=s.replace('🧪 TESTE JOGO • KEISE • v1.0.1','🧪 TESTE JOGO • KEISE • v1.0.2')
+          s=s.replace('A direção agora usa suspensão e pneus raycast. O carro só anda quando o jogador acelera.','A direção usa suspensão e pneus raycast. Toques curtos aceleram pouco; segurar o acelerador aumenta a força e a velocidade progressivamente.')
+
+          pat=r"function setRaycastInput\(i,enabled,dt=\.016\)\{.*?\}\n\nfunction zoneAt"
+          m=re.search(pat,s,re.S)
+          if not m:
+              raise SystemExit('setRaycastInput block not found')
+          new="""function setRaycastInput(i,enabled,dt=.016){const pv=vehiclePhysics[i],rv=pv.vehicle,b=pv.body,s=states[i],fw=physicsForward(pv),signed=b.velocity.dot(fw),kmh=Math.abs(signed)*3.6,left=enabled&&(keys.ArrowLeft||keys.a||keys.A),right=enabled&&(keys.ArrowRight||keys.d||keys.D),acc=enabled&&(keys.ArrowUp||keys.w||keys.W),down=enabled&&(keys.ArrowDown||keys.s||keys.S),steerIn=(left?1:0)-(right?1:0),maxSteer=THREE.MathUtils.degToRad(30-21*THREE.MathUtils.clamp(kmh/130,0,1)),target=steerIn*maxSteer;pv.steer=THREE.MathUtils.lerp(pv.steer,target,1-Math.exp(-(steerIn?6.4:9.8)*dt));rv.setSteeringValue(pv.steer,0);rv.setSteeringValue(pv.steer,1);pv.throttleHold=acc?Math.min(3.2,(pv.throttleHold||0)+dt):Math.max(0,(pv.throttleHold||0)-dt*2.2);const ramp=THREE.MathUtils.smoothstep(pv.throttleHold,0,2.7),motorHealth=Math.max(.38,s.motor/100);let engine=0,brake=0;if(!enabled){brake=420;pv.throttleHold=0}else if(acc){if(signed<-.8){brake=330}else{const launch=4800,full=16000,force=launch+(full-launch)*ramp,speedFade=kmh<150?1:Math.max(.12,1-(kmh-150)/55);engine=force*motorHealth*speedFade}}else if(down){pv.throttleHold=0;if(signed>1){brake=330}else{const reverseRamp=Math.min(1,Math.max(0,(Math.abs(signed)*3.6)/18));engine=-5200*motorHealth*(1-.35*reverseRamp)}}else{brake=4;pv.throttleHold=Math.max(0,(pv.throttleHold||0)-dt*1.5)}for(let w=0;w<4;w++){rv.setBrake(brake,w);rv.wheelInfos[w].frictionSlip=(Math.abs(s.lat)<4.15?4.5:2.2)*THREE.MathUtils.clamp(s.tires/100,.55,1)}rv.applyEngineForce(engine,2);rv.applyEngineForce(engine,3);rv.applyEngineForce(0,0);rv.applyEngineForce(0,1)}
+
+function zoneAt"""
+          s=s[:m.start()]+new+s[m.end():]
+          p.write_text(s)
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add jogos/dupla-na-pista-teste.html
+          git commit -m 'fix: progressive throttle and faster acceleration'
+          git push
