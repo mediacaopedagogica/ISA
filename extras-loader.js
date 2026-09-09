@@ -9,14 +9,15 @@ function loadOnce(key,path){
   return p
 }
 function who(){return String($('myName')?.textContent||'').trim().toLowerCase()}
+function requestedProfile(){return String(new URLSearchParams(location.search).get('perfil')||'').trim().toLowerCase()}
 function mainReady(){
   const main=$('mainView')
   return !!main&&!main.classList.contains('hidden')&&!!who()&&who()!=='família'
 }
-function isIsa(){return who()==='isa'}
-function isKeise(){return who()==='keise'}
-function isParent(){return who()==='keise'}
-function isAlan(){return who()==='alan'}
+function isIsa(){return who()==='isa'||requestedProfile()==='isa'}
+function isKeise(){return who()==='keise'||who().startsWith('keise ')||requestedProfile()==='keise'}
+function isParent(){return isKeise()}
+function isAlan(){return who()==='alan'||requestedProfile()==='alan'}
 const dedicatedMobile=new URLSearchParams(location.search).get('mobile')==='1'
 
 async function loadCoreExtras(){
@@ -35,7 +36,7 @@ async function loadCoreExtras(){
   if(isKeise()){
     jobs.push(loadOnce('keise-access-settings','./keise-access-settings.js?v=1-edit-login'))
     jobs.push(loadOnce('keise-alan-studio-control','./keise-alan-studio-control.js?v=1-master-lock'))
-    jobs.push(loadOnce('keise-game-test','./keise-game-test.js?v=4-farm-private-test'))
+    jobs.push(loadOnce('keise-game-test','./keise-game-test.js?v=5-persistent-menu'))
   }
 
   if(isAlan()){
