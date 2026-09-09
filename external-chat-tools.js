@@ -1,4 +1,5 @@
 import { CONFIG } from './config.js?v=20260909-access-fix'
+import { capturePhoto } from './media-capture.js?v=5-external-camera'
 
 const $=id=>document.getElementById(id)
 const token=window.__ISA_FRIEND_TOKEN__||new URLSearchParams(location.hash.replace(/^#/, '')).get('acesso')||''
@@ -13,7 +14,7 @@ function addStyle(){
   if($('externalChatToolsStyle'))return
   const s=document.createElement('style');s.id='externalChatToolsStyle';s.textContent=`
 .friend-avatar.external-profile-avatar{position:relative;overflow:hidden;cursor:pointer;border:0;padding:0;background:linear-gradient(145deg,#fff0f7,#e7ddff);background-size:cover!important;background-position:center!important;color:transparent}.friend-avatar.external-profile-avatar.no-photo{color:inherit}.external-avatar-camera{position:absolute;right:-2px;bottom:-2px;width:23px;height:23px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#6d5678;font-size:12px;box-shadow:0 3px 9px #614a7130;pointer-events:none}.external-audio-btn.is-recording{background:#ffe1e8!important;color:#a7445d!important;box-shadow:0 0 0 3px rgba(225,104,137,.16)!important;animation:externalAudioPulse 1s infinite}@keyframes externalAudioPulse{50%{transform:scale(1.06)}}
-@media(max-width:780px){.external-avatar-camera{width:21px;height:21px;font-size:11px}.friend-composer .external-audio-btn{width:43px!important;height:43px!important;flex:0 0 43px!important}}
+@media(max-width:780px){.external-avatar-camera{width:21px;height:21px;font-size:11px}.friend-composer .external-audio-btn,.friend-composer #friendCameraBtn{width:43px!important;height:43px!important;flex:0 0 43px!important}}
 `;document.head.appendChild(s)
 }
 async function apiJson(payload){
@@ -30,6 +31,31 @@ async function uploadForm(form){
 }
 function activeConversationId(){return window.__ISA_FRIEND_GET_ACTIVE_CONVERSATION_ID__?.()||null}
 
+async function uploadConversationImage(file){
+  const conversationId=activeConversationId();if(!conversationId)throw new Error('Abra uma conversa primeiro.')
+  if(!file)throw new Error('Imagem não encontrada.')
+  if(file.size>6*1024*1024)throw new Error('Use uma imagem de até 6 MB.')
+  if(!['image/jpeg','image/png','image/webp','image/gif'].includes(file.type))throw new Error('Use JPG, PNG, WEBP ou GIF.')
+  const form=new FormData();form.append('token',token);form.append('conversationId',conversationId);form.append('action','message');form.append('file',file)
+  await uploadForm(form)
+  await window.__ISA_FRIEND_REFRESH_MESSAGES__?.();await window.__ISA_FRIEND_REFRESH_LIST__?.()
+}
+async function takePhotoNow(){
+  if(!activeConversationId())return toast('Abra uma conversa para tirar a foto.')
+  try{const file=await capturePhoto();if(!file)return;toast('Enviando foto…');await uploadConversationImage(file);toast('Foto enviada 📷')}catch(e){toast(e.message||'Não foi possível tirar a foto.')}
+}
+function ensureMediaButtons(){
+  const composer=document.querySelector('.friend-composer');if(!composer)return false
+  const image=$('friendPhotoBtn'),emoji=$('friendEmojiBtn')
+  if(image){image.textContent='🖼️';image.title='Enviar imagem';image.setAttribute('aria-label','Enviar imagem')}
+  let camera=$('friendCameraBtn')
+  if(!camera){camera=document.createElement('button');camera.id='friendCameraBtn';camera.type='button';camera.className='emoji-btn';camera.textContent='📷';camera.title='Tirar foto';camera.setAttribute('aria-label','Tirar foto');if(image)image.insertAdjacentElement('beforebegin',camera);else composer.prepend(camera)}
+  if(camera.dataset.externalCameraBound!=='1'){camera.dataset.externalCameraBound='1';camera.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();takePhotoNow()})}
+  let audio=$('friendAudioBtn')
+  if(audio&&emoji&&audio.nextElementSibling!==emoji)emoji.insertAdjacentElement('beforebegin',audio)
+  return true
+}
+
 async function loadAvatar(){
   const avatar=document.querySelector('.friend-avatar');if(!avatar)return
   const ref=String(window.__ISA_FRIEND_PERSON__?.avatarRef||'')
@@ -37,9 +63,7 @@ async function loadAvatar(){
   try{
     const data=await apiJson({action:'profile_signed_url',token})
     avatar.style.backgroundImage=`url("${String(data.url).replace(/"/g,'%22')}")`
-    avatar.textContent=''
-    avatar.classList.remove('no-photo')
-    ensureCameraBadge(avatar)
+    avatar.textContent='';avatar.classList.remove('no-photo');ensureCameraBadge(avatar)
   }catch{avatar.classList.add('no-photo')}
 }
 function ensureCameraBadge(avatar){
@@ -48,7 +72,7 @@ function ensureCameraBadge(avatar){
 }
 function ensureAvatarControl(){
   const avatar=document.querySelector('.friend-avatar');if(!avatar)return false
-  avatar.classList.add('external-profile-avatar');avatar.setAttribute('role','button');avatar.setAttribute('tabindex','0');avatar.title='Trocar foto de perfil';avatar.setAttribute('aria-label','Trocar foto de perfil');ensureCameraBadge(avatar)
+  avatar.classList.add('external-profile-avatar');avatar.removeAttribute('aria-hidden');avatar.setAttribute('role','button');avatar.setAttribute('tabindex','0');avatar.title='Trocar foto de perfil';avatar.setAttribute('aria-label','Trocar foto de perfil');ensureCameraBadge(avatar)
   let input=$('externalProfilePhotoInput')
   if(!input){input=document.createElement('input');input.id='externalProfilePhotoInput';input.type='file';input.accept='image/jpeg,image/png,image/webp,image/gif';input.hidden=true;document.body.appendChild(input)}
   if(avatar.dataset.externalAvatarBound!=='1'){
@@ -114,11 +138,11 @@ function toggleRecording(){if(recorder?.state==='recording'){recorder.stop();ret
 function ensureAudioButton(){
   const composer=document.querySelector('.friend-composer');if(!composer)return false
   let b=$('friendAudioBtn')
-  if(!b){b=document.createElement('button');b.id='friendAudioBtn';b.type='button';b.className='emoji-btn external-audio-btn';b.textContent='🎙️';b.title='Gravar áudio';b.setAttribute('aria-label','Gravar áudio');const emoji=$('friendEmojiBtn');if(emoji)emoji.insertAdjacentElement('afterend',b);else composer.prepend(b)}
+  if(!b){b=document.createElement('button');b.id='friendAudioBtn';b.type='button';b.className='emoji-btn external-audio-btn';b.textContent='🎙️';b.title='Gravar áudio';b.setAttribute('aria-label','Gravar áudio');const emoji=$('friendEmojiBtn');if(emoji)emoji.insertAdjacentElement('beforebegin',b);else composer.prepend(b)}
   if(b.dataset.externalAudioBound!=='1'){b.dataset.externalAudioBound='1';b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();toggleRecording()})}
   return true
 }
-function ensure(){addStyle();ensureAvatarControl();ensureAudioButton()}
+function ensure(){addStyle();ensureAvatarControl();ensureAudioButton();ensureMediaButtons()}
 function start(){
   if(window.__ISA_FRIEND_ACCESS_VALID__===true)ensure()
   document.addEventListener('isa:friend-access-valid',()=>setTimeout(ensure,0))
