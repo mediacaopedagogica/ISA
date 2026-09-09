@@ -1,0 +1,70 @@
+name: Unfreeze all links v1
+on:
+  push:
+    paths:
+      - '.github/workflows/unfreeze-all-links-v1.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch main and external loaders
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          def version(path, filename, value):
+              p=Path(path); s=p.read_text()
+              pattern=re.escape(filename)+r'(?:\?v=[^\"\']*)?'
+              s,n=re.subn(pattern, filename+'?v='+value, s)
+              if not n: raise SystemExit(f'{path}: {filename} not found')
+              p.write_text(s)
+
+          p=Path('index.html'); s=p.read_text()
+          if 'http-equiv="Cache-Control"' not in s:
+              s=s.replace('<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">','<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">\n  <meta http-equiv="Pragma" content="no-cache">\n  <meta http-equiv="Expires" content="0">',1)
+          p.write_text(s)
+          for fn,val in [
+              ('styles.css','62-ui'),('theme-3d.css','62-ui'),('login-3d.css','62-ui'),('app-3d.css','62-updated-ui'),
+              ('mobile-responsive-v2.css','62-updated-ui'),('mobile-stability-fix.css','62-unfreeze'),('heart-polish.css','62-ui'),
+              ('mobile-interaction-guard.js','62-unfreeze'),('app-v33.js','62-unfreeze-core'),('postboot-loader.js','62-progressive')]:
+              version('index.html',fn,val)
+          s=Path('index.html').read_text()
+          s=re.sub(r"sw\.js\?v=[^'\"]+","sw.js?v=unfreeze-62",s)
+          Path('index.html').write_text(s)
+
+          block=re.compile(r'<script type="module">\s*const idle=.*?if\(window\.__ISA_FRIEND_PORTAL_ENTERED__===true\)loadExtras\(\)\s*else document\.addEventListener\(\'isa:friend-portal-entered\',loadExtras,\{once:true\}\)\s*</script>',re.S)
+          for path in ['acesso-mobile.html','acesso.html']:
+              p=Path(path); s=p.read_text()
+              ns,n=block.subn('<script type="module" src="./external-progressive-loader.js?v=1-progressive"></script>',s,count=1)
+              if not n:
+                  raise SystemExit(f'{path}: old extra loader block not found')
+              ns=re.sub(r'familia-externa\.css\?v=[^\"\']+','familia-externa.css?v=62-unfreeze',ns)
+              ns=re.sub(r'amiga-ui-enhanced\.css\?v=[^\"\']+','amiga-ui-enhanced.css?v=62-unfreeze',ns)
+              ns=re.sub(r'familia-mobile\.css\?v=[^\"\']+','familia-mobile.css?v=62-unfreeze',ns)
+              ns=re.sub(r'nossa-rede-access\.css\?v=[^\"\']+','nossa-rede-access.css?v=62-unfreeze',ns)
+              ns=re.sub(r'familia-externa\.js\?v=[^\"\']+','familia-externa.js?v=62-unfreeze-core',ns)
+              if 'http-equiv="Cache-Control"' not in ns:
+                  ns=ns.replace('<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">','<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">',1)
+              p.write_text(ns)
+          PY
+          node --check postboot-loader.js
+          node --check profile-menu-guard.js
+          node --check general-settings.js
+          node --check external-progressive-loader.js
+          node --check external-menu.js
+          grep -q 'postboot-loader.js?v=62-progressive' index.html
+          grep -q 'app-3d.css?v=62-updated-ui' index.html
+          grep -q 'external-progressive-loader.js?v=1-progressive' acesso-mobile.html
+          grep -q 'external-progressive-loader.js?v=1-progressive' acesso.html
+      - name: Commit patch
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html acesso-mobile.html acesso.html
+          git commit -m 'fix: unfreeze all links and refresh updated interface'
+          git push
