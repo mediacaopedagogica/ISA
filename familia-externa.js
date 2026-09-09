@@ -38,6 +38,13 @@ async function uploadImage(file){
 }
 function toast(text){const el=$('friendToast');if(!el)return;el.textContent=text;el.classList.remove('hidden');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.add('hidden'),2300)}
 function fmtTime(ts){return new Intl.DateTimeFormat('pt-BR',{hour:'2-digit',minute:'2-digit'}).format(new Date(ts))}
+function stopTimers(){clearInterval(messageTimer);clearInterval(listTimer);clearInterval(presenceTimer);messageTimer=listTimer=presenceTimer=null}
+function ensureExitButton(){
+  const host=document.querySelector('.friend-profile');if(!host)return null
+  let b=$('friendExitBtn')
+  if(!b){b=document.createElement('button');b.id='friendExitBtn';b.type='button';b.className='friend-exit-btn';b.textContent='Sair';b.title='Sair deste acesso';b.setAttribute('aria-label','Sair deste acesso');host.appendChild(b)}
+  return b
+}
 async function bootstrap(silent=false){
   window.__ISA_FRIEND_BOOTSTRAP_STATE__='loading'
   const btn=$('friendEnterBtn')
@@ -55,21 +62,37 @@ async function bootstrap(silent=false){
 function renderConversationList(){
   $('friendName').textContent=person?.name||'Família'
   $('friendRelationship').textContent=person?.relationship||'Família'
-  $('friendConversationList').innerHTML=conversations.map(c=>`<button class="friend-conversation ${activeConversation?.id===c.id?'active':''}" data-friend-conv="${c.id}"><strong>${c.type==='group'?'👥 ':''}${esc(c.title||'Isa')}</strong><small>${esc(c.preview||(c.type==='direct'?'Conversa com a Isa':(c.participants||[]).join(', ')))}</small></button>`).join('')||'<p class="muted">Nenhuma conversa disponível.</p>'
+  $('friendConversationList').innerHTML=conversations.map(c=>`<button class="friend-conversation ${activeConversation?.id===c.id?'active':''}" data-friend-conv="${c.id}" type="button"><strong>${c.type==='group'?'👥 ':''}${esc(c.title||'Isa')}</strong><small>${esc(c.preview||(c.type==='direct'?'Conversa com a Isa':(c.participants||[]).join(', ')))}</small></button>`).join('')||'<p class="muted">Nenhuma conversa disponível.</p>'
   document.querySelectorAll('[data-friend-conv]').forEach(b=>b.onclick=()=>openConversation(b.dataset.friendConv))
+  ensureExitButton()
 }
-async function enterPortal(){
-  $('friendEnterBtn').disabled=true
-  try{await rpc('friend_portal_presence',{p_token:token,p_online:true});$('friendGate').classList.add('hidden');$('friendChat').classList.remove('hidden');renderConversationList();startTimers();const direct=conversations.find(c=>c.type==='direct');if(direct)await openConversation(direct.id)}
-  catch(e){$('friendGateError').textContent=e.message}finally{$('friendEnterBtn').disabled=false}
+function enterPortal(){
+  const btn=$('friendEnterBtn')
+  if(!person||!window.__ISA_FRIEND_ACCESS_VALID__)return bootstrap(false)
+  if(btn)btn.disabled=true
+  // Núcleo primeiro: a interface abre imediatamente; presença e mensagens não bloqueiam o toque.
+  $('friendGate').classList.add('hidden')
+  $('friendChat').classList.remove('hidden')
+  document.body.classList.add('friend-portal-open')
+  renderConversationList();startTimers();setPresence(true).catch(()=>{})
+  window.__ISA_FRIEND_PORTAL_ENTERED__=true
+  document.dispatchEvent(new CustomEvent('isa:friend-portal-entered',{detail:{id:person?.id||null,name:person?.name||''}}))
+  const direct=conversations.find(c=>c.type==='direct')
+  if(direct)openConversation(direct.id).catch(e=>toast(e.message||'Não foi possível abrir a conversa.'))
+  if(btn)btn.disabled=false
+}
+function exitPortal(){
+  stopTimers();setPresence(false,true).catch(()=>{})
+  activeConversation=null;window.__FRIEND_ACTIVE_CONV_TYPE__=null;window.__ISA_FRIEND_PORTAL_ENTERED__=false
+  $('friendChat').classList.remove('thread-open');$('friendChat').classList.add('hidden');$('friendGate').classList.remove('hidden');document.body.classList.remove('friend-portal-open')
+  $('friendThread')?.classList.add('hidden');$('friendEmpty')?.classList.remove('hidden')
+  const btn=$('friendEnterBtn');if(btn){btn.disabled=false;btn.dataset.mode='enter';btn.textContent='Acessar 💜';btn.classList.remove('hidden')}
 }
 async function refreshConversations(){try{await bootstrap(true);renderConversationList()}catch{}}
-function refreshCallActionsNow(){
-  const fire=()=>document.dispatchEvent(new Event('visibilitychange'))
-  fire();setTimeout(fire,180);setTimeout(fire,650)
-}
+function refreshCallActionsNow(){const fire=()=>document.dispatchEvent(new Event('visibilitychange'));fire();setTimeout(fire,180);setTimeout(fire,650)}
 async function openConversation(id){
-  const c=conversations.find(x=>x.id===id);if(!c)return;activeConversation=c;window.__FRIEND_ACTIVE_CONV_TYPE__=c.type
+  const c=conversations.find(x=>x.id===id);if(!c)return
+  activeConversation=c;window.__FRIEND_ACTIVE_CONV_TYPE__=c.type
   $('friendEmpty').classList.add('hidden');$('friendThread').classList.remove('hidden');$('friendChat').classList.add('thread-open');$('friendThreadTitle').textContent=c.title||'Isa';$('friendThreadSubtitle').textContent=c.type==='group'?'Grupo criado pela Isa':'Conversa direta com a Isa';renderConversationList();refreshCallActionsNow();await loadMessages(true)
 }
 async function getMediaUrl(messageId){const cached=mediaCache.get(messageId);if(cached&&cached.until>Date.now())return cached.url;const data=await mediaJson({action:'signed_url',token,messageId});mediaCache.set(messageId,{url:data.url,until:Date.now()+240000});return data.url}
@@ -80,23 +103,14 @@ async function hydrateMedia(){
   }
   for(const node of [...document.querySelectorAll('[data-family-audio]')]){
     if(node.dataset.loaded==='1')continue;const id=node.dataset.familyAudio
-    try{
-      const url=await getMediaUrl(id),audio=document.createElement('audio');audio.controls=true;audio.preload='metadata';audio.src=url;audio.className='friend-audio';audio.style.width='min(360px,100%)';audio.style.maxWidth='100%';audio.setAttribute('controlsList','nodownload');node.innerHTML='';node.appendChild(audio);audio.load();node.dataset.loaded='1'
-    }catch{node.innerHTML='<div class="friend-photo-note">🎙️ Áudio expirado.</div>';node.dataset.loaded='1'}
+    try{const url=await getMediaUrl(id),audio=document.createElement('audio');audio.controls=true;audio.preload='metadata';audio.src=url;audio.className='friend-audio';audio.style.width='min(360px,100%)';audio.style.maxWidth='100%';audio.setAttribute('controlsList','nodownload');node.innerHTML='';node.appendChild(audio);audio.load();node.dataset.loaded='1'}catch{node.innerHTML='<div class="friend-photo-note">🎙️ Áudio expirado.</div>';node.dataset.loaded='1'}
   }
 }
 async function loadMessages(forceScroll=false){
   if(!activeConversation)return
   try{
     const list=await rpc('friend_portal_messages',{p_token:token,p_conversation_id:activeConversation.id}),box=$('friendMessages'),atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<90
-    box.innerHTML=(list||[]).map(m=>{
-      const mine=m.senderId===person.id,read=mine?(Number(m.readCount||0)>0?'✓✓ Lida':'✓ Enviada'):''
-      let content
-      if(m.kind==='photo')content=`<div class="friend-photo-wrap" data-family-photo="${m.id}"><div class="friend-photo-note">📷 Carregando imagem…</div></div>`
-      else if(m.kind==='audio')content=`<div class="friend-audio-wrap" data-family-audio="${m.id}"><div class="friend-photo-note">🎙️ Carregando áudio…</div></div>`
-      else content=`<div>${esc(m.body||'')}</div>`
-      return `<div class="friend-msg ${mine?'mine':''}"><div class="friend-bubble">${!mine?`<span class="friend-sender">${esc(m.senderName)}</span>`:''}${content}<span class="friend-meta">${fmtTime(m.sentAt)}</span>${read?`<span class="friend-read">${read}</span>`:''}</div></div>`
-    }).join('')||'<div class="friend-empty" style="height:auto;padding:40px"><p>Comece a conversa 💕</p></div>'
+    box.innerHTML=(list||[]).map(m=>{const mine=m.senderId===person.id,read=mine?(Number(m.readCount||0)>0?'✓✓ Lida':'✓ Enviada'):'';let content;if(m.kind==='photo')content=`<div class="friend-photo-wrap" data-family-photo="${m.id}"><div class="friend-photo-note">📷 Carregando imagem…</div></div>`;else if(m.kind==='audio')content=`<div class="friend-audio-wrap" data-family-audio="${m.id}"><div class="friend-photo-note">🎙️ Carregando áudio…</div></div>`;else content=`<div>${esc(m.body||'')}</div>`;return `<div class="friend-msg ${mine?'mine':''}"><div class="friend-bubble">${!mine?`<span class="friend-sender">${esc(m.senderName)}</span>`:''}${content}<span class="friend-meta">${fmtTime(m.sentAt)}</span>${read?`<span class="friend-read">${read}</span>`:''}</div></div>`}).join('')||'<div class="friend-empty" style="height:auto;padding:40px"><p>Comece a conversa 💕</p></div>'
     hydrateMedia();if(forceScroll||atBottom)requestAnimationFrame(()=>box.scrollTop=box.scrollHeight)
   }catch(e){toast(e.message)}
 }
@@ -104,8 +118,14 @@ async function sendMessage(){const input=$('friendMessageInput'),body=input.valu
 async function sendPhoto(file){if(!file||!activeConversation)return;if(file.size>6*1024*1024)return toast('Use uma imagem de até 6 MB.');if(!['image/jpeg','image/png','image/webp','image/gif'].includes(file.type))return toast('Use JPG, PNG, WEBP ou GIF.');toast('Enviando imagem…');try{await uploadImage(file);await loadMessages(true);await refreshConversations();toast('Imagem enviada 📷')}catch(e){toast(e.message)}}
 function chooseImage(){const i=$('friendPhotoInput');i?.click()}
 function buildEmoji(){const bar=$('friendEmojiBar');if(!bar)return;bar.innerHTML=emojis.map(e=>`<button type="button" data-emoji="${e}">${e}</button>`).join('');bar.querySelectorAll('[data-emoji]').forEach(b=>b.onclick=()=>{const i=$('friendMessageInput');i.value+=b.dataset.emoji;bar.classList.add('hidden');i.focus()})}
-async function setPresence(online,keepalive=false){if(!token||!person)return;try{await rpc('friend_portal_presence',{p_token:token,p_online:!!online},{keepalive})}catch{}}
-function startTimers(){clearInterval(messageTimer);clearInterval(listTimer);clearInterval(presenceTimer);messageTimer=setInterval(()=>{if(document.visibilityState==='visible')loadMessages(false)},2500);listTimer=setInterval(()=>{if(document.visibilityState==='visible')refreshConversations()},5000);presenceTimer=setInterval(()=>{if(document.visibilityState==='visible')setPresence(true)},15000)}
+async function setPresence(online,keepalive=false){if(!token||!person)return;try{await rpc('friend_portal_presence',{p_token:token,p_online:!!online},{keepalive,timeoutMs:6000})}catch{}}
+function startTimers(){
+  stopTimers()
+  const mobile=matchMedia('(max-width:780px)').matches
+  messageTimer=setInterval(()=>{if(document.visibilityState==='visible'&&activeConversation)loadMessages(false)},mobile?4200:2500)
+  listTimer=setInterval(()=>{if(document.visibilityState==='visible')refreshConversations()},mobile?10000:5000)
+  presenceTimer=setInterval(()=>{if(document.visibilityState==='visible')setPresence(true)},20000)
+}
 
 $('friendEnterBtn').onclick=()=>$('friendEnterBtn').dataset.mode==='retry'?bootstrap(false):enterPortal()
 $('friendSendBtn').onclick=sendMessage
@@ -114,7 +134,7 @@ $('friendEmojiBtn').onclick=e=>{e.stopPropagation();$('friendEmojiBar').classLis
 $('friendPhotoBtn').onclick=chooseImage
 $('friendPhotoInput').onchange=e=>{const f=e.target.files?.[0];if(f)sendPhoto(f);e.target.value=''}
 $('friendBackBtn').onclick=()=>{$('friendChat').classList.remove('thread-open');if(innerWidth>780){$('friendThread').classList.add('hidden');$('friendEmpty').classList.remove('hidden')}activeConversation=null;window.__FRIEND_ACTIVE_CONV_TYPE__=null;renderConversationList()}
-document.addEventListener('click',e=>{if(!e.target.closest('#friendEmojiBar')&&!e.target.closest('#friendEmojiBtn'))$('friendEmojiBar').classList.add('hidden')})
+document.addEventListener('click',e=>{if(e.target.closest('#friendExitBtn')){e.preventDefault();exitPortal();return}if(!e.target.closest('#friendEmojiBar')&&!e.target.closest('#friendEmojiBtn'))$('friendEmojiBar').classList.add('hidden')})
 document.addEventListener('visibilitychange',()=>setPresence(document.visibilityState==='visible'))
 window.addEventListener('pagehide',()=>setPresence(false,true))
 buildEmoji();bootstrap(false)
