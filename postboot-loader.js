@@ -38,12 +38,22 @@ later(1450,'./family-media-menu-v2.js?v=12-compact-plus')
 later(1750,'./notifications-v2.js?v=11-progressive')
 later(2300,'./extras-loader.js?v=55-snake-restored',()=>window.__ISA_ENSURE_PROFILE_MENU__?.())
 
-// Layout aprovado da Keise + Teste Jogo exclusivo.
-const requested=String(new URLSearchParams(location.search).get('perfil')||'').trim().toLowerCase()
-const current=String(document.getElementById('myName')?.textContent||'').trim().toLowerCase()
-if(requested==='keise'||current==='keise'||current.startsWith('keise ')){
-  css('./keise-dashboard-state-fix.css?v=1','keiseDashboardStateFix')
-  later(260,'./keise-dashboard-v1.js?v=2-approved-exact',()=>window.__ISA_SHOW_KEISE_HOME__?.())
-  later(420,'./keise-game-test.js?v=9-progressive',()=>{window.__ISA_ENSURE_TEST_GAME_NAV__?.();window.__ISA_ENSURE_PROFILE_MENU__?.()})
+// Layout aprovado da Keise + Teste Jogo exclusivo. Funciona tanto em ?perfil=Keise quanto no acesso raiz salvo da Keise.
+let keiseBooted=false
+function isKeiseAccess(){
+  const requested=String(new URLSearchParams(location.search).get('perfil')||'').trim().toLowerCase()
+  const current=String(document.getElementById('myName')?.textContent||'').trim().toLowerCase()
+  return requested==='keise'||current==='keise'||current.startsWith('keise ')
 }
+function bootKeise(){
+  if(keiseBooted||!isKeiseAccess())return false
+  keiseBooted=true
+  css('./keise-dashboard-state-fix.css?v=1','keiseDashboardStateFix')
+  later(40,'./keise-dashboard-v1.js?v=3-approved-exact',()=>window.__ISA_SHOW_KEISE_HOME__?.())
+  later(210,'./keise-game-test.js?v=9-progressive',()=>{window.__ISA_ENSURE_TEST_GAME_NAV__?.();window.__ISA_ENSURE_PROFILE_MENU__?.()})
+  return true
+}
+bootKeise()
+let keiseChecks=0;const keiseTimer=setInterval(()=>{if(bootKeise()||++keiseChecks>40)clearInterval(keiseTimer)},150)
+
 window.__ISA_EXTRAS_READY__=true
