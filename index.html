@@ -104,7 +104,7 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=res
     const list=document.getElementById('chatList'),coreReady=!list||!/Carregando conversas/i.test(list.textContent||'');
     if(main&&!main.classList.contains('hidden')&&name&&name!=='Família'&&coreReady){
       loaded=true;
-      const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=23-access-and-dupla-fix';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
+      const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=24-alan-core-safe';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
     }
     if(++tries<100)setTimeout(loadExtras,120);
   };
@@ -127,6 +127,27 @@ window.addEventListener('load',()=>{
     login?.classList.remove('hidden');
   },7000);
 });
+</script>
+<script>
+(function(){
+  const btn=document.getElementById('logoutBtn');
+  if(!btn||btn.dataset.rootLogoutFallback)return;
+  btn.dataset.rootLogoutFallback='1';
+  btn.addEventListener('click',()=>{
+    setTimeout(()=>{
+      const main=document.getElementById('mainView');
+      if(!main||main.classList.contains('hidden'))return;
+      try{
+        for(const store of [localStorage,sessionStorage]){
+          const keys=[];
+          for(let i=0;i<store.length;i++){const k=store.key(i)||'';if(/auth-token/i.test(k))keys.push(k)}
+          keys.forEach(k=>store.removeItem(k));
+        }
+      }catch{}
+      location.replace('./?sair=forcado&_cb='+Date.now());
+    },3500);
+  },true);
+})();
 </script>
 </body>
 </html>
