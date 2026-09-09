@@ -72,3 +72,4 @@ ensureStyle();build();ensureButton();document.addEventListener('isa:friend-acces
           git diff --cached --quiet && exit 0
           git commit -m 'fix: private Nossa Rede navigation for all family links'
           git push
+# trigger 2
