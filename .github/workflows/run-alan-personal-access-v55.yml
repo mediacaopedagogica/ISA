@@ -1,0 +1,26 @@
+name: Run Alan personal access v55
+on:
+  push:
+    paths:
+      - '.github/workflows/run-alan-personal-access-v55.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch Alan access
+        run: python scripts/fix_alan_personal_access_v55.py
+      - name: Validate JavaScript
+        run: |
+          node --check app-v33.js
+          node --check personal-access-recovery.js
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html acesso-v41.html app-v33.js personal-access-recovery.js
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'fix: unfreeze Alan personal access'
+          git push
