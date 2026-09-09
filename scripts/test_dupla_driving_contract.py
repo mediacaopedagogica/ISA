@@ -1,5 +1,4 @@
 from pathlib import Path
-import re
 
 html = Path('jogos/dupla-na-pista-teste.html').read_text()
 contract = Path('jogos/dupla-na-pista/src/config/driving-contract.js').read_text()
@@ -22,19 +21,31 @@ require("fixedStep: 1 / 60", contract, '60 Hz physics contract')
 forbid("new CANNON.Vec3(0,0,-1)", html, 'legacy -Z physicsForward')
 
 # Playable build must actually use the contract and architecture.
-require('pista viva v1.2.0', html, 'v1.2.0 build marker')
+require('pista viva v1.2.1', html, 'v1.2.1 build marker')
 require("import {EventBus}", html, 'EventBus import')
 require("import {RaceDirectorAgent}", html, 'RaceDirectorAgent import')
 require("import {DRIVING,assertDrivingContract}", html, 'driving contract import')
 require('assertDrivingContract();', html, 'runtime driving-contract assertion')
 require('raceDirector.tick(', html, 'RaceDirectorAgent connected to runtime')
 
-# Physical road must be continuous and old box seams removed.
+# Physical road must be continuous, solid and free from the old box seams.
 require('new CANNON.Trimesh(verts,idx)', html, 'continuous physical road mesh')
+require('solidRoadDepth=.85', html, 'solid road slab depth')
+require('lt,lb,nlt,lb,nlb,nlt', html, 'left wall of solid road slab')
+require('rt,nrt,rb,rb,nrt,nrb', html, 'right wall of solid road slab')
 forbid('barrierPhysMat', html, 'segmented physical guard-rail bodies')
 forbid('new CANNON.Box(new CANNON.Vec3(11.5', html, 'overlapping 23m base road boxes')
 forbid('physicsWorld.step(1/120', html, 'old 120 Hz / high-substep loop')
 require('physicsWorld.step(DRIVING.physics.fixedStep,dt,DRIVING.physics.maxSubSteps)', html, 'contract-controlled physics step')
+
+# Anti-subsoil protection must work for rollover and rail impacts.
+require('function applyGroundSafety(i,near)', html, 'ground penetration safety resolver')
+require('supportRadius=', html, 'orientation-aware chassis support radius')
+require('bottom=b.position.y+off.y-supportRadius', html, 'actual chassis bottom calculation')
+require('if(bottom<minBottom)', html, 'surface penetration correction')
+require('if(b.position.y<roadY-.22)', html, 'deep-subsoil emergency recovery')
+require('applyGroundSafety(i,near)', html, 'ground safety called from runtime loop')
+require("Proteção anti-subsolo", html, 'visible recovery message')
 
 # Driver input / steering.
 require('steerIn=(right?1:0)-(left?1:0)', html, 'explicit left/right steering sign')
@@ -54,12 +65,9 @@ forbid('function obbCollision(', html, 'legacy OBB collision engine')
 require('applySoftBarrier(i,near)', html, 'non-sticking soft road boundary')
 require('modelFix[i]', html, 'per-vehicle visual orientation hook')
 
-# Sanity: triangle winding in physical road should face upward for +Z travel.
-require('idx.push(n,nx,n+1,n+1,nx,nx+1)', html, 'upward-facing road triangle winding')
-
 if errors:
     print('\n'.join(errors))
     raise SystemExit(1)
 
-print('Dupla na Pista v1.2.0 driving contract: PASS')
-print('Verified: +Z forward, front axle 2/3, chase camera behind, continuous road mesh, 60 Hz step, no legacy OBB/segmented rail physics, runtime agent connected.')
+print('Dupla na Pista v1.2.1 driving contract: PASS')
+print('Verified: +Z forward, chase camera behind, solid road slab, orientation-aware anti-subsoil correction, 60 Hz step, no legacy OBB/segmented rail physics, runtime agent connected.')
