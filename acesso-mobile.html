@@ -5,12 +5,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#cdb8ff">
   <meta name="robots" content="noindex,nofollow">
-  <title>Cantinho da Isa • Família</title>
+  <title>Cantinho da Isa • Família Mobile</title>
   <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="familia-externa.css?v=2-core-first">
+  <link rel="stylesheet" href="familia-externa.css?v=1">
   <link rel="stylesheet" href="amiga-ui-enhanced.css?v=6-family-emoji">
-  <link rel="stylesheet" href="familia-mobile.css?v=3-native-tap">
-  <link rel="stylesheet" href="nossa-rede-access.css?v=4-private-visibility">
+  <link rel="stylesheet" href="familia-mobile.css?v=2-hidden-fix">
   <link rel="stylesheet" href="paloma-studies.css?v=2-mobile-stable">
   <link rel="stylesheet" href="paloma-studies-advanced.css?v=2-mobile-stable">
   <link rel="stylesheet" href="paloma-study-desk.css?v=1">
@@ -33,10 +32,6 @@
           <div><small id="friendRelationship">Família</small><strong id="friendName">Perfil</strong></div>
           <button id="friendSettingsBtn" class="friend-settings-menu" type="button" title="Configurações" aria-label="Configurações">⚙️ <span>Configurações</span></button>
         </div>
-        <nav class="family-primary-nav" aria-label="Navegação principal">
-          <button id="friendChatsTab" class="family-primary-tab active" type="button">💬 <span>Conversas</span></button>
-          <button id="friendSocialBtn" class="family-primary-tab is-locked" type="button" disabled aria-disabled="true">🌸 <span>Nossa Rede</span></button>
-        </nav>
         <div class="friend-side-title"><strong>Conversas</strong><small>Isa e grupos criados por ela</small></div>
         <div id="friendConversationList" class="friend-conversation-list"></div>
         <div class="friend-link-note">🔒 Este acesso é pessoal. Aqui aparecem apenas a Isa e os grupos em que ela colocou você.</div>
@@ -65,69 +60,16 @@
     </section>
   </main>
   <div id="friendToast" class="friend-toast hidden"></div>
-
-  <script type="module" src="./familia-externa.js?v=9-private-social-core"></script>
-  <script type="module">
-    const idle=()=>new Promise(resolve=>{
-      if('requestIdleCallback' in window)requestIdleCallback(()=>resolve(),{timeout:700})
-      else setTimeout(resolve,100)
-    })
-    let extrasStarted=false
-    async function safeImport(src){
-      await idle()
-      try{return await import(src)}catch(error){console.warn('Módulo secundário não carregado:',src,error);return null}
-    }
-    async function loadExtras(){
-      if(extrasStarted)return
-      extrasStarted=true
-      const name=String(window.__ISA_FRIEND_PERSON__?.name||'').trim().toLowerCase()
-
-      // Fase 1: só navegação/personalização. Nada pesado entra antes do chat responder ao toque.
-      for(const src of[
-        './family-settings.js?v=7-mobile-stable',
-        './familia-emoji-completo.js?v=6-mobile-stable',
-        './profile-actions.js?v=6-mobile-stable'
-      ])await safeImport(src)
-
-      // Fase 2: recursos complementares, um por vez e fora do caminho crítico.
-      setTimeout(async()=>{
-        for(const src of[
-          './profile-status-stickers.js?v=6-mobile-stable',
-          './call-manager.js?v=12-mobile-stable',
-          './link-preview.js?v=10-mobile-stable',
-          './games-menu.js?v=10-mobile-stable',
-          './games-menu-snake.js?v=6-mobile-stable'
-        ])await safeImport(src)
-      },850)
-
-      // Fase 3: rede social privada por último; continua disponível, mas nunca trava Acessar/Conversas.
-      setTimeout(async()=>{
-        await safeImport('./family-social.js?v=7-mobile-stable')
-        window.__ISA_ENSURE_FAMILY_SOCIAL__?.()
-      },2400)
-
-      if(name.includes('paloma'))setTimeout(async()=>{
-        for(const src of[
-          './paloma-studies.js?v=6-mobile-stable',
-          './paloma-studies-advanced-mobile.js?v=5-mobile-stable',
-          './paloma-study-desk.js?v=5-mobile-stable'
-        ])await safeImport(src)
-      },3200)
-    }
-    if(window.__ISA_FRIEND_PORTAL_ENTERED__===true)loadExtras()
-    else document.addEventListener('isa:friend-portal-entered',loadExtras,{once:true})
-  </script>
-  <script>
-    setTimeout(()=>{
-      const state=window.__ISA_FRIEND_BOOTSTRAP_STATE__
-      if(state==='ready'||state==='error'||state==='invalid')return
-      const title=document.getElementById('friendGateTitle')
-      const text=document.getElementById('friendGateText')
-      const btn=document.getElementById('friendEnterBtn')
-      if(title)title.textContent='Reconectando seu acesso…'
-      if(text)text.textContent='A conexão está demorando mais que o normal.'
-      if(btn){btn.textContent='Tentar novamente';btn.classList.remove('hidden');btn.disabled=false;btn.onclick=()=>location.reload()}
-    },14000)
-  </script>
+  <script type="module" src="./familia-externa.js?v=3-audio-receive"></script>
+  <script type="module" src="./family-settings.js?v=1-menu-all-family"></script>
+  <script type="module" src="./familia-emoji-completo.js?v=2"></script>
+  <script type="module" src="./call-manager.js?v=8-header-safe"></script>
+  <script type="module" src="./link-preview.js?v=6-inline-video"></script>
+  <script type="module" src="./games-menu.js?v=5-family-all"></script>
+  <script type="module" src="./games-menu-snake.js?v=1"></script>
+  <script type="module" src="./paloma-studies.js?v=2-mobile-reopen"></script>
+  <script type="module" src="./paloma-studies-advanced-mobile.js?v=1"></script>
+  <script type="module" src="./paloma-study-desk.js?v=1"></script>
+  <script type="module" src="./profile-status-stickers.js?v=1-all-family-mobile"></script>
 </body>
 </html>

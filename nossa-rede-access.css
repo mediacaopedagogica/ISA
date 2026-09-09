@@ -1,7 +1,0 @@
-.family-primary-nav{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:8px 0 10px;padding:4px;border-radius:16px;background:rgba(255,255,255,.58);border:1px solid rgba(233,220,241,.95);box-shadow:0 7px 20px rgba(91,66,104,.08)}
-.family-primary-tab{min-height:42px;border:0;border-radius:12px;background:transparent;color:#765f81;font-weight:950;font-size:11px;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;transition:.18s ease}
-.family-primary-tab.active{background:linear-gradient(145deg,#fff,#eee4ff);color:#684e78;box-shadow:0 6px 16px rgba(92,68,106,.13)}
-.family-primary-tab:disabled,.family-primary-tab.is-locked{opacity:.48;cursor:not-allowed}
-.friend-chat.social-open .friend-main,.friend-chat.social-open .friend-side-title,.friend-chat.social-open .friend-conversation-list,.friend-chat.social-open .friend-link-note{visibility:hidden}
-@media(max-width:780px){.family-primary-nav{position:sticky;top:max(6px,env(safe-area-inset-top));z-index:28;margin:5px 0 8px;background:rgba(255,250,253,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}.family-primary-tab{min-height:39px;font-size:10px}.family-primary-tab span{display:inline}#familySocialOverlay .fs-top{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}}
-@media(min-width:781px){.family-primary-nav{margin-top:10px}}

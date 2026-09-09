@@ -4,10 +4,10 @@ const GAMES={
   bubbles:{title:'🫧 Bubble Shooter Pastel',url:'./jogos/bubble-shooter-pastel.html?v=2-mobile',desc:'Mire, combine cores e estoure grupos de bolhas.'}
 }
 const $=id=>document.getElementById(id)
-const norm=v=>String(v||'').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+const norm=v=>String(v||'').trim().toLocaleLowerCase('pt-BR')
 const mobileContext=new URLSearchParams(location.search).get('mobile')==='1'||/acesso-mobile\.html$/i.test(location.pathname)||matchMedia('(max-width:700px)').matches
 function currentName(){const main=norm($('myName')?.textContent);if(main&&main!=='família')return main;const external=norm($('friendName')?.textContent);if(external&&external!=='perfil')return external;return''}
-function eligible(){const n=currentName();return['isa','keise','alan','paloma','elion','vania','davi'].includes(n)}
+function eligible(){const n=currentName();return['isa','paloma','elion','vania','davi'].includes(n)}
 function isExternal(){return!!$('friendApp')}
 function injectStyles(){
   if($('cantinhoGamesStyles'))return
@@ -61,7 +61,7 @@ function ensureOverlay(){
 }
 function openGames(){if(!eligible())return;ensureOverlay().classList.remove('hidden');document.documentElement.classList.add('cantinho-game-open')}
 window.__CANTINHO_OPEN_GAMES__=openGames
-function wireMain(){if(isExternal()||!eligible())return;const plus=$('groupPlusBtn'),menu=$('groupPlusMenu');if(!plus||!menu)return;plus.classList.remove('hidden');if(menu.querySelector('[data-cantinho-games]'))return;const b=document.createElement('button');b.type='button';b.dataset.cantinhoGames='1';b.textContent='🎮 Joguinhos';b.onclick=()=>{menu.classList.add('hidden');openGames()};menu.appendChild(b)}
+function wireMain(){if(isExternal()||currentName()!=='isa')return;const plus=$('groupPlusBtn'),menu=$('groupPlusMenu');if(!plus||!menu)return;plus.classList.remove('hidden');if(menu.querySelector('[data-cantinho-games]'))return;const b=document.createElement('button');b.type='button';b.dataset.cantinhoGames='1';b.textContent='🎮 Joguinhos';b.onclick=()=>{menu.classList.add('hidden');openGames()};menu.appendChild(b)}
 function wirePaloma(){if(!isExternal()||!eligible())return;const composer=document.querySelector('.friend-composer');if(!composer||$('palomaGamesPlus'))return;const wrap=document.createElement('div');wrap.className='cantinho-games-popwrap';wrap.innerHTML='<button id="palomaGamesPlus" class="emoji-btn" type="button" title="Mais opções">＋</button><div id="palomaGamesPop" class="cantinho-games-pop hidden"><button type="button" data-open-games>🎮 Joguinhos</button></div>';composer.insertBefore(wrap,composer.firstChild);const btn=$('palomaGamesPlus'),pop=$('palomaGamesPop');btn.onclick=e=>{e.stopPropagation();pop.classList.toggle('hidden')};pop.querySelector('[data-open-games]').onclick=()=>{pop.classList.add('hidden');openGames()};document.addEventListener('click',e=>{if(!wrap.contains(e.target))pop.classList.add('hidden')})}
 function wire(){if(!eligible())return;ensureOverlay();wireMain();wirePaloma()}
 const observer=new MutationObserver(wire);observer.observe(document.body,{childList:true,subtree:true,characterData:true});let tries=0;const timer=setInterval(()=>{wire();if(++tries>120)clearInterval(timer)},500);wire()

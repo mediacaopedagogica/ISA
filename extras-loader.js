@@ -9,15 +9,14 @@ function loadOnce(key,path){
   return p
 }
 function who(){return String($('myName')?.textContent||'').trim().toLowerCase()}
-function requestedProfile(){return String(new URLSearchParams(location.search).get('perfil')||'').trim().toLowerCase()}
 function mainReady(){
   const main=$('mainView')
   return !!main&&!main.classList.contains('hidden')&&!!who()&&who()!=='família'
 }
-function isIsa(){return who()==='isa'||requestedProfile()==='isa'}
-function isKeise(){return who()==='keise'||who().startsWith('keise ')||requestedProfile()==='keise'}
-function isParent(){return isKeise()}
-function isAlan(){return who()==='alan'||requestedProfile()==='alan'}
+function isIsa(){return who()==='isa'}
+function isKeise(){return who()==='keise'}
+function isParent(){return who()==='keise'}
+function isAlan(){return who()==='alan'}
 const dedicatedMobile=new URLSearchParams(location.search).get('mobile')==='1'
 
 async function loadCoreExtras(){
@@ -29,17 +28,14 @@ async function loadCoreExtras(){
     loadOnce('family-media','./family-media-menu-v2.js?v=9-audio-day'),
     loadOnce('links','./link-preview.js?v=6-inline-video'),
     loadOnce('social-network','./social-network.js?v=3-family-feed'),
-    loadOnce('social-network-bridge','./social-network-bridge-v2.js?v=3-touch-open'),
-    loadOnce('games','./games-menu.js?v=6-all-profiles'),
-    loadOnce('snake-game','./games-menu-snake.js?v=2-all-profiles')
+    loadOnce('social-network-bridge','./social-network-bridge-v2.js?v=3-touch-open')
   ]
-  if(!dedicatedMobile)jobs.push(loadOnce('games-notebook-fit','./games-notebook-fit.js?v=2-all-profiles'))
   if(!dedicatedMobile)jobs.push(loadOnce('calls','./call-manager.js?v=4-stable'))
 
   if(isKeise()){
     jobs.push(loadOnce('keise-access-settings','./keise-access-settings.js?v=1-edit-login'))
     jobs.push(loadOnce('keise-alan-studio-control','./keise-alan-studio-control.js?v=1-master-lock'))
-    jobs.push(loadOnce('keise-game-test','./keise-game-test.js?v=5-persistent-menu'))
+    jobs.push(loadOnce('keise-game-test','./keise-game-test.js?v=4-farm-private-test'))
   }
 
   if(isAlan()){
@@ -55,7 +51,10 @@ async function loadCoreExtras(){
   }
   if(isIsa()){
     jobs.push(loadOnce('isa-tools','./isa-tools.js?v=9-study-fix'))
+    jobs.push(loadOnce('games','./games-menu.js?v=3-mobile-games'))
+    jobs.push(loadOnce('snake-game','./games-menu-snake.js?v=1'))
     // Fazendinha temporariamente desativada para Isa. A prévia fica só em Keise → Teste Jogo.
+    if(!dedicatedMobile)jobs.push(loadOnce('games-notebook-fit','./games-notebook-fit.js?v=1'))
   }
   const result=await Promise.allSettled(jobs)
   result.forEach((r,i)=>{if(r.status==='rejected')console.warn('Módulo extra não carregou',i,r.reason)})

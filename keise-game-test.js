@@ -1,7 +1,5 @@
 const name=()=>String(document.getElementById('myName')?.textContent||'').trim().toLowerCase();
-const requestedProfile=String(new URLSearchParams(location.search).get('perfil')||'').trim().toLowerCase();
-const isKeiseProfile=()=>name()==='keise'||name().startsWith('keise ')||requestedProfile==='keise';
-if(!isKeiseProfile()) throw new Error('Preview indisponível para este perfil');
+if(name()!=='keise') throw new Error('Preview indisponível para este perfil');
 const KEY='keise-private-game-test-settings';
 const defaults={playerA:'Piloto 1',playerB:'Piloto 2',game:'dupla'};
 const read=()=>{try{return {...defaults,...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch{return {...defaults}}};
@@ -20,17 +18,5 @@ function refreshGame(){const frame=document.getElementById('tgpIframe');document
 function selectGame(game){state.game=game;write(state);refreshGame()}
 function build(){if(document.getElementById('testGamePanel'))return;const panel=document.createElement('section');panel.id='testGamePanel';panel.className='hidden';panel.innerHTML=`<div class="tgp-shell"><div class="tgp-head"><div><strong>🧪 Teste — Jogos em desenvolvimento</strong><small>Área privada exclusiva da Keise</small></div><div class="tgp-head-actions"><button id="tgpSettings" class="tgp-settings-btn" aria-label="Configurações"></button><button id="tgpFullscreen" class="tgp-fullscreen" aria-label="Tela cheia">⛶ Tela cheia</button><button id="tgpClose" class="tgp-close" aria-label="Fechar">✕ Fechar</button></div></div><div id="tgpConfig" class="tgp-config"><div class="tgp-games"><button class="tgp-game" data-game="dupla">🏎️ Dupla na Pista</button><button class="tgp-game" data-game="farm">🌾 Fazendinha</button></div><label>Apelido jogador 1<input id="tgpA" maxlength="24"></label><label>Apelido jogador 2<input id="tgpB" maxlength="24"></label><button id="tgpSave" class="save">Salvar apelidos</button><span class="tgp-lock">🔒 Isa e primo continuam sem acesso aos jogos em teste</span></div><div class="tgp-frame"><div id="tgpLoad" class="tgp-load">Carregando a build privada...</div><iframe id="tgpIframe" title="Jogo em teste — build privada" allow="fullscreen; gamepad"></iframe></div></div>`;document.body.appendChild(panel);document.getElementById('tgpA').value=state.playerA;document.getElementById('tgpB').value=state.playerB;const frame=document.getElementById('tgpIframe'),config=document.getElementById('tgpConfig');frame.addEventListener('load',()=>document.getElementById('tgpLoad')?.classList.add('hidden'));document.querySelectorAll('.tgp-game').forEach(b=>b.onclick=()=>{selectGame(b.dataset.game);if(innerWidth<=720)config.classList.remove('mobile-open')});document.getElementById('tgpSettings').onclick=()=>config.classList.toggle('mobile-open');document.getElementById('tgpFullscreen').onclick=()=>requestGameFullscreen(panel);document.getElementById('tgpClose').onclick=()=>{panel.classList.add('hidden');config.classList.remove('mobile-open');document.documentElement.style.overflow='';frame.src='about:blank';if(document.fullscreenElement)document.exitFullscreen?.().catch?.(()=>{})};document.getElementById('tgpSave').onclick=()=>{state.playerA=document.getElementById('tgpA').value.trim()||defaults.playerA;state.playerB=document.getElementById('tgpB').value.trim()||defaults.playerB;write(state);config.classList.remove('mobile-open');refreshGame()};document.querySelectorAll('.tgp-game').forEach(b=>b.classList.toggle('active',b.dataset.game===state.game))}
 function open(){build();const panel=document.getElementById('testGamePanel');panel.classList.remove('hidden');document.documentElement.style.overflow='hidden';refreshGame()}
-function nav(){
-  if(!isKeiseProfile())return null;
-  const n=document.querySelector('.nav-tabs');if(!n)return null;
-  let b=document.getElementById('testGameNav');
-  if(!b){b=document.createElement('button');b.id='testGameNav';b.className='nav-btn';b.type='button';b.innerHTML='🧪 <span>Teste Jogo</span>';b.onclick=open}
-  b.classList.remove('hidden');b.style.removeProperty('display');b.style.removeProperty('visibility');b.style.removeProperty('opacity');
-  if(!b.isConnected){const settings=n.querySelector('#settingsMenuBtn,#generalSettingsNav');const c=n.querySelector('[data-tab="calendar"]');if(settings)settings.after(b);else if(c)c.after(b);else n.appendChild(b)}
-  return b;
-}
-build();nav();
-window.__ISA_ENSURE_TEST_GAME_NAV__=nav;
-const navObserver=new MutationObserver(()=>nav());
-navObserver.observe(document.getElementById('mainView')||document.body,{childList:true,subtree:true});
-let i=0,t=setInterval(()=>{nav();if(++i>120)clearInterval(t)},250);
+function nav(){if(document.getElementById('testGameNav'))return;const n=document.querySelector('.nav-tabs');if(!n)return;const b=document.createElement('button');b.id='testGameNav';b.className='nav-btn';b.type='button';b.innerHTML='🧪 <span>Teste</span>';b.onclick=open;const c=n.querySelector('[data-tab="calendar"]');c?.after(b)}
+build();nav();let i=0,t=setInterval(()=>{nav();if(document.getElementById('testGameNav')||++i>30)clearInterval(t)},250);
