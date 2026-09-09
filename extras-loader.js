@@ -30,7 +30,7 @@ async function loadCoreExtras(){
     loadOnce('social-network','./social-network.js?v=3-family-feed'),
     loadOnce('social-network-bridge','./social-network-bridge-v2.js?v=3-touch-open'),
     loadOnce('games','./games-menu.js?v=6-all-profiles'),
-    loadOnce('snake-game','./games-menu-snake.js?v=2-all-profiles')
+    loadOnce('snake-game','./games-menu-snake.js?v=3-all-users')
   ]
   if(!dedicatedMobile)jobs.push(loadOnce('games-notebook-fit','./games-notebook-fit.js?v=2-all-profiles'))
 
@@ -41,28 +41,18 @@ async function loadCoreExtras(){
   }
 
   if(isAlan()){
-    // Mantém o núcleo do Cantinho leve: chat, calendário e Sair precisam responder primeiro.
-    // A proteção de permissões agora observa apenas seus próprios controles.
     jobs.push(loadOnce('alan-supervision-only','./alan-supervision-only.js?v=2-no-global-observer'))
     const accessModule=await loadOnce('alan-studio-access','./alan-studio-access.js?v=1-master-lock')
     const studioEnabled=await accessModule.isAlanStudioEnabled()
-    if(studioEnabled){
-      // Os módulos pesados do Estúdio só carregam quando Alan clicar em "Meu Estúdio".
-      jobs.push(loadOnce('alan-studio-launcher','./alan-studio-launcher.js?v=1-lazy-core-safe'))
-    }
+    if(studioEnabled)jobs.push(loadOnce('alan-studio-launcher','./alan-studio-launcher.js?v=1-lazy-core-safe'))
   }
-  if(isIsa()){
-    jobs.push(loadOnce('isa-tools','./isa-tools.js?v=9-study-fix'))
-    // Fazendinha temporariamente desativada para Isa. A prévia fica só em Keise → Teste Jogo.
-  }
+  if(isIsa())jobs.push(loadOnce('isa-tools','./isa-tools.js?v=9-study-fix'))
   const result=await Promise.allSettled(jobs)
   result.forEach((r,i)=>{if(r.status==='rejected')console.warn('Módulo extra não carregou',i,r.reason)})
 }
 async function loadSupervisionExtras(){
   if(!isParent())return
-  await Promise.allSettled([
-    loadOnce('diary-parent','./diary-parent.js?v=5-stable')
-  ])
+  await Promise.allSettled([loadOnce('diary-parent','./diary-parent.js?v=5-stable')])
 }
 function wire(){
   if(wired||!mainReady())return false
@@ -78,10 +68,7 @@ function wire(){
 function start(){
   if(wire())return
   const main=$('mainView')
-  if(main){
-    const obs=new MutationObserver(()=>{if(wire())obs.disconnect()})
-    obs.observe(main,{attributes:true,attributeFilter:['class']})
-  }
+  if(main){const obs=new MutationObserver(()=>{if(wire())obs.disconnect()});obs.observe(main,{attributes:true,attributeFilter:['class']})}
   let tries=0
   const retry=()=>{if(wire()||++tries>=80)return;setTimeout(retry,150)}
   retry()
