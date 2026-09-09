@@ -99,7 +99,7 @@ async function compressImage'''
           grep -q 'id="generalSettingsNav"' index.html
           grep -q 'id="friendSettingsBtn"' acesso-mobile.html
           grep -q 'general-settings.js?v=4-all-links-menu' acesso-mobile.html
-          grep -q "$('friendMessages')" general-settings.js
+          grep -Fq 'friendMessages' general-settings.js
           grep -q 'settings-menu-all-links-v1' familia-externa.css
       - name: Commit published fix
         shell: bash
@@ -109,3 +109,4 @@ async function compressImage'''
           git add index.html general-settings.js acesso-mobile.html familia-externa.css postboot-loader.js
           git commit -m 'fix: show Configuracoes menu for every access link' || exit 0
           git push
+# rollout-v2
