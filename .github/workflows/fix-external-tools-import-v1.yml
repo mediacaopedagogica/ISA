@@ -1,0 +1,44 @@
+name: Fix external media tools import v1
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-external-tools-import-v1.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove duplicate camera import
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('external-chat-tools.js');s=p.read_text()
+          line="import { capturePhoto } from './media-capture.js?v=5-external-camera'\n"
+          if s.count(line)>1:
+            first=s.find(line);rest=s[first+len(line):].replace(line,'',1);s=s[:first+len(line)]+rest
+          p.write_text(s)
+          PY
+          node --check external-chat-tools.js
+      - name: Validate external controls
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('external-chat-tools.js').read_text()
+          for x in ['capturePhoto','friendCameraBtn','friendAudioBtn','message_audio','external-profile-avatar']:
+            assert x in s,x
+          assert s.count("import { capturePhoto } from './media-capture.js?v=5-external-camera'")==1
+          print('External media tools: OK')
+          PY
+      - name: Commit fix
+        shell: bash
+        run: |
+          if git diff --quiet; then echo 'No changes'; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add external-chat-tools.js
+          git commit -m 'fix: make external camera audio profile tools load correctly'
+          git push
