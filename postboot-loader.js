@@ -19,15 +19,12 @@ window.__ISA_ENSURE_SETTINGS_MENU__=ensureSettings
 ensureSettings();document.addEventListener('DOMContentLoaded',ensureSettings,{once:true})
 let n=0;const t=setInterval(()=>{ensureSettings();window.__ISA_ENSURE_PROFILE_MENU__?.();if(++n>24)clearInterval(t)},350)
 
-// Primeira onda: somente navegação e configurações leves.
 later(20,'./profile-menu-guard.js?v=4-responsive-safe',()=>window.__ISA_ENSURE_PROFILE_MENU__?.())
 later(80,'./general-settings.js?v=12-unified-settings',()=>{ensureSettings();window.__ISA_APPLY_GENERAL_SETTINGS__?.()})
 
-// Ajuste de responsividade sem bloquear a tela.
 const dedicatedMobile=new URLSearchParams(location.search).get('mobile')==='1'
 later(180,dedicatedMobile?'./mobile-native.js?v=6-progressive':'./mobile-responsive-v2.js?v=18-progressive',()=>window.__ISA_ENSURE_PROFILE_MENU__?.())
 
-// Recursos sociais e de comunicação entram depois que a interface já está clicável.
 later(520,'./profile-status-stickers.js?v=14-plus-menu')
 later(650,'./sticker-bg-remover.js?v=1-ai-cutout',()=>window.__ISA_ENSURE_STICKER_BG_REMOVER__?.())
 later(760,'./social-nav-guard.js?v=6-progressive',()=>{window.__ISA_ENSURE_SOCIAL_NAV__?.();window.__ISA_ENSURE_PROFILE_MENU__?.()})
@@ -38,7 +35,6 @@ later(1450,'./family-media-menu-v2.js?v=12-compact-plus')
 later(1750,'./notifications-v2.js?v=11-progressive')
 later(2300,'./extras-loader.js?v=55-snake-restored',()=>window.__ISA_ENSURE_PROFILE_MENU__?.())
 
-// Layout aprovado da Keise + Teste Jogo exclusivo. Funciona tanto em ?perfil=Keise quanto no acesso raiz salvo da Keise.
 let keiseBooted=false
 function isKeiseAccess(){
   const requested=String(new URLSearchParams(location.search).get('perfil')||'').trim().toLowerCase()
@@ -49,8 +45,8 @@ function bootKeise(){
   if(keiseBooted||!isKeiseAccess())return false
   keiseBooted=true
   css('./keise-dashboard-state-fix.css?v=1','keiseDashboardStateFix')
-  css('./keise-dashboard-dashboard-only.css?v=3-restore-approved','keiseDashboardOnly')
-  later(40,'./keise-dashboard-v1.js?v=3-approved-exact',()=>window.__ISA_SHOW_KEISE_HOME__?.())
+  css('./keise-dashboard-dashboard-only.css?v=4-no-sidebar','keiseDashboardOnly')
+  later(40,'./keise-dashboard-v1.js?v=4-no-sidebar',()=>window.__ISA_SHOW_KEISE_HOME__?.())
   later(210,'./keise-game-test.js?v=9-progressive',()=>{window.__ISA_ENSURE_TEST_GAME_NAV__?.();window.__ISA_ENSURE_PROFILE_MENU__?.()})
   return true
 }
