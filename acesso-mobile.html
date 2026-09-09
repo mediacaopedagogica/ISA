@@ -36,8 +36,7 @@
         <nav class="family-primary-nav" aria-label="Menu principal">
           <button id="friendChatsTab" class="family-primary-tab active" type="button">💬 <span>Chat</span></button>
           <button id="friendSocialBtn" class="family-primary-tab" type="button">🌸 <span>Nossa Rede</span></button>
-          <button id="friendProfileMenuBtn" class="family-primary-tab" type="button">☁️ <span>Perfil</span></button>
-          <button id="friendStickerMenuBtn" class="family-primary-tab" type="button">✨ <span>Stickers</span></button>
+          <button id="friendGamesMenuBtn" class="family-primary-tab" type="button">🎮 <span>Joguinhos</span></button>
           <button id="friendSettingsBtn" class="family-primary-tab icon-only friend-settings-menu" type="button" title="Configurações" aria-label="Configurações">⚙️</button>
         </nav>
         <div class="friend-side-title"><strong>Conversas</strong><small>Isa e grupos criados por ela</small></div>
@@ -72,7 +71,8 @@
   <div id="friendToast" class="friend-toast hidden"></div>
 
   <script type="module" src="./familia-externa.js?v=62-unfreeze-core"></script>
-  <script type="module" src="./external-progressive-loader.js?v=1-progressive"></script>
+  <script type="module" src="./external-ui-controller.js?v=1-controls"></script>
+  <script type="module" src="./external-progressive-loader.js?v=2-controls"></script>
   <script>
     setTimeout(()=>{
       const state=window.__ISA_FRIEND_BOOTSTRAP_STATE__
