@@ -31,7 +31,7 @@ function injectUi(){
   if($('socialNav'))return
   const css=document.createElement('link');css.rel='stylesheet';css.href='./social-network.css?v=2';document.head.appendChild(css)
   const nav=document.querySelector('.nav-tabs');if(!nav)return
-  const btn=document.createElement('button');btn.className='nav-btn';btn.id='socialNav';btn.dataset.tab='social';btn.innerHTML='🌸 <span>Nossa Rede</span>'
+  const btn=document.createElement('button');btn.className='nav-btn';btn.id='socialNav';btn.type='button';btn.innerHTML='🌸 <span>Nossa Rede</span>'
   const calendar=nav.querySelector('[data-tab="calendar"]');calendar?.after(btn)
   const content=document.querySelector('main.content');if(!content)return
   const panel=document.createElement('section');panel.id='socialPanel';panel.className='social-panel hidden';panel.innerHTML=`
@@ -168,6 +168,6 @@ async function boot(){
   if(booted)return;booted=true;injectUi();const m=await identity().catch(()=>null);if(!m)return;await loadAll().catch(console.error)
   refreshTimer=setInterval(()=>{if(document.visibilityState==='visible'&&!$('socialPanel')?.classList.contains('hidden'))loadAll().catch(()=>{})},15000)
 }
-window.__ISA_OPEN_SOCIAL__=openSocial
+window.__ISA_OPEN_SOCIAL_CORE__=openSocial;if(!window.__ISA_OPEN_SOCIAL__)window.__ISA_OPEN_SOCIAL__=openSocial
 function waitBoot(){const main=$('mainView');if(main&&!main.classList.contains('hidden')&&$('myName')?.textContent?.trim()!=='Família'){boot();return}let tries=0;const t=setInterval(()=>{if(main&&!main.classList.contains('hidden')&&$('myName')?.textContent?.trim()!=='Família'){clearInterval(t);boot()}else if(++tries>100)clearInterval(t)},150)}
 waitBoot()
