@@ -64,7 +64,7 @@ function build(){
   const main=$('mainView'),sidebar=main?.querySelector('.sidebar'),content=main?.querySelector('.content');if(!main||!sidebar||!content){built=false;return false}
 
   if(!$('keiseDesktopTopbar')){
-    const top=document.createElement('header');top.id='keiseDesktopTopbar';top.innerHTML=`<div class="kd-brand"><span class="kd-brand-heart">💗</span><span class="kd-brand-name">Cantinho da Isa 💕</span></div><label class="kd-search"><input id="kdSearchInput" type="search" placeholder="Pesquisar no Cantinho da Isa..." aria-label="Pesquisar no Cantinho da Isa"></label><div class="kd-top-actions"><button class="kd-bell" type="button" aria-label="Notificações">♧</button><button class="kd-top-profile" type="button" data-kd-action="profile"><span id="kdTopAvatar" class="kd-top-avatar">🦋</span><span>Keise</span><span>⌄</span></button></div>`;main.insertBefore(top,main.firstChild)
+    const top=document.createElement('header');top.id='keiseDesktopTopbar';top.innerHTML=`<div class="kd-brand"><span class="kd-brand-heart">💗</span><span class="kd-brand-name">Cantinho da Isa 💕</span></div><label class="kd-search"><input id="kdSearchInput" type="search" placeholder="Pesquisar no Cantinho da Isa..." aria-label="Pesquisar no Cantinho da Isa"></label><div class="kd-top-actions"><button class="kd-bell" type="button" aria-label="Notificações">🔔</button><button class="kd-top-profile" type="button" data-kd-action="profile"><span id="kdTopAvatar" class="kd-top-avatar">🦋</span><span>Keise</span><span>⌄</span></button></div>`;main.insertBefore(top,main.firstChild)
   }
 
   if(!sidebar.querySelector('.kd-side-menu')){
@@ -98,7 +98,7 @@ function build(){
 
   document.addEventListener('click',e=>{const b=e.target.closest('[data-kd-action]');if(!b)return;const a=b.dataset.kdAction;if(!a)return;e.preventDefault();runAction(a)},false)
   $('kdLogout').addEventListener('click',e=>{e.preventDefault();$('logoutBtn')?.click()})
-  $('kdAvatarBtn').addEventListener('click',e=>{e.preventDefault();$('myAvatarBtn')?.click()||$('profileAvatarInput')?.click()})
+  $('kdAvatarBtn').addEventListener('click',e=>{e.preventDefault();const profileBtn=$('myAvatarBtn');if(profileBtn)profileBtn.click();else $('profileAvatarInput')?.click()})
   $('kdSearchInput')?.addEventListener('input',filterConversations)
 
   const list=$('chatList');if(list){chatObserver=new MutationObserver(syncConversations);chatObserver.observe(list,{childList:true,subtree:true,characterData:true})}
