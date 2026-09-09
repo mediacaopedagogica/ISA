@@ -7,8 +7,9 @@ function start(){
   const name=String(window.__ISA_FRIEND_PERSON__?.name||document.getElementById('friendName')?.textContent||'').trim().toLowerCase()
   later(20,'./external-menu.js?v=5-simplified',()=>window.__ISA_ENSURE_EXTERNAL_MENU__?.())
   later(100,'./family-settings.js?v=11-click-fix')
-  later(260,'./external-chat-tools.js?v=5-controls')
-  later(480,'./familia-emoji-completo.js?v=9-controls')
+  later(220,'./nossa-rede-v4.js?v=1-approved',()=>window.__ISA_ENHANCE_NOSSA_REDE__?.())
+  later(300,'./external-chat-tools.js?v=5-controls')
+  later(520,'./familia-emoji-completo.js?v=9-controls')
   later(900,'./profile-status-stickers.js?v=13-click-fix',()=>window.__ISA_ENSURE_EXTERNAL_MENU__?.())
   later(1350,'./link-preview.js?v=13-controls')
   if(name.includes('paloma')){
