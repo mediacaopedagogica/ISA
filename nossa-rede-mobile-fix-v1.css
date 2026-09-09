@@ -1,0 +1,23 @@
+/* Nossa Rede — correção única de responsividade para Keise, Isa, Alan e acessos familiares */
+#socialPanel:not(.hidden),#familySocialOverlay:not(.hidden){width:100%!important;max-width:100%!important;height:100dvh!important;max-height:100dvh!important;min-height:100dvh!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior-y:contain!important}
+#socialPanel .social-shell,#familySocialOverlay .social-shell{width:min(1480px,100%)!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important}
+#socialPanel .social-main,#familySocialOverlay .social-main,#socialPanel .social-feed,#familySocialOverlay .social-feed{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important}
+#socialPanel .social-post,#familySocialOverlay .social-post,#socialPanel .social-composer,#familySocialOverlay .social-composer{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;overflow:hidden!important}
+#socialPanel img,#familySocialOverlay img,#socialPanel video,#familySocialOverlay video{max-width:100%!important}
+#socialPanel .social-direct-btn,#familySocialOverlay .social-direct-btn{display:none!important}
+body.approved-family-dashboard.keise-panel-active #socialPanel:not(.hidden),body.keise-approved-layout.keise-panel-active #socialPanel:not(.hidden){display:block!important;position:relative!important;inset:auto!important;z-index:1!important}
+body.approved-family-dashboard.keise-panel-active #mainView>.content:has(#socialPanel:not(.hidden)),body.keise-approved-layout.keise-panel-active #mainView>.content:has(#socialPanel:not(.hidden)){overflow:visible!important;height:100dvh!important;max-height:100dvh!important}
+@media(max-width:760px){
+  #socialPanel:not(.hidden),#familySocialOverlay:not(.hidden){position:fixed!important;inset:0!important;z-index:120000!important;padding:0 0 max(74px,env(safe-area-inset-bottom))!important;background:var(--nr5-bg)!important}
+  #socialPanel .social-shell,#familySocialOverlay .social-shell{display:block!important;width:100%!important;max-width:100%!important;min-height:100%!important;margin:0!important;padding:max(8px,env(safe-area-inset-top)) 8px 90px!important}
+  #socialPanel .social-main,#familySocialOverlay .social-main{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:9px!important;width:100%!important}
+  #socialPanel .social-feed,#familySocialOverlay .social-feed{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:10px!important;width:100%!important;min-height:20px!important;visibility:visible!important;opacity:1!important}
+  #socialPanel .social-post,#familySocialOverlay .social-post{display:block!important;width:100%!important;min-width:0!important;visibility:visible!important;opacity:1!important;border-radius:19px!important}
+  #socialPanel .social-carousel,#familySocialOverlay .social-carousel,#socialPanel .fs-media-grid,#familySocialOverlay .fs-media-grid{width:calc(100% - 16px)!important;max-width:calc(100% - 16px)!important;margin-left:8px!important;margin-right:8px!important;overflow:hidden!important}
+  #socialPanel .social-slide,#familySocialOverlay .social-slide,#socialPanel .fs-media-grid img,#familySocialOverlay .fs-media-grid img,#socialPanel .fs-media-grid video,#familySocialOverlay .fs-media-grid video{width:100%!important;max-width:100%!important;height:auto!important;max-height:72dvh!important;aspect-ratio:auto!important;object-fit:contain!important}
+  #socialPanel .social-side,#familySocialOverlay .social-side{position:static!important;top:auto!important;width:100%!important;max-width:100%!important;margin:0 0 8px!important}
+  #socialPanel .social-status-strip,#familySocialOverlay .social-status-strip{width:100%!important;max-width:100%!important;overflow-x:auto!important;overflow-y:hidden!important;display:flex!important;gap:7px!important;padding-bottom:7px!important}
+  #socialPanel .social-status-card,#familySocialOverlay .social-status-card{flex:0 0 104px!important;min-width:104px!important}
+  #socialPanel .isa-social-header,#familySocialOverlay .isa-social-header{width:100%!important;max-width:100%!important;box-sizing:border-box!important}
+  #socialPanel .social-caption,#familySocialOverlay .social-caption,#socialPanel .social-comment,#familySocialOverlay .social-comment{overflow-wrap:anywhere!important;word-break:break-word!important}
+}
