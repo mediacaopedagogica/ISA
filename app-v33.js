@@ -22252,7 +22252,37 @@ ${suffix}`;
       if ($("chatList")) $("chatList").innerHTML = '<p class="muted" style="padding:12px">Carregando conversas\u2026</p>';
       supabase.realtime.setAuth().catch(() => {
       });
-      await Promise.all([loadFamily(), loadConversations()]);
+      const coreLoad = Promise.allSettled([loadFamily(), loadConversations()]);
+      await Promise.race([
+        coreLoad,
+        new Promise((resolve) => setTimeout(resolve, 6500))
+      ]);
+      const bootChatList = $("chatList");
+      if (bootChatList && /Carregando conversas/i.test(bootChatList.textContent || "")) {
+        bootChatList.innerHTML = '<div class="muted" style="padding:12px;line-height:1.5">As conversas demoraram para responder.<br><button id="conversationRetryBtn" type="button" class="tiny-btn" style="margin-top:8px">Tentar carregar novamente</button></div>';
+        const retry = $("conversationRetryBtn");
+        if (retry) retry.onclick = async () => {
+          bootChatList.innerHTML = '<p class="muted" style="padding:12px">Carregando conversas…</p>';
+          await Promise.race([
+            Promise.allSettled([loadFamily(), loadConversations()]),
+            new Promise((resolve) => setTimeout(resolve, 6500))
+          ]);
+          if (/Carregando conversas/i.test(bootChatList.textContent || "")) {
+            bootChatList.innerHTML = '<div class="muted" style="padding:12px;line-height:1.5">Ainda não foi possível atualizar as conversas. O restante do Cantinho continua disponível.<br><button id="conversationRetryBtn2" type="button" class="tiny-btn" style="margin-top:8px">Tentar novamente</button></div>';
+            const retry2 = $("conversationRetryBtn2");
+            if (retry2) retry2.onclick = async () => {
+              bootChatList.innerHTML = '<p class="muted" style="padding:12px">Carregando conversas…</p>';
+              await Promise.race([
+                Promise.allSettled([loadFamily(), loadConversations()]),
+                new Promise((resolve) => setTimeout(resolve, 6500))
+              ]);
+              if (/Carregando conversas/i.test(bootChatList.textContent || "")) {
+                bootChatList.innerHTML = '<div class="muted" style="padding:12px;line-height:1.5">Conexão com as conversas indisponível no momento. As outras áreas continuam funcionando.</div>';
+              }
+            };
+          }
+        };
+      }
       hydrateAvatarElements().catch(() => {
       });
       upsertPresence(true).catch(() => {
