@@ -3,19 +3,22 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <meta name="theme-color" content="#cdb8ff">
   <meta name="description" content="Cantinho da Isa — chat privado da família">
   <title>Cantinho da Isa 💕</title>
   <link rel="preconnect" href="https://srazofmrxzwqcavnhplq.supabase.co" crossorigin>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="theme-3d.css">
-  <link rel="stylesheet" href="login-3d.css">
-  <link rel="stylesheet" href="app-3d.css?v=restore-39">
-  <link rel="stylesheet" href="mobile-responsive-v2.css?v=9-restore">
-  <link rel="stylesheet" href="mobile-stability-fix.css?v=3">
-  <link rel="stylesheet" href="heart-polish.css?v=restore-39">
+  <link rel="stylesheet" href="styles.css?v=62-ui">
+  <link rel="stylesheet" href="theme-3d.css?v=62-ui">
+  <link rel="stylesheet" href="login-3d.css?v=62-ui">
+  <link rel="stylesheet" href="app-3d.css?v=62-updated-ui">
+  <link rel="stylesheet" href="mobile-responsive-v2.css?v=62-updated-ui">
+  <link rel="stylesheet" href="mobile-stability-fix.css?v=62-unfreeze">
+  <link rel="stylesheet" href="heart-polish.css?v=62-ui">
   <link rel="stylesheet" href="desktop-chat-scroll-fix.css?v=1" media="(min-width: 851px)">
   <style>
     #personalBootGuard{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 18% 14%,#fff0f6 0 18%,transparent 42%),radial-gradient(circle at 86% 12%,#eee4ff 0 18%,transparent 42%),#f8f2fb;color:#65536f;font-family:Inter,"Segoe UI",system-ui,sans-serif}
@@ -81,7 +84,7 @@
 </script>
 <script>(function(){const btn=document.getElementById('togglePassword'),input=document.getElementById('loginPassword');if(btn&&input){btn.onclick=()=>{const show=input.type==='password';input.type=show?'text':'password';btn.textContent=show?'🙈':'👁️';btn.setAttribute('aria-label',show?'Ocultar senha':'Mostrar senha');btn.title=show?'Ocultar senha':'Mostrar senha';input.focus()}}})();</script>
 <script>
-if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=unfreeze-60-native-tap',{scope:'./'}).then(reg=>reg.update().catch(()=>{})).catch(error=>console.warn('Service Worker:',error));}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=unfreeze-62',{scope:'./'}).then(reg=>reg.update().catch(()=>{})).catch(error=>console.warn('Service Worker:',error));}
 </script>
 <script>
 (function(){
@@ -93,8 +96,8 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=unf
   new MutationObserver(()=>{if(!main.classList.contains('hidden'))clear()}).observe(main,{attributes:true,attributeFilter:['class']});
 })();
 </script>
-<script defer src="./mobile-interaction-guard.js?v=6-native-tap"></script>
-<script defer src="./app-v33.js?v=stable-59-unfreeze-main"></script>
+<script defer src="./mobile-interaction-guard.js?v=62-unfreeze"></script>
+<script defer src="./app-v33.js?v=62-unfreeze-core"></script>
 <script>
 (function(){
   let tries=0,loaded=false;
@@ -103,7 +106,7 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=unf
     const main=document.getElementById('mainView'),name=String(document.getElementById('myName')?.textContent||'').trim();
     if(main&&!main.classList.contains('hidden')&&name&&name!=='Família'){
       loaded=true;
-      const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=36-stable-games';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
+      const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=62-progressive';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
     }
     if(++tries<140)setTimeout(loadExtras,120);
   };

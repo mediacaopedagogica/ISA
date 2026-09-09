@@ -3,14 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta name="theme-color" content="#cdb8ff">
   <meta name="robots" content="noindex,nofollow">
   <title>Cantinho da Isa • Família</title>
   <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="familia-externa.css?v=3-complete-external">
-  <link rel="stylesheet" href="amiga-ui-enhanced.css?v=6-family-emoji">
-  <link rel="stylesheet" href="familia-mobile.css?v=4-phone-only">
-  <link rel="stylesheet" href="nossa-rede-access.css?v=4-private-visibility">
+  <link rel="stylesheet" href="familia-externa.css?v=62-unfreeze">
+  <link rel="stylesheet" href="amiga-ui-enhanced.css?v=62-unfreeze">
+  <link rel="stylesheet" href="familia-mobile.css?v=62-unfreeze">
+  <link rel="stylesheet" href="nossa-rede-access.css?v=62-unfreeze">
   <link rel="stylesheet" href="paloma-studies.css?v=2-mobile-stable">
   <link rel="stylesheet" href="paloma-studies-advanced.css?v=2-mobile-stable">
   <link rel="stylesheet" href="paloma-study-desk.css?v=1">
@@ -70,45 +71,8 @@
   </main>
   <div id="friendToast" class="friend-toast hidden"></div>
 
-  <script type="module" src="./familia-externa.js?v=12-all-family-features"></script>
-  <script type="module">
-    const idle=()=>new Promise(resolve=>{
-      if('requestIdleCallback' in window)requestIdleCallback(()=>resolve(),{timeout:500})
-      else setTimeout(resolve,70)
-    })
-    let extrasStarted=false
-    async function safeImport(src){
-      await idle()
-      try{return await import(src)}catch(error){console.warn('Módulo secundário não carregado:',src,error);return null}
-    }
-    async function loadExtras(){
-      if(extrasStarted)return
-      extrasStarted=true
-      const name=String(window.__ISA_FRIEND_PERSON__?.name||'').trim().toLowerCase()
-      const core=[
-        './family-settings.js?v=9-all-family-features',
-        './external-menu.js?v=3-games-studies',
-        './external-chat-tools.js?v=3-fixed-media-tools',
-        './familia-emoji-completo.js?v=7-all-family-features',
-        './profile-status-stickers.js?v=9-all-family-features',
-        './call-manager.js?v=15-all-family-features',
-        './family-social.js?v=10-all-family-features'
-      ]
-      const loaded=await Promise.allSettled(core.map(src=>import(src)))
-      loaded.forEach((r,i)=>{if(r.status==='rejected')console.warn('Recurso principal não carregou:',core[i],r.reason)})
-      window.__ISA_ENSURE_FAMILY_SETTINGS__?.()
-      window.__ISA_ENSURE_EXTERNAL_MENU__?.()
-      window.__ISA_ENSURE_FAMILY_SOCIAL__?.()
-      setTimeout(async()=>{
-        for(const src of['./link-preview.js?v=11-all-family-features','./games-menu.js?v=11-all-family-menu','./games-menu-snake.js?v=6-all-family-features'])await safeImport(src)
-      },650)
-      if(name.includes('paloma'))setTimeout(async()=>{
-        for(const src of['./paloma-studies.js?v=8-paloma-menu','./paloma-studies-advanced-mobile.js?v=6-all-family-features','./paloma-study-desk.js?v=6-all-family-features'])await safeImport(src)
-      },1200)
-    }
-    if(window.__ISA_FRIEND_PORTAL_ENTERED__===true)loadExtras()
-    else document.addEventListener('isa:friend-portal-entered',loadExtras,{once:true})
-  </script>
+  <script type="module" src="./familia-externa.js?v=62-unfreeze-core"></script>
+  <script type="module" src="./external-progressive-loader.js?v=1-progressive"></script>
   <script>
     setTimeout(()=>{
       const state=window.__ISA_FRIEND_BOOTSTRAP_STATE__
