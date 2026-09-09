@@ -112,8 +112,8 @@ jobs:
           grep -q 'cantinhoEmbeddedNotebookStyle' games-notebook-fit.js
           grep -q 'games-notebook-fit.js' acesso.html
           grep -q 'games-menu-snake.js' extras-loader.js
-          grep -q 'games-menu-snake.js?v=1' acesso.html
-          grep -q 'games-menu-snake.js?v=1' acesso-mobile.html
+          grep -q 'games-menu-snake.js' acesso.html
+          grep -q 'games-menu-snake.js' acesso-mobile.html
           grep -q 'Cobrinha Pastel' games-menu-snake.js
           grep -q 'cobrinha-pastel.html' games-menu-snake.js
           grep -q 'Cobrinha Pastel' jogos/cobrinha-pastel.html
@@ -133,8 +133,8 @@ jobs:
           grep -q 'paloma-studies.css' acesso.html
           grep -q 'paloma-studies.js' acesso.html
           grep -q 'paloma-studies.css' acesso-mobile.html
-          grep -q 'paloma-studies.js?v=2-mobile-reopen' acesso-mobile.html
-          grep -q 'games-menu.js?v=4-mobile-reopen' acesso-mobile.html
+          grep -q 'paloma-studies.js' acesso-mobile.html
+          grep -q 'games-menu.js' acesso-mobile.html
           grep -q 'paloma_study_load' paloma-studies.js
           grep -q 'paloma_study_save' paloma-studies.js
           grep -q 'Caderno digital' paloma-studies.js
@@ -144,7 +144,7 @@ jobs:
           grep -q 'paloma-studies-advanced.css' acesso.html
           grep -q 'paloma-studies-advanced.js' acesso.html
           grep -q 'paloma-studies-advanced.css' acesso-mobile.html
-          grep -q 'paloma-studies-advanced-mobile.js?v=1' acesso-mobile.html
+          grep -q 'paloma-studies-advanced-mobile.js' acesso-mobile.html
           grep -q 'PalomaMobileMutationObserver' paloma-studies-advanced-mobile.js
           grep -q "closest('.ps-coming')" paloma-studies-advanced-mobile.js
           grep -q 'paloma_study_advanced_load' paloma-studies-advanced.js
@@ -156,9 +156,9 @@ jobs:
           grep -q 'ABNT NBR 14724:2024' paloma-studies-advanced.js
 
           grep -q 'paloma-study-desk.css' acesso.html
-          grep -q 'paloma-study-desk.js?v=1' acesso.html
+          grep -q 'paloma-study-desk.js' acesso.html
           grep -q 'paloma-study-desk.css' acesso-mobile.html
-          grep -q 'paloma-study-desk.js?v=1' acesso-mobile.html
+          grep -q 'paloma-study-desk.js' acesso-mobile.html
           grep -q 'paloma_study_desk_load' paloma-study-desk.js
           grep -q 'paloma_study_desk_save' paloma-study-desk.js
           grep -q 'Mesa de Estudos da Paloma' paloma-study-desk.js
