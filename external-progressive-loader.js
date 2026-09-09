@@ -12,6 +12,7 @@ function start(){
   later(300,'./external-chat-tools.js?v=5-controls')
   later(520,'./familia-emoji-completo.js?v=9-controls')
   later(900,'./profile-status-stickers.js?v=13-click-fix',()=>window.__ISA_ENSURE_EXTERNAL_MENU__?.())
+  later(1080,'./social-profile-chat-bridge.js?v=1-separated-photo-chat-rules',()=>window.__ISA_SOCIAL_PROFILE_CHAT_SYNC__?.())
   later(1350,'./link-preview.js?v=13-controls')
   if(name.includes('paloma')){
     later(720,'./paloma-studies.js?v=9-click-fix',()=>window.__ISA_ENSURE_EXTERNAL_MENU__?.())
