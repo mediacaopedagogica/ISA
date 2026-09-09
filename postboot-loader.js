@@ -49,6 +49,7 @@ function bootKeise(){
   if(keiseBooted||!isKeiseAccess())return false
   keiseBooted=true
   css('./keise-dashboard-state-fix.css?v=1','keiseDashboardStateFix')
+  css('./keise-dashboard-dashboard-only.css?v=1','keiseDashboardOnly')
   later(40,'./keise-dashboard-v1.js?v=3-approved-exact',()=>window.__ISA_SHOW_KEISE_HOME__?.())
   later(210,'./keise-game-test.js?v=9-progressive',()=>{window.__ISA_ENSURE_TEST_GAME_NAV__?.();window.__ISA_ENSURE_PROFILE_MENU__?.()})
   return true
