@@ -27,17 +27,18 @@ async function loadCoreExtras(){
     loadOnce('pins','./conversation-pins.js?v=5-direct-pin'),
     loadOnce('paused-friends','./paused-friends-filter.js?v=3-stable'),
     loadOnce('links','./link-preview.js?v=6-inline-video'),
-    loadOnce('social-network','./social-network.js?v=3-family-feed'),
-    loadOnce('social-network-bridge','./social-network-bridge-v2.js?v=3-touch-open'),
+    loadOnce('social-network','./social-network.js?v=6-keise-direct-api'),
     loadOnce('games','./games-menu.js?v=6-all-profiles'),
     loadOnce('snake-game','./games-menu-snake.js?v=3-all-users')
   ]
+  // A ponte social antiga intercepta pointer/click/touch e não é necessária no dashboard aprovado da Keise.
+  if(!isKeise())jobs.push(loadOnce('social-network-bridge','./social-network-bridge-v2.js?v=3-touch-open'))
   if(!dedicatedMobile)jobs.push(loadOnce('games-notebook-fit','./games-notebook-fit.js?v=2-all-profiles'))
 
   if(isKeise()){
-    jobs.push(loadOnce('keise-access-settings','./keise-access-settings.js?v=1-edit-login'))
+    jobs.push(loadOnce('keise-access-settings','./keise-access-settings.js?v=2-direct-api'))
     jobs.push(loadOnce('keise-alan-studio-control','./keise-alan-studio-control.js?v=1-master-lock'))
-    jobs.push(loadOnce('keise-game-test','./keise-game-test.js?v=5-persistent-menu'))
+    jobs.push(loadOnce('keise-game-test','./keise-game-test.js?v=10-direct-api'))
   }
 
   if(isAlan()){
