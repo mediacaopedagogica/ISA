@@ -1,0 +1,37 @@
+name: Fix Dupla controls forward v1.0.3
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-dupla-controls-forward-v103.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Correct forward reverse orientation and progressive throttle
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('jogos/dupla-na-pista-teste.html')
+          s=p.read_text()
+          s=s.replace('pista viva v1.0.1 • frente corrigida','pista viva v1.0.3 • frente/ré + aceleração corrigidas')
+          s=s.replace('🧪 TESTE JOGO • KEISE • v1.0.1','🧪 TESTE JOGO • KEISE • v1.0.3')
+          s=s.replace("function physicsForward(pv){const v=new CANNON.Vec3(0,0,1);pv.body.quaternion.vmult(v,v);return v}","function physicsForward(pv){const v=new CANNON.Vec3(0,0,-1);pv.body.quaternion.vmult(v,v);return v}")
+          s=s.replace("yaw=Math.atan2(f.tan.x,f.tan.z),body=new CANNON.Body", "yaw=Math.atan2(f.tan.x,f.tan.z)+Math.PI,body=new CANNON.Body", 1)
+          s=s.replace("yaw=Math.atan2(f.tan.x,f.tan.z);Object.assign(states[i]", "yaw=Math.atan2(f.tan.x,f.tan.z)+Math.PI;Object.assign(states[i]", 1)
+          start=s.find('function setRaycastInput(i,enabled,dt=.016){')
+          end=s.find('\n\nfunction zoneAt',start)
+          if start<0 or end<0:
+              raise SystemExit('setRaycastInput block not found')
+          new="""function setRaycastInput(i,enabled,dt=.016){const pv=vehiclePhysics[i],rv=pv.vehicle,b=pv.body,s=states[i],fw=physicsForward(pv),signed=b.velocity.dot(fw),kmh=Math.abs(signed)*3.6,left=enabled&&(keys.ArrowLeft||keys.a||keys.A),right=enabled&&(keys.ArrowRight||keys.d||keys.D),acc=enabled&&(keys.ArrowUp||keys.w||keys.W),down=enabled&&(keys.ArrowDown||keys.s||keys.S),steerIn=(left?1:0)-(right?1:0),maxSteer=THREE.MathUtils.degToRad(30-21*THREE.MathUtils.clamp(kmh/130,0,1)),target=steerIn*maxSteer;pv.steer=THREE.MathUtils.lerp(pv.steer,target,1-Math.exp(-(steerIn?6.4:9.8)*dt));rv.setSteeringValue(pv.steer,0);rv.setSteeringValue(pv.steer,1);pv.throttleHold=acc?Math.min(3,(pv.throttleHold||0)+dt):Math.max(0,(pv.throttleHold||0)-dt*2.4);const ramp=THREE.MathUtils.clamp(pv.throttleHold/2.6,0,1),motorHealth=Math.max(.38,s.motor/100);let engine=0,brake=0;if(!enabled){brake=420;pv.throttleHold=0}else if(acc){if(signed<-.8){brake=340}else{const force=5200+(15500-5200)*(ramp*ramp*(3-2*ramp)),speedFade=kmh<155?1:Math.max(.08,1-(kmh-155)/55);engine=-force*motorHealth*speedFade}}else if(down){pv.throttleHold=0;if(signed>1){brake=340}else engine=5400*motorHealth*Math.max(.2,1-kmh/58)}else{brake=4;pv.throttleHold=Math.max(0,(pv.throttleHold||0)-dt*1.6)}for(let w=0;w<4;w++){rv.setBrake(brake,w);rv.wheelInfos[w].frictionSlip=(Math.abs(s.lat)<4.15?4.5:2.2)*THREE.MathUtils.clamp(s.tires/100,.55,1)}rv.applyEngineForce(engine,2);rv.applyEngineForce(engine,3);rv.applyEngineForce(0,0);rv.applyEngineForce(0,1)}"""
+          s=s[:start]+new+s[end:]
+          p.write_text(s)
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add jogos/dupla-na-pista-teste.html
+          git commit -m 'fix: forward reverse controls and progressive acceleration'
+          git push
