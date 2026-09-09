@@ -20,3 +20,4 @@ jobs:
           git add games-menu.js games-menu-snake.js extras-loader.js profile-status-stickers.js acesso-mobile.html postboot-loader.js index.html
           git commit -m "fix: expose mobile features on every family profile"
           git push
+# rerun 2
