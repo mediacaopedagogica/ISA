@@ -46,6 +46,7 @@ function bootKeise(){
   keiseBooted=true
   load('./keise-dashboard-hardstyle.js?v=2-unified-chat')
   load('./keise-chat-unified.js?v=1-unified-chat')
+  load('./keise-mobile-chat-compat.js?v=1-mobile-chat')
   css('./keise-dashboard-state-fix.css?v=1','keiseDashboardStateFix')
   css('./keise-dashboard-dashboard-only.css?v=4-no-sidebar','keiseDashboardOnly')
   later(40,'./keise-dashboard-v1.js?v=6-unified-chat',()=>window.__ISA_SHOW_KEISE_HOME__?.())
