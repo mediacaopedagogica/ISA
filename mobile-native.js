@@ -24,6 +24,7 @@ if(mobileParams.get('mobile')==='1'){
     m.classList.remove('mobile-native-content')
     ensureBack().classList.add('hidden')
     document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab==='chats'))
+    window.__ISA_ENSURE_SETTINGS_MENU__?.()
     const list=$('chatList')
     if(list){list.style.removeProperty('display');list.style.removeProperty('pointer-events')}
   }
@@ -64,6 +65,9 @@ if(mobileParams.get('mobile')==='1'){
   // O núcleo é quem abre conversa/calendário/supervisão. Esta camada apenas troca a tela
   // depois que um painel realmente ficou visível. Assim um toque nunca gera tela vazia.
   document.addEventListener('click',event=>{
+    const settings=event.target.closest?.('#settingsMenuBtn,[data-settings-menu="1"]')
+    if(settings){window.__ISA_ENSURE_SETTINGS_MENU__?.();return}
+
     const back=event.target.closest?.('#mobileBackBtn')
     if(back){setTimeout(showHome,0);setTimeout(showHome,90);return}
 
@@ -81,9 +85,10 @@ if(mobileParams.get('mobile')==='1'){
   },true)
 
   // Também observa o estado real dos painéis. Não esconde a lista até algum conteúdo existir.
-  const observer=new MutationObserver(()=>{syncFromPanels();ensureConversationActions()})
+  const observer=new MutationObserver(()=>{window.__ISA_ENSURE_SETTINGS_MENU__?.();syncFromPanels();ensureConversationActions()})
 
   function start(){
+    window.__ISA_ENSURE_SETTINGS_MENU__?.()
     ensureBack()
     ;['chatPanel','calendarPanel','supervisionPanel','parentsPanel','studyPanel'].forEach(id=>{
       const el=$(id)
@@ -93,6 +98,7 @@ if(mobileParams.get('mobile')==='1'){
       }
     })
     ensureConversationActions()
+    window.__ISA_ENSURE_SETTINGS_MENU__?.()
   }
 
   start();document.addEventListener('DOMContentLoaded',start,{once:true});setTimeout(start,300);setTimeout(start,1200)

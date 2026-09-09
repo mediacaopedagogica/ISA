@@ -1,0 +1,38 @@
+name: Mobile core quality v2
+on:
+  push:
+    paths:
+      - '.github/workflows/mobile-core-quality-v2.yml'
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate mobile core
+        shell: bash
+        run: |
+          node --check mobile-interaction-guard.js
+          node --check postboot-loader.js
+          node --check familia-externa.js
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          h=Path('acesso-mobile.html').read_text()
+          scripts=re.findall(r'<script type="module">(.*?)</script>',h,re.S)
+          for i,src in enumerate(scripts):
+              Path(f'/tmp/access-inline-{i}.mjs').write_text(src)
+          assert 'isa:friend-portal-entered' in h
+          assert 'family-social.js?v=7-mobile-stable' in h
+          assert h.index('profile-actions.js?v=6-mobile-stable') < h.index('family-social.js?v=7-mobile-stable')
+          g=Path('mobile-interaction-guard.js').read_text()
+          assert "addEventListener('touchend'" not in g
+          assert '.click()' not in g.split('IMPORTANTE: não interceptamos touchend',1)[-1]
+          f=Path('familia-externa.js').read_text()
+          assert "$('friendGate').classList.add('hidden')" in f
+          assert 'setPresence(true).catch' in f
+          assert 'friendExitBtn' in f
+          print('Static mobile core checks OK')
+          PY
+          for f in /tmp/access-inline-*.mjs; do node --check "$f"; done

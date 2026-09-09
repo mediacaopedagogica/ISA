@@ -1,0 +1,75 @@
+name: Fix Nossa Rede family links v3
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-nossa-rede-family-links-v3.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch private social navigation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('family-social.js')
+          s=p.read_text()
+          old="""async function open(){
+  build();const o=$('familySocialOverlay');o.classList.remove('hidden');document.documentElement.style.overflow='hidden';$('fsLoading').classList.remove('hidden');$('fsShell').classList.add('hidden')
+  try{await refresh();$('fsLoading').classList.add('hidden');$('fsShell').classList.remove('hidden')}catch(e){$('fsLoading').textContent='Não foi possível abrir a Nossa Rede.';toast(e.message)}
+}
+function close(){$('familySocialOverlay')?.classList.add('hidden');$('fsProfileModal')?.classList.remove('show');document.documentElement.style.overflow=''}
+function ensureButton(){
+  const profile=document.querySelector('.friend-profile');if(!profile)return null
+  let b=$('friendSocialBtn');if(!b){b=document.createElement('button');b.id='friendSocialBtn';b.className='friend-social-menu';b.type='button';b.innerHTML='🌸 <span>Nossa Rede</span>';b.onclick=open}
+  const actions=$('profileFeatureActions');const anchor=actions||profile;if(b.previousElementSibling!==anchor)anchor.insertAdjacentElement('afterend',b)
+  b.classList.remove('hidden');b.style.removeProperty('display');return b
+}
+window.__ISA_OPEN_FAMILY_SOCIAL__=open;window.__ISA_ENSURE_FAMILY_SOCIAL__=ensureButton
+ensureStyle();build();ensureButton();
+"""
+          new="""async function open(){
+  if(!token||window.__ISA_FRIEND_ACCESS_VALID__!==true)return toast('Este link pessoal não está autorizado.')
+  build();const o=$('familySocialOverlay');o.classList.remove('hidden');document.documentElement.style.overflow='hidden';$('friendChatsTab')?.classList.remove('active');$('friendSocialBtn')?.classList.add('active');$('fsLoading').textContent='Carregando a Nossa Rede…';$('fsLoading').classList.remove('hidden');$('fsShell').classList.add('hidden')
+  try{await refresh();$('fsLoading').classList.add('hidden');$('fsShell').classList.remove('hidden')}catch(e){$('fsLoading').textContent='Não foi possível abrir a Nossa Rede.';toast(e.message)}
+}
+function close(){$('familySocialOverlay')?.classList.add('hidden');$('fsProfileModal')?.classList.remove('show');document.documentElement.style.overflow='';$('friendSocialBtn')?.classList.remove('active');$('friendChatsTab')?.classList.add('active')}
+function ensureButton(){
+  const profile=document.querySelector('.friend-profile');if(!profile)return null
+  const nav=document.querySelector('.family-primary-nav')
+  let b=$('friendSocialBtn');if(!b){b=document.createElement('button');b.id='friendSocialBtn';b.type='button';b.innerHTML='🌸 <span>Nossa Rede</span>'}
+  b.classList.add('family-primary-tab');b.classList.remove('friend-social-menu','hidden')
+  if(nav&&b.parentNode!==nav)nav.appendChild(b)
+  const valid=!!token&&window.__ISA_FRIEND_ACCESS_VALID__===true
+  b.disabled=!valid;b.setAttribute('aria-disabled',String(!valid));b.classList.toggle('is-locked',!valid)
+  b.onclick=e=>{e.preventDefault();valid?open():toast('Este link pessoal ainda não foi validado.')}
+  const chat=$('friendChatsTab');if(chat)chat.onclick=e=>{e.preventDefault();close()}
+  b.style.removeProperty('display');return b
+}
+window.__ISA_OPEN_FAMILY_SOCIAL__=open;window.__ISA_CLOSE_FAMILY_SOCIAL__=close;window.__ISA_ENSURE_FAMILY_SOCIAL__=ensureButton
+ensureStyle();build();ensureButton();document.addEventListener('isa:friend-access-valid',ensureButton);document.addEventListener('isa:friend-access-invalid',ensureButton);
+"""
+          if old not in s: raise SystemExit('family-social navigation block not found')
+          p.write_text(s.replace(old,new,1))
+
+          p=Path('acesso-mobile.html')
+          s=p.read_text().replace('./family-social.js?v=2-private-links','./family-social.js?v=3-private-links')
+          p.write_text(s)
+          PY
+      - name: Validate
+        run: |
+          node --check family-social.js
+          node --check familia-externa.js
+          grep -q 'family-primary-nav' acesso-mobile.html
+          grep -q '__ISA_FRIEND_ACCESS_VALID__' family-social.js
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add family-social.js acesso-mobile.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'fix: private Nossa Rede navigation for all family links'
+          git push
+# trigger 2

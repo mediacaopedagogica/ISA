@@ -1,0 +1,84 @@
+name: Fix family mobile access loading
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-family-access-loading-v1.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Harden family access bootstrap
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          js=Path('familia-externa.js')
+          s=js.read_text()
+
+          s=s.replace("import { CONFIG } from './config.js'","import { CONFIG } from './config.js?v=20260909-access-fix'",1)
+
+          rpc_pattern=r"async function rpc\(name,args=\{\},opts=\{\}\)\{.*?\n\}"
+          rpc_code="""async function rpc(name,args={},opts={}){
+  const timeoutMs=Number(opts.timeoutMs||12000),controller=opts.keepalive?null:new AbortController(),timer=controller?setTimeout(()=>controller.abort(),timeoutMs):null
+  try{
+    const request={method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${CONFIG.SUPABASE_KEY}`,'Content-Type':'application/json'},body:JSON.stringify(args),cache:'no-store',keepalive:!!opts.keepalive}
+    if(controller)request.signal=controller.signal
+    const r=await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/rpc/${name}`,request)
+    let data=null;try{data=await r.json()}catch{}
+    if(!r.ok)throw new Error(data?.message||data?.hint||data?.details||'Não foi possível acessar.')
+    return data
+  }catch(e){
+    if(e?.name==='AbortError')throw new Error('A conexão demorou demais. Vamos tentar novamente.')
+    throw e
+  }finally{if(timer)clearTimeout(timer)}
+}"""
+          s,n=re.subn(rpc_pattern,rpc_code,s,count=1,flags=re.S)
+          if n!=1: raise SystemExit(f'rpc patch failed: {n}')
+
+          boot_pattern=r"async function bootstrap\(silent=false\)\{.*?\n\}"
+          boot_code="""async function bootstrap(silent=false){
+  window.__ISA_FRIEND_BOOTSTRAP_STATE__='loading'
+  const btn=$('friendEnterBtn')
+  if(!token){window.__ISA_FRIEND_BOOTSTRAP_STATE__='invalid';window.__ISA_FRIEND_ACCESS_VALID__=false;document.dispatchEvent(new Event('isa:friend-access-invalid'));$('friendGateTitle').textContent='Este link não é válido';$('friendGateText').textContent='Peça um novo link pessoal.';return}
+  if(!silent){$('friendGateTitle').textContent='Verificando seu acesso…';$('friendGateText').textContent='Só um instante.';$('friendGateError').textContent='';if(btn){btn.classList.add('hidden');btn.disabled=false;btn.dataset.mode='enter';btn.textContent='Acessar 💜'}}
+  const load=()=>rpc('friend_portal_bootstrap',{p_token:token},{timeoutMs:10000})
+  try{
+    let data
+    try{data=await load()}catch(first){if(silent)throw first;await new Promise(r=>setTimeout(r,550));data=await load()}
+    person=data.friend;conversations=data.conversations||[];window.__ISA_FRIEND_BOOTSTRAP_STATE__='ready';window.__ISA_FRIEND_ACCESS_VALID__=true;window.__ISA_FRIEND_PERSON__=person;document.dispatchEvent(new CustomEvent('isa:friend-access-valid',{detail:{id:person?.id||null,name:person?.name||''}}))
+    if(!silent){$('friendGateTitle').textContent=`Oi, ${person.name}! 💜`;$('friendGateText').textContent='Este é seu acesso pessoal ao Cantinho da Isa.';if(btn){btn.dataset.mode='enter';btn.textContent='Acessar 💜';btn.classList.remove('hidden')}}
+    if($('friendChat')&&!$('friendChat').classList.contains('hidden'))renderConversationList()
+  }catch(e){window.__ISA_FRIEND_BOOTSTRAP_STATE__='error';window.__ISA_FRIEND_ACCESS_VALID__=false;document.dispatchEvent(new Event('isa:friend-access-invalid'));if(!silent){$('friendGateTitle').textContent='Não conseguimos conectar agora';$('friendGateText').textContent='Seu link continua válido. Toque abaixo para tentar novamente.';$('friendGateError').textContent=e.message||'Falha de conexão.';if(btn){btn.disabled=false;btn.dataset.mode='retry';btn.textContent='Tentar novamente';btn.classList.remove('hidden')}}}
+}"""
+          s,n=re.subn(boot_pattern,boot_code,s,count=1,flags=re.S)
+          if n!=1: raise SystemExit(f'bootstrap patch failed: {n}')
+
+          s=s.replace("$('friendEnterBtn').onclick=enterPortal","$('friendEnterBtn').onclick=()=>$('friendEnterBtn').dataset.mode==='retry'?bootstrap(false):enterPortal()",1)
+          js.write_text(s)
+
+          html=Path('acesso-mobile.html')
+          h=html.read_text()
+          start=h.index('  <script type="module" src="./familia-externa.js')
+          end=h.index('</body>')
+          loader='''  <script type="module" src="./familia-externa.js?v=7-access-recovery"></script>\n  <script type="module">\n    const extras=[\n      './family-settings.js?v=4-after-access',\n      './familia-emoji-completo.js?v=3-after-access',\n      './call-manager.js?v=9-after-access',\n      './link-preview.js?v=7-after-access',\n      './games-menu.js?v=7-after-access',\n      './games-menu-snake.js?v=3-after-access',\n      './paloma-studies.js?v=3-after-access',\n      './paloma-studies-advanced-mobile.js?v=2-after-access',\n      './paloma-study-desk.js?v=2-after-access',\n      './profile-status-stickers.js?v=3-after-access',\n      './profile-actions.js?v=3-after-access',\n      './family-social.js?v=5-after-access'\n    ];\n    let extrasStarted=false;\n    async function loadExtras(){\n      if(extrasStarted)return;extrasStarted=true;\n      const results=await Promise.allSettled(extras.map(src=>import(src)));\n      const failed=results.filter(x=>x.status==='rejected');\n      if(failed.length)console.warn('Módulos secundários não carregados:',failed.length);\n    }\n    if(window.__ISA_FRIEND_ACCESS_VALID__===true)loadExtras();\n    else document.addEventListener('isa:friend-access-valid',loadExtras,{once:true});\n  </script>\n  <script>\n    setTimeout(()=>{\n      const state=window.__ISA_FRIEND_BOOTSTRAP_STATE__;\n      if(state==='ready'||state==='error'||state==='invalid')return;\n      const title=document.getElementById('friendGateTitle'),text=document.getElementById('friendGateText'),btn=document.getElementById('friendEnterBtn');\n      if(title)title.textContent='Reconectando seu acesso…';\n      if(text)text.textContent='A conexão está demorando mais que o normal.';\n      if(btn){btn.textContent='Tentar novamente';btn.classList.remove('hidden');btn.disabled=false;btn.onclick=()=>location.reload()}\n    },14000);\n  </script>\n'''
+          h=h[:start]+loader+h[end:]
+          html.write_text(h)
+          PY
+
+          node --check familia-externa.js
+          grep -q "v=7-access-recovery" acesso-mobile.html
+          grep -q "Promise.allSettled" acesso-mobile.html
+          grep -q "__ISA_FRIEND_BOOTSTRAP_STATE__='ready'" familia-externa.js
+      - name: Commit access recovery
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add familia-externa.js acesso-mobile.html
+          git commit -m 'fix: make family access resilient and non-blocking' || exit 0
+          git push

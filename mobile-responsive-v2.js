@@ -8,6 +8,7 @@ function mainReady(){return !!shell()&&!shell().classList.contains('hidden')&&!!
 function syncProfileSubtitle(){const role=$('myRole');if(!role)return;if(!role.dataset.desktopText)role.dataset.desktopText=role.textContent||'';const next=mq.matches?'Cantinho da Isa 💜':role.dataset.desktopText;if(role.textContent!==next)role.textContent=next}
 function ensureProfileNav(){
   if(!mainReady())return
+  window.__ISA_ENSURE_SETTINGS_MENU__?.()
   syncProfileSubtitle()
   const study=$('studyNav'),diary=$('diaryNav'),supervision=$('supervisionNav'),parents=$('parentsNav')
   if(who()==='isa'){
@@ -16,6 +17,7 @@ function ensureProfileNav(){
     study?.classList.add('hidden');diary?.classList.add('hidden')
     if(who()==='keise'||who()==='alan'){supervision?.classList.remove('hidden');parents?.classList.remove('hidden')}
   }
+  window.__ISA_ENSURE_SETTINGS_MENU__?.()
 }
 function backBtn(){
   let b=$('mobilePanelBack')
@@ -43,6 +45,7 @@ function showConversationList(){
   backBtn()?.classList.add('hidden')
   const chats=document.querySelector('.nav-btn[data-tab="chats"]')
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b===chats))
+  window.__ISA_ENSURE_SETTINGS_MENU__?.()
   placeNotifyBanner()
   requestAnimationFrame(()=>{const list=$('chatList');if(list){list.style.removeProperty('display');list.scrollLeft=0}})
 }
@@ -87,10 +90,12 @@ function wire(){
   }
 }
 function sync(){
+  window.__ISA_ENSURE_SETTINGS_MENU__?.()
   ensureProfileNav();wire();backBtn();placeNotifyBanner();syncProfileSubtitle()
   if(!mq.matches){
     shell()?.classList.remove('mobile-content-open','mobile-chat-open','mobile-panel-open')
     backBtn()?.classList.add('hidden')
+    window.__ISA_ENSURE_SETTINGS_MENU__?.()
     return
   }
   if(mainReady()){
@@ -100,13 +105,14 @@ function sync(){
     else if(active==='chats')showConversationList()
     else if(active!=='study'&&active!=='diary')showContent('panel')
   }
+  window.__ISA_ENSURE_SETTINGS_MENU__?.()
 }
 
 sync()
 const main=$('mainView')
 if(main){const obs=new MutationObserver(()=>sync());obs.observe(main,{attributes:true,attributeFilter:['class']})}
 const nav=document.querySelector('.nav-tabs')
-if(nav){const obs=new MutationObserver(()=>{ensureProfileNav();wire()});obs.observe(nav,{childList:true,subtree:true})}
+if(nav){const obs=new MutationObserver(()=>{window.__ISA_ENSURE_SETTINGS_MENU__?.();ensureProfileNav();wire()});obs.observe(nav,{childList:true,subtree:true})}
 window.addEventListener('resize',sync,{passive:true})
 mq.addEventListener?.('change',sync)
 window.__ISA_MOBILE_SHOW_CONTENT__=showContent
