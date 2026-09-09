@@ -1,0 +1,35 @@
+name: Profile Status and Stickers Quality Gate
+on:
+  push:
+    paths:
+      - 'profile-status-stickers.js'
+      - 'profile-status-stickers.css'
+      - 'postboot-loader.js'
+      - 'acesso.html'
+      - 'acesso-mobile.html'
+      - '.github/workflows/profile-status-stickers-quality.yml'
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate JavaScript syntax
+        run: node --check profile-status-stickers.js
+      - name: Validate integration markers
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          js=Path('profile-status-stickers.js').read_text()
+          required=['friend_portal_statuses','friend_portal_set_status','pssStickerCanvas','pssProfileCloud','status_audio_signed_url']
+          missing=[x for x in required if x not in js]
+          if missing: raise SystemExit('Missing feature markers: '+', '.join(missing))
+          for f in ['acesso.html','acesso-mobile.html']:
+              text=Path(f).read_text()
+              if 'profile-status-stickers.js' not in text: raise SystemExit(f'{f}: shared module missing')
+          if 'profile-status-stickers.js' not in Path('postboot-loader.js').read_text():
+              raise SystemExit('postboot-loader.js: module missing for authenticated profiles')
+          print('Profile/status/sticker integration: OK')
+          PY
