@@ -1,0 +1,20 @@
+name: Run Alan personal access v56
+on: push
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: github.event.head_commit.message == 'fix: trigger Alan personal access v56'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python scripts/fix_alan_personal_access_v55.py
+      - run: node --check app-v33.js
+      - run: node --check personal-access-recovery.js
+      - run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add index.html acesso-v41.html app-v33.js personal-access-recovery.js
+          git diff --cached --quiet && exit 0
+          git commit -m 'fix: unfreeze Alan personal access'
+          git push
