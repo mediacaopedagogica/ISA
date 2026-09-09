@@ -87,7 +87,7 @@
       const name=String(window.__ISA_FRIEND_PERSON__?.name||'').trim().toLowerCase()
       const core=[
         './family-settings.js?v=9-all-family-features',
-        './external-menu.js?v=2-all-family-features',
+        './external-menu.js?v=3-games-studies',
         './external-chat-tools.js?v=3-fixed-media-tools',
         './familia-emoji-completo.js?v=7-all-family-features',
         './profile-status-stickers.js?v=9-all-family-features',
@@ -100,10 +100,10 @@
       window.__ISA_ENSURE_EXTERNAL_MENU__?.()
       window.__ISA_ENSURE_FAMILY_SOCIAL__?.()
       setTimeout(async()=>{
-        for(const src of['./link-preview.js?v=11-all-family-features','./games-menu.js?v=10-all-family-features','./games-menu-snake.js?v=6-all-family-features'])await safeImport(src)
+        for(const src of['./link-preview.js?v=11-all-family-features','./games-menu.js?v=11-all-family-menu','./games-menu-snake.js?v=6-all-family-features'])await safeImport(src)
       },650)
       if(name.includes('paloma'))setTimeout(async()=>{
-        for(const src of['./paloma-studies.js?v=7-all-family-features','./paloma-studies-advanced-mobile.js?v=6-all-family-features','./paloma-study-desk.js?v=6-all-family-features'])await safeImport(src)
+        for(const src of['./paloma-studies.js?v=8-paloma-menu','./paloma-studies-advanced-mobile.js?v=6-all-family-features','./paloma-study-desk.js?v=6-all-family-features'])await safeImport(src)
       },1200)
     }
     if(window.__ISA_FRIEND_PORTAL_ENTERED__===true)loadExtras()

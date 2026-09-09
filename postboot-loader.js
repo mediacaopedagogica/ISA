@@ -53,7 +53,7 @@ const commonCore=[
   './family-media-menu-v2.js?v=10-all-family-features',
   './social-nav-guard.js?v=5-all-family-features',
   './profile-actions.js?v=6-all-family-features',
-  './profile-menu-guard.js?v=2-all-family-features'
+  './profile-menu-guard.js?v=3-stable-games'
 ]
 const firstWave=dedicatedMobile?[
   './mobile-native.js?v=5-native-tap',
