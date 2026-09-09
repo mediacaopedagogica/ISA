@@ -42,12 +42,13 @@ async function api(path,options={}){
   const text=await res.text();return text?JSON.parse(text):null
 }
 
-const style=document.createElement('style')
-style.textContent=`
-#accessSettingsNav{position:relative}
-#accessSettingsPanel{position:fixed;inset:0;z-index:130000;background:rgba(25,18,35,.52);backdrop-filter:blur(12px);display:grid;place-items:center;padding:18px;font-family:Inter,system-ui,sans-serif}
-#accessSettingsPanel.hidden{display:none!important}.access-card{width:min(470px,94vw);border-radius:26px;background:#fffafc;color:#5b4a66;border:1px solid #fff;box-shadow:0 24px 70px rgba(65,40,80,.22);padding:22px}.access-head{display:flex;align-items:flex-start;gap:12px}.access-head button{margin-left:auto;border:0;border-radius:12px;background:#efe7f6;color:#684f78;padding:8px 10px;cursor:pointer}.access-card h2{margin:0 0 4px}.access-card p{margin:0;color:#88758f;font-size:13px}.access-form{display:grid;gap:12px;margin-top:18px}.access-form label{display:grid;gap:6px;font-weight:800;font-size:13px}.access-form input{width:100%;padding:12px 13px;border-radius:14px;border:1px solid #dfd2e8;background:#fff;color:#4f4059;outline:none}.access-form input:focus{border-color:#b99bd3;box-shadow:0 0 0 3px #cbb0df2b}.access-pass{position:relative}.access-pass input{padding-right:48px}.access-pass button{position:absolute;right:6px;top:6px;width:38px;height:38px;border:0;border-radius:10px;background:#f0e8f5;cursor:pointer}.access-save{border:0;border-radius:14px;padding:12px 14px;background:linear-gradient(135deg,#a985c7,#d49bb8);color:#fff;font-weight:900;cursor:pointer}.access-status{min-height:18px;font-size:12px;margin-top:8px!important}.access-note{margin-top:12px!important;padding:10px 12px;border-radius:13px;background:#f4eef7;color:#796681!important}.access-save:disabled{opacity:.6;cursor:wait}`
-document.head.appendChild(style)
+if(!document.getElementById('keiseAccessSettingsStyle')){
+  const style=document.createElement('style');style.id='keiseAccessSettingsStyle'
+  style.textContent=`
+  #accessSettingsPanel{position:fixed;inset:0;z-index:130000;background:rgba(25,18,35,.52);backdrop-filter:blur(12px);display:grid;place-items:center;padding:18px;font-family:Inter,system-ui,sans-serif}
+  #accessSettingsPanel.hidden{display:none!important}.access-card{width:min(470px,94vw);border-radius:26px;background:#fffafc;color:#5b4a66;border:1px solid #fff;box-shadow:0 24px 70px rgba(65,40,80,.22);padding:22px}.access-head{display:flex;align-items:flex-start;gap:12px}.access-head button{margin-left:auto;border:0;border-radius:12px;background:#efe7f6;color:#684f78;padding:8px 10px;cursor:pointer}.access-card h2{margin:0 0 4px}.access-card p{margin:0;color:#88758f;font-size:13px}.access-form{display:grid;gap:12px;margin-top:18px}.access-form label{display:grid;gap:6px;font-weight:800;font-size:13px}.access-form input{width:100%;padding:12px 13px;border-radius:14px;border:1px solid #dfd2e8;background:#fff;color:#4f4059;outline:none}.access-form input:focus{border-color:#b99bd3;box-shadow:0 0 0 3px #cbb0df2b}.access-pass{position:relative}.access-pass input{padding-right:48px}.access-pass button{position:absolute;right:6px;top:6px;width:38px;height:38px;border:0;border-radius:10px;background:#f0e8f5;cursor:pointer}.access-save{border:0;border-radius:14px;padding:12px 14px;background:linear-gradient(135deg,#a985c7,#d49bb8);color:#fff;font-weight:900;cursor:pointer}.access-status{min-height:18px;font-size:12px;margin-top:8px!important}.access-note{margin-top:12px!important;padding:10px 12px;border-radius:13px;background:#f4eef7;color:#796681!important}.access-save:disabled{opacity:.6;cursor:wait}`
+  document.head.appendChild(style)
+}
 
 function build(){
   if(document.getElementById('accessSettingsPanel'))return
@@ -83,10 +84,7 @@ async function save(){
   finally{btn.disabled=false}
 }
 function open(){build();document.getElementById('accessSettingsPanel').classList.remove('hidden');loadCurrent()}
-function nav(){
-  if(document.getElementById('accessSettingsNav'))return
-  const n=document.querySelector('.nav-tabs');if(!n)return
-  const b=document.createElement('button');b.id='accessSettingsNav';b.className='nav-btn';b.type='button';b.innerHTML='🔐 <span>Meu acesso</span>';b.onclick=open
-  const p=document.getElementById('parentsNav');if(p)p.after(b);else n.appendChild(b)
-}
-build();nav();let tries=0,t=setInterval(()=>{nav();if(document.getElementById('accessSettingsNav')||++tries>30)clearInterval(t)},250)
+
+// API pública usada pelo dashboard aprovado: não criamos mais um botão invisível na navegação antiga.
+build()
+window.__ISA_OPEN_ACCESS_SETTINGS__=open
