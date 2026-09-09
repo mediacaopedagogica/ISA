@@ -81,7 +81,7 @@
 </script>
 <script>(function(){const btn=document.getElementById('togglePassword'),input=document.getElementById('loginPassword');if(btn&&input){btn.onclick=()=>{const show=input.type==='password';input.type=show?'text':'password';btn.textContent=show?'🙈':'👁️';btn.setAttribute('aria-label',show?'Ocultar senha':'Mostrar senha');btn.title=show?'Ocultar senha':'Mostrar senha';input.focus()}}})();</script>
 <script>
-if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=unfreeze-59',{scope:'./'}).then(reg=>reg.update().catch(()=>{})).catch(error=>console.warn('Service Worker:',error));}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=unfreeze-60-native-tap',{scope:'./'}).then(reg=>reg.update().catch(()=>{})).catch(error=>console.warn('Service Worker:',error));}
 </script>
 <script>
 (function(){
@@ -93,7 +93,7 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=unf
   new MutationObserver(()=>{if(!main.classList.contains('hidden'))clear()}).observe(main,{attributes:true,attributeFilter:['class']});
 })();
 </script>
-<script defer src="./mobile-interaction-guard.js?v=5-unfreeze-main"></script>
+<script defer src="./mobile-interaction-guard.js?v=6-native-tap"></script>
 <script defer src="./app-v33.js?v=stable-59-unfreeze-main"></script>
 <script>
 (function(){
@@ -103,7 +103,7 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=unf
     const main=document.getElementById('mainView'),name=String(document.getElementById('myName')?.textContent||'').trim();
     if(main&&!main.classList.contains('hidden')&&name&&name!=='Família'){
       loaded=true;
-      const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=32-unfreeze-main';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
+      const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=33-progressive-mobile';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
     }
     if(++tries<140)setTimeout(loadExtras,120);
   };
