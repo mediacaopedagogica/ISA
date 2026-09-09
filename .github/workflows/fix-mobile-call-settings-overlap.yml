@@ -1,0 +1,79 @@
+name: Fix mobile call/settings overlap
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-mobile-call-settings-overlap.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch mobile header controls
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          # 1) Move the floating settings button below the chat header on mobile.
+          p=Path('general-settings.js')
+          s=p.read_text()
+          old="@media(max-width:850px){.general-settings-fab{display:grid}.general-settings-card{"
+          new="@media(max-width:850px){.general-settings-fab{display:grid;right:8px;top:calc(max(8px, env(safe-area-inset-top)) + 58px)}.general-settings-card{"
+          if old not in s and new not in s:
+              raise SystemExit('general-settings mobile marker not found')
+          if old in s:
+              s=s.replace(old,new,1)
+          p.write_text(s)
+
+          # 2) Keep voice/video buttons above any floating UI and prevent flex shrink.
+          p=Path('call-manager.js')
+          s=p.read_text()
+          old=".isa-call-actions{display:flex;gap:7px;margin-left:auto}"
+          new=".isa-call-actions{display:flex;gap:7px;margin-left:auto;position:relative;z-index:99001;flex:0 0 auto}"
+          if old not in s and new not in s:
+              raise SystemExit('call actions css marker not found')
+          if old in s:
+              s=s.replace(old,new,1)
+          oldm="@media(max-width:620px){.isa-call-btn{width:38px;height:38px}"
+          newm="@media(max-width:620px){.isa-call-actions{gap:5px}.isa-call-btn{width:38px;height:38px;flex:0 0 38px}"
+          if oldm not in s and newm not in s:
+              raise SystemExit('mobile call css marker not found')
+          if oldm in s:
+              s=s.replace(oldm,newm,1)
+          p.write_text(s)
+
+          # 3) Cache-bust the changed modules everywhere they are used.
+          p=Path('postboot-loader.js')
+          s=p.read_text().replace('./general-settings.js?v=1-all-profiles','./general-settings.js?v=2-call-safe')
+          s=s.replace('./call-manager.js?v=7-mobile-fast','./call-manager.js?v=8-header-safe')
+          p.write_text(s)
+
+          p=Path('acesso-mobile.html')
+          s=p.read_text().replace('./call-manager.js?v=7-mobile-fast','./call-manager.js?v=8-header-safe')
+          p.write_text(s)
+
+          p=Path('index.html')
+          s=p.read_text().replace('./postboot-loader.js?v=27-general-settings-social-v3','./postboot-loader.js?v=28-call-safe')
+          p.write_text(s)
+
+          print('mobile call/settings overlap fix applied')
+          PY
+      - name: Validate patched markers
+        shell: bash
+        run: |
+          grep -q "v=2-call-safe" postboot-loader.js
+          grep -q "v=8-header-safe" acesso-mobile.html
+          grep -q "v=28-call-safe" index.html
+          grep -q "top:calc(max(8px, env(safe-area-inset-top)) + 58px)" general-settings.js
+          grep -q "z-index:99001" call-manager.js
+      - name: Commit changes
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add general-settings.js call-manager.js postboot-loader.js acesso-mobile.html index.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'fix: keep call buttons clear of settings control'
+          git push
