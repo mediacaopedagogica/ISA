@@ -21,7 +21,6 @@ const dedicatedMobile=new URLSearchParams(location.search).get('mobile')==='1'
 
 async function loadCoreExtras(){
   const jobs=[
-    loadOnce('general-settings','./general-settings.js?v=1-all-profiles'),
     loadOnce('profile','./profile-mascot.js?v=4-stable'),
     loadOnce('groups','./group-controls.js?v=5-stable'),
     loadOnce('pins','./conversation-pins.js?v=5-direct-pin'),

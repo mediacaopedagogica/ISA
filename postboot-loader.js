@@ -12,7 +12,7 @@ async function loadWithRetry(path){
 
 const dedicatedMobile=new URLSearchParams(location.search).get('mobile')==='1'
 const common=[
-  './general-settings.js?v=2-call-safe',
+  './general-settings.js?v=3-single-entry',
   './notifications-v2.js?v=9-stable',
   './extras-loader.js?v=48-settings-social-v3'
 ]

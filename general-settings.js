@@ -37,10 +37,9 @@ async function setCustom(data){const db=await openDb();return new Promise((resol
 async function deleteCustom(){try{const db=await openDb();await new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).delete(profileId());tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error)})}catch{}}
 
 const css=document.createElement('style');css.id='generalSettingsStyles';css.textContent=`
-#generalSettingsNav{position:relative}.general-settings-fab{display:none;position:fixed;z-index:98000;right:54px;top:max(8px,env(safe-area-inset-top));width:38px;height:38px;border:1px solid rgba(130,100,150,.16);border-radius:13px;background:rgba(255,250,253,.92);box-shadow:0 8px 24px rgba(70,45,85,.16);font-size:18px;place-items:center;color:#695874;backdrop-filter:blur(12px)}
 #generalSettingsPanel{position:fixed;inset:0;z-index:140000;background:rgba(28,20,38,.48);backdrop-filter:blur(12px);display:grid;place-items:center;padding:18px;font-family:Inter,"Segoe UI",system-ui,sans-serif}#generalSettingsPanel.hidden{display:none!important}.general-settings-card{width:min(780px,96vw);max-height:92vh;overflow:auto;border-radius:28px;background:#fffafc;color:#5d4e66;border:1px solid rgba(255,255,255,.96);box-shadow:0 24px 80px rgba(62,38,76,.24);padding:20px}.general-settings-head{display:flex;align-items:center;gap:12px;position:sticky;top:-20px;background:#fffafcee;padding:6px 0 12px;z-index:2;backdrop-filter:blur(8px)}.general-settings-head>div{flex:1}.general-settings-head h2{margin:0 0 3px;font-size:22px}.general-settings-head p{margin:0;color:#8b7c91;font-size:12px}.general-settings-close{border:0;width:38px;height:38px;border-radius:12px;background:#f0e8f5;color:#684f78;font-weight:900}.gs-section{padding:15px 0;border-top:1px solid #eee5f2}.gs-section:first-of-type{border-top:0}.gs-section h3{margin:0 0 4px;font-size:16px}.gs-section>p{margin:0 0 12px;color:#8b7c91;font-size:12px}.gs-wallpapers{display:grid;grid-template-columns:repeat(5,minmax(92px,1fr));gap:10px}.gs-wallpaper{border:2px solid transparent;border-radius:17px;background:#fff;padding:6px;text-align:left;box-shadow:0 6px 18px rgba(85,65,100,.07)}.gs-wallpaper.active{border-color:#b396d1;box-shadow:0 0 0 3px rgba(188,158,216,.15)}.gs-wallpaper-preview{display:block;width:100%;aspect-ratio:.82;border-radius:12px;background-size:cover;background-position:center;border:1px solid rgba(75,55,90,.08)}.gs-wallpaper-name{display:block;font-size:10px;font-weight:900;margin:6px 3px 2px}.gs-wallpaper-group{display:block;font-size:8px;color:#98899f;margin:0 3px 3px}.gs-upload-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}.gs-btn{border:0;border-radius:13px;padding:10px 13px;background:#eee5ff;color:#65527a;font-weight:900}.gs-btn.primary{background:linear-gradient(135deg,#a98acb,#d59dbb);color:white}.gs-btn.danger{background:#ffe8ee;color:#a45169}.gs-file{display:none}.gs-setting-row{display:flex;align-items:center;gap:12px;padding:10px 0}.gs-setting-row>div{flex:1}.gs-setting-row strong{display:block;font-size:13px}.gs-setting-row small{display:block;color:#93839a;font-size:10px;margin-top:2px}.gs-size-options{display:flex;gap:6px}.gs-size-options button{border:1px solid #e6dbea;border-radius:11px;background:#fff;padding:8px 11px;font-weight:900}.gs-size-options button.active{background:#e9ddfb;border-color:#c0a6df}.gs-switch{position:relative;width:48px;height:28px}.gs-switch input{opacity:0;width:1px;height:1px;position:absolute}.gs-switch span{position:absolute;inset:0;border-radius:999px;background:#ddd1e3;transition:.2s}.gs-switch span:after{content:'';position:absolute;width:22px;height:22px;border-radius:50%;left:3px;top:3px;background:#fff;box-shadow:0 2px 8px #0002;transition:.2s}.gs-switch input:checked+span{background:#ad8dcc}.gs-switch input:checked+span:after{transform:translateX(20px)}
 html[data-isa-font-scale="90"] #messages .bubble,html[data-isa-font-scale="90"] #messageInput{font-size:90%}html[data-isa-font-scale="115"] #messages .bubble,html[data-isa-font-scale="115"] #messageInput{font-size:115%}html[data-isa-reduce-motion="1"] *,html[data-isa-reduce-motion="1"] *:before,html[data-isa-reduce-motion="1"] *:after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
-@media(max-width:850px){.general-settings-fab{display:grid;right:8px;top:calc(max(8px, env(safe-area-inset-top)) + 58px)}.general-settings-card{width:100%;height:min(92dvh,760px);max-height:92dvh;border-radius:24px 24px 18px 18px;padding:15px}.general-settings-head{top:-15px}.gs-wallpapers{grid-template-columns:repeat(3,minmax(82px,1fr));gap:8px}.gs-setting-row{align-items:flex-start}.gs-size-options button{padding:7px 9px}.nav-tabs #generalSettingsNav span{display:none}}
+@media(max-width:850px){.general-settings-card{width:100%;height:min(92dvh,760px);max-height:92dvh;border-radius:24px 24px 18px 18px;padding:15px}.general-settings-head{top:-15px}.gs-wallpapers{grid-template-columns:repeat(3,minmax(82px,1fr));gap:8px}.gs-setting-row{align-items:flex-start}.gs-size-options button{padding:7px 9px}}
 @media(max-width:390px){.gs-wallpapers{grid-template-columns:repeat(2,minmax(90px,1fr))}}
 `;document.head.appendChild(css)
 
@@ -79,9 +78,21 @@ function renderSelection(){const panel=$('generalSettingsPanel');if(!panel)retur
 function open(){build();settings=readSettings();applySettings();const p=$('generalSettingsPanel');p.classList.remove('hidden');p.setAttribute('aria-hidden','false')}
 function close(){const p=$('generalSettingsPanel');p?.classList.add('hidden');p?.setAttribute('aria-hidden','true')}
 
-function injectNav(){
-  const nav=document.querySelector('.nav-tabs');if(nav&&!$('generalSettingsNav')){const b=document.createElement('button');b.id='generalSettingsNav';b.className='nav-btn';b.type='button';b.innerHTML='⚙️ <span>Configurações</span>';b.title='Configurações Gerais';b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open()},true);nav.appendChild(b)}
-  if(!$('generalSettingsFab')){const f=document.createElement('button');f.id='generalSettingsFab';f.className='general-settings-fab';f.type='button';f.textContent='⚙️';f.title='Configurações Gerais';f.setAttribute('aria-label','Abrir Configurações Gerais');f.onclick=open;document.body.appendChild(f)}
+function bindExistingSettingsButton(){
+  // O Cantinho já possui um botão de Configurações junto aos demais controles.
+  // Este módulo só fornece o painel: não cria atalhos abaixo de Sair nem sobre as conversas.
+  $('generalSettingsNav')?.remove();$('generalSettingsFab')?.remove();
+  const nodes=[...document.querySelectorAll('button,a,[role="button"]')];
+  const btn=nodes.find(el=>{
+    if(el.closest('#generalSettingsPanel'))return false;
+    if(el.id==='accessSettingsNav'||el.id==='logoutBtn')return false;
+    const label=`${el.textContent||''} ${el.title||''} ${el.getAttribute('aria-label')||''}`.toLowerCase();
+    return /configura(c|ç)(a|ã)o|configura(c|ç)(o|õ)es|settings/.test(label);
+  });
+  if(btn&&btn.dataset.generalSettingsBound!=='1'){
+    btn.dataset.generalSettingsBound='1';
+    btn.addEventListener('click',e=>{e.preventDefault();open()});
+  }
 }
 
 async function compressImage(file){
@@ -94,9 +105,9 @@ async function compressImage(file){
 }
 
 async function boot(){
-  build();injectNav();customData=await getCustom();settings=readSettings();applySettings();
-  let tries=0;const timer=setInterval(()=>{injectNav();applyWallpaper();if(++tries>40)clearInterval(timer)},250)
-  const obs=new MutationObserver(()=>{injectNav();if($('messages'))applyWallpaper()});obs.observe(document.getElementById('mainView')||document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']})
+  build();bindExistingSettingsButton();customData=await getCustom();settings=readSettings();applySettings();
+  let tries=0;const timer=setInterval(()=>{bindExistingSettingsButton();applyWallpaper();if(++tries>40)clearInterval(timer)},250)
+  const obs=new MutationObserver(()=>{bindExistingSettingsButton();if($('messages'))applyWallpaper()});obs.observe(document.getElementById('mainView')||document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']})
   window.__ISA_OPEN_GENERAL_SETTINGS__=open
 }
 
