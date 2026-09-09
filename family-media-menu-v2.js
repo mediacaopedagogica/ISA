@@ -72,14 +72,6 @@ async function sendNativePhoto(){
   try{const file=await capturePhoto();if(file)await uploadMedia(file,'photo',{maxMb:10})}catch(e){toast(e.message||'Não foi possível tirar a foto.')}
 }
 function chooseImage(){const i=$('photoInput');if(!i)return;i.removeAttribute('capture');i.setAttribute('accept','image/jpeg,image/png,image/webp,image/gif');i.click()}
-function bindMobileCameraButton(){
-  if(!dedicatedMobile)return
-  const photo=$('photoBtn');if(!photo)return
-  photo.style.removeProperty('display');photo.title='Tirar foto'
-  if(photo.dataset.mobileCameraBound==='1')return
-  photo.dataset.mobileCameraBound='1'
-  photo.addEventListener('click',async e=>{e.preventDefault();e.stopImmediatePropagation();await sendNativePhoto()},true)
-}
 async function startNativeRecording(){
   const id=activeConv();if(!id)return
   if(await conversationHasFriend(id))return toast('Áudio fica disponível somente nas conversas da família.')
@@ -127,16 +119,49 @@ async function hydrateAudio(){
   }finally{audioHydrateBusy=false}
 }
 function scheduleHydrate(delay=220){clearTimeout(audioHydrateTimer);audioHydrateTimer=setTimeout(hydrateAudio,delay)}
+function addCompactCss(){
+  if($('compactChatToolsCss'))return
+  const s=document.createElement('style');s.id='compactChatToolsCss';s.textContent=`
+  #chatPanel,.chat-header,.messages,.composer{min-width:0!important;max-width:100%!important;box-sizing:border-box!important}.chat-header>.grow{min-width:0!important;overflow:hidden!important}.chat-header h3,.chat-header small{max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}.messages{overflow-x:hidden!important}.bubble{overflow-wrap:anywhere!important}.messages img,.messages video{max-width:100%!important;height:auto!important}
+  #chatPanel .isa-call-actions{display:none!important}.composer.compact-chat-tools{display:grid!important;grid-template-columns:42px minmax(0,1fr) 42px!important;align-items:end!important;gap:7px!important;width:100%!important;max-width:100%!important;overflow:visible!important}.composer.compact-chat-tools>.group-plus-wrap{grid-column:1!important;grid-row:1!important}.composer.compact-chat-tools>#photoBtn,.composer.compact-chat-tools>#pssStickerBtn,.composer.compact-chat-tools>.emoji-wrap>#emojiBtn{display:none!important}.composer.compact-chat-tools>.emoji-wrap{grid-column:1!important;grid-row:1!important;width:0!important;height:0!important;min-width:0!important;overflow:visible!important;position:relative!important}.composer.compact-chat-tools>textarea{grid-column:2!important;grid-row:1!important;width:100%!important;max-width:100%!important;min-width:0!important;margin:0!important}.composer.compact-chat-tools>.send-btn{grid-column:3!important;grid-row:1!important;margin:0!important}.composer.compact-chat-tools .plus-menu{min-width:235px!important;max-height:min(430px,65dvh)!important;overflow:auto!important}
+  @media(max-width:850px){.composer.compact-chat-tools{grid-template-columns:42px minmax(0,1fr) 42px!important;padding-left:8px!important;padding-right:8px!important}.composer.compact-chat-tools .plus-menu{position:fixed!important;left:8px!important;right:8px!important;bottom:calc(60px + env(safe-area-inset-bottom))!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:5px!important;min-width:0!important;max-height:48dvh!important;padding:8px!important}.composer.compact-chat-tools .plus-menu.hidden{display:none!important}.composer.compact-chat-tools .plus-menu button{min-height:45px!important}.bubble{max-width:min(88%,calc(100vw - 42px))!important}}
+  `;document.head.appendChild(s)
+}
+async function openSticker(){
+  try{
+    await import('./profile-status-stickers.js?v=14-plus-menu')
+    await import('./sticker-bg-remover.js?v=1-ai-cutout')
+    for(let i=0;i<20&&typeof window.__ISA_OPEN_STICKER_CREATOR__!=='function';i++)await new Promise(r=>setTimeout(r,70))
+    window.__ISA_ENSURE_STICKER_BG_REMOVER__?.()
+    if(typeof window.__ISA_OPEN_STICKER_CREATOR__==='function')window.__ISA_OPEN_STICKER_CREATOR__();else toast('O criador de stickers ainda está carregando.')
+  }catch{toast('Não foi possível abrir o criador de stickers.')}
+}
+function openEmoji(){const b=$('emojiBtn');if(b)b.click();else toast('Os emojis ainda estão carregando.')}
+async function launchCall(kind){
+  try{
+    await import('./call-manager.js?v=18-plus-menu')
+    const id=kind==='video'?'isaVideoCall':'isaVoiceCall'
+    for(let i=0;i<20&&!$(id);i++){document.dispatchEvent(new Event('visibilitychange'));await new Promise(r=>setTimeout(r,80))}
+    const b=$(id);if(!b)return toast('A chamada ainda está carregando. Tente novamente.')
+    b.click()
+  }catch{toast('Não foi possível iniciar a chamada.')}
+}
 function ensureMenu(){
   if(!isChatOpen()||isSupervision())return
-  const plus=$('groupPlusBtn'),menu=$('groupPlusMenu'),photo=$('photoBtn');if(!plus||!menu)return
-  plus.classList.remove('hidden')
-  if(dedicatedMobile)bindMobileCameraButton();else if(photo)photo.style.display='none'
+  addCompactCss()
+  const plus=$('groupPlusBtn'),menu=$('groupPlusMenu'),composer=$('composer');if(!plus||!menu||!composer)return
+  plus.classList.remove('hidden');composer.classList.add('compact-chat-tools')
   menu.querySelector('[data-group-action="photo"]')?.classList.add('hidden')
   menu.querySelectorAll('[data-family-media]').forEach(n=>n.remove())
-  const items=dedicatedMobile
-    ?[['image','🖼️ Enviar imagem',chooseImage],['record','🎙️ Gravar áudio',startNativeRecording]]
-    :[['camera','📷 Tirar foto',sendNativePhoto],['image','🖼️ Enviar imagem',chooseImage],['record','🎙️ Gravar áudio',startNativeRecording]]
+  const items=[
+    ['sticker','✨ Criar sticker',openSticker],
+    ['camera','📷 Tirar foto',sendNativePhoto],
+    ['image','🖼️ Enviar imagem',chooseImage],
+    ['record','🎙️ Gravar áudio',startNativeRecording],
+    ['emoji','😊 Emojis',openEmoji],
+    ['voice','📞 Chamada de voz',()=>launchCall('voice')],
+    ['video','🎥 Videochamada',()=>launchCall('video')]
+  ]
   for(const [key,label,fn] of items){const b=document.createElement('button');b.type='button';b.dataset.familyMedia=key;b.textContent=label;b.onclick=async()=>{menu.classList.add('hidden');await fn()};menu.appendChild(b)}
   scheduleHydrate(120)
 }
@@ -145,6 +170,6 @@ function bindLifecycle(){
   const messages=$('messages');if(messages&&!messages.dataset.audioHydrateObservedV2){messages.dataset.audioHydrateObservedV2='1';const obs=new MutationObserver(()=>scheduleHydrate());obs.observe(messages,{childList:true,subtree:true})}
   const list=$('chatList');if(list&&!list.dataset.familyMediaV2Bound){list.dataset.familyMediaV2Bound='1';list.addEventListener('click',e=>{if(e.target.closest('.chat-item[data-conv]'))setTimeout(()=>{ensureMenu();scheduleHydrate()},140)})}
   document.querySelector('[data-tab="chats"]')?.addEventListener('click',()=>setTimeout(ensureMenu,80))
-  setInterval(()=>{if(document.visibilityState==='visible'&&isChatOpen())scheduleHydrate(0)},3000)
+  setInterval(()=>{if(document.visibilityState==='visible'&&isChatOpen()){ensureMenu();scheduleHydrate(0)}},3000)
 }
 bindLifecycle()
