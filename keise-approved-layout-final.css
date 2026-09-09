@@ -1,0 +1,206 @@
+/*
+ * Keise — ÚNICO layout aprovado.
+ * Mantém o núcleo original escondido como fonte funcional; não apaga conversas,
+ * módulos, mensagens ou permissões. Notebook e mobile usam o mesmo dashboard.
+ */
+:root{
+  --ka-ink:#4d315d;
+  --ka-muted:#8d7898;
+  --ka-shadow:0 16px 34px rgba(96,72,119,.13),0 5px 0 rgba(183,161,208,.14);
+}
+body.keise-approved-layout{
+  background:
+    radial-gradient(circle at 8% 9%,rgba(255,219,234,.68),transparent 28%),
+    radial-gradient(circle at 91% 13%,rgba(222,212,255,.70),transparent 30%),
+    linear-gradient(135deg,#fff9fc 0%,#f8f2ff 50%,#f2f8ff 100%)!important;
+  color:var(--ka-ink)!important;
+}
+
+/* HOME: o layout antigo nunca aparece. */
+body.keise-approved-layout.keise-home-active #mainView{
+  display:block!important;
+  width:100%!important;
+  max-width:none!important;
+  min-height:100dvh!important;
+  height:100dvh!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:auto!important;
+  background:transparent!important;
+}
+body.keise-approved-layout #mainView>.sidebar,
+body.keise-approved-layout .kd-side-menu{
+  display:none!important;
+  visibility:hidden!important;
+  width:0!important;
+  min-width:0!important;
+  max-width:0!important;
+  height:0!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  overflow:hidden!important;
+  pointer-events:none!important;
+}
+body.keise-approved-layout.keise-home-active #mainView>.content{
+  display:block!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  min-height:calc(100dvh - 72px)!important;
+  height:auto!important;
+  margin:0!important;
+  padding:18px clamp(18px,3.5vw,58px) 34px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+}
+body.keise-approved-layout.keise-home-active #mainView>.content>section:not(#keiseApprovedHome){
+  display:none!important;
+}
+
+/* Barra superior notebook aprovada. */
+#keiseApprovedTopbar{
+  position:sticky;
+  top:0;
+  z-index:50;
+  width:100%;
+  min-height:72px;
+  display:flex;
+  align-items:center;
+  gap:24px;
+  padding:10px 28px;
+  background:linear-gradient(90deg,rgba(255,235,245,.95),rgba(250,247,255,.96),rgba(236,230,255,.95));
+  border-bottom:1px solid rgba(188,169,210,.23);
+  box-shadow:0 8px 24px rgba(99,74,118,.07);
+  backdrop-filter:blur(18px);
+}
+.ka-brand{display:flex;align-items:center;gap:9px;min-width:285px;color:#543363}
+.ka-brand-heart{font-size:27px;filter:drop-shadow(0 5px 8px rgba(225,149,194,.25))}
+.ka-brand-name{font:600 italic 26px/1.05 Georgia,"Times New Roman",serif;white-space:nowrap}
+.ka-search{position:relative;flex:1;max-width:650px;margin:auto}
+.ka-search input{
+  width:100%;height:46px;border:1px solid rgba(193,175,214,.36);border-radius:999px;
+  background:rgba(255,255,255,.84);padding:0 20px 0 45px;outline:none;color:#5c446b;
+  font:600 14px/1 Inter,"Segoe UI",sans-serif;box-shadow:inset 0 1px 0 rgba(255,255,255,.95)
+}
+.ka-search:before{content:'⌕';position:absolute;left:17px;top:5px;font-size:28px;color:#7b6392}
+.ka-top-actions{display:flex;align-items:center;gap:13px;margin-left:auto}
+.ka-bell,.ka-top-profile{appearance:none;border:0;background:transparent;color:#50335f;cursor:pointer}
+.ka-bell{font-size:23px;position:relative}.ka-bell:after{content:'';position:absolute;right:0;top:0;width:9px;height:9px;border-radius:50%;background:#f06b9c;border:2px solid white}
+.ka-top-profile{display:flex;align-items:center;gap:9px;font:800 15px/1 Inter,"Segoe UI",sans-serif}
+.ka-top-avatar{width:45px;height:45px;border-radius:16px;display:grid;place-items:center;overflow:hidden;background:linear-gradient(135deg,#ffe7e5,#e8dfff);box-shadow:0 10px 24px rgba(104,78,124,.15);font-size:23px}
+.ka-top-avatar img{width:100%;height:100%;object-fit:cover}
+
+/* Dashboard central — exatamente a composição aprovada. */
+#keiseApprovedHome{
+  position:relative;
+  width:min(1120px,100%);
+  max-width:1120px;
+  min-height:100%;
+  margin:0 auto;
+  padding:0 0 30px;
+  color:var(--ka-ink);
+}
+.ka-hero{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto auto;
+  align-items:center;
+  gap:20px;
+  padding:20px 28px;
+  border-radius:32px;
+  background:linear-gradient(120deg,rgba(255,248,251,.96),rgba(240,235,255,.95),rgba(255,237,246,.94));
+  border:1px solid rgba(255,255,255,.98);
+  box-shadow:var(--ka-shadow);
+}
+.ka-avatar-btn{
+  appearance:none;width:112px;height:112px;border:0;border-radius:30px;padding:0;
+  background:linear-gradient(145deg,#fff0d8,#ffdee8 48%,#e7deff);
+  box-shadow:0 14px 26px rgba(96,71,116,.15),inset 0 0 0 2px rgba(255,255,255,.9);
+  display:grid;place-items:center;position:relative;cursor:pointer;overflow:visible
+}
+.ka-avatar-content{width:100%;height:100%;display:grid;place-items:center;border-radius:30px;overflow:hidden;font-size:62px}
+.ka-avatar-content img{width:100%;height:100%;object-fit:cover}.ka-camera{position:absolute;right:-8px;bottom:-7px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:#fff;box-shadow:0 8px 18px rgba(73,56,92,.17);font-size:18px}
+.ka-identity h1{margin:0 0 8px;color:#442453;font:800 39px/1 Inter,"Segoe UI",sans-serif}.ka-identity p{margin:0;color:#90779e;font:italic 600 22px/1.15 Georgia,serif}.ka-identity p span{color:#ef6aa5}
+.ka-status-btn{appearance:none;border:1px solid rgba(255,255,255,.98);min-width:190px;min-height:82px;border-radius:999px;background:linear-gradient(135deg,#f1e9ff,#fff0f7);box-shadow:var(--ka-shadow);color:#5a3b6e;font:800 16px/1.2 Inter,"Segoe UI",sans-serif;cursor:pointer;padding:11px 18px;display:flex;align-items:center;justify-content:center;gap:9px}.ka-status-btn .cloud{font-size:30px}.ka-status-btn small{display:block;font-size:11px;color:#8f7899;margin-top:3px}.ka-status-btn .arrow{font-size:20px}
+.ka-logout{appearance:none;border:0;border-radius:24px;padding:18px 31px;background:linear-gradient(145deg,#fff9fa,#ffe8ee);color:#9b506e;font:900 18px/1 Inter,"Segoe UI",sans-serif;box-shadow:0 10px 0 rgba(232,171,196,.24),0 16px 26px rgba(92,65,106,.11);cursor:pointer}
+
+.ka-grid{display:grid;grid-template-columns:repeat(20,minmax(0,1fr));gap:14px;margin-top:18px}
+.ka-feature{appearance:none;-webkit-appearance:none;grid-column:span 5;min-height:142px;border:1px solid rgba(255,255,255,.98);border-radius:29px;background:linear-gradient(145deg,#f8f4ff,#eef7ff);box-shadow:var(--ka-shadow);color:#5b3d6b;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:14px 10px;cursor:pointer;font:700 20px/1.1 Inter,"Segoe UI",sans-serif;position:relative;transition:.15s ease}
+.ka-feature:nth-child(2),.ka-feature:nth-child(6){background:linear-gradient(145deg,#fff8e9,#f3f8ff)}.ka-feature:nth-child(3),.ka-feature:nth-child(8){background:linear-gradient(145deg,#f3efff,#eef8ff)}.ka-feature:nth-child(4),.ka-feature:nth-child(7){background:linear-gradient(145deg,#ebffff,#fff7e9)}.ka-feature:nth-child(n+5){grid-column:span 4}.ka-feature:hover{transform:translateY(-3px);box-shadow:0 20px 38px rgba(91,68,111,.16)}.ka-feature-icon{font-size:48px;line-height:1;filter:drop-shadow(0 5px 8px rgba(100,76,120,.11))}.ka-feature.private:after{content:'PRIVADO';position:absolute;top:11px;right:12px;background:#8051b2;color:#fff;padding:5px 9px;border-radius:999px;font-size:11px;letter-spacing:.02em}.ka-feature.settings .ka-feature-icon{font-size:52px}.ka-feature.settings span:last-child{font-size:17px}
+
+/* Conversas aprovadas — avatar + texto juntos à esquerda, nunca no menu lateral. */
+.ka-conv-head{display:flex;align-items:center;gap:18px;margin:24px 2px 14px}.ka-conv-head h2{margin:0;color:#4d315d;font:800 32px/1 Inter,"Segoe UI",sans-serif}.ka-group-btn{appearance:none;margin-left:auto;border:0;border-radius:21px;padding:14px 24px;background:linear-gradient(135deg,#fff3c9,#ffdfe8);color:#51365f;font:900 18px/1 Inter,"Segoe UI",sans-serif;box-shadow:0 8px 0 rgba(217,185,142,.24);cursor:pointer}
+#kaConversationList{display:grid;gap:11px;width:100%;max-width:760px}
+#kaConversationList .ka-conv-card{
+  appearance:none!important;display:flex!important;grid-template-columns:none!important;align-items:center!important;justify-content:flex-start!important;gap:14px!important;
+  width:100%!important;min-width:0!important;min-height:88px!important;height:auto!important;margin:0!important;padding:10px 18px!important;
+  border:1px solid rgba(255,255,255,.98)!important;border-radius:24px!important;background:linear-gradient(120deg,#fff6e8,#ffeef4)!important;
+  box-shadow:0 12px 25px rgba(93,70,111,.11)!important;transform:none!important;text-align:left!important;color:#543b65!important;cursor:pointer!important;
+  pointer-events:auto!important;touch-action:manipulation!important
+}
+#kaConversationList .ka-conv-card:nth-child(2){background:linear-gradient(120deg,#eef7ff,#f0f2ff)!important}
+#kaConversationList .ka-conv-card:nth-child(3){background:linear-gradient(120deg,#fff8e7,#fff0e9)!important}
+#kaConversationList .ka-conv-card:hover{transform:translateY(-2px)!important}
+#kaConversationList .ka-conv-card>.avatar,
+#kaConversationList .ka-conv-card>.profile-photo,
+#kaConversationList .ka-conv-card>div:first-child{
+  flex:0 0 62px!important;width:62px!important;height:62px!important;min-width:62px!important;max-width:62px!important;
+  border-radius:18px!important;margin:0!important;display:grid!important;place-items:center!important;overflow:hidden!important
+}
+#kaConversationList .ka-conv-card>.avatar img,
+#kaConversationList .ka-conv-card>.profile-photo img,
+#kaConversationList .ka-conv-card>div:first-child img{width:100%!important;height:100%!important;object-fit:cover!important}
+#kaConversationList .ka-conv-card .grow{display:block!important;flex:1 1 auto!important;width:auto!important;min-width:0!important;max-width:none!important;margin:0!important;padding:0!important;text-align:left!important;justify-self:auto!important;align-self:center!important}
+#kaConversationList .ka-conv-card .grow strong{display:block!important;margin:0!important;padding:0!important;text-align:left!important;font:800 17px/1.2 Inter,"Segoe UI",sans-serif!important;color:#563c65!important}
+#kaConversationList .ka-conv-card .grow small{display:block!important;margin:4px 0 0!important;padding:0!important;text-align:left!important;font:500 13px/1.25 Inter,"Segoe UI",sans-serif!important;color:#8e7899!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+#kaConversationList .ka-conv-card .unread-star{color:#8a59b1!important}
+#kaConversationList .ka-conv-card button,#kaConversationList .ka-conv-card a{margin-left:auto!important;flex:0 0 auto!important}
+.ka-empty-note{padding:20px;border-radius:20px;background:rgba(255,255,255,.62);color:var(--ka-muted);font-weight:700}
+.ka-heart-deco{position:fixed;right:36px;bottom:24px;font-size:94px;opacity:.10;pointer-events:none;filter:saturate(.7)}
+
+/* Quando abre conversa/módulo, apenas o conteúdo real fica visível. */
+body.keise-approved-layout.keise-panel-active #keiseApprovedTopbar,
+body.keise-approved-layout.keise-panel-active #keiseApprovedHome,
+body.keise-approved-layout.keise-panel-active #mainView>.sidebar{display:none!important;visibility:hidden!important}
+body.keise-approved-layout.keise-panel-active #mainView{display:block!important;width:100%!important;max-width:100%!important;height:100dvh!important;min-height:100dvh!important;margin:0!important;padding:0!important;overflow:hidden!important}
+body.keise-approved-layout.keise-panel-active #mainView>.content{display:block!important;visibility:visible!important;width:100%!important;max-width:100%!important;min-width:0!important;height:100dvh!important;min-height:100dvh!important;max-height:100dvh!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:hidden!important}
+body.keise-approved-layout.keise-panel-active #chatPanel:not(.hidden){display:grid!important;width:100%!important;height:100dvh!important;min-height:100dvh!important;max-height:100dvh!important}
+body.keise-approved-layout.keise-panel-active #mainView>.content>section:not(.hidden):not(#chatPanel){width:100%!important;max-width:100%!important;min-height:100dvh!important;overflow:auto!important}
+
+/* Link ?perfil=Keise = versão mobile aprovada, mesmo se aberto para teste no notebook. */
+body.keise-approved-layout.keise-mobile-access-link.keise-home-active #keiseApprovedTopbar{display:none!important}
+body.keise-approved-layout.keise-mobile-access-link.keise-home-active #mainView>.content{min-height:100dvh!important;padding:10px 10px 34px!important}
+body.keise-approved-layout.keise-mobile-access-link #keiseApprovedHome{width:min(520px,100%)!important;max-width:520px!important;padding:0 4px 28px!important}
+
+@media(max-width:850px){
+  body.keise-approved-layout.keise-home-active #keiseApprovedTopbar{display:none!important}
+  body.keise-approved-layout.keise-home-active #mainView{height:auto!important;min-height:100dvh!important;overflow:visible!important}
+  body.keise-approved-layout.keise-home-active #mainView>.content{min-height:100dvh!important;padding:10px 10px 34px!important;overflow:visible!important}
+  #keiseApprovedHome{width:min(520px,100%)!important;max-width:520px!important;padding:0 4px 28px!important}
+}
+
+/* Mobile aprovado (também aplicado ao link dedicado, independentemente da largura). */
+@media(max-width:850px){
+  .ka-hero{grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:'avatar identity logout' 'avatar status logout';gap:7px 11px;padding:14px 15px;border-radius:28px;min-height:142px}
+  .ka-avatar-btn{grid-area:avatar;width:96px;height:96px;border-radius:26px}.ka-avatar-content{border-radius:26px;font-size:52px}.ka-camera{width:34px;height:34px;font-size:15px}
+  .ka-identity{grid-area:identity;align-self:end}.ka-identity h1{font-size:29px;margin-bottom:4px}.ka-identity p{font-size:17px;white-space:nowrap}
+  .ka-status-btn{grid-area:status;min-width:0;min-height:45px;width:max-content;max-width:100%;padding:6px 13px;border-radius:999px;align-self:start;font-size:14px}.ka-status-btn .cloud{font-size:23px}.ka-status-btn small{display:none}.ka-logout{grid-area:logout;align-self:center;padding:15px 17px;border-radius:20px;font-size:17px}
+  .ka-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:12px}.ka-feature,.ka-feature:nth-child(n+5){grid-column:span 1;min-height:108px;border-radius:22px;font-size:13px;padding:10px 3px;gap:7px}.ka-feature-icon{font-size:36px}.ka-feature.settings .ka-feature-icon{font-size:39px}.ka-feature.settings span:last-child{font-size:12px}.ka-feature.private:after{font-size:8px;padding:4px 6px;top:5px;right:5px}
+  .ka-conv-head{margin-top:18px}.ka-conv-head h2{font-size:26px}.ka-group-btn{padding:12px 18px;font-size:16px}
+  #kaConversationList{max-width:100%}#kaConversationList .ka-conv-card{min-height:88px!important;padding:10px 12px!important;border-radius:22px!important}#kaConversationList .ka-conv-card>.avatar,#kaConversationList .ka-conv-card>.profile-photo,#kaConversationList .ka-conv-card>div:first-child{width:60px!important;height:60px!important;min-width:60px!important;max-width:60px!important;flex-basis:60px!important;border-radius:18px!important}
+  .ka-heart-deco{position:absolute;font-size:74px;right:16px;bottom:64px}
+  body.keise-approved-layout.keise-panel-active .messages{min-width:0!important;max-width:100%!important;overflow-x:hidden!important}body.keise-approved-layout.keise-panel-active .bubble{max-width:88%!important;overflow-wrap:anywhere!important;word-break:break-word!important}body.keise-approved-layout.keise-panel-active .composer{width:100%!important;max-width:100%!important;min-width:0!important;padding-left:7px!important;padding-right:7px!important}body.keise-approved-layout.keise-panel-active .composer textarea{min-width:0!important;flex:1 1 auto!important}
+}
+
+/* Força o layout mobile no link ?perfil=Keise mesmo em tela larga. */
+body.keise-approved-layout.keise-mobile-access-link .ka-hero{grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:'avatar identity logout' 'avatar status logout';gap:7px 11px;padding:14px 15px;border-radius:28px;min-height:142px}
+body.keise-approved-layout.keise-mobile-access-link .ka-avatar-btn{grid-area:avatar;width:96px;height:96px;border-radius:26px}body.keise-approved-layout.keise-mobile-access-link .ka-avatar-content{border-radius:26px;font-size:52px}body.keise-approved-layout.keise-mobile-access-link .ka-camera{width:34px;height:34px;font-size:15px}
+body.keise-approved-layout.keise-mobile-access-link .ka-identity{grid-area:identity;align-self:end}body.keise-approved-layout.keise-mobile-access-link .ka-identity h1{font-size:29px;margin-bottom:4px}body.keise-approved-layout.keise-mobile-access-link .ka-identity p{font-size:17px;white-space:nowrap}
+body.keise-approved-layout.keise-mobile-access-link .ka-status-btn{grid-area:status;min-width:0;min-height:45px;width:max-content;max-width:100%;padding:6px 13px;border-radius:999px;align-self:start;font-size:14px}body.keise-approved-layout.keise-mobile-access-link .ka-status-btn .cloud{font-size:23px}body.keise-approved-layout.keise-mobile-access-link .ka-status-btn small{display:none}body.keise-approved-layout.keise-mobile-access-link .ka-logout{grid-area:logout;align-self:center;padding:15px 17px;border-radius:20px;font-size:17px}
+body.keise-approved-layout.keise-mobile-access-link .ka-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:12px}body.keise-approved-layout.keise-mobile-access-link .ka-feature,body.keise-approved-layout.keise-mobile-access-link .ka-feature:nth-child(n+5){grid-column:span 1;min-height:108px;border-radius:22px;font-size:13px;padding:10px 3px;gap:7px}body.keise-approved-layout.keise-mobile-access-link .ka-feature-icon{font-size:36px}body.keise-approved-layout.keise-mobile-access-link .ka-feature.settings .ka-feature-icon{font-size:39px}body.keise-approved-layout.keise-mobile-access-link .ka-feature.settings span:last-child{font-size:12px}body.keise-approved-layout.keise-mobile-access-link .ka-feature.private:after{font-size:8px;padding:4px 6px;top:5px;right:5px}
+body.keise-approved-layout.keise-mobile-access-link .ka-conv-head{margin-top:18px}body.keise-approved-layout.keise-mobile-access-link .ka-conv-head h2{font-size:26px}body.keise-approved-layout.keise-mobile-access-link .ka-group-btn{padding:12px 18px;font-size:16px}body.keise-approved-layout.keise-mobile-access-link #kaConversationList{max-width:100%}
+
+@media(max-width:390px){.ka-hero{grid-template-columns:82px minmax(0,1fr) auto;padding:12px 10px}.ka-avatar-btn{width:80px;height:80px}.ka-identity h1{font-size:25px}.ka-identity p{font-size:14px}.ka-feature{min-height:100px;font-size:12px}.ka-feature-icon{font-size:32px}}
