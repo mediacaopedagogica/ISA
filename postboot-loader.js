@@ -44,9 +44,10 @@ function isKeiseAccess(){
 function bootKeise(){
   if(keiseBooted||!isKeiseAccess())return false
   keiseBooted=true
+  load('./keise-dashboard-hardstyle.js?v=1-hardstyle')
   css('./keise-dashboard-state-fix.css?v=1','keiseDashboardStateFix')
   css('./keise-dashboard-dashboard-only.css?v=4-no-sidebar','keiseDashboardOnly')
-  later(40,'./keise-dashboard-v1.js?v=4-no-sidebar',()=>window.__ISA_SHOW_KEISE_HOME__?.())
+  later(40,'./keise-dashboard-v1.js?v=5-hardstyle',()=>window.__ISA_SHOW_KEISE_HOME__?.())
   later(210,'./keise-game-test.js?v=9-progressive',()=>{window.__ISA_ENSURE_TEST_GAME_NAV__?.();window.__ISA_ENSURE_PROFILE_MENU__?.()})
   return true
 }
