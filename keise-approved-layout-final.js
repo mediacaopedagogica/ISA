@@ -18,17 +18,20 @@
     t.textContent=text;t.classList.remove('hidden');clearTimeout(t._ka);t._ka=setTimeout(()=>t.classList.add('hidden'),2800)
   }
   function ensureCss(){
-    if(document.getElementById('keiseApprovedFinalCss'))return
-    const l=document.createElement('link');l.id='keiseApprovedFinalCss';l.rel='stylesheet';l.href='./keise-approved-layout-final.css?v=2-interactive';document.head.appendChild(l)
+    if(!document.getElementById('keiseApprovedFinalCss')){
+      const l=document.createElement('link');l.id='keiseApprovedFinalCss';l.rel='stylesheet';l.href='./keise-approved-layout-final.css?v=3-single-layer';document.head.appendChild(l)
+    }
+    if(!document.getElementById('keiseApprovedRuntimeStyle')){
+      const s=document.createElement('style');s.id='keiseApprovedRuntimeStyle';s.textContent=`
+        #kaPanelBack{position:fixed;z-index:119500;left:max(12px,env(safe-area-inset-left));top:max(12px,env(safe-area-inset-top));min-width:48px;height:46px;padding:0 15px;border:1px solid rgba(255,255,255,.95);border-radius:16px;background:linear-gradient(145deg,#fff,#efe5ff);color:#5d466c;box-shadow:0 10px 26px rgba(79,57,96,.18);font:800 14px/1 Inter,"Segoe UI",sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+        #kaPanelBack.hidden{display:none!important}
+        body.keise-approved-layout #mobilePanelBack{display:none!important}
+        @media(max-width:850px){#kaPanelBack{width:46px;min-width:46px;padding:0;font-size:0}#kaPanelBack:before{content:'←';font-size:23px}}
+      `;document.head.appendChild(s)
+    }
   }
   async function find(selector,tries=28,delay=80){for(let i=0;i<tries;i++){const el=document.querySelector(selector);if(el)return el;await wait(delay)}return null}
   async function ensureModule(modulePath){try{await import(modulePath);return true}catch(e){console.warn('Keise módulo:',modulePath,e);return false}}
-  async function clickTarget(selector,modulePath){
-    let el=document.querySelector(selector)
-    if(!el&&modulePath){await ensureModule(modulePath);el=await find(selector,22,80)}
-    if(el){el.click();return true}
-    return false
-  }
 
   function setAccessClass(){
     document.body.classList.toggle('keise-mobile-access-link',isMobileLink())
@@ -54,10 +57,11 @@
     const {main}=shell()
     document.body.classList.add('keise-approved-layout','keise-dashboard-mode','keise-home-active')
     document.body.classList.remove('keise-panel-active')
-    main?.classList.remove('mobile-content-open','mobile-chat-open','mobile-panel-open','mobile-native-content')
+    main?.classList.remove('mobile-content-open','mobile-chat-open','mobile-panel-open','mobile-native-content','social-mode')
     hideNativeHomePieces()
     $('keiseApprovedTopbar')?.classList.remove('hidden')
     $('keiseApprovedHome')?.classList.remove('hidden')
+    $('kaPanelBack')?.classList.add('hidden')
     syncIdentity();syncConversations()
     if(scrollConversations)setTimeout(()=>$('kaConversations')?.scrollIntoView({behavior:'smooth',block:'start'}),70)
   }
@@ -69,23 +73,46 @@
     document.body.classList.remove('keise-home-active')
     $('keiseApprovedTopbar')?.classList.add('hidden')
     $('keiseApprovedHome')?.classList.add('hidden')
+    $('kaPanelBack')?.classList.remove('hidden')
     if(sidebar){sidebar.style.setProperty('display','none','important');sidebar.style.setProperty('visibility','hidden','important');sidebar.style.setProperty('width','0','important')}
     if(main){main.style.setProperty('display','block','important');main.style.setProperty('width','100%','important');main.style.setProperty('height','100dvh','important');main.style.setProperty('overflow','hidden','important')}
     if(content){content.style.setProperty('display','block','important');content.style.setProperty('visibility','visible','important');content.style.setProperty('width','100%','important');content.style.setProperty('height','100dvh','important');content.style.setProperty('margin','0','important');content.style.setProperty('padding','0','important');content.style.setProperty('overflow','hidden','important')}
   }
   window.__ISA_KEISE_ENTER_PANEL__=enterPanel
 
+  // ÚNICA ponte para painéis que ainda pertencem ao núcleo fechado do app-v33.
+  // Não cria interface paralela: apenas pede ao núcleo para trocar o estado do painel.
+  function openCorePanel(tab){
+    const btn=document.querySelector(`.nav-tabs .nav-btn[data-tab="${tab}"]`)
+    if(!btn)return false
+    enterPanel();btn.click();return true
+  }
+
   async function openStatus(){
-    let cloud=$('pssProfileCloud')
-    if(!cloud){await ensureModule('./profile-status-stickers.js?v=14-plus-menu');cloud=await find('#pssProfileCloud',24,80)}
-    if(cloud){cloud.click();return true}
-    const avatar=$('myAvatarBtn');if(avatar){avatar.click();return true}
+    if(typeof window.__ISA_OPEN_PROFILE_STATUS__!=='function')await ensureModule('./profile-status-stickers.js?v=14-plus-menu')
+    if(typeof window.__ISA_OPEN_PROFILE_STATUS__==='function'){window.__ISA_OPEN_PROFILE_STATUS__();return true}
     toast('Meu perfil e status ainda está carregando.');return false
   }
   async function openSettings(){
-    if(typeof window.__ISA_OPEN_GENERAL_SETTINGS__!=='function')await ensureModule('./general-settings.js?v=12-unified-settings')
+    if(typeof window.__ISA_OPEN_GENERAL_SETTINGS__!=='function')await ensureModule('./general-settings.js?v=13-keise-single-layer')
     if(typeof window.__ISA_OPEN_GENERAL_SETTINGS__==='function'){window.__ISA_OPEN_GENERAL_SETTINGS__();return true}
-    const ok=await clickTarget('#settingsMenuBtn,[data-settings-menu="1"]');if(!ok)toast('Configurações ainda estão carregando.');return ok
+    toast('Configurações ainda estão carregando.');return false
+  }
+  async function openAccess(){
+    if(typeof window.__ISA_OPEN_ACCESS_SETTINGS__!=='function')await ensureModule('./keise-access-settings.js?v=2-direct-api')
+    if(typeof window.__ISA_OPEN_ACCESS_SETTINGS__==='function'){window.__ISA_OPEN_ACCESS_SETTINGS__();return true}
+    toast('Meu acesso ainda está carregando.');return false
+  }
+  async function openSocial(){
+    if(typeof window.__ISA_OPEN_SOCIAL__!=='function'&&typeof window.__ISA_OPEN_SOCIAL_CORE__!=='function')await ensureModule('./social-network.js?v=6-keise-direct-api')
+    const fn=window.__ISA_OPEN_SOCIAL__||window.__ISA_OPEN_SOCIAL_CORE__
+    if(typeof fn==='function'){enterPanel();await fn();return true}
+    toast('Nossa Rede ainda está carregando.');return false
+  }
+  async function openTest(){
+    if(typeof window.__ISA_OPEN_KEISE_TEST__!=='function')await ensureModule('./keise-game-test.js?v=10-direct-api')
+    if(typeof window.__ISA_OPEN_KEISE_TEST__==='function'){window.__ISA_OPEN_KEISE_TEST__();return true}
+    toast('Teste ainda está carregando.');return false
   }
   async function openNotifications(){
     await ensureModule('./notifications-v2.js?v=11-progressive')
@@ -95,8 +122,6 @@
     toast('Notificações ainda estão carregando.');return false
   }
   function openAvatarPicker(){
-    const core=$('myAvatarBtn')
-    if(core){core.click();return true}
     const input=$('profileAvatarInput')
     if(input){input.click();return true}
     toast('A troca da foto ainda está carregando.');return false
@@ -110,7 +135,7 @@
     const core=$('logoutBtn')
     if(core){
       core.click()
-      // O index já possui fallback de logout; este segundo fallback evita botão aparentemente congelado.
+      // O núcleo encerra a sessão Supabase. Este fallback só evita uma tela congelada.
       setTimeout(()=>{
         const main=$('mainView')
         if(!main||main.classList.contains('hidden'))return
@@ -132,12 +157,12 @@
     busyAction=action
     try{
       if(action==='chat'){enterHome({scrollConversations:true});return}
-      if(action==='calendar'){enterPanel();if(!await clickTarget('.nav-tabs .nav-btn[data-tab="calendar"]')){enterHome();toast('Calendário ainda está carregando.')}return}
-      if(action==='social'){enterPanel();if(!await clickTarget('#socialNav','./social-nav-guard.js?v=6-progressive')){enterHome();toast('Nossa Rede ainda está carregando.')}return}
-      if(action==='test'){enterPanel();if(!await clickTarget('#testGameNav','./keise-game-test.js?v=9-progressive')){enterHome();toast('Teste ainda está carregando.')}return}
-      if(action==='supervision'){enterPanel();if(!await clickTarget('#supervisionNav,.nav-tabs .nav-btn[data-tab="supervision"]')){enterHome();toast('Supervisão ainda está carregando.')}return}
-      if(action==='parents'){enterPanel();if(!await clickTarget('#parentsNav,.nav-tabs .nav-btn[data-tab="parents"]')){enterHome();toast('Super Pais ainda está carregando.')}return}
-      if(action==='access'){if(!await clickTarget('#accessSettingsNav','./keise-access-settings.js?v=1-edit-login'))toast('Meu acesso ainda está carregando.');return}
+      if(action==='calendar'){if(!openCorePanel('calendar'))toast('Calendário ainda está carregando.');return}
+      if(action==='social'){if(!await openSocial())enterHome();return}
+      if(action==='test'){await openTest();return}
+      if(action==='supervision'){if(!openCorePanel('supervision'))toast('Supervisão ainda está carregando.');return}
+      if(action==='parents'){if(!openCorePanel('parents'))toast('Super Pais ainda está carregando.');return}
+      if(action==='access'){await openAccess();return}
       if(action==='profile'||action==='status'){await openStatus();return}
       if(action==='settings'){await openSettings();return}
       if(action==='notifications'){await openNotifications();return}
@@ -158,6 +183,10 @@
 
     // O dashboard visual anterior é removido; o núcleo funcional original continua intacto e invisível.
     document.querySelectorAll('#keiseDesktopTopbar,#keiseHomeDashboard,.kd-side-menu').forEach(el=>el.remove())
+
+    if(!$('kaPanelBack')){
+      const back=document.createElement('button');back.id='kaPanelBack';back.type='button';back.className='hidden';back.innerHTML='← <span>Voltar</span>';back.setAttribute('aria-label','Voltar ao início');back.onclick=e=>{e.preventDefault();e.stopPropagation();enterHome()};document.body.appendChild(back)
+    }
 
     let top=$('keiseApprovedTopbar')
     if(!top){
@@ -224,7 +253,7 @@
       const id=orig.dataset.conv||''
       const clone=cloneWithoutIds(orig)
       clone.classList.add('ka-conv-card')
-      // IMPORTANTE: não deixamos data-conv no clone; o núcleo não registra um segundo listener nele.
+      // Não deixamos data-conv no clone: o núcleo não registra um segundo listener nele.
       clone.removeAttribute('data-conv');clone.dataset.kaConv=id
       clone.querySelectorAll('[data-conv]').forEach(el=>el.removeAttribute('data-conv'))
       clone.addEventListener('click',e=>{
