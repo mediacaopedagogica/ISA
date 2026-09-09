@@ -1,0 +1,95 @@
+name: Fix conversation boot v1
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-conversation-boot-v1.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch conversation startup
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          app = Path('app-v33.js')
+          s = app.read_text()
+          old = '''      await Promise.all([loadFamily(), loadConversations()]);
+      hydrateAvatarElements().catch(() => {
+      });'''
+          new = '''      const coreLoad = Promise.allSettled([loadFamily(), loadConversations()]);
+      const coreBootResult = await Promise.race([
+        coreLoad.then(() => "ready"),
+        new Promise((resolve) => setTimeout(() => resolve("timeout"), 6500))
+      ]);
+      const bootChatList = $("chatList");
+      if (coreBootResult === "timeout" && bootChatList && /Carregando conversas/i.test(bootChatList.textContent || "")) {
+        bootChatList.innerHTML = '<div class="muted" style="padding:12px;line-height:1.5">A conexão com as conversas demorou mais que o normal.<br><button id="conversationRetryBtn" type="button" class="tiny-btn" style="margin-top:8px">Tentar carregar novamente</button></div>';
+        const retry = $("conversationRetryBtn");
+        if (retry) retry.onclick = async () => {
+          retry.disabled = true;
+          retry.textContent = "Carregando…";
+          const retryResult = await Promise.race([
+            Promise.allSettled([loadFamily(), loadConversations()]).then(() => "ready"),
+            new Promise((resolve) => setTimeout(() => resolve("timeout"), 6500))
+          ]);
+          if (retryResult === "timeout" && /demorou mais que o normal|Carregando conversas/i.test(bootChatList.textContent || "")) {
+            bootChatList.innerHTML = '<div class="muted" style="padding:12px;line-height:1.5">Não foi possível atualizar as conversas agora. O restante do Cantinho continua disponível.<br><button id="conversationRetryBtn2" type="button" class="tiny-btn" style="margin-top:8px">Tentar novamente</button></div>';
+            const retry2 = $("conversationRetryBtn2");
+            if (retry2) retry2.onclick = () => { bootChatList.innerHTML = '<p class="muted" style="padding:12px">Carregando conversas…</p>'; Promise.allSettled([loadFamily(), loadConversations()]); };
+          }
+        };
+      }
+      hydrateAvatarElements().catch(() => {
+      });'''
+          if old not in s:
+              raise SystemExit('app-v33 boot marker not found')
+          s = s.replace(old, new, 1)
+          app.write_text(s)
+
+          idx = Path('index.html')
+          h = idx.read_text()
+          h = h.replace('./app-v33.js?v=stable-52-avatar', './app-v33.js?v=stable-54-conversation-boot', 1)
+          old_extra = """    const main=document.getElementById('mainView'),name=String(document.getElementById('myName')?.textContent||'').trim();
+    if(main&&!main.classList.contains('hidden')&&name&&name!=='Família'){"""
+          new_extra = """    const main=document.getElementById('mainView'),name=String(document.getElementById('myName')?.textContent||'').trim();
+    const list=document.getElementById('chatList'),coreReady=!list||!/Carregando conversas/i.test(list.textContent||'');
+    if(main&&!main.classList.contains('hidden')&&name&&name!=='Família'&&coreReady){"""
+          if old_extra not in h:
+              raise SystemExit('index extras marker not found')
+          h = h.replace(old_extra, new_extra, 1)
+
+          watchdog_marker = """window.addEventListener('load',()=>{
+  setTimeout(()=>{"""
+          watchdog = """window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    const list=document.getElementById('chatList');
+    if(list&&/Carregando conversas/i.test(list.textContent||'')){
+      list.innerHTML='<div class="muted" style="padding:12px;line-height:1.5">As conversas estão demorando para responder. O Cantinho não ficará travado por isso.</div>';
+      window.__ISA_HIDE_BOOT_GUARD__?.();
+    }
+  },9000);
+  setTimeout(()=>{"""
+          if watchdog_marker not in h:
+              raise SystemExit('index watchdog marker not found')
+          h = h.replace(watchdog_marker, watchdog, 1)
+          idx.write_text(h)
+          PY
+      - name: Syntax check
+        run: node --check app-v33.js
+      - name: Commit fix
+        shell: bash
+        run: |
+          if git diff --quiet -- app-v33.js index.html; then
+            echo 'No changes needed'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app-v33.js index.html
+          git commit -m 'fix: prevent endless conversation loading on desktop and mobile'
+          git push
