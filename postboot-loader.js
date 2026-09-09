@@ -28,6 +28,7 @@ later(180,dedicatedMobile?'./mobile-native.js?v=6-progressive':'./mobile-respons
 
 // Recursos sociais e de comunicação entram depois que a interface já está clicável.
 later(520,'./profile-status-stickers.js?v=11-settings-lazy')
+later(650,'./sticker-bg-remover.js?v=1-ai-cutout',()=>window.__ISA_ENSURE_STICKER_BG_REMOVER__?.())
 later(760,'./social-nav-guard.js?v=6-progressive',()=>{window.__ISA_ENSURE_SOCIAL_NAV__?.();window.__ISA_ENSURE_PROFILE_MENU__?.()})
 later(980,'./profile-actions.js?v=7-progressive')
 later(1200,'./call-manager.js?v=16-progressive')
