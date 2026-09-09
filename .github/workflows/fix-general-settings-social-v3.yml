@@ -1,0 +1,52 @@
+name: General Settings and Nossa Rede v3
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-general-settings-social-v3.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch loader cache and social router
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p=Path('index.html')
+          s=p.read_text()
+          s=s.replace("./postboot-loader.js?v=26-social-network-v2","./postboot-loader.js?v=27-general-settings-social-v3")
+          p.write_text(s)
+
+          p=Path('social-network.js')
+          s=p.read_text()
+          s=s.replace("btn.className='nav-btn';btn.id='socialNav';btn.dataset.tab='social';btn.innerHTML='🌸 <span>Nossa Rede</span>'","btn.className='nav-btn';btn.id='socialNav';btn.type='button';btn.innerHTML='🌸 <span>Nossa Rede</span>'")
+          s=s.replace("window.__ISA_OPEN_SOCIAL__=openSocial","window.__ISA_OPEN_SOCIAL_CORE__=openSocial;if(!window.__ISA_OPEN_SOCIAL__)window.__ISA_OPEN_SOCIAL__=openSocial")
+          p.write_text(s)
+          PY
+      - name: Syntax checks
+        shell: bash
+        run: |
+          node --check general-settings.js
+          node --check social-network-bridge-v2.js
+          node --check social-network.js
+          node --check postboot-loader.js
+          node --check extras-loader.js
+          grep -q 'general-settings.js?v=1-all-profiles' postboot-loader.js
+          grep -q 'v=27-general-settings-social-v3' index.html
+          grep -q '__ISA_OPEN_SOCIAL_CORE__' social-network.js
+      - name: Commit changes
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html social-network.js
+          if git diff --cached --quiet; then
+            echo 'Nothing to commit'
+          else
+            git commit -m 'fix: show general settings everywhere and stabilize Nossa Rede'
+            git push
+          fi
