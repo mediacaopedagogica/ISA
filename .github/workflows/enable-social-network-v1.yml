@@ -1,0 +1,34 @@
+name: Enable Nossa Rede v1
+on:
+  push:
+    paths:
+      - '.github/workflows/enable-social-network-v1.yml'
+permissions:
+  contents: write
+jobs:
+  enable:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enable fresh postboot loader
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          s=s.replace("./postboot-loader.js?v=24-alan-core-safe","./postboot-loader.js?v=25-social-network")
+          p.write_text(s)
+          PY
+      - name: Validate social module
+        run: |
+          node --check social-network.js
+          grep -q "social-network" extras-loader.js
+          grep -q "Nossa Rede" social-network.js
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'feat: enable Nossa Rede social tab'
+          git push
