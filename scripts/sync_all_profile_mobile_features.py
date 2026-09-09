@@ -84,11 +84,26 @@ p.write_text(s)
 
 p = Path('postboot-loader.js')
 s = p.read_text()
-s = s.replace("  './extras-loader.js?v=48-settings-social-v3',", "  './extras-loader.js?v=49-all-profile-features',")
-s = s.replace(
-    "  './profile-status-stickers.js?v=1-all-profiles'",
-    "  './profile-status-stickers.js?v=2-all-links',\n  './profile-actions.js?v=1-all-links'",
-)
+for old_version in (
+    "  './extras-loader.js?v=48-settings-social-v3',",
+    "  './extras-loader.js?v=49-keise-test-restore',",
+):
+    if old_version in s:
+        s = s.replace(old_version, "  './extras-loader.js?v=50-all-profile-features',", 1)
+        break
+if './profile-actions.js?v=1-all-links' not in s:
+    if "  './profile-status-stickers.js?v=1-all-profiles'" in s:
+        s = s.replace(
+            "  './profile-status-stickers.js?v=1-all-profiles'",
+            "  './profile-status-stickers.js?v=2-all-links',\n  './profile-actions.js?v=1-all-links'",
+            1,
+        )
+    elif "  './profile-status-stickers.js?v=2-all-links'" in s:
+        s = s.replace(
+            "  './profile-status-stickers.js?v=2-all-links'",
+            "  './profile-status-stickers.js?v=2-all-links',\n  './profile-actions.js?v=1-all-links'",
+            1,
+        )
 p.write_text(s)
 
 p = Path('index.html')
@@ -100,7 +115,7 @@ checks = {
     'games-menu.js': ["'keise'", "'alan'", "normalize('NFD')"],
     'extras-loader.js': ['v=6-all-profiles', 'games-notebook-fit'],
     'acesso-mobile.html': ['profile-actions.js?v=1-all-links', 'profile-status-stickers.js?v=2-all-links'],
-    'postboot-loader.js': ['profile-actions.js?v=1-all-links', 'v=49-all-profile-features'],
+    'postboot-loader.js': ['profile-actions.js?v=1-all-links', 'v=50-all-profile-features'],
     'profile-status-stickers.js': ['__ISA_OPEN_PROFILE_STATUS__', '__ISA_OPEN_STICKER_CREATOR__'],
 }
 for path, needles in checks.items():
