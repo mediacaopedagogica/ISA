@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="familia-externa.css?v=2-core-first">
   <link rel="stylesheet" href="amiga-ui-enhanced.css?v=6-family-emoji">
   <link rel="stylesheet" href="familia-mobile.css?v=3-native-tap">
-  <link rel="stylesheet" href="nossa-rede-access.css?v=3-private-links">
+  <link rel="stylesheet" href="nossa-rede-access.css?v=4-private-visibility">
   <link rel="stylesheet" href="paloma-studies.css?v=2-mobile-stable">
   <link rel="stylesheet" href="paloma-studies-advanced.css?v=2-mobile-stable">
   <link rel="stylesheet" href="paloma-study-desk.css?v=1">
@@ -67,7 +67,7 @@
   <div id="friendToast" class="friend-toast hidden"></div>
 
   <!-- Núcleo do chat primeiro. Recursos extras entram só depois que a pessoa realmente acessa. -->
-  <script type="module" src="./familia-externa.js?v=8-core-first-native-tap"></script>
+  <script type="module" src="./familia-externa.js?v=9-private-social-core"></script>
   <script type="module">
     const idle=()=>new Promise(resolve=>{
       if('requestIdleCallback' in window)requestIdleCallback(()=>resolve(),{timeout:700})
@@ -82,31 +82,32 @@
       if(extrasStarted)return
       extrasStarted=true
       const name=String(window.__ISA_FRIEND_PERSON__?.name||'').trim().toLowerCase()
-      // Primeiro apenas o que ajuda a navegação e personalização.
+      // Navegação, personalização e Nossa Rede entram logo depois do chat já estar aberto.
       for(const src of[
-        './family-settings.js?v=5-core-first',
-        './familia-emoji-completo.js?v=4-core-first',
-        './profile-actions.js?v=4-core-first'
+        './family-settings.js?v=6-private-social',
+        './familia-emoji-completo.js?v=5-private-social',
+        './profile-actions.js?v=5-private-social',
+        './family-social.js?v=6-private-visibility'
       ])await safeImport(src)
-      // Depois entram os recursos mais pesados, um por vez, fora do caminho crítico do chat.
+      window.__ISA_ENSURE_FAMILY_SOCIAL__?.()
+      // Recursos mais pesados entram depois, um por vez, sem travar o chat.
       setTimeout(async()=>{
         for(const src of[
-          './profile-status-stickers.js?v=4-core-first',
-          './call-manager.js?v=10-core-first',
-          './link-preview.js?v=8-core-first',
-          './games-menu.js?v=8-core-first',
-          './games-menu-snake.js?v=4-core-first'
+          './profile-status-stickers.js?v=5-private-social',
+          './call-manager.js?v=11-private-social',
+          './link-preview.js?v=9-private-social',
+          './games-menu.js?v=9-private-social',
+          './games-menu-snake.js?v=5-private-social'
         ])await safeImport(src)
       },500)
       // Estudos específicos não são carregados para toda a família.
       if(name.includes('paloma'))setTimeout(async()=>{
         for(const src of[
-          './paloma-studies.js?v=4-core-first',
-          './paloma-studies-advanced-mobile.js?v=3-core-first',
-          './paloma-study-desk.js?v=3-core-first'
+          './paloma-studies.js?v=5-private-social',
+          './paloma-studies-advanced-mobile.js?v=4-private-social',
+          './paloma-study-desk.js?v=4-private-social'
         ])await safeImport(src)
       },1200)
-      // Nossa Rede continua bloqueada; portanto não carrega um overlay que não será usado.
     }
     if(window.__ISA_FRIEND_PORTAL_ENTERED__===true)loadExtras()
     else document.addEventListener('isa:friend-portal-entered',loadExtras,{once:true})
