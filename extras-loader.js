@@ -29,8 +29,11 @@ async function loadCoreExtras(){
     loadOnce('family-media','./family-media-menu-v2.js?v=9-audio-day'),
     loadOnce('links','./link-preview.js?v=6-inline-video'),
     loadOnce('social-network','./social-network.js?v=3-family-feed'),
-    loadOnce('social-network-bridge','./social-network-bridge-v2.js?v=3-touch-open')
+    loadOnce('social-network-bridge','./social-network-bridge-v2.js?v=3-touch-open'),
+    loadOnce('games','./games-menu.js?v=6-all-profiles'),
+    loadOnce('snake-game','./games-menu-snake.js?v=2-all-profiles')
   ]
+  if(!dedicatedMobile)jobs.push(loadOnce('games-notebook-fit','./games-notebook-fit.js?v=2-all-profiles'))
   if(!dedicatedMobile)jobs.push(loadOnce('calls','./call-manager.js?v=4-stable'))
 
   if(isKeise()){
@@ -52,10 +55,7 @@ async function loadCoreExtras(){
   }
   if(isIsa()){
     jobs.push(loadOnce('isa-tools','./isa-tools.js?v=9-study-fix'))
-    jobs.push(loadOnce('games','./games-menu.js?v=3-mobile-games'))
-    jobs.push(loadOnce('snake-game','./games-menu-snake.js?v=1'))
     // Fazendinha temporariamente desativada para Isa. A prévia fica só em Keise → Teste Jogo.
-    if(!dedicatedMobile)jobs.push(loadOnce('games-notebook-fit','./games-notebook-fit.js?v=1'))
   }
   const result=await Promise.allSettled(jobs)
   result.forEach((r,i)=>{if(r.status==='rejected')console.warn('Módulo extra não carregou',i,r.reason)})
