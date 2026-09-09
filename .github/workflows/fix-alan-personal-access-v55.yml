@@ -1,0 +1,89 @@
+name: Fix Alan personal access v55
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-alan-personal-access-v55.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch personal access bootstrap
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          # 1) Do not let optional Alan modules start while conversations are still booting.
+          p=Path('index.html')
+          s=p.read_text()
+          if 'personal-access-recovery.js?v=1-alan' not in s:
+              marker='<script defer src="./mobile-interaction-guard.js?v=4-early"></script>'
+              if marker not in s:
+                  raise SystemExit('index mobile guard marker not found')
+              s=s.replace(marker,'<script defer src="./personal-access-recovery.js?v=1-alan"></script>\n<script defer src="./mobile-interaction-guard.js?v=5-personal"></script>',1)
+          else:
+              s=s.replace('./mobile-interaction-guard.js?v=4-early','./mobile-interaction-guard.js?v=5-personal')
+          s=s.replace('./app-v33.js?v=stable-52-avatar','./app-v33.js?v=stable-53-alan-personal')
+          old="""    const main=document.getElementById('mainView'),name=String(document.getElementById('myName')?.textContent||'').trim();
+    if(main&&!main.classList.contains('hidden')&&name&&name!=='Família'){"""
+          new="""    const main=document.getElementById('mainView'),name=String(document.getElementById('myName')?.textContent||'').trim();
+    const list=document.getElementById('chatList'),coreReady=!list||!/Carregando conversas/i.test(list.textContent||'');
+    if(main&&!main.classList.contains('hidden')&&name&&name!=='Família'&&coreReady){"""
+          if old in s:
+              s=s.replace(old,new,1)
+          elif 'coreReady=!list||!/Carregando conversas/i.test' not in s:
+              raise SystemExit('index extras gate marker not found')
+          p.write_text(s)
+
+          # 2) Force each personal-link redirect onto the repaired build, bypassing stale browser copies.
+          p=Path('acesso-v41.html')
+          s=p.read_text()
+          s=s.replace("u.searchParams.set('v','54');u.hash='';","u.searchParams.set('v','55');u.searchParams.set('_cb',String(Date.now()));u.hash='';",1)
+          if "u.searchParams.set('v','55')" not in s or "u.searchParams.set('_cb',String(Date.now()))" not in s:
+              raise SystemExit('personal access cache-bust patch failed')
+          p.write_text(s)
+
+          # 3) The app previously waited forever if the family/conversation query stalled.
+          #    Give core boot a bounded wait, then finish wiring the interface and offer retry.
+          p=Path('app-v33.js')
+          s=p.read_text()
+          needle='await Promise.all([loadFamily(), loadConversations()]);'
+          anchor=s.find('Carregando conversas')
+          if anchor < 0:
+              raise SystemExit('chat loading anchor not found')
+          pos=s.find(needle,anchor)
+          if pos < 0:
+              if 'const coreBoot = Promise.allSettled([loadFamily(), loadConversations()]);' not in s:
+                  raise SystemExit('core boot Promise.all marker not found')
+          else:
+              replacement="""const coreBoot = Promise.allSettled([loadFamily(), loadConversations()]);
+      await Promise.race([coreBoot, new Promise((resolve) => setTimeout(resolve, 5e3))]);
+      const bootChatList = $(\"chatList\");
+      if (bootChatList && /Carregando conversas/i.test(bootChatList.textContent || \"\")) {
+        bootChatList.innerHTML = '<div class=\"muted\" style=\"padding:12px;line-height:1.45\">As conversas demoraram para carregar.<br><button id=\"conversationRetryBtn\" type=\"button\" class=\"tiny-btn\" style=\"margin-top:8px\">Tentar novamente</button></div>';
+        const retry = $(\"conversationRetryBtn\");
+        if (retry) retry.onclick = () => location.reload();
+      }"""
+              s=s[:pos]+replacement+s[pos+len(needle):]
+          p.write_text(s)
+          PY
+
+          node --check app-v33.js
+          node --check personal-access-recovery.js
+          grep -q 'stable-53-alan-personal' index.html
+          grep -q "set('v','55')" acesso-v41.html
+      - name: Commit repaired Alan access
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html acesso-v41.html app-v33.js personal-access-recovery.js
+          if git diff --cached --quiet; then
+            echo 'No changes needed'
+            exit 0
+          fi
+          git commit -m 'fix: unfreeze Alan personal access'
+          git push
