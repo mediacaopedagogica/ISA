@@ -84,7 +84,7 @@ const dedicatedMobile=new URLSearchParams(location.search).get('mobile')==='1'
 const common=[
   './general-settings.js?v=6-mobile-notebook',
   './notifications-v2.js?v=9-stable',
-  './extras-loader.js?v=48-settings-social-v3',
+  './extras-loader.js?v=49-keise-test-restore',
   './profile-status-stickers.js?v=1-all-profiles'
 ]
 const paths=dedicatedMobile?[
@@ -97,6 +97,18 @@ const paths=dedicatedMobile?[
 ]
 const results=await Promise.allSettled(paths.map(loadWithRetry))
 ensureSettingsMenuButton();
+
+// Fallback específico para o perfil pessoal da Keise: garante que o botão Teste Jogo
+// continue no menu mesmo se outro módulo reconstruir a navegação depois do boot.
+const requestedProfile=String(new URLSearchParams(location.search).get('perfil')||'').trim().toLowerCase();
+const currentName=String(document.getElementById('myName')?.textContent||'').trim().toLowerCase();
+if(requestedProfile==='keise'||currentName==='keise'||currentName.startsWith('keise ')){
+  try{
+    await loadWithRetry('./keise-game-test.js?v=5-persistent-menu');
+    window.__ISA_ENSURE_TEST_GAME_NAV__?.();
+  }catch(error){console.warn('Teste Jogo da Keise não carregou:',error)}
+}
+
 window.__ISA_EXTRAS_READY__=true
 window.__ISA_EXTRAS_RESULTS__=results.map((r,i)=>({index:i,path:paths[i],ok:r.status==='fulfilled',error:r.status==='rejected'?String(r.reason?.message||r.reason||'Erro'):null}))
 
