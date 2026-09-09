@@ -1,3 +1,58 @@
+const waitSettings=ms=>new Promise(r=>setTimeout(r,ms))
+
+// Entrada de Configurações garantida em todos os acessos pessoais (?perfil=Alan, Isa, Keise etc.),
+// tanto no celular quanto no notebook. O botão fica somente no menu principal.
+function ensureGlobalSettingsEntry(){
+  const nav=document.querySelector('.nav-tabs')
+  if(!nav)return null
+  let btn=document.getElementById('settingsMenuBtn')
+  if(!btn){
+    btn=document.createElement('button')
+    btn.id='settingsMenuBtn'
+    btn.className='nav-btn'
+    btn.type='button'
+    btn.innerHTML='⚙️ <span>Configurações</span>'
+    btn.title='Configurações Gerais'
+    btn.setAttribute('aria-label','Configurações Gerais')
+    const calendar=nav.querySelector('[data-tab="calendar"]')
+    if(calendar)calendar.insertAdjacentElement('afterend',btn)
+    else nav.appendChild(btn)
+  }
+  btn.classList.remove('hidden')
+  btn.style.removeProperty('display')
+  if(btn.dataset.settingsEntryGuardBound!=='1'){
+    btn.dataset.settingsEntryGuardBound='1'
+    btn.dataset.generalSettingsBound='1'
+    btn.addEventListener('click',async e=>{
+      e.preventDefault();e.stopPropagation()
+      if(typeof window.__ISA_OPEN_GENERAL_SETTINGS__==='function'){
+        window.__ISA_OPEN_GENERAL_SETTINGS__();return
+      }
+      try{
+        await import('./general-settings.js?v=6-personal-links')
+        for(let i=0;i<16;i++){
+          if(typeof window.__ISA_OPEN_GENERAL_SETTINGS__==='function'){
+            window.__ISA_OPEN_GENERAL_SETTINGS__();return
+          }
+          await waitSettings(90)
+        }
+      }catch(error){console.warn('Configurações não abriram:',error)}
+    },true)
+  }
+  return btn
+}
+
+function startSettingsEntry(){
+  ensureGlobalSettingsEntry()
+  let tries=0
+  const timer=setInterval(()=>{
+    ensureGlobalSettingsEntry()
+    if(++tries>=40)clearInterval(timer)
+  },250)
+}
+startSettingsEntry()
+document.addEventListener('DOMContentLoaded',startSettingsEntry,{once:true})
+
 if(new URLSearchParams(location.search).get('mobile')==='1'){
   const $m=id=>document.getElementById(id)
   document.body.classList.add('mobile-native-mode')
@@ -7,6 +62,7 @@ if(new URLSearchParams(location.search).get('mobile')==='1'){
     document.head.appendChild(l)
   }
   function syncDedicated(){
+    ensureGlobalSettingsEntry()
     const main=$m('mainView');if(!main)return
     const visible=el=>!!el&&!el.classList.contains('hidden')
     const chat=$m('chatPanel'),calendar=$m('calendarPanel'),supervision=$m('supervisionPanel'),parents=$m('parentsPanel'),study=$m('studyPanel')
@@ -18,6 +74,7 @@ if(new URLSearchParams(location.search).get('mobile')==='1'){
   }
   const observer=new MutationObserver(syncDedicated)
   function startDedicated(){
+    ensureGlobalSettingsEntry()
     ;['chatPanel','calendarPanel','supervisionPanel','parentsPanel','studyPanel'].forEach(id=>{
       const el=$m(id)
       if(el&&!el.dataset.mobileEarlyObserved){
@@ -92,6 +149,7 @@ document.addEventListener('touchend',event=>{
 },{capture:true,passive:false})
 
 const contentObserver=new MutationObserver(()=>{
+  ensureGlobalSettingsEntry()
   if(!mobileMQ.matches||!mobileReady())return
   const chat=$m('chatPanel'),calendar=$m('calendarPanel'),supervision=$m('supervisionPanel'),parents=$m('parentsPanel')
   if(chat&&!chat.classList.contains('hidden'))showMobileContent('chat')
@@ -99,7 +157,7 @@ const contentObserver=new MutationObserver(()=>{
 })
 
 function startMobileGuard(){
-  ensureTouchCss();ensurePanelBack()
+  ensureGlobalSettingsEntry();ensureTouchCss();ensurePanelBack()
   ;['chatPanel','calendarPanel','supervisionPanel','parentsPanel'].forEach(id=>{const el=$m(id);if(el&&!el.dataset.mobileGuardObserved){el.dataset.mobileGuardObserved='1';contentObserver.observe(el,{attributes:true,attributeFilter:['class']})}})
 }
 startMobileGuard();document.addEventListener('DOMContentLoaded',startMobileGuard,{once:true});setTimeout(startMobileGuard,250)
