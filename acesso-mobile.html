@@ -65,18 +65,46 @@
     </section>
   </main>
   <div id="friendToast" class="friend-toast hidden"></div>
-  <script type="module" src="./familia-externa.js?v=5-private-social-access"></script>
-  <script type="module" src="./family-settings.js?v=3-all-links"></script>
-  <script type="module" src="./familia-emoji-completo.js?v=2"></script>
-  <script type="module" src="./call-manager.js?v=8-header-safe"></script>
-  <script type="module" src="./link-preview.js?v=6-inline-video"></script>
-  <script type="module" src="./games-menu.js?v=6-all-profiles"></script>
-  <script type="module" src="./games-menu-snake.js?v=2-all-profiles"></script>
-  <script type="module" src="./paloma-studies.js?v=2-mobile-reopen"></script>
-  <script type="module" src="./paloma-studies-advanced-mobile.js?v=1"></script>
-  <script type="module" src="./paloma-study-desk.js?v=1"></script>
-  <script type="module" src="./profile-status-stickers.js?v=2-all-links"></script>
-  <script type="module" src="./profile-actions.js?v=2-evalda-family-links"></script>
-  <script type="module" src="./family-social.js?v=4-private-link-gate"></script>
+
+  <!-- O acesso pessoal é validado primeiro. Os módulos extras só entram depois. -->
+  <script type="module" src="./familia-externa.js?v=7-access-recovery"></script>
+  <script type="module">
+    const extras=[
+      './family-settings.js?v=4-after-access',
+      './familia-emoji-completo.js?v=3-after-access',
+      './call-manager.js?v=9-after-access',
+      './link-preview.js?v=7-after-access',
+      './games-menu.js?v=7-after-access',
+      './games-menu-snake.js?v=3-after-access',
+      './paloma-studies.js?v=3-after-access',
+      './paloma-studies-advanced-mobile.js?v=2-after-access',
+      './paloma-study-desk.js?v=2-after-access',
+      './profile-status-stickers.js?v=3-after-access',
+      './profile-actions.js?v=3-after-access',
+      './family-social.js?v=5-after-access'
+    ]
+    let extrasStarted=false
+    async function loadExtras(){
+      if(extrasStarted)return
+      extrasStarted=true
+      const results=await Promise.allSettled(extras.map(src=>import(src)))
+      const failed=results.filter(x=>x.status==='rejected')
+      if(failed.length)console.warn('Módulos secundários não carregados:',failed.length)
+    }
+    if(window.__ISA_FRIEND_ACCESS_VALID__===true)loadExtras()
+    else document.addEventListener('isa:friend-access-valid',loadExtras,{once:true})
+  </script>
+  <script>
+    setTimeout(()=>{
+      const state=window.__ISA_FRIEND_BOOTSTRAP_STATE__
+      if(state==='ready'||state==='error'||state==='invalid')return
+      const title=document.getElementById('friendGateTitle')
+      const text=document.getElementById('friendGateText')
+      const btn=document.getElementById('friendEnterBtn')
+      if(title)title.textContent='Reconectando seu acesso…'
+      if(text)text.textContent='A conexão está demorando mais que o normal.'
+      if(btn){btn.textContent='Tentar novamente';btn.classList.remove('hidden');btn.disabled=false;btn.onclick=()=>location.reload()}
+    },14000)
+  </script>
 </body>
 </html>
