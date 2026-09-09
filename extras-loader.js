@@ -26,7 +26,6 @@ async function loadCoreExtras(){
     loadOnce('groups','./group-controls.js?v=5-stable'),
     loadOnce('pins','./conversation-pins.js?v=5-direct-pin'),
     loadOnce('paused-friends','./paused-friends-filter.js?v=3-stable'),
-    loadOnce('family-media','./family-media-menu-v2.js?v=9-audio-day'),
     loadOnce('links','./link-preview.js?v=6-inline-video'),
     loadOnce('social-network','./social-network.js?v=3-family-feed'),
     loadOnce('social-network-bridge','./social-network-bridge-v2.js?v=3-touch-open'),
@@ -34,7 +33,6 @@ async function loadCoreExtras(){
     loadOnce('snake-game','./games-menu-snake.js?v=2-all-profiles')
   ]
   if(!dedicatedMobile)jobs.push(loadOnce('games-notebook-fit','./games-notebook-fit.js?v=2-all-profiles'))
-  if(!dedicatedMobile)jobs.push(loadOnce('calls','./call-manager.js?v=4-stable'))
 
   if(isKeise()){
     jobs.push(loadOnce('keise-access-settings','./keise-access-settings.js?v=1-edit-login'))

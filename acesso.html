@@ -30,11 +30,13 @@
         <div class="friend-profile">
           <div class="friend-avatar" aria-hidden="true">💜</div>
           <div><small id="friendRelationship">Família</small><strong id="friendName">Perfil</strong></div>
-          <button id="friendSettingsBtn" class="friend-settings-menu" type="button" title="Configurações" aria-label="Configurações">⚙️ <span>Configurações</span></button>
         </div>
-        <nav class="family-primary-nav" aria-label="Navegação principal">
-          <button id="friendChatsTab" class="family-primary-tab active" type="button">💬 <span>Conversas</span></button>
-          <button id="friendSocialBtn" class="family-primary-tab is-locked" type="button" disabled aria-disabled="true">🌸 <span>Nossa Rede</span></button>
+        <nav class="family-primary-nav" aria-label="Menu principal">
+          <button id="friendChatsTab" class="family-primary-tab active" type="button">💬 <span>Chat</span></button>
+          <button id="friendSocialBtn" class="family-primary-tab" type="button">🌸 <span>Nossa Rede</span></button>
+          <button id="friendProfileMenuBtn" class="family-primary-tab" type="button">☁️ <span>Perfil</span></button>
+          <button id="friendStickerMenuBtn" class="family-primary-tab" type="button">✨ <span>Stickers</span></button>
+          <button id="friendSettingsBtn" class="family-primary-tab icon-only friend-settings-menu" type="button" title="Configurações" aria-label="Configurações">⚙️</button>
         </nav>
         <div class="friend-side-title"><strong>Conversas</strong><small>Isa e grupos criados por ela</small></div>
         <div id="friendConversationList" class="friend-conversation-list"></div>
@@ -52,9 +54,11 @@
           <div id="friendMessages" class="friend-messages"></div>
           <div class="retention-note">Mensagens e imagens ficam disponíveis por até 2 dias. Áudios ficam disponíveis por 1 dia.</div>
           <div class="friend-composer">
-            <button id="friendPhotoBtn" class="emoji-btn" type="button" title="Enviar imagem">📷</button>
+            <button id="friendCameraBtn" class="emoji-btn" type="button" title="Tirar foto" aria-label="Tirar foto">📷</button>
+            <button id="friendPhotoBtn" class="emoji-btn" type="button" title="Enviar imagem" aria-label="Enviar imagem">🖼️</button>
             <input id="friendPhotoInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
-            <button id="friendEmojiBtn" class="emoji-btn" type="button" title="Emojis">😊</button>
+            <button id="friendAudioBtn" class="emoji-btn external-audio-btn" type="button" title="Gravar áudio" aria-label="Gravar áudio">🎙️</button>
+            <button id="friendEmojiBtn" class="emoji-btn" type="button" title="Emojis" aria-label="Emojis">😊</button>
             <div id="friendEmojiBar" class="emoji-bar hidden"></div>
             <textarea id="friendMessageInput" rows="1" maxlength="5000" placeholder="Digite uma mensagem…"></textarea>
             <button id="friendSendBtn" class="send-btn" type="button">➤</button>
@@ -66,7 +70,7 @@
   <div id="friendToast" class="friend-toast hidden"></div>
 
   <!-- O chat abre primeiro; os módulos secundários entram progressivamente para não travar o notebook. -->
-  <script type="module" src="./familia-externa.js?v=9-private-social-core"></script>
+  <script type="module" src="./familia-externa.js?v=11-all-family-features"></script>
   <script type="module">
     const idle=()=>new Promise(resolve=>{
       if('requestIdleCallback' in window)requestIdleCallback(()=>resolve(),{timeout:700})
@@ -81,30 +85,26 @@
       if(extrasStarted)return
       extrasStarted=true
       const name=String(window.__ISA_FRIEND_PERSON__?.name||'').trim().toLowerCase()
-      for(const src of[
-        './family-settings.js?v=6-private-social',
-        './familia-emoji-completo.js?v=5-private-social',
-        './profile-actions.js?v=5-private-social',
-        './family-social.js?v=6-private-visibility'
-      ])await safeImport(src)
+      const core=[
+        './family-settings.js?v=9-all-family-features',
+        './external-menu.js?v=2-all-family-features',
+        './external-chat-tools.js?v=2-all-family-features',
+        './familia-emoji-completo.js?v=7-all-family-features',
+        './profile-status-stickers.js?v=8-all-family-features',
+        './call-manager.js?v=14-all-family-features',
+        './family-social.js?v=9-all-family-features'
+      ]
+      const loaded=await Promise.allSettled(core.map(src=>import(src)))
+      loaded.forEach((r,i)=>{if(r.status==='rejected')console.warn('Recurso principal não carregou:',core[i],r.reason)})
+      window.__ISA_ENSURE_FAMILY_SETTINGS__?.()
+      window.__ISA_ENSURE_EXTERNAL_MENU__?.()
       window.__ISA_ENSURE_FAMILY_SOCIAL__?.()
       setTimeout(async()=>{
-        for(const src of[
-          './profile-status-stickers.js?v=5-private-social',
-          './call-manager.js?v=11-private-social',
-          './link-preview.js?v=9-private-social',
-          './games-menu.js?v=9-private-social',
-          './games-menu-snake.js?v=5-private-social',
-          './games-notebook-fit.js?v=2-private-social'
-        ])await safeImport(src)
-      },450)
+        for(const src of['./link-preview.js?v=11-all-family-features','./games-menu.js?v=10-all-family-features','./games-menu-snake.js?v=6-all-family-features'])await safeImport(src)
+      },650)
       if(name.includes('paloma'))setTimeout(async()=>{
-        for(const src of[
-          './paloma-studies.js?v=5-private-social',
-          './paloma-studies-advanced.js?v=2-private-social',
-          './paloma-study-desk.js?v=4-private-social'
-        ])await safeImport(src)
-      },1150)
+        for(const src of['./paloma-studies.js?v=7-all-family-features','./paloma-studies-advanced.js?v=3-all-family-features','./paloma-study-desk.js?v=6-all-family-features'])await safeImport(src)
+      },1200)
     }
     if(window.__ISA_FRIEND_PORTAL_ENTERED__===true)loadExtras()
     else document.addEventListener('isa:friend-portal-entered',loadExtras,{once:true})

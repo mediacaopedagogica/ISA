@@ -132,6 +132,7 @@ window.__ISA_FRIEND_TOKEN__=token
 window.__ISA_FRIEND_GET_ACTIVE_CONVERSATION_ID__=()=>activeConversation?.id||null
 window.__ISA_FRIEND_REFRESH_MESSAGES__=()=>loadMessages(true)
 window.__ISA_FRIEND_REFRESH_LIST__=()=>refreshConversations()
+window.__ISA_FRIEND_SEND_PHOTO_FILE__=sendPhoto
 window.__ISA_FRIEND_TOAST__=toast
 
 $('friendEnterBtn').onclick=()=>$('friendEnterBtn').dataset.mode==='retry'?bootstrap(false):enterPortal()

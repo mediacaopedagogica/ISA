@@ -18,8 +18,8 @@ function ensure(){
   const nav=document.querySelector('.nav-tabs'),p=profile();if(!nav||!p||p==='familia')return false
   const chats=byTab('chats'),calendar=byTab('calendar'),study=$('studyNav')||byTab('study'),diary=$('diaryNav')||byTab('diary'),supervision=$('supervisionNav')||byTab('supervision'),parents=$('parentsNav')||byTab('parents')
   const settings=dynamic('settingsMenuBtn','[data-settings-menu="1"]'),social=dynamic('socialNav'),test=dynamic('testGameNav'),studio=dynamic('alanStudioLauncher')||dynamic('alanStudioEntry')
-  const oldExtras=[$('profileStatusNav'),$('profileStickerNav'),$('profileGamesNav')]
-  oldExtras.forEach(el=>visible(el,false))
+  const profileStatus=$('profileStatusNav'),profileSticker=$('profileStickerNav'),profileGames=$('profileGamesNav')
+  visible(profileStatus,true);visible(profileSticker,true);visible(profileGames,false)
 
   const isKeise=p==='keise'||p.startsWith('keise '),isAlan=p==='alan',isIsa=p==='isa'
   visible(chats,true)
@@ -34,10 +34,10 @@ function ensure(){
   if(social)visible(social,true)
 
   let order=[]
-  if(isKeise)order=[chats,calendar,settings,social,supervision,parents,test]
-  else if(isAlan)order=[chats,calendar,studio,settings,social]
-  else if(isIsa)order=[chats,settings,diary,study,social]
-  else order=[chats,settings,social]
+  if(isKeise)order=[chats,calendar,settings,profileStatus,profileSticker,social,supervision,parents,test]
+  else if(isAlan)order=[chats,calendar,studio,settings,profileStatus,profileSticker,social]
+  else if(isIsa)order=[chats,settings,diary,study,profileStatus,profileSticker,social]
+  else order=[chats,settings,profileStatus,profileSticker,social]
   order.filter(Boolean).forEach(el=>{if(el.parentNode===nav)nav.appendChild(el)})
   nav.dataset.profileMenu= isKeise?'keise':isAlan?'alan':isIsa?'isa':'basic'
   return true

@@ -22,12 +22,12 @@ function ensureSettingsMenuButton(){
   let btn=candidates[0]||null
   candidates.slice(1).forEach(extra=>extra.remove())
   if(!btn){
-    btn=document.createElement('button');btn.id='settingsMenuBtn';btn.className='nav-btn';btn.type='button';btn.innerHTML='⚙️ <span>Configurações</span>'
+    btn=document.createElement('button');btn.id='settingsMenuBtn';btn.className='nav-btn';btn.type='button';btn.textContent='⚙️'
     const calendar=nav.querySelector('[data-tab="calendar"]')
     if(calendar)calendar.insertAdjacentElement('afterend',btn);else nav.appendChild(btn)
   }else if(btn.id!=='settingsMenuBtn')btn.id='settingsMenuBtn'
   if(!btn.classList.contains('nav-btn'))btn.classList.add('nav-btn')
-  btn.classList.remove('hidden');btn.type='button';btn.title='Configurações Gerais';btn.setAttribute('aria-label','Configurações Gerais');btn.setAttribute('data-settings-menu','1');btn.removeAttribute('data-tab')
+  btn.classList.remove('hidden');btn.type='button';btn.title='Configurações Gerais';btn.setAttribute('aria-label','Configurações Gerais');btn.setAttribute('data-settings-menu','1');btn.removeAttribute('data-tab');btn.textContent='⚙️'
   btn.style.removeProperty('display');btn.style.removeProperty('visibility');btn.style.removeProperty('opacity')
   if(btn.dataset.settingsEntryBound!=='1'){
     btn.dataset.settingsEntryBound='1';btn.dataset.generalSettingsBound='1'
@@ -46,25 +46,27 @@ document.addEventListener('DOMContentLoaded',ensureSettingsMenuButton,{once:true
 let settingsMenuTries=0;const settingsMenuTimer=setInterval(()=>{ensureSettingsMenuButton();window.__ISA_ENSURE_PROFILE_MENU__?.();if(++settingsMenuTries>=30)clearInterval(settingsMenuTimer)},300)
 
 const dedicatedMobile=new URLSearchParams(location.search).get('mobile')==='1'
+const commonCore=[
+  './general-settings.js?v=10-all-family-features',
+  './profile-status-stickers.js?v=8-all-family-features',
+  './call-manager.js?v=14-all-family-features',
+  './family-media-menu-v2.js?v=10-all-family-features',
+  './social-nav-guard.js?v=5-all-family-features',
+  './profile-actions.js?v=6-all-family-features',
+  './profile-menu-guard.js?v=2-all-family-features'
+]
 const firstWave=dedicatedMobile?[
   './mobile-native.js?v=5-native-tap',
-  './general-settings.js?v=9-profile-menu',
-  './profile-menu-guard.js?v=1-exact-menus',
-  './profile-actions.js?v=3-helper-only'
+  ...commonCore
 ]:[
   './mobile-responsive-v2.js?v=17-native-tap',
-  './general-settings.js?v=9-profile-menu',
-  './profile-menu-guard.js?v=1-exact-menus',
-  './profile-actions.js?v=3-helper-only'
+  ...commonCore
 ]
 const secondWave=[
-  './notifications-v2.js?v=10-progressive',
-  './profile-status-stickers.js?v=3-progressive',
-  './social-nav-guard.js?v=4-profile-menu'
+  './notifications-v2.js?v=10-progressive'
 ]
 const thirdWave=[
-  ...(dedicatedMobile?['./call-manager.js?v=9-progressive']:[]),
-  './extras-loader.js?v=52-profile-menu'
+  './extras-loader.js?v=53-all-family-features'
 ]
 
 const results=[]

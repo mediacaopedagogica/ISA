@@ -1,5 +1,6 @@
 import { CONFIG } from './config.js?v=20260909-access-fix'
 import { capturePhoto } from './media-capture.js?v=5-external-camera'
+import { capturePhoto } from './media-capture.js?v=5-external-camera'
 
 const $=id=>document.getElementById(id)
 const token=window.__ISA_FRIEND_TOKEN__||new URLSearchParams(location.hash.replace(/^#/, '')).get('acesso')||''
