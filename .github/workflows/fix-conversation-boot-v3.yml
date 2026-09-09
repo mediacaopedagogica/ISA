@@ -1,0 +1,52 @@
+name: Fix conversation boot v3
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-conversation-boot-v3.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch active conversation boot
+        run: python scripts/fix_conversation_boot_v3.py
+
+      - name: Check JavaScript syntax
+        run: node --check app-v33.js
+
+      - name: Verify active boot contract
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('app-v33.js').read_text()
+          boot=s.split('    async function boot() {',1)[1]
+          assert 'const coreLoad = Promise.allSettled([loadFamily(), loadConversations()]);' in boot
+          assert 'const bootChatList = $("chatList");' in boot
+          assert 'await Promise.all([loadFamily(), loadConversations()]);' not in boot.split('hydrateAvatarElements',1)[0]
+          h=Path('index.html').read_text()
+          assert 'stable-55-conversation-boot' in h
+          assert 'coreReady=!list||!/Carregando conversas/i.test' in h
+          print('active conversation boot contract OK')
+          PY
+
+      - name: Commit repaired startup
+        shell: bash
+        run: |
+          if git diff --quiet -- app-v33.js index.html; then
+            echo 'No changes needed'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app-v33.js index.html
+          git commit -m 'fix: unstick conversation loading on notebook and mobile'
+          git push
