@@ -70,7 +70,7 @@
   </main>
   <div id="friendToast" class="friend-toast hidden"></div>
 
-  <script type="module" src="./familia-externa.js?v=11-all-family-features"></script>
+  <script type="module" src="./familia-externa.js?v=12-all-family-features"></script>
   <script type="module">
     const idle=()=>new Promise(resolve=>{
       if('requestIdleCallback' in window)requestIdleCallback(()=>resolve(),{timeout:500})
@@ -88,11 +88,11 @@
       const core=[
         './family-settings.js?v=9-all-family-features',
         './external-menu.js?v=2-all-family-features',
-        './external-chat-tools.js?v=2-all-family-features',
+        './external-chat-tools.js?v=3-fixed-media-tools',
         './familia-emoji-completo.js?v=7-all-family-features',
-        './profile-status-stickers.js?v=8-all-family-features',
-        './call-manager.js?v=14-all-family-features',
-        './family-social.js?v=9-all-family-features'
+        './profile-status-stickers.js?v=9-all-family-features',
+        './call-manager.js?v=15-all-family-features',
+        './family-social.js?v=10-all-family-features'
       ]
       const loaded=await Promise.allSettled(core.map(src=>import(src)))
       loaded.forEach((r,i)=>{if(r.status==='rejected')console.warn('Recurso principal não carregou:',core[i],r.reason)})
