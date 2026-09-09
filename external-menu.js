@@ -14,12 +14,12 @@ function addStyle(){
 }
 async function ensureSocialLoaded(){
   if(typeof window.__ISA_OPEN_FAMILY_SOCIAL__==='function')return true
-  if(!socialLoading)socialLoading=import('./family-social.js?v=8-external-menu').catch(e=>{socialLoading=null;throw e})
+  if(!socialLoading)socialLoading=import('./family-social.js?v=10-unfreeze-menu').catch(e=>{socialLoading=null;throw e})
   try{await socialLoading;window.__ISA_ENSURE_FAMILY_SOCIAL__?.();return typeof window.__ISA_OPEN_FAMILY_SOCIAL__==='function'}catch(e){console.warn('Nossa Rede:',e);toast('A Nossa Rede demorou para abrir. Tente novamente.');return false}
 }
 async function ensureProfileLoaded(){
   if(typeof window.__ISA_OPEN_PROFILE_STATUS__==='function'&&typeof window.__ISA_OPEN_STICKER_CREATOR__==='function')return true
-  if(!profileLoading)profileLoading=import('./profile-status-stickers.js?v=7-external-menu').catch(e=>{profileLoading=null;throw e})
+  if(!profileLoading)profileLoading=import('./profile-status-stickers.js?v=9-unfreeze-menu').catch(e=>{profileLoading=null;throw e})
   try{await profileLoading;return true}catch(e){console.warn('Perfil/Stickers:',e);toast('Perfil e Stickers ainda estão carregando.');return false}
 }
 function goChats(){
@@ -30,19 +30,20 @@ function goChats(){
 async function openSocial(){if(await ensureSocialLoaded())window.__ISA_OPEN_FAMILY_SOCIAL__?.()}
 async function openProfile(){if(await ensureProfileLoaded()){if(typeof window.__ISA_OPEN_PROFILE_STATUS__==='function')window.__ISA_OPEN_PROFILE_STATUS__();else document.querySelector('.pss-profile-edit')?.click()}}
 async function openSticker(){if(await ensureProfileLoaded()){if(typeof window.__ISA_OPEN_STICKER_CREATOR__==='function')window.__ISA_OPEN_STICKER_CREATOR__();else $('pssStickerBtn')?.click()}}
+function setHtml(el,html){if(el&&el.innerHTML!==html)el.innerHTML=html}
 function ensure(){
   addStyle()
   const nav=document.querySelector('.family-primary-nav');if(!nav)return false
-  const chat=$('friendChatsTab');if(chat){chat.disabled=false;chat.removeAttribute('aria-disabled');chat.classList.remove('is-locked');chat.innerHTML='💬 <span>Chat</span>';chat.onclick=e=>{e.preventDefault();goChats()}}
-  let social=$('friendSocialBtn');if(!social){social=document.createElement('button');social.id='friendSocialBtn';social.type='button';nav.appendChild(social)}social.className='family-primary-tab';social.disabled=false;social.removeAttribute('aria-disabled');social.innerHTML='🌸 <span>Nossa Rede</span>';social.onclick=e=>{e.preventDefault();openSocial()}
-  let profile=$('friendProfileMenuBtn');if(!profile){profile=document.createElement('button');profile.id='friendProfileMenuBtn';profile.type='button';profile.className='family-primary-tab';nav.appendChild(profile)}profile.innerHTML='☁️ <span>Perfil</span>';profile.onclick=e=>{e.preventDefault();openProfile()}
-  let sticker=$('friendStickerMenuBtn');if(!sticker){sticker=document.createElement('button');sticker.id='friendStickerMenuBtn';sticker.type='button';sticker.className='family-primary-tab';nav.appendChild(sticker)}sticker.innerHTML='✨ <span>Stickers</span>';sticker.onclick=e=>{e.preventDefault();openSticker()}
-  let settings=$('friendSettingsBtn');if(!settings){settings=document.createElement('button');settings.id='friendSettingsBtn';settings.type='button';nav.appendChild(settings)}settings.className='family-primary-tab icon-only friend-settings-menu';settings.textContent='⚙️';settings.title='Configurações';settings.setAttribute('aria-label','Configurações')
-  if(settings.parentNode!==nav)nav.appendChild(settings)
-  document.querySelectorAll('.friend-profile .pss-profile-edit').forEach(b=>b.style.setProperty('display','none','important'))
+  const chat=$('friendChatsTab');if(chat){chat.disabled=false;chat.removeAttribute('aria-disabled');chat.classList.remove('is-locked');setHtml(chat,'💬 <span>Chat</span>');if(chat.dataset.externalMenuBound!=='1'){chat.dataset.externalMenuBound='1';chat.addEventListener('click',e=>{e.preventDefault();goChats()})}}
+  let social=$('friendSocialBtn');if(!social){social=document.createElement('button');social.id='friendSocialBtn';social.type='button';social.className='family-primary-tab';nav.appendChild(social)}
+  if(!social.classList.contains('family-primary-tab'))social.classList.add('family-primary-tab');social.classList.remove('is-locked');social.disabled=false;social.removeAttribute('aria-disabled');setHtml(social,'🌸 <span>Nossa Rede</span>');if(social.dataset.externalMenuBound!=='1'){social.dataset.externalMenuBound='1';social.addEventListener('click',e=>{e.preventDefault();openSocial()})}
+  let profile=$('friendProfileMenuBtn');if(!profile){profile=document.createElement('button');profile.id='friendProfileMenuBtn';profile.type='button';profile.className='family-primary-tab';nav.appendChild(profile)}setHtml(profile,'☁️ <span>Perfil</span>');if(profile.dataset.externalMenuBound!=='1'){profile.dataset.externalMenuBound='1';profile.addEventListener('click',e=>{e.preventDefault();openProfile()})}
+  let sticker=$('friendStickerMenuBtn');if(!sticker){sticker=document.createElement('button');sticker.id='friendStickerMenuBtn';sticker.type='button';sticker.className='family-primary-tab';nav.appendChild(sticker)}setHtml(sticker,'✨ <span>Stickers</span>');if(sticker.dataset.externalMenuBound!=='1'){sticker.dataset.externalMenuBound='1';sticker.addEventListener('click',e=>{e.preventDefault();openSticker()})}
+  let settings=$('friendSettingsBtn');if(!settings){settings=document.createElement('button');settings.id='friendSettingsBtn';settings.type='button';settings.className='family-primary-tab icon-only friend-settings-menu';nav.appendChild(settings)}
+  settings.classList.add('family-primary-tab','icon-only','friend-settings-menu');if(settings.textContent!=='⚙️')settings.textContent='⚙️';settings.title='Configurações';settings.setAttribute('aria-label','Configurações');if(settings.parentNode!==nav)nav.appendChild(settings)
+  document.querySelectorAll('.friend-profile .pss-profile-edit').forEach(b=>{if(b.style.display!=='none')b.style.setProperty('display','none','important')})
   return true
 }
 window.__ISA_ENSURE_EXTERNAL_MENU__=ensure
 ensure();document.addEventListener('isa:friend-portal-entered',ensure);document.addEventListener('isa:friend-access-valid',ensure)
-const host=$('friendChat')||document.body;new MutationObserver(()=>ensure()).observe(host,{childList:true,subtree:true,attributes:true,attributeFilter:['class']})
-let tries=0;const timer=setInterval(()=>{ensure();if(++tries>60)clearInterval(timer)},250)
+let tries=0;const timer=setInterval(()=>{ensure();if(++tries>30)clearInterval(timer)},300)
