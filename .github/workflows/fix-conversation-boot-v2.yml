@@ -1,0 +1,36 @@
+name: Fix conversation boot v2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-conversation-boot-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply conversation boot patch
+        run: python scripts/fix_conversation_boot_v2.py
+
+      - name: Check JavaScript syntax
+        run: node --check app-v33.js
+
+      - name: Commit repaired startup
+        shell: bash
+        run: |
+          if git diff --quiet -- app-v33.js index.html; then
+            echo 'No changes needed'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app-v33.js index.html
+          git commit -m 'fix: prevent endless conversation loading on desktop and mobile'
+          git push
