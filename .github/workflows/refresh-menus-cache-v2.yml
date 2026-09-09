@@ -1,0 +1,49 @@
+name: Refresh menus cache v2
+on:
+  push:
+    paths:
+      - '.github/workflows/refresh-menus-cache-v2.yml'
+permissions:
+  contents: write
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refresh menu module versions safely
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          def sub(path, pattern, repl):
+              p=Path(path); s=p.read_text()
+              ns,n=re.subn(pattern,repl,s)
+              if not n:
+                  raise SystemExit(f'{path}: pattern not found: {pattern}')
+              p.write_text(ns)
+          sub('index.html',r'\./postboot-loader\.js\?v=[^\'\"]+','./postboot-loader.js?v=36-stable-games')
+          sub('postboot-loader.js',r'\./profile-menu-guard\.js\?v=[^\'\"]+','./profile-menu-guard.js?v=3-stable-games')
+          for path in ['acesso-mobile.html','acesso.html']:
+              sub(path,r'\./external-menu\.js\?v=[^\'\"]+','./external-menu.js?v=3-games-studies')
+              sub(path,r'\./games-menu\.js\?v=[^\'\"]+','./games-menu.js?v=11-all-family-menu')
+              sub(path,r'\./paloma-studies\.js\?v=[^\'\"]+','./paloma-studies.js?v=8-paloma-menu')
+          PY
+          node --check postboot-loader.js
+          node --check profile-menu-guard.js
+          node --check external-menu.js
+          grep -q 'postboot-loader.js?v=36-stable-games' index.html
+          grep -q 'profile-menu-guard.js?v=3-stable-games' postboot-loader.js
+          grep -q 'external-menu.js?v=3-games-studies' acesso-mobile.html
+          grep -q 'games-menu.js?v=11-all-family-menu' acesso-mobile.html
+          grep -q 'paloma-studies.js?v=8-paloma-menu' acesso-mobile.html
+      - name: Commit refreshed versions
+        run: |
+          if git diff --quiet; then
+            echo 'No changes needed'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html postboot-loader.js acesso-mobile.html acesso.html
+          git commit -m 'fix: publish stable menus and games on every link'
+          git push
