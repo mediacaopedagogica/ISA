@@ -16,7 +16,9 @@ function byTab(name){return document.querySelector(`.nav-tabs .nav-btn[data-tab=
 function dynamic(id,alt=''){return $(id)||(alt?document.querySelector(alt):null)}
 function actionButton(nav,id,icon,label,action){
   let b=$(id)
-  if(!b){b=document.createElement('button');b.id=id;b.type='button';b.className='nav-btn';b.dataset.profileMenuAction='1';b.innerHTML=`${icon} <span>${label}</span>`;nav.appendChild(b)}
+  if(!b){
+    b=document.createElement('button');b.id=id;b.type='button';b.className='nav-btn';b.dataset.profileMenuAction='1';b.innerHTML=`${icon} <span>${label}</span>`;nav.appendChild(b)
+  }
   b.classList.add('nav-btn');b.classList.remove('hidden');b.style.removeProperty('display');b.title=label;b.setAttribute('aria-label',label)
   if(b.dataset.profileActionBound!=='1'){
     b.dataset.profileActionBound='1'
@@ -24,23 +26,24 @@ function actionButton(nav,id,icon,label,action){
   }
   return b
 }
-function openProfile(){
-  if(typeof window.__ISA_PROFILE_ACTIONS__?.openStatus==='function')return window.__ISA_PROFILE_ACTIONS__.openStatus()
-  if(typeof window.__ISA_OPEN_PROFILE_STATUS__==='function')return window.__ISA_OPEN_PROFILE_STATUS__()
-  document.querySelector('.pss-profile-edit')?.click()
+function openGames(){
+  if(typeof window.__ISA_PROFILE_ACTIONS__?.openGames==='function')return window.__ISA_PROFILE_ACTIONS__.openGames()
+  if(typeof window.__CANTINHO_OPEN_GAMES__==='function')return window.__CANTINHO_OPEN_GAMES__()
 }
-function openSticker(){
-  if(typeof window.__ISA_PROFILE_ACTIONS__?.openSticker==='function')return window.__ISA_PROFILE_ACTIONS__.openSticker()
-  if(typeof window.__ISA_OPEN_STICKER_CREATOR__==='function')return window.__ISA_OPEN_STICKER_CREATOR__()
-  $('pssStickerBtn')?.click()
+function stableOrder(nav,items){
+  const order=items.filter(Boolean)
+  const wanted=new Set(order)
+  const current=[...nav.children].filter(el=>wanted.has(el))
+  if(current.length===order.length&&current.every((el,i)=>el===order[i]))return
+  order.forEach(el=>{if(el.parentNode===nav)nav.appendChild(el)})
 }
 function ensure(){
   const nav=document.querySelector('.nav-tabs'),p=profile();if(!nav||!p||p==='familia')return false
   const chats=byTab('chats'),calendar=byTab('calendar'),study=$('studyNav')||byTab('study'),diary=$('diaryNav')||byTab('diary'),supervision=$('supervisionNav')||byTab('supervision'),parents=$('parentsNav')||byTab('parents')
   const settings=dynamic('settingsMenuBtn','[data-settings-menu="1"]'),social=dynamic('socialNav'),test=dynamic('testGameNav'),studio=dynamic('alanStudioLauncher')||dynamic('alanStudioEntry')
-  const profileStatus=actionButton(nav,'profileStatusNav','☁️','Perfil',openProfile)
-  const profileSticker=actionButton(nav,'profileStickerNav','✨','Stickers',openSticker)
-  const profileGames=$('profileGamesNav');visible(profileGames,false)
+  const games=actionButton(nav,'profileGamesNav','🎮','Joguinhos',openGames)
+  const profileStatus=$('profileStatusNav'),profileSticker=$('profileStickerNav')
+  visible(profileStatus,false);visible(profileSticker,false)
 
   const isKeise=p==='keise'||p.startsWith('keise '),isAlan=p==='alan',isIsa=p==='isa'
   visible(chats,true)
@@ -51,16 +54,16 @@ function ensure(){
   visible(parents,isKeise)
   visible(test,isKeise)
   visible(studio,isAlan)
-  visible(profileStatus,true);visible(profileSticker,true)
+  visible(games,true)
   if(settings)visible(settings,true)
   if(social)visible(social,true)
 
   let order=[]
-  if(isKeise)order=[chats,calendar,settings,profileStatus,profileSticker,social,supervision,parents,test]
-  else if(isAlan)order=[chats,calendar,studio,settings,profileStatus,profileSticker,social]
-  else if(isIsa)order=[chats,settings,diary,study,profileStatus,profileSticker,social]
-  else order=[chats,settings,profileStatus,profileSticker,social]
-  order.filter(Boolean).forEach(el=>{if(el.parentNode===nav)nav.appendChild(el)})
+  if(isKeise)order=[chats,calendar,settings,social,supervision,parents,games,test]
+  else if(isAlan)order=[chats,calendar,studio,settings,social,games]
+  else if(isIsa)order=[chats,settings,diary,study,social,games]
+  else order=[chats,settings,social,games]
+  stableOrder(nav,order)
   nav.dataset.profileMenu=isKeise?'keise':isAlan?'alan':isIsa?'isa':'basic'
   return true
 }
@@ -69,4 +72,4 @@ ensure()
 document.addEventListener('DOMContentLoaded',ensure,{once:true})
 const host=$('mainView')||document.body
 new MutationObserver(()=>ensure()).observe(host,{childList:true,subtree:true,attributes:true,attributeFilter:['class']})
-let tries=0;const timer=setInterval(()=>{ensure();if(++tries>120)clearInterval(timer)},250)
+let tries=0;const timer=setInterval(()=>{ensure();if(++tries>80)clearInterval(timer)},300)
