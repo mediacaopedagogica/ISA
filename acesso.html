@@ -38,18 +38,18 @@
           <button id="friendGamesMenuBtn" class="family-primary-tab" type="button">🎮 <span>Joguinhos</span></button>
           <button id="friendSettingsBtn" class="family-primary-tab icon-only friend-settings-menu" type="button" title="Configurações" aria-label="Configurações">⚙️</button>
         </nav>
-        <div class="friend-side-title"><strong>Conversas</strong><small>Isa e grupos criados por ela</small></div>
+        <div class="friend-side-title"><strong>Conversas</strong><small>Familiares liberados para este perfil</small></div>
         <div id="friendConversationList" class="friend-conversation-list"></div>
-        <div class="friend-link-note">🔒 Este acesso é pessoal. Aqui aparecem apenas a Isa e os grupos em que ela colocou você.</div>
+        <div class="friend-link-note">🔒 Este acesso é pessoal. As conversas seguem as mesmas regras de privacidade da Nossa Rede.</div>
       </aside>
 
       <section class="friend-main shell-card">
-        <div id="friendEmpty" class="friend-empty"><div class="friend-heart" aria-hidden="true">♥</div><h2>Cantinho da Isa 💕</h2><p>Escolha a Isa ou um grupo criado por ela.</p></div>
+        <div id="friendEmpty" class="friend-empty"><div class="friend-heart" aria-hidden="true">♥</div><h2>Cantinho da Isa 💕</h2><p>Escolha uma conversa disponível para este perfil.</p></div>
         <div id="friendThread" class="friend-thread hidden">
           <header class="friend-thread-head">
             <button id="friendBackBtn" class="back-btn" type="button">←</button>
             <div class="thread-avatar">💬</div>
-            <div><h2 id="friendThreadTitle">Isa</h2><small id="friendThreadSubtitle">Conversa direta com a Isa</small></div>
+            <div><h2 id="friendThreadTitle">Conversa</h2><small id="friendThreadSubtitle">Conversa da família</small></div>
           </header>
           <div id="friendMessages" class="friend-messages"></div>
           <div class="retention-note">Mensagens e imagens ficam disponíveis por até 2 dias. Áudios ficam disponíveis por 1 dia.</div>
@@ -71,7 +71,7 @@
 
   <script type="module" src="./familia-externa.js?v=62-unfreeze-core"></script>
   <script type="module" src="./external-ui-controller.js?v=2-compact-plus"></script>
-  <script type="module" src="./external-progressive-loader.js?v=3-family-privacy"></script>
+  <script type="module" src="./external-progressive-loader.js?v=4-social-photo-chat"></script>
   <script>
     setTimeout(()=>{
       const state=window.__ISA_FRIEND_BOOTSTRAP_STATE__
