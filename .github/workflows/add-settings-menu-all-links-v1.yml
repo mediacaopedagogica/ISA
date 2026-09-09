@@ -1,0 +1,111 @@
+name: Restore settings menu on all links
+on:
+  push:
+    paths:
+      - '.github/workflows/add-settings-menu-all-links-v1.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add one visible settings menu entry everywhere
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          # Main Cantinho: keep exactly one menu button in the existing navigation.
+          p=Path('index.html')
+          s=p.read_text()
+          if 'id="generalSettingsNav"' not in s:
+              needle='        <button class="nav-btn" data-tab="calendar">📅 <span>Calendário</span></button>\n'
+              if needle not in s:
+                  raise SystemExit('calendar nav button not found in index.html')
+              s=s.replace(needle, needle+'        <button class="nav-btn" id="generalSettingsNav" type="button" title="Configurações Gerais">⚙️ <span>Configurações</span></button>\n',1)
+          s=s.replace('./postboot-loader.js?v=29-single-settings-entry','./postboot-loader.js?v=30-settings-menu-all-links',1)
+          p.write_text(s)
+
+          # General settings module: support both the main app and family personal links.
+          p=Path('general-settings.js')
+          s=p.read_text()
+          s=s.replace("return String($('myName')?.textContent||'familia').trim().toLowerCase()", "return String($('myName')?.textContent||$('friendName')?.textContent||'familia').trim().toLowerCase()",1)
+          s=s.replace("function toast(text){const t=$('toast');if(!t)return;", "function toast(text){const t=$('toast')||$('friendToast');if(!t)return;",1)
+          s=s.replace("html[data-isa-font-scale=\"90\"] #messages .bubble,html[data-isa-font-scale=\"90\"] #messageInput{font-size:90%}html[data-isa-font-scale=\"115\"] #messages .bubble,html[data-isa-font-scale=\"115\"] #messageInput{font-size:115%}", "html[data-isa-font-scale=\"90\"] #messages .bubble,html[data-isa-font-scale=\"90\"] #messageInput,html[data-isa-font-scale=\"90\"] .friend-bubble,html[data-isa-font-scale=\"90\"] #friendMessageInput{font-size:90%}html[data-isa-font-scale=\"115\"] #messages .bubble,html[data-isa-font-scale=\"115\"] #messageInput,html[data-isa-font-scale=\"115\"] .friend-bubble,html[data-isa-font-scale=\"115\"] #friendMessageInput{font-size:115%}",1)
+          s=s.replace("const box=$('messages');if(!box)return", "const box=$('messages')||$('friendMessages');if(!box)return",1)
+          s=s.replace("function open(){build();settings=readSettings();applySettings();const p=$('generalSettingsPanel');p.classList.remove('hidden');p.setAttribute('aria-hidden','false')}", "async function open(){build();settings=readSettings();customData=await getCustom();applySettings();const p=$('generalSettingsPanel');p.classList.remove('hidden');p.setAttribute('aria-hidden','false')}",1)
+
+          pattern=r"function bindExistingSettingsButton\(\)\{.*?\n\}\n\nasync function compressImage"
+          repl='''function bindExistingSettingsButton(){
+  // Um único ponto de entrada visível: no menu existente, nunca sobre a conversa.
+  $('generalSettingsFab')?.remove();
+  const explicit=[$('generalSettingsNav'),$('friendSettingsBtn')].filter(Boolean);
+  const fallback=[...document.querySelectorAll('button,a,[role="button"]')].filter(el=>{
+    if(el.closest('#generalSettingsPanel'))return false;
+    if(el.id==='accessSettingsNav'||el.id==='logoutBtn')return false;
+    const label=`${el.textContent||''} ${el.title||''} ${el.getAttribute('aria-label')||''}`.toLowerCase();
+    return /configura(c|ç)(a|ã)o|configura(c|ç)(o|õ)es|settings/.test(label);
+  });
+  [...new Set([...explicit,...fallback])].forEach(btn=>{
+    if(btn.dataset.generalSettingsBound==='1')return;
+    btn.dataset.generalSettingsBound='1';
+    btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open()},true);
+  });
+}
+
+async function compressImage'''
+          s,n=re.subn(pattern,repl,s,count=1,flags=re.S)
+          if n!=1:
+              raise SystemExit('settings bind block not found')
+          s=s.replace("const obs=new MutationObserver(()=>{bindExistingSettingsButton();if($('messages'))applyWallpaper()});obs.observe(document.getElementById('mainView')||document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']})", "const obs=new MutationObserver(()=>{bindExistingSettingsButton();if($('messages')||$('friendMessages'))applyWallpaper()});obs.observe(document.getElementById('mainView')||document.getElementById('friendChat')||document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']})",1)
+          p.write_text(s)
+
+          # Personal family links (Paloma, Vania, Elion, Evalda, Davi and any future token): same settings button.
+          p=Path('acesso-mobile.html')
+          s=p.read_text()
+          s=s.replace('familia-externa.css?v=1','familia-externa.css?v=2-settings-menu',1)
+          if 'id="friendSettingsBtn"' not in s:
+              needle='          <div><small id="friendRelationship">Família</small><strong id="friendName">Perfil</strong></div>\n'
+              if needle not in s:
+                  raise SystemExit('friend profile name block not found')
+              s=s.replace(needle, needle+'          <button id="friendSettingsBtn" class="friend-settings-menu" type="button" title="Configurações Gerais" aria-label="Configurações Gerais">⚙️ <span>Configurações</span></button>\n',1)
+          if 'general-settings.js?v=4-all-links-menu' not in s:
+              needle='  <script type="module" src="./familia-externa.js?v=3-audio-receive"></script>\n'
+              if needle not in s:
+                  raise SystemExit('family external script marker not found')
+              s=s.replace(needle,needle+'  <script type="module" src="./general-settings.js?v=4-all-links-menu"></script>\n',1)
+          p.write_text(s)
+
+          p=Path('familia-externa.css')
+          s=p.read_text()
+          marker='/* settings-menu-all-links-v1 */'
+          if marker not in s:
+              s += '''\n/* settings-menu-all-links-v1 */
+.friend-profile>div:nth-child(2){min-width:0;flex:1}.friend-settings-menu{margin-left:auto;flex:0 0 auto;border:1px solid rgba(167,131,188,.18);border-radius:14px;padding:9px 11px;background:linear-gradient(145deg,#fff,#eee6ff);color:#65546f;font-weight:900;box-shadow:0 5px 0 rgba(183,160,209,.18);cursor:pointer;display:inline-flex;align-items:center;gap:6px}.friend-settings-menu:active{transform:translateY(2px);box-shadow:0 3px 0 rgba(183,160,209,.18)}.friend-settings-menu span{font-size:.76rem}@media(max-width:420px){.friend-settings-menu{padding:9px;width:42px;height:42px;justify-content:center}.friend-settings-menu span{display:none}}
+'''
+          p.write_text(s)
+
+          p=Path('postboot-loader.js')
+          s=p.read_text().replace("'./general-settings.js?v=3-single-entry'","'./general-settings.js?v=4-all-links-menu'",1)
+          p.write_text(s)
+          PY
+      - name: Validate files
+        shell: bash
+        run: |
+          node --check general-settings.js
+          node --check postboot-loader.js
+          grep -q 'id="generalSettingsNav"' index.html
+          grep -q 'id="friendSettingsBtn"' acesso-mobile.html
+          grep -q 'general-settings.js?v=4-all-links-menu' acesso-mobile.html
+          grep -q "$('friendMessages')" general-settings.js
+          grep -q 'settings-menu-all-links-v1' familia-externa.css
+      - name: Commit published fix
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html general-settings.js acesso-mobile.html familia-externa.css postboot-loader.js
+          git commit -m 'fix: show Configuracoes menu for every access link' || exit 0
+          git push
