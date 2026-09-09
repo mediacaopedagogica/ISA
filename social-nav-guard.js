@@ -1,4 +1,5 @@
 // Mantém Nossa Rede no menu mesmo quando outros módulos reconstroem a navegação.
+// Importante: todas as operações são idempotentes para não criar um ciclo de MutationObserver.
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 const $=id=>document.getElementById(id);
 let recoveryRunning=false,recoveryDone=false;
@@ -10,21 +11,30 @@ function mainProfileReady(){
   return !!main&&!main.classList.contains('hidden')&&!!(requested||name)&&name!=='família';
 }
 function bind(btn){
-  btn.type='button';btn.classList.add('nav-btn');btn.classList.remove('hidden');
-  btn.removeAttribute('data-tab');btn.style.removeProperty('display');btn.style.removeProperty('visibility');btn.style.removeProperty('opacity');
-  btn.innerHTML='🌸 <span>Nossa Rede</span>';btn.title='Nossa Rede';btn.setAttribute('aria-label','Abrir Nossa Rede');
+  if(!btn)return null;
+  if(btn.type!=='button')btn.type='button';
+  if(!btn.classList.contains('nav-btn'))btn.classList.add('nav-btn');
+  if(btn.classList.contains('hidden'))btn.classList.remove('hidden');
+  if(btn.hasAttribute('data-tab'))btn.removeAttribute('data-tab');
+  if(btn.style.display)btn.style.removeProperty('display');
+  if(btn.style.visibility)btn.style.removeProperty('visibility');
+  if(btn.style.opacity)btn.style.removeProperty('opacity');
+  if(btn.dataset.socialGuardMarkup!=='1'){
+    btn.innerHTML='🌸 <span>Nossa Rede</span>';
+    btn.dataset.socialGuardMarkup='1';
+  }
+  if(btn.title!=='Nossa Rede')btn.title='Nossa Rede';
+  if(btn.getAttribute('aria-label')!=='Abrir Nossa Rede')btn.setAttribute('aria-label','Abrir Nossa Rede');
   if(btn.dataset.socialGuardBound==='1')return btn;
   btn.dataset.socialGuardBound='1';
-  const open=async e=>{
+  btn.addEventListener('click',async e=>{
     e?.preventDefault?.();e?.stopPropagation?.();
     if(typeof window.__ISA_OPEN_SOCIAL__==='function'){await window.__ISA_OPEN_SOCIAL__(e);return}
     if(typeof window.__ISA_OPEN_SOCIAL_CORE__==='function'){window.__ISA_OPEN_SOCIAL_CORE__();return}
     await recover();
     if(typeof window.__ISA_OPEN_SOCIAL__==='function')await window.__ISA_OPEN_SOCIAL__(e);
     else window.__ISA_OPEN_SOCIAL_CORE__?.();
-  };
-  btn.addEventListener('click',open,true);
-  btn.addEventListener('pointerup',e=>{if(e.pointerType==='touch')open(e)},true);
+  },true);
   return btn;
 }
 function ensureButton(){
@@ -32,7 +42,6 @@ function ensureButton(){
   const nav=document.querySelector('.nav-tabs');if(!nav)return null;
   const panel=$('socialPanel');
   let btn=$('socialNav');
-  // Só cria o atalho manualmente quando o painel já existe. Isso evita impedir o módulo social de montar a própria interface.
   if(!btn&&panel){
     btn=document.createElement('button');btn.id='socialNav';
     const anchor=$('settingsMenuBtn')||nav.querySelector('[data-settings-menu="1"]')||nav.querySelector('[data-tab="calendar"]');
@@ -44,9 +53,9 @@ async function recover(){
   if(recoveryRunning)return;recoveryRunning=true;
   try{
     if(!$('socialPanel')){
-      try{await import(`./social-network.js?v=4-nav-recovery-${Date.now()}`)}catch(e){console.warn('Nossa Rede: núcleo não carregou',e)}
+      try{await import('./social-network.js?v=5-social-safe')}catch(e){console.warn('Nossa Rede: núcleo não carregou',e)}
     }
-    try{await import('./social-network-bridge-v2.js?v=4-persistent-nav')}catch(e){console.warn('Nossa Rede: ponte não carregou',e)}
+    try{await import('./social-network-bridge-v2.js?v=5-social-safe')}catch(e){console.warn('Nossa Rede: ponte não carregou',e)}
     for(let i=0;i<30;i++){if(ensureButton())break;await wait(100)}
     recoveryDone=!!$('socialPanel');
   }finally{recoveryRunning=false}
@@ -58,7 +67,10 @@ async function ensure(){
   return !!ensureButton();
 }
 window.__ISA_ENSURE_SOCIAL_NAV__=ensureButton;
-const observer=new MutationObserver(()=>{ensureButton();if(mainProfileReady()&&!$('socialPanel')&&!recoveryRunning&&!recoveryDone)recover()});
+const observer=new MutationObserver(()=>{
+  ensureButton();
+  if(mainProfileReady()&&!$('socialPanel')&&!recoveryRunning&&!recoveryDone)recover();
+});
 observer.observe(document.getElementById('mainView')||document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
-let tries=0;const timer=setInterval(()=>{ensure();if(++tries>160)clearInterval(timer)},250);
+let tries=0;const timer=setInterval(()=>{ensure();if(++tries>80)clearInterval(timer)},250);
 ensure();
