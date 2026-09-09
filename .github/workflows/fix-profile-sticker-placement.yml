@@ -1,0 +1,32 @@
+name: Fix Profile Sticker Placement
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-profile-sticker-placement.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch shared profile module
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('profile-status-stickers.js')
+          s=p.read_text()
+          old="const emoji=$('emojiBtn');emoji?.after(b);b.onclick=openSticker"
+          new="const emojiWrap=document.querySelector('.emoji-wrap');emojiWrap?.after(b);b.onclick=openSticker"
+          if old not in s:
+              raise SystemExit('main sticker placement marker not found')
+          s=s.replace(old,new,1)
+          p.write_text(s)
+          PY
+          node --check profile-status-stickers.js
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add profile-status-stickers.js
+          git commit -m 'fix: keep sticker creator aligned in chat composer'
+          git push
