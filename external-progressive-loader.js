@@ -6,8 +6,9 @@ function start(){
   if(started)return;started=true
   const name=String(window.__ISA_FRIEND_PERSON__?.name||document.getElementById('friendName')?.textContent||'').trim().toLowerCase()
   later(20,'./external-menu.js?v=5-simplified',()=>window.__ISA_ENSURE_EXTERNAL_MENU__?.())
+  later(70,'./social-privacy-guard.js?v=1-family-rules',()=>window.__ISA_SOCIAL_PRIVACY__?.apply?.())
   later(100,'./family-settings.js?v=11-click-fix')
-  later(220,'./nossa-rede-v4.js?v=1-approved',()=>window.__ISA_ENHANCE_NOSSA_REDE__?.())
+  later(220,'./nossa-rede-v4.js?v=3-family-rules',()=>{window.__ISA_ENHANCE_NOSSA_REDE__?.();window.__ISA_SOCIAL_PRIVACY__?.apply?.()})
   later(300,'./external-chat-tools.js?v=5-controls')
   later(520,'./familia-emoji-completo.js?v=9-controls')
   later(900,'./profile-status-stickers.js?v=13-click-fix',()=>window.__ISA_ENSURE_EXTERNAL_MENU__?.())
