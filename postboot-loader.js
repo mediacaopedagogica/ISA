@@ -51,7 +51,7 @@ later(980,'./profile-actions.js?v=7-progressive')
 later(1200,'./call-manager.js?v=18-plus-menu')
 later(1450,'./family-media-menu-v2.js?v=12-compact-plus')
 later(1750,'./notifications-v2.js?v=11-progressive')
-later(2150,'./extras-loader.js?v=59-approved-dashboards',()=>{window.__ISA_SOCIAL_PRIVACY__?.apply?.();if(!approvedDashboardAtBoot){window.__ISA_ENSURE_PROFILE_MENU__?.();window.__ISA_PERSONAL_NAV_SYNC__?.()}})
+later(2150,'./extras-loader.js?v=60-social-profile-chat',()=>{window.__ISA_SOCIAL_PRIVACY__?.apply?.();window.__ISA_SOCIAL_PROFILE_CHAT_SYNC__?.();if(!approvedDashboardAtBoot){window.__ISA_ENSURE_PROFILE_MENU__?.();window.__ISA_PERSONAL_NAV_SYNC__?.()}})
 
 let keiseBooted=false
 function bootKeise(){
