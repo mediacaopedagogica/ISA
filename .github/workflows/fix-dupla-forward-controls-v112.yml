@@ -1,0 +1,45 @@
+name: Fix Dupla forward controls v1.1.2
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-dupla-forward-controls-v112.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Align visual front, physics forward and keyboard controls
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('jogos/dupla-na-pista-teste.html')
+          s=p.read_text()
+
+          s=s.replace('pista viva v1.1.1 • barra superior','pista viva v1.1.2 • frente e comandos alinhados')
+          s=s.replace('🧪 TESTE JOGO • KEISE • v1.1.1','🧪 TESTE JOGO • KEISE • v1.1.2')
+
+          # Uma única convenção: frente visual = +Z local = frente física.
+          s=s.replace('yaw=Math.atan2(f.tan.x,f.tan.z)+Math.PI','yaw=Math.atan2(f.tan.x,f.tan.z)')
+          s=s.replace('function physicsForward(pv){const v=new CANNON.Vec3(0,0,-1);pv.body.quaternion.vmult(v,v);return v}',
+                      'function physicsForward(pv){const v=new CANNON.Vec3(0,0,1);pv.body.quaternion.vmult(v,v);return v}')
+
+          # Aceleração progressiva: seta para cima/W sempre aplica força para a frente (+Z).
+          s=s.replace('const force=5200+(15500-5200)*(ramp*ramp*(3-2*ramp)),speedFade=kmh<155?1:Math.max(.08,1-(kmh-155)/55);engine=-force*motorHealth*speedFade',
+                      'const force=7000+(23000-7000)*(ramp*ramp*(3-2*ramp)),speedFade=kmh<185?1:Math.max(.08,1-(kmh-185)/55);engine=force*motorHealth*speedFade')
+          s=s.replace('else engine=5400*motorHealth*Math.max(.2,1-kmh/58)',
+                      'else engine=-6500*motorHealth*Math.max(.2,1-kmh/62)')
+
+          # Solta totalmente o freio durante aceleração e aumenta resposta inicial.
+          s=s.replace('pv.throttleHold=acc?Math.min(3,(pv.throttleHold||0)+dt):Math.max(0,(pv.throttleHold||0)-dt*2.4)',
+                      'pv.throttleHold=acc?Math.min(3,(pv.throttleHold||0)+dt*1.35):Math.max(0,(pv.throttleHold||0)-dt*2.8)')
+
+          p.write_text(s)
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add jogos/dupla-na-pista-teste.html
+          git commit -m 'fix: align forward reverse controls and acceleration v1.1.2'
+          git push
