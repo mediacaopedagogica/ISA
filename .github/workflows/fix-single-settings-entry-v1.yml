@@ -1,0 +1,71 @@
+name: Keep single Configuracoes entry
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-single-settings-entry-v1.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove duplicate settings buttons
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p=Path('general-settings.js')
+          s=p.read_text()
+
+          old_css='''#generalSettingsNav{position:relative}.general-settings-fab{display:none;position:fixed;z-index:98000;right:54px;top:max(8px,env(safe-area-inset-top));width:38px;height:38px;border:1px solid rgba(130,100,150,.16);border-radius:13px;background:rgba(255,250,253,.92);box-shadow:0 8px 24px rgba(70,45,85,.16);font-size:18px;place-items:center;color:#695874;backdrop-filter:blur(12px)}\n'''
+          if old_css in s:
+              s=s.replace(old_css,'',1)
+          s=s.replace('@media(max-width:850px){.general-settings-fab{display:grid;right:8px;top:calc(max(8px, env(safe-area-inset-top)) + 58px)}.general-settings-card{', '@media(max-width:850px){.general-settings-card{',1)
+          s=s.replace('.nav-tabs #generalSettingsNav span{display:none}', '',1)
+
+          old='''function injectNav(){\n  const nav=document.querySelector('.nav-tabs');if(nav&&!$('generalSettingsNav')){const b=document.createElement('button');b.id='generalSettingsNav';b.className='nav-btn';b.type='button';b.innerHTML='⚙️ <span>Configurações</span>';b.title='Configurações Gerais';b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open()},true);nav.appendChild(b)}\n  if(!$('generalSettingsFab')){const f=document.createElement('button');f.id='generalSettingsFab';f.className='general-settings-fab';f.type='button';f.textContent='⚙️';f.title='Configurações Gerais';f.setAttribute('aria-label','Abrir Configurações Gerais');f.onclick=open;document.body.appendChild(f)}\n}\n'''
+          new='''function bindExistingSettingsButton(){\n  // O Cantinho já possui um botão de Configurações junto aos demais controles.\n  // Este módulo só fornece o painel: não cria atalhos abaixo de Sair nem sobre as conversas.\n  $('generalSettingsNav')?.remove();$('generalSettingsFab')?.remove();\n  const nodes=[...document.querySelectorAll('button,a,[role="button"]')];\n  const btn=nodes.find(el=>{\n    if(el.closest('#generalSettingsPanel'))return false;\n    if(el.id==='accessSettingsNav'||el.id==='logoutBtn')return false;\n    const label=`${el.textContent||''} ${el.title||''} ${el.getAttribute('aria-label')||''}`.toLowerCase();\n    return /configura(c|ç)(a|ã)o|configura(c|ç)(o|õ)es|settings/.test(label);\n  });\n  if(btn&&btn.dataset.generalSettingsBound!=='1'){\n    btn.dataset.generalSettingsBound='1';\n    btn.addEventListener('click',e=>{e.preventDefault();open()});\n  }\n}\n'''
+          if old not in s:
+              raise SystemExit('injectNav block not found')
+          s=s.replace(old,new,1)
+
+          old_boot='''async function boot(){\n  build();injectNav();customData=await getCustom();settings=readSettings();applySettings();\n  let tries=0;const timer=setInterval(()=>{injectNav();applyWallpaper();if(++tries>40)clearInterval(timer)},250)\n  const obs=new MutationObserver(()=>{injectNav();if($('messages'))applyWallpaper()});obs.observe(document.getElementById('mainView')||document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']})\n  window.__ISA_OPEN_GENERAL_SETTINGS__=open\n}\n'''
+          new_boot='''async function boot(){\n  build();bindExistingSettingsButton();customData=await getCustom();settings=readSettings();applySettings();\n  let tries=0;const timer=setInterval(()=>{bindExistingSettingsButton();applyWallpaper();if(++tries>40)clearInterval(timer)},250)\n  const obs=new MutationObserver(()=>{bindExistingSettingsButton();if($('messages'))applyWallpaper()});obs.observe(document.getElementById('mainView')||document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']})\n  window.__ISA_OPEN_GENERAL_SETTINGS__=open\n}\n'''
+          if old_boot not in s:
+              raise SystemExit('boot block not found')
+          s=s.replace(old_boot,new_boot,1)
+          p.write_text(s)
+
+          p=Path('postboot-loader.js')
+          s=p.read_text().replace("'./general-settings.js?v=2-call-safe'","'./general-settings.js?v=3-single-entry'",1)
+          p.write_text(s)
+
+          p=Path('extras-loader.js')
+          s=p.read_text()
+          s=s.replace("    loadOnce('general-settings','./general-settings.js?v=1-all-profiles'),\n",'',1)
+          p.write_text(s)
+
+          p=Path('index.html')
+          s=p.read_text().replace('./postboot-loader.js?v=28-call-safe','./postboot-loader.js?v=29-single-settings-entry',1)
+          p.write_text(s)
+          PY
+      - name: Validate
+        shell: bash
+        run: |
+          node --check general-settings.js
+          node --check postboot-loader.js
+          node --check extras-loader.js
+          grep -q 'bindExistingSettingsButton' general-settings.js
+          ! grep -q "loadOnce('general-settings'" extras-loader.js
+          grep -q 'general-settings.js?v=3-single-entry' postboot-loader.js
+          grep -q 'postboot-loader.js?v=29-single-settings-entry' index.html
+      - name: Commit
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add general-settings.js postboot-loader.js extras-loader.js index.html
+          git commit -m 'fix: remove duplicate Configuracoes buttons' || exit 0
+          git push
