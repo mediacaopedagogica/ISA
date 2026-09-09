@@ -37,10 +37,11 @@ later(1450,'./family-media-menu-v2.js?v=12-compact-plus')
 later(1750,'./notifications-v2.js?v=11-progressive')
 later(2300,'./extras-loader.js?v=55-snake-restored',()=>window.__ISA_ENSURE_PROFILE_MENU__?.())
 
-// Teste Jogo permanece exclusivo da Keise e carrega separado do restante.
+// Layout aprovado da Keise + Teste Jogo exclusivo.
 const requested=String(new URLSearchParams(location.search).get('perfil')||'').trim().toLowerCase()
 const current=String(document.getElementById('myName')?.textContent||'').trim().toLowerCase()
 if(requested==='keise'||current==='keise'||current.startsWith('keise ')){
+  later(260,'./keise-dashboard-v1.js?v=2-approved-exact',()=>window.__ISA_SHOW_KEISE_HOME__?.())
   later(420,'./keise-game-test.js?v=9-progressive',()=>{window.__ISA_ENSURE_TEST_GAME_NAV__?.();window.__ISA_ENSURE_PROFILE_MENU__?.()})
 }
 window.__ISA_EXTRAS_READY__=true
