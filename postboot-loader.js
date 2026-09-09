@@ -1,98 +1,44 @@
-// Carrega recursos complementares sem bloquear o núcleo do Cantinho.
+// Carregador progressivo: o núcleo do Cantinho nunca espera módulos extras.
 const wait=ms=>new Promise(r=>setTimeout(r,ms))
-const idle=()=>new Promise(resolve=>{
-  if('requestIdleCallback' in window)requestIdleCallback(()=>resolve(),{timeout:700})
-  else setTimeout(resolve,80)
-})
+async function load(path){try{return await import(path)}catch(e){console.warn('Módulo não carregou:',path,e);return null}}
+function later(ms,path,after){setTimeout(async()=>{await load(path);try{after?.()}catch{}},ms)}
 
-async function loadWithRetry(path){
-  try{return await import(path)}
-  catch(first){
-    console.warn('Primeira tentativa falhou:',path,first)
-    await wait(320)
-    const sep=path.includes('?')?'&':'?'
-    return import(`${path}${sep}retry=${Date.now()}`)
-  }
-}
-
-function ensureSettingsMenuButton(){
-  const nav=document.querySelector('.nav-tabs')
-  if(!nav)return null
-  const candidates=[...nav.querySelectorAll('#settingsMenuBtn,#generalSettingsNav')]
-  let btn=candidates[0]||null
-  candidates.slice(1).forEach(extra=>extra.remove())
-  if(!btn){
-    btn=document.createElement('button');btn.id='settingsMenuBtn';btn.className='nav-btn';btn.type='button';btn.textContent='⚙️'
-    const calendar=nav.querySelector('[data-tab="calendar"]')
-    if(calendar)calendar.insertAdjacentElement('afterend',btn);else nav.appendChild(btn)
-  }else if(btn.id!=='settingsMenuBtn')btn.id='settingsMenuBtn'
-  if(!btn.classList.contains('nav-btn'))btn.classList.add('nav-btn')
-  btn.classList.remove('hidden');btn.type='button';btn.title='Configurações Gerais';btn.setAttribute('aria-label','Configurações Gerais');btn.setAttribute('data-settings-menu','1');btn.removeAttribute('data-tab');btn.textContent='⚙️'
-  btn.style.removeProperty('display');btn.style.removeProperty('visibility');btn.style.removeProperty('opacity')
-  if(btn.dataset.settingsEntryBound!=='1'){
-    btn.dataset.settingsEntryBound='1';btn.dataset.generalSettingsBound='1'
-    btn.addEventListener('click',async e=>{
-      e.preventDefault();e.stopPropagation()
-      if(typeof window.__ISA_OPEN_GENERAL_SETTINGS__==='function'){window.__ISA_OPEN_GENERAL_SETTINGS__();return}
-      try{await loadWithRetry('./general-settings.js?v=9-profile-menu');window.__ISA_OPEN_GENERAL_SETTINGS__?.()}catch(error){console.warn('Configurações não abriram:',error)}
-    },true)
+function ensureSettings(){
+  const nav=document.querySelector('.nav-tabs');if(!nav)return null
+  let btn=document.getElementById('settingsMenuBtn')||document.getElementById('generalSettingsNav')
+  if(!btn){btn=document.createElement('button');btn.id='settingsMenuBtn';btn.type='button';btn.className='nav-btn';const cal=nav.querySelector('[data-tab="calendar"]');cal?.insertAdjacentElement('afterend',btn);if(!btn.parentNode)nav.appendChild(btn)}
+  btn.id='settingsMenuBtn';btn.classList.add('nav-btn');btn.classList.remove('hidden');btn.removeAttribute('data-tab');btn.dataset.settingsMenu='1';btn.textContent='⚙️';btn.title='Configurações';btn.setAttribute('aria-label','Configurações');btn.style.removeProperty('display');btn.style.removeProperty('visibility');btn.style.removeProperty('opacity')
+  if(btn.dataset.stableSettingsBound!=='1'){
+    btn.dataset.stableSettingsBound='1';btn.dataset.generalSettingsBound='1'
+    btn.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();if(typeof window.__ISA_OPEN_GENERAL_SETTINGS__!=='function')await load('./general-settings.js?v=12-unified-settings');window.__ISA_OPEN_GENERAL_SETTINGS__?.()},true)
   }
   return btn
 }
+window.__ISA_ENSURE_SETTINGS_MENU__=ensureSettings
+ensureSettings();document.addEventListener('DOMContentLoaded',ensureSettings,{once:true})
+let n=0;const t=setInterval(()=>{ensureSettings();window.__ISA_ENSURE_PROFILE_MENU__?.();if(++n>24)clearInterval(t)},350)
 
-window.__ISA_ENSURE_SETTINGS_MENU__=ensureSettingsMenuButton
-ensureSettingsMenuButton()
-document.addEventListener('DOMContentLoaded',ensureSettingsMenuButton,{once:true})
-let settingsMenuTries=0;const settingsMenuTimer=setInterval(()=>{ensureSettingsMenuButton();window.__ISA_ENSURE_PROFILE_MENU__?.();if(++settingsMenuTries>=30)clearInterval(settingsMenuTimer)},300)
+// Primeira onda: somente navegação e configurações leves.
+later(20,'./profile-menu-guard.js?v=4-responsive-safe',()=>window.__ISA_ENSURE_PROFILE_MENU__?.())
+later(80,'./general-settings.js?v=12-unified-settings',()=>{ensureSettings();window.__ISA_APPLY_GENERAL_SETTINGS__?.()})
 
+// Ajuste de responsividade sem bloquear a tela.
 const dedicatedMobile=new URLSearchParams(location.search).get('mobile')==='1'
-const commonCore=[
-  './general-settings.js?v=10-all-family-features',
-  './profile-status-stickers.js?v=8-all-family-features',
-  './call-manager.js?v=14-all-family-features',
-  './family-media-menu-v2.js?v=10-all-family-features',
-  './social-nav-guard.js?v=5-all-family-features',
-  './profile-actions.js?v=6-all-family-features',
-  './profile-menu-guard.js?v=3-stable-games'
-]
-const firstWave=dedicatedMobile?[
-  './mobile-native.js?v=5-native-tap',
-  ...commonCore
-]:[
-  './mobile-responsive-v2.js?v=17-native-tap',
-  ...commonCore
-]
-const secondWave=[
-  './notifications-v2.js?v=10-progressive'
-]
-const thirdWave=[
-  './extras-loader.js?v=53-all-family-features'
-]
+later(180,dedicatedMobile?'./mobile-native.js?v=6-progressive':'./mobile-responsive-v2.js?v=18-progressive',()=>window.__ISA_ENSURE_PROFILE_MENU__?.())
 
-const results=[]
-async function loadWave(paths){
-  for(const path of paths){
-    await idle()
-    try{await loadWithRetry(path);results.push({path,ok:true});window.__ISA_ENSURE_PROFILE_MENU__?.()}
-    catch(error){results.push({path,ok:false,error:String(error?.message||error||'Erro')});console.warn('Módulo complementar não carregou:',path,error)}
-  }
+// Recursos sociais e de comunicação entram depois que a interface já está clicável.
+later(520,'./profile-status-stickers.js?v=11-settings-lazy')
+later(760,'./social-nav-guard.js?v=6-progressive',()=>{window.__ISA_ENSURE_SOCIAL_NAV__?.();window.__ISA_ENSURE_PROFILE_MENU__?.()})
+later(980,'./profile-actions.js?v=7-progressive')
+later(1200,'./call-manager.js?v=16-progressive')
+later(1450,'./family-media-menu-v2.js?v=11-progressive')
+later(1750,'./notifications-v2.js?v=11-progressive')
+later(2300,'./extras-loader.js?v=54-progressive',()=>window.__ISA_ENSURE_PROFILE_MENU__?.())
+
+// Teste Jogo permanece exclusivo da Keise e carrega separado do restante.
+const requested=String(new URLSearchParams(location.search).get('perfil')||'').trim().toLowerCase()
+const current=String(document.getElementById('myName')?.textContent||'').trim().toLowerCase()
+if(requested==='keise'||current==='keise'||current.startsWith('keise ')){
+  later(420,'./keise-game-test.js?v=9-progressive',()=>{window.__ISA_ENSURE_TEST_GAME_NAV__?.();window.__ISA_ENSURE_PROFILE_MENU__?.()})
 }
-
-await loadWave(firstWave)
-ensureSettingsMenuButton();window.__ISA_ENSURE_PROFILE_MENU__?.()
-setTimeout(()=>loadWave(secondWave).then(()=>{window.__ISA_ENSURE_SOCIAL_NAV__?.();window.__ISA_ENSURE_PROFILE_MENU__?.()}),250)
-setTimeout(()=>loadWave(thirdWave).then(()=>window.__ISA_ENSURE_PROFILE_MENU__?.()),1000)
-
-// Teste Jogo continua exclusivo da Keise.
-const requestedProfile=String(new URLSearchParams(location.search).get('perfil')||'').trim().toLowerCase()
-const currentName=String(document.getElementById('myName')?.textContent||'').trim().toLowerCase()
-if(requestedProfile==='keise'||currentName==='keise'||currentName.startsWith('keise ')){
-  setTimeout(async()=>{
-    await idle()
-    try{await loadWithRetry('./keise-game-test.js?v=8-profile-menu');window.__ISA_ENSURE_TEST_GAME_NAV__?.();window.__ISA_ENSURE_PROFILE_MENU__?.()}
-    catch(error){console.warn('Teste Jogo da Keise não carregou:',error)}
-  },1300)
-}
-
 window.__ISA_EXTRAS_READY__=true
-window.__ISA_EXTRAS_RESULTS__=results
