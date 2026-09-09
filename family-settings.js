@@ -1,5 +1,5 @@
 // Configurações dos acessos pessoais da família.
-// Um único botão no cabeçalho/menu lateral; nunca sobre a conversa.
+// Um único botão de engrenagem no cabeçalho; nunca sobre a conversa.
 const $=id=>document.getElementById(id)
 const PALETTES={
   default:{label:'Padrão',bg:''},
@@ -22,10 +22,10 @@ let state=read()
 function addStyle(){
   if($('familySettingsStyle'))return
   const s=document.createElement('style');s.id='familySettingsStyle';s.textContent=`
-.friend-settings-menu{margin-left:auto;flex:0 0 auto;border:1px solid rgba(167,131,188,.18);border-radius:14px;padding:9px 11px;background:linear-gradient(145deg,#fff,#eee6ff);color:#65546f;font-weight:900;box-shadow:0 5px 0 rgba(183,160,209,.18);cursor:pointer;display:inline-flex!important;align-items:center;gap:6px;visibility:visible!important;opacity:1!important}.friend-settings-menu:active{transform:translateY(2px);box-shadow:0 3px 0 rgba(183,160,209,.18)}.friend-settings-menu span{font-size:.76rem}.friend-profile>div:nth-child(2){min-width:0;flex:1}
+.friend-settings-menu{margin-left:auto;flex:0 0 42px;width:42px;height:42px;border:1px solid rgba(167,131,188,.18);border-radius:14px;padding:0;background:linear-gradient(145deg,#fff,#eee6ff);color:#65546f;font-weight:900;font-size:20px;line-height:1;box-shadow:0 5px 0 rgba(183,160,209,.18);cursor:pointer;display:inline-grid!important;place-items:center;visibility:visible!important;opacity:1!important}.friend-settings-menu:active{transform:translateY(2px);box-shadow:0 3px 0 rgba(183,160,209,.18)}.friend-settings-menu span{display:none!important}.friend-profile>div:nth-child(2){min-width:0;flex:1}
 #familySettingsPanel{position:fixed;inset:0;z-index:150000;display:grid;place-items:center;padding:16px;background:rgba(42,29,51,.38);backdrop-filter:blur(10px)}#familySettingsPanel.hidden{display:none!important}.fsp-card{width:min(620px,96vw);max-height:90dvh;overflow:auto;border-radius:26px;background:#fffafd;color:#5d4e66;padding:18px;border:1px solid #fff;box-shadow:0 25px 80px #49375433}.fsp-head{display:flex;align-items:center;gap:10px}.fsp-head>div{flex:1}.fsp-head h2{margin:0;font-size:20px}.fsp-head p{margin:3px 0 0;color:#8e8096;font-size:11px}.fsp-close{width:38px;height:38px;border:0;border-radius:12px;background:#f1e9f6;color:#675272;font-size:18px}.fsp-section{padding:14px 0;border-top:1px solid #eee5f2}.fsp-section h3{margin:0 0 4px;font-size:15px}.fsp-section p{margin:0 0 10px;color:#8e8096;font-size:11px}.fsp-grid{display:grid;grid-template-columns:repeat(4,minmax(72px,1fr));gap:8px}.fsp-bg{border:2px solid transparent;border-radius:15px;background:#fff;padding:5px;box-shadow:0 5px 15px #6d55751a}.fsp-bg.active{border-color:#b69bd2}.fsp-preview{display:block;aspect-ratio:1.15;border-radius:10px;border:1px solid #0000000d}.fsp-bg small{display:block;margin:5px 2px 2px;font-weight:850;color:#685675}.fsp-row{display:flex;align-items:center;gap:10px;padding:7px 0}.fsp-row>div{flex:1}.fsp-buttons{display:flex;gap:6px}.fsp-buttons button{border:1px solid #e4d9e9;border-radius:10px;background:#fff;padding:8px 10px;font-weight:900}.fsp-buttons button.active{background:#eadffc}.fsp-toggle{width:48px;height:28px}.fsp-toggle input{width:20px;height:20px;accent-color:#a887c8}.friend-settings-font-small .friend-bubble,.friend-settings-font-small #friendMessageInput{font-size:90%!important}.friend-settings-font-large .friend-bubble,.friend-settings-font-large #friendMessageInput{font-size:115%!important}.friend-settings-reduce *{animation-duration:.001ms!important;transition-duration:.001ms!important}
-@media(min-width:781px){.friend-settings-menu{min-width:126px;justify-content:center}.friend-settings-menu span{display:inline!important}.fsp-card{width:min(660px,90vw)}}
-@media(max-width:780px){.friend-settings-menu{width:42px;height:42px;padding:8px;justify-content:center}.friend-settings-menu span{display:none}.fsp-card{width:100%;max-height:92dvh;border-radius:22px 22px 14px 14px}.fsp-grid{grid-template-columns:repeat(3,minmax(72px,1fr))}}
+@media(min-width:781px){.fsp-card{width:min(660px,90vw)}}
+@media(max-width:780px){.fsp-card{width:100%;max-height:92dvh;border-radius:22px 22px 14px 14px}.fsp-grid{grid-template-columns:repeat(3,minmax(72px,1fr))}}
 `;document.head.appendChild(s)
 }
 function apply(){
@@ -57,15 +57,16 @@ function ensureButton(){
   const duplicates=[...document.querySelectorAll('#friendSettingsBtn')]
   let b=duplicates[0]||null
   duplicates.slice(1).forEach(x=>x.remove())
-  if(!b){b=document.createElement('button');b.id='friendSettingsBtn';b.className='friend-settings-menu';b.type='button';b.title='Configurações';b.setAttribute('aria-label','Configurações');b.innerHTML='⚙️ <span>Configurações</span>';row.appendChild(b)}
+  if(!b){b=document.createElement('button');b.id='friendSettingsBtn';b.className='friend-settings-menu';b.type='button';row.appendChild(b)}
   if(b.parentNode!==row)row.appendChild(b)
-  b.classList.add('friend-settings-menu');b.classList.remove('hidden');b.style.removeProperty('display');b.style.removeProperty('visibility');b.style.removeProperty('opacity')
+  b.classList.add('friend-settings-menu');b.classList.remove('hidden');b.type='button';b.title='Configurações';b.setAttribute('aria-label','Configurações');b.textContent='⚙️';b.style.removeProperty('display');b.style.removeProperty('visibility');b.style.removeProperty('opacity')
   if(b.dataset.familySettingsBound!=='1'){b.dataset.familySettingsBound='1';b.onclick=e=>{e.preventDefault();e.stopPropagation();buildPanel();state=read();apply();$('familySettingsPanel').classList.remove('hidden')}}
   return b
 }
 function boot(){
   addStyle();buildPanel();ensureButton();state=read();apply();
-  const observer=new MutationObserver(()=>{ensureButton();apply()});observer.observe(document.getElementById('friendChat')||document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']})
+  const host=document.getElementById('friendChat')||document.body
+  const observer=new MutationObserver(()=>{ensureButton();apply()});observer.observe(host,{subtree:true,childList:true,attributes:true,attributeFilter:['class']})
   let n=0;const t=setInterval(()=>{ensureButton();apply();if(++n>40)clearInterval(t)},250)
   window.__ISA_ENSURE_FAMILY_SETTINGS__=ensureButton
 }
