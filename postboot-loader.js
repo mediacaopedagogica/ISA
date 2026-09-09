@@ -86,7 +86,8 @@ const common=[
   './notifications-v2.js?v=9-stable',
   './extras-loader.js?v=50-all-profile-features',
   './profile-status-stickers.js?v=2-all-links',
-  './profile-actions.js?v=1-all-links'
+  './profile-actions.js?v=1-all-links',
+  './social-nav-guard.js?v=1-persistent'
 ]
 const paths=dedicatedMobile?[
   './call-manager.js?v=8-header-safe',
@@ -98,6 +99,7 @@ const paths=dedicatedMobile?[
 ]
 const results=await Promise.allSettled(paths.map(loadWithRetry))
 ensureSettingsMenuButton();
+window.__ISA_ENSURE_SOCIAL_NAV__?.();
 
 // Fallback específico para o perfil pessoal da Keise: garante que o botão Teste Jogo
 // continue no menu mesmo se outro módulo reconstruir a navegação depois do boot.
