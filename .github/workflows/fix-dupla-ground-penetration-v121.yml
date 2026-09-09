@@ -1,0 +1,83 @@
+name: Fix Dupla ground penetration v1.2.1
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-dupla-ground-penetration-v121.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply solid road and anti-subsoil safety
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p=Path('jogos/dupla-na-pista-teste.html')
+          s=p.read_text()
+
+          if 'pista viva v1.2.1' in s:
+              print('v1.2.1 already applied')
+              raise SystemExit(0)
+          if 'pista viva v1.2.0' not in s:
+              raise SystemExit('expected v1.2.0 marker not found')
+
+          s=s.replace(
+            'Build privada • pista viva v1.2.0 • direção reconstruída + câmera traseira',
+            'Build privada • pista viva v1.2.1 • pista sólida + proteção anti-subsolo',
+            1
+          )
+
+          old="function buildPhysicalTrack(track){const N=DRIVING.physics.trackSegments,half=DRIVING.physics.physicalHalfWidth,verts=[],idx=[];for(let i=0;i<N;i++){const t=i/N,l=roadPoint(t,track,-half,-.05),r=roadPoint(t,track,half,-.05);verts.push(l.x,l.y,l.z,r.x,r.y,r.z)}for(let i=0;i<N;i++){const n=i*2,nx=((i+1)%N)*2;idx.push(n,nx,n+1,n+1,nx,nx+1)}const body=new CANNON.Body({mass:0,material:roadPhysMat});body.addShape(new CANNON.Trimesh(verts,idx));physicsWorld.addBody(body)}buildPhysicalTrack(TRACK_A);buildPhysicalTrack(TRACK_B);"
+          new="function buildPhysicalTrack(track){const N=DRIVING.physics.trackSegments,half=DRIVING.physics.physicalHalfWidth,solidRoadDepth=.85,verts=[],idx=[];for(let i=0;i<N;i++){const t=i/N,lt=roadPoint(t,track,-half,-.05),rt=roadPoint(t,track,half,-.05);verts.push(lt.x,lt.y,lt.z,rt.x,rt.y,rt.z,lt.x,lt.y-solidRoadDepth,lt.z,rt.x,rt.y-solidRoadDepth,rt.z)}for(let i=0;i<N;i++){const a=i*4,b=((i+1)%N)*4,lt=a,rt=a+1,lb=a+2,rb=a+3,nlt=b,nrt=b+1,nlb=b+2,nrb=b+3;idx.push(lt,nlt,rt,rt,nlt,nrt,lb,rb,nlb,rb,nrb,nlb,lt,lb,nlt,lb,nlb,nlt,rt,nrt,rb,rb,nrt,nrb)}const body=new CANNON.Body({mass:0,material:roadPhysMat});body.addShape(new CANNON.Trimesh(verts,idx));physicsWorld.addBody(body)}buildPhysicalTrack(TRACK_A);buildPhysicalTrack(TRACK_B);"
+          if old not in s:
+              raise SystemExit('continuous track marker not found')
+          s=s.replace(old,new,1)
+
+          old_barrier="function applySoftBarrier(i,near){const s=states[i],pv=vehiclePhysics[i],pen=Math.abs(s.lat)-DRIVING.barrier.lateralLimit;if(pen<=0)return;const sg=Math.sign(s.lat)||1,out=new CANNON.Vec3(near.f.side.x*sg,0,near.f.side.z*sg),outSpeed=pv.body.velocity.dot(out);if(outSpeed>0){const normalRemove=outSpeed*(1+DRIVING.barrier.restitution);pv.body.velocity.x-=out.x*normalRemove;pv.body.velocity.z-=out.z*normalRemove}const inward=Math.min(.10,.018+pen*.12);pv.body.position.x-=out.x*inward;pv.body.position.z-=out.z*inward;pv.body.angularVelocity.y*=.88}"
+          ground_safety="function applySoftBarrier(i,near){const s=states[i],pv=vehiclePhysics[i],pen=Math.abs(s.lat)-DRIVING.barrier.lateralLimit;if(pen<=0)return;const sg=Math.sign(s.lat)||1,out=new CANNON.Vec3(near.f.side.x*sg,0,near.f.side.z*sg),outSpeed=pv.body.velocity.dot(out);if(outSpeed>0){const normalRemove=outSpeed*(1+DRIVING.barrier.restitution);pv.body.velocity.x-=out.x*normalRemove;pv.body.velocity.z-=out.z*normalRemove}const inward=Math.min(.10,.018+pen*.12);pv.body.position.x-=out.x*inward;pv.body.position.z-=out.z*inward;pv.body.angularVelocity.y*=.88}function applyGroundSafety(i,near){const pv=vehiclePhysics[i],b=pv.body,roadY=near.q.y,ex=new CANNON.Vec3(1,0,0),ey=new CANNON.Vec3(0,1,0),ez=new CANNON.Vec3(0,0,1),off=new CANNON.Vec3(0,.18,0);b.quaternion.vmult(ex,ex);b.quaternion.vmult(ey,ey);b.quaternion.vmult(ez,ez);b.quaternion.vmult(off,off);const supportRadius=Math.abs(ex.y)*1.02+Math.abs(ey.y)*.40+Math.abs(ez.y)*2.34,bottom=b.position.y+off.y-supportRadius,minBottom=roadY+.035;if(b.position.y<roadY-.22){const yaw=Math.atan2(near.f.tan.x,near.f.tan.z);b.position.set(near.q.x,roadY+1.15,near.q.z);b.quaternion.setFromEuler(0,yaw,0,'XYZ');b.velocity.set(0,0,0);b.angularVelocity.set(0,0,0);pv.steer=0;for(let w=0;w<4;w++){pv.vehicle.applyEngineForce(0,w);pv.vehicle.setBrake(180,w)}msg('↺ Proteção anti-subsolo: veículo recolocado na pista');return}if(bottom<minBottom){b.position.y+=minBottom-bottom+.025;if(b.velocity.y<0)b.velocity.y=Math.max(0,-b.velocity.y*.06);b.velocity.x*=.965;b.velocity.z*=.965;b.angularVelocity.x*=.78;b.angularVelocity.z*=.78}}"
+          if old_barrier not in s:
+              raise SystemExit('barrier marker not found')
+          s=s.replace(old_barrier,ground_safety,1)
+
+          old_loop="for(let i=0;i<2;i++){const s=states[i],pv=vehiclePhysics[i],near=i===0?near0:near1;applySoftBarrier(i,near);if(pv.body.position.y<near.q.y-2.2||Math.abs(s.lat)>DRIVING.barrier.recoveryLimit){"
+          new_loop="for(let i=0;i<2;i++){const s=states[i],pv=vehiclePhysics[i],near=i===0?near0:near1;applySoftBarrier(i,near);applyGroundSafety(i,near);if(pv.body.position.y<near.q.y-2.2||Math.abs(s.lat)>DRIVING.barrier.recoveryLimit){"
+          if old_loop not in s:
+              raise SystemExit('main loop marker not found')
+          s=s.replace(old_loop,new_loop,1)
+
+          p.write_text(s)
+          print('Dupla v1.2.1 anti-subsoil fix applied')
+          PY
+
+      - name: Syntax and safety checks
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('jogos/dupla-na-pista-teste.html').read_text()
+          required=['pista viva v1.2.1','solidRoadDepth=.85','applyGroundSafety','supportRadius','new CANNON.Trimesh']
+          missing=[x for x in required if x not in s]
+          if missing: raise SystemExit('missing: '+', '.join(missing))
+          scripts=re.findall(r'<script type="module">(.*?)</script>',s,re.S)
+          if not scripts: raise SystemExit('module script not found')
+          Path('/tmp/dupla.mjs').write_text(scripts[-1])
+          PY
+          node --check /tmp/dupla.mjs
+
+      - name: Commit fix
+        shell: bash
+        run: |
+          if git diff --quiet -- jogos/dupla-na-pista-teste.html; then
+            echo 'No changes'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add jogos/dupla-na-pista-teste.html
+          git commit -m 'fix: keep rolled vehicles above solid track'
+          git push
