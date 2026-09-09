@@ -1,0 +1,33 @@
+name: Fix Dupla forward orientation v1.0.1
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-dupla-forward-orientation-v101.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Correct visual vehicle forward axis
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('jogos/dupla-na-pista-teste.html')
+          s=p.read_text()
+          s=s.replace('pista viva v1.0 • suspensão + pneus raycast','pista viva v1.0.1 • frente corrigida')
+          s=s.replace('🧪 TESTE JOGO • KEISE • v1.0','🧪 TESTE JOGO • KEISE • v1.0.1')
+          old="const modelFix=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),Math.PI);"
+          new="const modelFix=new THREE.Quaternion();"
+          if old not in s:
+              raise SystemExit('modelFix marker not found')
+          s=s.replace(old,new,1)
+          p.write_text(s)
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add jogos/dupla-na-pista-teste.html
+          git commit -m 'fix: align vehicle visual front with physics forward axis'
+          git push
