@@ -1,0 +1,47 @@
+name: Publish external controls v1
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-external-controls-v1.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add stable external UI controller
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          for path in ['acesso-mobile.html','acesso.html']:
+              p=Path(path); s=p.read_text()
+              s=re.sub(r'\./external-progressive-loader\.js\?v=[^\"\']+','./external-progressive-loader.js?v=2-controls',s)
+              if 'external-ui-controller.js' not in s:
+                  marker='<script type="module" src="./familia-externa.js?v=62-unfreeze-core"></script>'
+                  if marker not in s:
+                      m=re.search(r'<script type="module" src="\./familia-externa\.js\?v=[^\"]+"></script>',s)
+                      if not m: raise SystemExit(f'{path}: familia-externa script not found')
+                      marker=m.group(0)
+                  s=s.replace(marker,marker+'\n  <script type="module" src="./external-ui-controller.js?v=1-controls"></script>',1)
+              # Remove the old Perfil/Stickers buttons from the primary menu; controller places them correctly.
+              s=re.sub(r'\s*<button id="friendProfileMenuBtn"[^>]*>.*?</button>','',s,flags=re.S)
+              s=re.sub(r'\s*<button id="friendStickerMenuBtn"[^>]*>.*?</button>','',s,flags=re.S)
+              # Keep a dedicated games entry in the menu from first paint.
+              if 'id="friendGamesMenuBtn"' not in s:
+                  s=s.replace('<button id="friendSocialBtn" class="family-primary-tab" type="button">🌸 <span>Nossa Rede</span></button>','<button id="friendSocialBtn" class="family-primary-tab" type="button">🌸 <span>Nossa Rede</span></button>\n          <button id="friendGamesMenuBtn" class="family-primary-tab" type="button">🎮 <span>Joguinhos</span></button>',1)
+              p.write_text(s)
+          PY
+          grep -q 'external-ui-controller.js?v=1-controls' acesso-mobile.html
+          grep -q 'external-ui-controller.js?v=1-controls' acesso.html
+          grep -q 'friendGamesMenuBtn' acesso-mobile.html
+          grep -q 'friendGamesMenuBtn' acesso.html
+      - name: Commit patch
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add acesso-mobile.html acesso.html
+          git commit -m 'fix: enable external buttons calls profile and sticker menu'
+          git push
