@@ -27,14 +27,14 @@ const dedicatedMobile=new URLSearchParams(location.search).get('mobile')==='1'
 later(180,dedicatedMobile?'./mobile-native.js?v=6-progressive':'./mobile-responsive-v2.js?v=18-progressive',()=>window.__ISA_ENSURE_PROFILE_MENU__?.())
 
 // Recursos sociais e de comunicação entram depois que a interface já está clicável.
-later(520,'./profile-status-stickers.js?v=11-settings-lazy')
+later(520,'./profile-status-stickers.js?v=14-plus-menu')
 later(650,'./sticker-bg-remover.js?v=1-ai-cutout',()=>window.__ISA_ENSURE_STICKER_BG_REMOVER__?.())
 later(760,'./social-nav-guard.js?v=6-progressive',()=>{window.__ISA_ENSURE_SOCIAL_NAV__?.();window.__ISA_ENSURE_PROFILE_MENU__?.()})
 later(980,'./profile-actions.js?v=7-progressive')
-later(1200,'./call-manager.js?v=16-progressive')
-later(1450,'./family-media-menu-v2.js?v=11-progressive')
+later(1200,'./call-manager.js?v=18-plus-menu')
+later(1450,'./family-media-menu-v2.js?v=12-compact-plus')
 later(1750,'./notifications-v2.js?v=11-progressive')
-later(2300,'./extras-loader.js?v=54-progressive',()=>window.__ISA_ENSURE_PROFILE_MENU__?.())
+later(2300,'./extras-loader.js?v=55-snake-restored',()=>window.__ISA_ENSURE_PROFILE_MENU__?.())
 
 // Teste Jogo permanece exclusivo da Keise e carrega separado do restante.
 const requested=String(new URLSearchParams(location.search).get('perfil')||'').trim().toLowerCase()
