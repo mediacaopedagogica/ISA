@@ -29,12 +29,12 @@ async function uploadImage(file){
 function toast(text){const el=$('friendToast');if(!el)return;el.textContent=text;el.classList.remove('hidden');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.add('hidden'),2300)}
 function fmtTime(ts){return new Intl.DateTimeFormat('pt-BR',{hour:'2-digit',minute:'2-digit'}).format(new Date(ts))}
 async function bootstrap(silent=false){
-  if(!token){$('friendGateTitle').textContent='Este link não é válido';$('friendGateText').textContent='Peça um novo link pessoal.';return}
+  if(!token){window.__ISA_FRIEND_ACCESS_VALID__=false;document.dispatchEvent(new Event('isa:friend-access-invalid'));$('friendGateTitle').textContent='Este link não é válido';$('friendGateText').textContent='Peça um novo link pessoal.';return}
   try{
-    const data=await rpc('friend_portal_bootstrap',{p_token:token});person=data.friend;conversations=data.conversations||[]
+    const data=await rpc('friend_portal_bootstrap',{p_token:token});person=data.friend;conversations=data.conversations||[];window.__ISA_FRIEND_ACCESS_VALID__=true;window.__ISA_FRIEND_PERSON__=person;document.dispatchEvent(new CustomEvent('isa:friend-access-valid',{detail:{id:person?.id||null,name:person?.name||''}}))
     if(!silent){$('friendGateTitle').textContent=`Oi, ${person.name}! 💜`;$('friendGateText').textContent='Este é seu acesso pessoal ao Cantinho da Isa.';$('friendEnterBtn').classList.remove('hidden')}
     if($('friendChat')&&!$('friendChat').classList.contains('hidden'))renderConversationList()
-  }catch(e){if(!silent){$('friendGateTitle').textContent='Acesso indisponível';$('friendGateText').textContent='Este link pode ter sido substituído.';$('friendGateError').textContent=e.message}}
+  }catch(e){window.__ISA_FRIEND_ACCESS_VALID__=false;document.dispatchEvent(new Event('isa:friend-access-invalid'));if(!silent){$('friendGateTitle').textContent='Acesso indisponível';$('friendGateText').textContent='Este link pode ter sido substituído.';$('friendGateError').textContent=e.message}}
 }
 function renderConversationList(){
   $('friendName').textContent=person?.name||'Família'
