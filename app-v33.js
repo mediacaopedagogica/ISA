@@ -21675,25 +21675,84 @@ ${suffix}`;
       renderChatList();
       renderSupervisionList();
     }
-    async function loadConversations() {
-      const { data, error } = await supabase.from("conversations").select("id,type,title,created_by,pinned_message_id,created_at,updated_at,conversation_members(member_id,last_read_at,joined_at)").order("updated_at", { ascending: false });
-      if (error) {
-        console.error(error);
+    const CONVERSATION_LOAD_TIMEOUT_V58 = 5200;
+    const CONVERSATION_ENRICH_TIMEOUT_V58 = 4200;
+    function conversationCacheKeyV58() {
+      return `cantinho:conversations:v58:${me?.id || "anon"}`;
+    }
+    function withConversationTimeoutV58(task, ms, label) {
+      let timer = null;
+      return Promise.race([
+        Promise.resolve(task),
+        new Promise((_, reject) => {
+          timer = setTimeout(() => reject(new Error(label || "Tempo limite excedido")), ms);
+        })
+      ]).finally(() => {
+        if (timer) clearTimeout(timer);
+      });
+    }
+    function saveConversationCacheV58() {
+      if (!me || !Array.isArray(conversations)) return;
+      try {
+        localStorage.setItem(conversationCacheKeyV58(), JSON.stringify({ savedAt: Date.now(), items: conversations }));
+      } catch {
+      }
+    }
+    function restoreConversationCacheV58() {
+      if (!me || conversations.length) return false;
+      try {
+        const raw = localStorage.getItem(conversationCacheKeyV58());
+        if (!raw) return false;
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed?.items) || !parsed.items.length) return false;
+        conversations = parsed.items;
+        renderChatList();
+        renderSupervisionList();
+        return true;
+      } catch {
+        return false;
+      }
+    }
+    function showConversationLoadErrorV58(message = "Não foi possível atualizar as conversas agora.") {
+      const list = $("chatList");
+      if (!list) return;
+      if (conversations.length) {
+        renderChatList();
         return;
       }
-      conversations = data || [];
-      const ids = conversations.map((c) => c.id), latestMap = {};
-      if (ids.length) {
-        const { data: recent } = await supabase.from("messages").select("id,conversation_id,sender_id,body,kind,sent_at").in("conversation_id", ids).is("deleted_at", null).order("sent_at", { ascending: false }).limit(500);
-        for (const m of recent || []) if (!latestMap[m.conversation_id]) latestMap[m.conversation_id] = m;
+      list.innerHTML = `<div class="muted" style="padding:12px;line-height:1.5">${esc(message)}<br><button id="conversationRetryV58" type="button" class="tiny-btn" style="margin-top:8px">Tentar novamente</button></div>`;
+      const retry = $("conversationRetryV58");
+      if (retry) retry.onclick = () => {
+        list.innerHTML = '<p class="muted" style="padding:12px">Atualizando conversas…</p>';
+        loadConversations();
+      };
+    }
+    async function enrichConversationsV58(ids) {
+      if (!Array.isArray(ids) || !ids.length) return;
+      const recentTask = withConversationTimeoutV58(
+        supabase.from("messages").select("id,conversation_id,sender_id,body,kind,sent_at").in("conversation_id", ids).is("deleted_at", null).order("sent_at", { ascending: false }).limit(500),
+        CONVERSATION_ENRICH_TIMEOUT_V58,
+        "Prévia das mensagens demorou demais"
+      );
+      const alertsTask = isParent() ? withConversationTimeoutV58(
+        supabase.from("parental_alerts").select("conversation_id").eq("target_member_id", me.id).is("read_at", null),
+        CONVERSATION_ENRICH_TIMEOUT_V58,
+        "Alertas demoraram demais"
+      ) : Promise.resolve({ data: [], error: null });
+      const [recentResult, alertsResult] = await Promise.allSettled([recentTask, alertsTask]);
+      const recentResponse = recentResult.status === "fulfilled" ? recentResult.value : { data: [], error: recentResult.reason };
+      const alertsResponse = alertsResult.status === "fulfilled" ? alertsResult.value : { data: [], error: alertsResult.reason };
+      const latestMap = {};
+      if (!recentResponse?.error) {
+        for (const m of recentResponse?.data || []) if (!latestMap[m.conversation_id]) latestMap[m.conversation_id] = m;
       }
       const supervisorUnread = {};
-      if (isParent()) {
-        const { data: alerts } = await supabase.from("parental_alerts").select("conversation_id").eq("target_member_id", me.id).is("read_at", null);
-        for (const a of alerts || []) if (a.conversation_id) supervisorUnread[a.conversation_id] = true;
+      if (!alertsResponse?.error) {
+        for (const a of alertsResponse?.data || []) if (a.conversation_id) supervisorUnread[a.conversation_id] = true;
       }
       for (const c of conversations) {
-        const mine = (c.conversation_members || []).find((x) => x.member_id === me.id), latest = latestMap[c.id];
+        const mine = (c.conversation_members || []).find((x) => x.member_id === me.id);
+        const latest = latestMap[c.id] || c._latest || null;
         c._latest = latest;
         c._isMember = !!mine;
         c._supervisorUnread = !!supervisorUnread[c.id];
@@ -21701,6 +21760,43 @@ ${suffix}`;
       }
       renderChatList();
       renderSupervisionList();
+      saveConversationCacheV58();
+    }
+    async function loadConversations() {
+      const restored = restoreConversationCacheV58();
+      let response;
+      try {
+        response = await withConversationTimeoutV58(
+          supabase.from("conversations").select("id,type,title,created_by,pinned_message_id,created_at,updated_at,conversation_members(member_id,last_read_at,joined_at)").order("updated_at", { ascending: false }),
+          CONVERSATION_LOAD_TIMEOUT_V58,
+          "A lista de conversas demorou demais"
+        );
+      } catch (error) {
+        console.warn("Conversas: usando recuperação local", error);
+        if (!restored) showConversationLoadErrorV58("As conversas demoraram para responder. O restante do Cantinho continua funcionando.");
+        return;
+      }
+      if (response?.error) {
+        console.error(response.error);
+        if (!restored) showConversationLoadErrorV58("Não foi possível consultar as conversas. O restante do Cantinho continua funcionando.");
+        return;
+      }
+      const previous = new Map((conversations || []).map((c) => [c.id, c]));
+      conversations = (response?.data || []).map((c) => {
+        const old = previous.get(c.id);
+        const mine = (c.conversation_members || []).find((x) => x.member_id === me.id);
+        return {
+          ...c,
+          _latest: old?._latest || null,
+          _isMember: !!mine,
+          _supervisorUnread: old?._supervisorUnread || false,
+          _unread: old?._unread || false
+        };
+      });
+      renderChatList();
+      renderSupervisionList();
+      saveConversationCacheV58();
+      enrichConversationsV58(conversations.map((c) => c.id)).catch((error) => console.warn("Conversas: prévias não carregaram", error));
     }
     function renderChatList() {
       if (!$("chatList")) return;
