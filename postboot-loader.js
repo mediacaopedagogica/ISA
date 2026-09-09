@@ -30,6 +30,7 @@ later(180,dedicatedMobile?'./mobile-native.js?v=6-progressive':'./mobile-respons
 later(520,'./profile-status-stickers.js?v=14-plus-menu')
 later(650,'./sticker-bg-remover.js?v=1-ai-cutout',()=>window.__ISA_ENSURE_STICKER_BG_REMOVER__?.())
 later(760,'./social-nav-guard.js?v=6-progressive',()=>{window.__ISA_ENSURE_SOCIAL_NAV__?.();window.__ISA_ENSURE_PROFILE_MENU__?.()})
+later(840,'./nossa-rede-v4.js?v=1-approved',()=>window.__ISA_ENHANCE_NOSSA_REDE__?.())
 later(980,'./profile-actions.js?v=7-progressive')
 later(1200,'./call-manager.js?v=18-plus-menu')
 later(1450,'./family-media-menu-v2.js?v=12-compact-plus')
