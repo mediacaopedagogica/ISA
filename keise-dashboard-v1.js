@@ -7,16 +7,55 @@ function requested(){return norm(new URLSearchParams(location.search).get('perfi
 function current(){return norm($('myName')?.textContent)}
 function isKeise(){const p=current(),q=requested();return p==='keise'||p.startsWith('keise ')||q==='keise'}
 function mainReady(){const m=$('mainView');return !!m&&!m.classList.contains('hidden')&&isKeise()}
-function ensureCss(){if(document.querySelector('link[data-keise-dashboard]'))return;const l=document.createElement('link');l.rel='stylesheet';l.href='./keise-dashboard-v1.css?v=4-dashboard-only';l.dataset.keiseDashboard='1';document.head.appendChild(l)}
+function ensureCss(){
+  if(document.querySelector('link[data-keise-dashboard-v2]'))return
+  const l=document.createElement('link')
+  l.rel='stylesheet'
+  l.href='./keise-dashboard-v1.css?v=5-state-safe'
+  l.dataset.keiseDashboardV2='1'
+  document.head.appendChild(l)
+}
 function toast(text){const t=$('toast');if(t){t.textContent=text;t.classList.remove('hidden');clearTimeout(t._kd);t._kd=setTimeout(()=>t.classList.add('hidden'),2600);return}console.info(text)}
 
 async function find(selector,tries=24,delay=90){for(let i=0;i<tries;i++){const el=document.querySelector(selector);if(el)return el;await wait(delay)}return null}
-async function clickTarget(selector,modulePath,after){let el=document.querySelector(selector);if(!el&&modulePath){try{await import(modulePath)}catch(e){console.warn('Keise dashboard module:',modulePath,e)}el=await find(selector,18,80)}if(el){el.click();after?.();return true}return false}
+async function clickTarget(selector,modulePath,after){
+  let el=document.querySelector(selector)
+  if(!el&&modulePath){
+    try{await import(modulePath)}catch(e){console.warn('Keise dashboard module:',modulePath,e)}
+    el=await find(selector,18,80)
+  }
+  if(el){el.click();after?.();return true}
+  return false
+}
+
+function shellParts(){
+  const main=$('mainView')
+  return {main,sidebar:main?.querySelector('.sidebar'),content:main?.querySelector('.content')}
+}
+
+function clearInlineLayout(){
+  const {main,sidebar,content}=shellParts()
+  if(main){
+    ;['grid-template-columns','grid-template-rows','display','width','max-width','min-width','height','min-height','max-height','margin','padding','overflow','background'].forEach(p=>main.style.removeProperty(p))
+  }
+  if(sidebar){
+    ;['display','visibility','width','min-width','max-width','height','min-height','max-height','padding','margin','border','border-radius','overflow','pointer-events','grid-column','grid-row'].forEach(p=>sidebar.style.removeProperty(p))
+  }
+  if(content){
+    ;['display','visibility','grid-column','grid-row','width','max-width','min-width','height','min-height','max-height','margin','margin-left','padding','border','border-radius','background','box-shadow','overflow','pointer-events'].forEach(p=>content.style.removeProperty(p))
+  }
+}
 
 function forceDashboardLayout(){
-  const main=$('mainView'),sidebar=main?.querySelector('.sidebar'),content=main?.querySelector('.content')
+  if(!document.body.classList.contains('keise-home-active'))return
+  const {main,sidebar,content}=shellParts()
   document.querySelectorAll('.kd-side-menu').forEach(el=>el.remove())
-  if(main){main.style.setProperty('grid-template-columns','minmax(0,1fr)','important')}
+  if(main){
+    main.style.setProperty('display','grid','important')
+    main.style.setProperty('grid-template-columns','minmax(0,1fr)','important')
+    main.style.setProperty('width','100%','important')
+    main.style.setProperty('max-width','none','important')
+  }
   if(sidebar){
     sidebar.style.setProperty('display','none','important')
     sidebar.style.setProperty('visibility','hidden','important')
@@ -26,6 +65,7 @@ function forceDashboardLayout(){
     sidebar.style.setProperty('margin','0','important')
   }
   if(content){
+    content.style.setProperty('display','block','important')
     content.style.setProperty('grid-column','1 / -1','important')
     content.style.setProperty('width','100%','important')
     content.style.setProperty('max-width','none','important')
@@ -33,30 +73,64 @@ function forceDashboardLayout(){
   }
 }
 
-function hideHome(){document.body.classList.remove('keise-home-active');$('keiseHomeDashboard')?.classList.add('hidden')}
+function enterPanelMode(){
+  clearInlineLayout()
+  const {main,sidebar,content}=shellParts()
+  document.body.classList.remove('keise-home-active')
+  document.body.classList.add('keise-dashboard-mode','keise-panel-active')
+  $('keiseHomeDashboard')?.classList.add('hidden')
+  $('keiseDesktopTopbar')?.classList.add('hidden')
+  main?.classList.remove('mobile-content-open','mobile-chat-open','mobile-panel-open','mobile-native-content')
+  if(sidebar){
+    sidebar.style.setProperty('display','none','important')
+    sidebar.style.setProperty('visibility','hidden','important')
+    sidebar.style.setProperty('width','0','important')
+    sidebar.style.setProperty('min-width','0','important')
+  }
+  if(content){
+    content.style.setProperty('display','block','important')
+    content.style.setProperty('width','100%','important')
+    content.style.setProperty('max-width','100%','important')
+    content.style.setProperty('height','100dvh','important')
+    content.style.setProperty('min-height','100dvh','important')
+    content.style.setProperty('margin','0','important')
+    content.style.setProperty('padding','0','important')
+    content.style.setProperty('overflow','hidden','important')
+  }
+}
+window.__ISA_KEISE_ENTER_PANEL__=enterPanelMode
+
+function hideHome(){enterPanelMode()}
 function clearMainPanels(){
   const content=document.querySelector('.content');if(!content)return
   ;[...content.children].forEach(el=>{if(el.id!=='keiseHomeDashboard'&&el.tagName==='SECTION')el.classList.add('hidden')})
 }
 function showHome({scrollConversations=false}={}){
   if(!built||!mainReady())return
-  forceDashboardLayout();clearMainPanels();$('keiseHomeDashboard')?.classList.remove('hidden');document.body.classList.add('keise-home-active');
-  syncIdentity();syncConversations();
+  clearInlineLayout()
+  const {main,content}=shellParts()
+  document.body.classList.remove('keise-panel-active')
+  document.body.classList.add('keise-dashboard-mode','keise-home-active')
+  main?.classList.remove('mobile-content-open','mobile-chat-open','mobile-panel-open','mobile-native-content')
+  clearMainPanels()
+  $('keiseDesktopTopbar')?.classList.remove('hidden')
+  $('keiseHomeDashboard')?.classList.remove('hidden')
+  if(content)content.style.removeProperty('height')
+  forceDashboardLayout()
+  syncIdentity();syncConversations()
   if(scrollConversations)setTimeout(()=>$('kdConversations')?.scrollIntoView({behavior:'smooth',block:'start'}),60)
 }
 
 async function openStatus(){
-  hideHome()
   let cloud=$('pssProfileCloud')
   if(!cloud){try{await import('./profile-status-stickers.js?v=14-plus-menu')}catch{}cloud=await find('#pssProfileCloud',24,80)}
   if(cloud){cloud.click();return}
-  showHome();toast('Meu perfil e status ainda está carregando.')
+  toast('Meu perfil e status ainda está carregando.')
 }
 async function openSettings(){
-  hideHome()
   if(typeof window.__ISA_OPEN_GENERAL_SETTINGS__!=='function'){try{await import('./general-settings.js?v=12-unified-settings')}catch{}}
   if(typeof window.__ISA_OPEN_GENERAL_SETTINGS__==='function'){window.__ISA_OPEN_GENERAL_SETTINGS__();return}
-  const ok=await clickTarget('#settingsMenuBtn,[data-settings-menu="1"]');if(!ok){showHome();toast('Configurações ainda estão carregando.')}
+  const ok=await clickTarget('#settingsMenuBtn,[data-settings-menu="1"]');if(!ok)toast('Configurações ainda estão carregando.')
 }
 async function runAction(action){
   if(action==='home'){showHome();return}
@@ -77,15 +151,19 @@ function feature(icon,label,action,cls=''){return `<button type="button" class="
 function build(){
   if(built||!mainReady())return false
   ensureCss();built=true;document.body.classList.add('keise-dashboard-mode')
-  const main=$('mainView'),sidebar=main?.querySelector('.sidebar'),content=main?.querySelector('.content');if(!main||!sidebar||!content){built=false;return false}
-  forceDashboardLayout()
+  const {main,sidebar,content}=shellParts();if(!main||!sidebar||!content){built=false;return false}
 
   if(!$('keiseDesktopTopbar')){
-    const top=document.createElement('header');top.id='keiseDesktopTopbar';top.innerHTML=`<div class="kd-brand"><span class="kd-brand-heart">💗</span><span class="kd-brand-name">Cantinho da Isa 💕</span></div><label class="kd-search"><input id="kdSearchInput" type="search" placeholder="Pesquisar no Cantinho da Isa..." aria-label="Pesquisar no Cantinho da Isa"></label><div class="kd-top-actions"><button class="kd-bell" type="button" aria-label="Notificações">🔔</button><button class="kd-top-profile" type="button" data-kd-action="profile"><span id="kdTopAvatar" class="kd-top-avatar">🦋</span><span>Keise</span><span>⌄</span></button></div>`;main.insertBefore(top,main.firstChild)
+    const top=document.createElement('header')
+    top.id='keiseDesktopTopbar'
+    top.innerHTML=`<div class="kd-brand"><span class="kd-brand-heart">💗</span><span class="kd-brand-name">Cantinho da Isa 💕</span></div><label class="kd-search"><input id="kdSearchInput" type="search" placeholder="Pesquisar no Cantinho da Isa..." aria-label="Pesquisar no Cantinho da Isa"></label><div class="kd-top-actions"><button class="kd-bell" type="button" aria-label="Notificações">🔔</button><button class="kd-top-profile" type="button" data-kd-action="profile"><span id="kdTopAvatar" class="kd-top-avatar">🦋</span><span>Keise</span><span>⌄</span></button></div>`
+    main.insertBefore(top,main.firstChild)
   }
 
   if(!$('keiseHomeDashboard')){
-    const home=document.createElement('section');home.id='keiseHomeDashboard';home.className='kd-home';home.innerHTML=`
+    const home=document.createElement('section')
+    home.id='keiseHomeDashboard';home.className='kd-home'
+    home.innerHTML=`
       <div class="kd-hero">
         <button id="kdAvatarBtn" type="button" class="kd-avatar-btn" aria-label="Alterar foto do perfil"><span id="kdAvatarContent" class="kd-avatar-content">🦋</span><span class="kd-camera">📷</span></button>
         <div class="kd-identity"><h1 id="kdName">Keise</h1><p>Cantinho da Isa <span>💕</span></p></div>
@@ -109,25 +187,48 @@ function build(){
     content.insertBefore(home,content.firstChild)
   }
 
-  document.addEventListener('click',e=>{const b=e.target.closest('[data-kd-action]');if(!b)return;const a=b.dataset.kdAction;if(!a)return;e.preventDefault();runAction(a)},false)
-  $('kdLogout').addEventListener('click',e=>{e.preventDefault();$('logoutBtn')?.click()})
-  $('kdAvatarBtn').addEventListener('click',e=>{e.preventDefault();const profileBtn=$('myAvatarBtn');if(profileBtn)profileBtn.click();else $('profileAvatarInput')?.click()})
+  document.addEventListener('click',e=>{
+    const b=e.target.closest('[data-kd-action]');if(!b)return
+    const a=b.dataset.kdAction;if(!a)return
+    e.preventDefault();runAction(a)
+  },false)
+  $('kdLogout')?.addEventListener('click',e=>{e.preventDefault();$('logoutBtn')?.click()})
+  $('kdAvatarBtn')?.addEventListener('click',e=>{e.preventDefault();const profileBtn=$('myAvatarBtn');if(profileBtn)profileBtn.click();else $('profileAvatarInput')?.click()})
   $('kdSearchInput')?.addEventListener('input',filterConversations)
 
-  const list=$('chatList');if(list){chatObserver=new MutationObserver(syncConversations);chatObserver.observe(list,{childList:true,subtree:true,characterData:true})}
-  $('mobileBackBtn')?.addEventListener('click',()=>setTimeout(()=>{if($('chatPanel')?.classList.contains('hidden'))showHome()},180))
+  const list=$('chatList')
+  if(list){chatObserver=new MutationObserver(()=>{if(document.body.classList.contains('keise-home-active'))syncConversations()});chatObserver.observe(list,{childList:true,subtree:true,characterData:true})}
+  $('mobileBackBtn')?.addEventListener('click',()=>setTimeout(showHome,100))
   document.querySelector('.nav-tabs .nav-btn[data-tab="chats"]')?.addEventListener('click',()=>setTimeout(()=>{if($('chatPanel')?.classList.contains('hidden'))showHome()},80))
-  identityTimer=setInterval(()=>{if(!mainReady()){clearInterval(identityTimer);return}forceDashboardLayout();syncIdentity();if(document.body.classList.contains('keise-home-active'))syncConversations()},900)
+  identityTimer=setInterval(()=>{
+    if(!mainReady()){clearInterval(identityTimer);return}
+    syncIdentity()
+    if(document.body.classList.contains('keise-home-active')){forceDashboardLayout();syncConversations()}
+  },900)
   syncIdentity();syncConversations();showHome();return true
 }
 
 function cloneWithoutIds(node){const c=node.cloneNode(true);c.removeAttribute?.('id');c.querySelectorAll?.('[id]').forEach(x=>x.removeAttribute('id'));return c}
 function syncConversations(){
+  if(!document.body.classList.contains('keise-home-active'))return
   const source=$('chatList'),target=$('kdConversationList');if(!source||!target)return
-  const items=[...source.querySelectorAll('.chat-item')].filter(x=>!x.classList.contains('hidden')&&getComputedStyle(x).display!=='none')
+  const items=[...source.querySelectorAll('.chat-item[data-conv]')].filter(x=>!x.classList.contains('hidden')&&getComputedStyle(x).display!=='none')
   target.innerHTML=''
   if(!items.length){const n=document.createElement('div');n.className='kd-empty-note';n.textContent=/carregando/i.test(source.textContent||'')?'Abrindo suas conversas…':'Suas conversas aparecem aqui.';target.appendChild(n);return}
-  items.forEach((orig,i)=>{const clone=cloneWithoutIds(orig);clone.classList.add('kd-conv-card');clone.dataset.kdConvIndex=String(i);clone.querySelectorAll('button,input,a').forEach(el=>{el.tabIndex=-1});clone.addEventListener('click',e=>{e.preventDefault();hideHome();orig.click()});target.appendChild(clone)})
+  items.forEach((orig,i)=>{
+    const clone=cloneWithoutIds(orig)
+    clone.classList.add('kd-conv-card')
+    clone.dataset.kdConvIndex=String(i)
+    clone.dataset.conv=orig.dataset.conv||''
+    clone.querySelectorAll('button,input,a').forEach(el=>{el.tabIndex=-1})
+    clone.addEventListener('click',e=>{
+      e.preventDefault()
+      const id=clone.dataset.conv
+      if(id&&typeof window.__ISA_OPEN_KEISE_CONVERSATION__==='function')window.__ISA_OPEN_KEISE_CONVERSATION__(id)
+      else{hideHome();orig.click()}
+    })
+    target.appendChild(clone)
+  })
   filterConversations()
 }
 function filterConversations(){const q=norm($('kdSearchInput')?.value);document.querySelectorAll('#kdConversationList .kd-conv-card').forEach(card=>{card.style.display=!q||norm(card.textContent).includes(q)?'':'none'})}
