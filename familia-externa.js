@@ -1,4 +1,4 @@
-import { CONFIG } from './config.js'
+import { CONFIG } from './config.js?v=20260909-access-fix'
 const $=id=>document.getElementById(id)
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
 const token=new URLSearchParams(location.hash.replace(/^#/, '')).get('acesso')||''
@@ -7,10 +7,20 @@ const mediaCache=new Map()
 const emojis=['😀','😊','🥰','😍','😂','😄','🙂','😉','🤗','🥳','💜','🩷','❤️','💙','💚','✨','⭐','🌷','🌸','🎉','👍','👏','🙏','📚']
 
 async function rpc(name,args={},opts={}){
-  const r=await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/rpc/${name}`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${CONFIG.SUPABASE_KEY}`,'Content-Type':'application/json'},body:JSON.stringify(args),cache:'no-store',keepalive:!!opts.keepalive})
-  let data=null;try{data=await r.json()}catch{}
-  if(!r.ok)throw new Error(data?.message||data?.hint||data?.details||'Não foi possível acessar.')
-  return data
+  const timeoutMs=Number(opts.timeoutMs||12000)
+  const controller=opts.keepalive?null:new AbortController()
+  const timer=controller?setTimeout(()=>controller.abort(),timeoutMs):null
+  try{
+    const request={method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${CONFIG.SUPABASE_KEY}`,'Content-Type':'application/json'},body:JSON.stringify(args),cache:'no-store',keepalive:!!opts.keepalive}
+    if(controller)request.signal=controller.signal
+    const r=await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/rpc/${name}`,request)
+    let data=null;try{data=await r.json()}catch{}
+    if(!r.ok)throw new Error(data?.message||data?.hint||data?.details||'Não foi possível acessar.')
+    return data
+  }catch(e){
+    if(e?.name==='AbortError')throw new Error('A conexão demorou demais. Toque em tentar novamente.')
+    throw e
+  }finally{if(timer)clearTimeout(timer)}
 }
 async function mediaJson(payload){
   const r=await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/friend-media`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${CONFIG.SUPABASE_KEY}`,'Content-Type':'application/json'},body:JSON.stringify(payload),cache:'no-store'})
@@ -29,12 +39,18 @@ async function uploadImage(file){
 function toast(text){const el=$('friendToast');if(!el)return;el.textContent=text;el.classList.remove('hidden');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.add('hidden'),2300)}
 function fmtTime(ts){return new Intl.DateTimeFormat('pt-BR',{hour:'2-digit',minute:'2-digit'}).format(new Date(ts))}
 async function bootstrap(silent=false){
-  if(!token){window.__ISA_FRIEND_ACCESS_VALID__=false;document.dispatchEvent(new Event('isa:friend-access-invalid'));$('friendGateTitle').textContent='Este link não é válido';$('friendGateText').textContent='Peça um novo link pessoal.';return}
+  window.__ISA_FRIEND_BOOTSTRAP_STATE__='loading'
+  const btn=$('friendEnterBtn')
+  if(!token){window.__ISA_FRIEND_BOOTSTRAP_STATE__='invalid';window.__ISA_FRIEND_ACCESS_VALID__=false;document.dispatchEvent(new Event('isa:friend-access-invalid'));$('friendGateTitle').textContent='Este link não é válido';$('friendGateText').textContent='Peça um novo link pessoal.';return}
+  if(!silent){$('friendGateTitle').textContent='Verificando seu acesso…';$('friendGateText').textContent='Só um instante.';$('friendGateError').textContent='';if(btn){btn.classList.add('hidden');btn.disabled=false;btn.dataset.mode='enter';btn.textContent='Acessar 💜'}}
+  const load=()=>rpc('friend_portal_bootstrap',{p_token:token},{timeoutMs:10000})
   try{
-    const data=await rpc('friend_portal_bootstrap',{p_token:token});person=data.friend;conversations=data.conversations||[];window.__ISA_FRIEND_ACCESS_VALID__=true;window.__ISA_FRIEND_PERSON__=person;document.dispatchEvent(new CustomEvent('isa:friend-access-valid',{detail:{id:person?.id||null,name:person?.name||''}}))
-    if(!silent){$('friendGateTitle').textContent=`Oi, ${person.name}! 💜`;$('friendGateText').textContent='Este é seu acesso pessoal ao Cantinho da Isa.';$('friendEnterBtn').classList.remove('hidden')}
+    let data
+    try{data=await load()}catch(first){if(silent)throw first;await new Promise(r=>setTimeout(r,550));data=await load()}
+    person=data.friend;conversations=data.conversations||[];window.__ISA_FRIEND_BOOTSTRAP_STATE__='ready';window.__ISA_FRIEND_ACCESS_VALID__=true;window.__ISA_FRIEND_PERSON__=person;document.dispatchEvent(new CustomEvent('isa:friend-access-valid',{detail:{id:person?.id||null,name:person?.name||''}}))
+    if(!silent){$('friendGateTitle').textContent=`Oi, ${person.name}! 💜`;$('friendGateText').textContent='Este é seu acesso pessoal ao Cantinho da Isa.';if(btn){btn.dataset.mode='enter';btn.textContent='Acessar 💜';btn.classList.remove('hidden')}}
     if($('friendChat')&&!$('friendChat').classList.contains('hidden'))renderConversationList()
-  }catch(e){window.__ISA_FRIEND_ACCESS_VALID__=false;document.dispatchEvent(new Event('isa:friend-access-invalid'));if(!silent){$('friendGateTitle').textContent='Acesso indisponível';$('friendGateText').textContent='Este link pode ter sido substituído.';$('friendGateError').textContent=e.message}}
+  }catch(e){window.__ISA_FRIEND_BOOTSTRAP_STATE__='error';window.__ISA_FRIEND_ACCESS_VALID__=false;document.dispatchEvent(new Event('isa:friend-access-invalid'));if(!silent){$('friendGateTitle').textContent='Não conseguimos conectar agora';$('friendGateText').textContent='Seu link continua válido. Toque abaixo para tentar novamente.';$('friendGateError').textContent=e.message||'Falha de conexão.';if(btn){btn.disabled=false;btn.dataset.mode='retry';btn.textContent='Tentar novamente';btn.classList.remove('hidden')}}}
 }
 function renderConversationList(){
   $('friendName').textContent=person?.name||'Família'
@@ -91,7 +107,7 @@ function buildEmoji(){const bar=$('friendEmojiBar');if(!bar)return;bar.innerHTML
 async function setPresence(online,keepalive=false){if(!token||!person)return;try{await rpc('friend_portal_presence',{p_token:token,p_online:!!online},{keepalive})}catch{}}
 function startTimers(){clearInterval(messageTimer);clearInterval(listTimer);clearInterval(presenceTimer);messageTimer=setInterval(()=>{if(document.visibilityState==='visible')loadMessages(false)},2500);listTimer=setInterval(()=>{if(document.visibilityState==='visible')refreshConversations()},5000);presenceTimer=setInterval(()=>{if(document.visibilityState==='visible')setPresence(true)},15000)}
 
-$('friendEnterBtn').onclick=enterPortal
+$('friendEnterBtn').onclick=()=>$('friendEnterBtn').dataset.mode==='retry'?bootstrap(false):enterPortal()
 $('friendSendBtn').onclick=sendMessage
 $('friendMessageInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}})
 $('friendEmojiBtn').onclick=e=>{e.stopPropagation();$('friendEmojiBar').classList.toggle('hidden')}
