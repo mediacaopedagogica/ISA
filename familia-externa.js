@@ -70,15 +70,16 @@ function enterPortal(){
   const btn=$('friendEnterBtn')
   if(!person||!window.__ISA_FRIEND_ACCESS_VALID__)return bootstrap(false)
   if(btn)btn.disabled=true
-  // Núcleo primeiro: a interface abre imediatamente; presença e mensagens não bloqueiam o toque.
   $('friendGate').classList.add('hidden')
   $('friendChat').classList.remove('hidden')
   document.body.classList.add('friend-portal-open')
   renderConversationList();startTimers();setPresence(true).catch(()=>{})
   window.__ISA_FRIEND_PORTAL_ENTERED__=true
   document.dispatchEvent(new CustomEvent('isa:friend-portal-entered',{detail:{id:person?.id||null,name:person?.name||''}}))
+  // No celular, abre primeiro a tela principal para Nossa Rede, configurações e perfil ficarem acessíveis.
+  // No notebook, mantém a conveniência de abrir a conversa direta com a Isa automaticamente.
   const direct=conversations.find(c=>c.type==='direct')
-  if(direct)openConversation(direct.id).catch(e=>toast(e.message||'Não foi possível abrir a conversa.'))
+  if(direct&&!matchMedia('(max-width:780px)').matches)openConversation(direct.id).catch(e=>toast(e.message||'Não foi possível abrir a conversa.'))
   if(btn)btn.disabled=false
 }
 function exitPortal(){
@@ -126,6 +127,12 @@ function startTimers(){
   listTimer=setInterval(()=>{if(document.visibilityState==='visible')refreshConversations()},mobile?10000:5000)
   presenceTimer=setInterval(()=>{if(document.visibilityState==='visible')setPresence(true)},20000)
 }
+
+window.__ISA_FRIEND_TOKEN__=token
+window.__ISA_FRIEND_GET_ACTIVE_CONVERSATION_ID__=()=>activeConversation?.id||null
+window.__ISA_FRIEND_REFRESH_MESSAGES__=()=>loadMessages(true)
+window.__ISA_FRIEND_REFRESH_LIST__=()=>refreshConversations()
+window.__ISA_FRIEND_TOAST__=toast
 
 $('friendEnterBtn').onclick=()=>$('friendEnterBtn').dataset.mode==='retry'?bootstrap(false):enterPortal()
 $('friendSendBtn').onclick=sendMessage
