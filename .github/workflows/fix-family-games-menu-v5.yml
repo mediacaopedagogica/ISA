@@ -1,0 +1,62 @@
+name: Enable family games menu v5
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-family-games-menu-v5.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enable games for family profiles
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          js = Path('games-menu.js')
+          s = js.read_text()
+
+          old = "function eligible(){const n=currentName();return n==='isa'||n==='paloma'}"
+          new = "function eligible(){const n=currentName();return['isa','paloma','elion','vania','davi'].includes(n)}"
+          if old not in s and new not in s:
+              raise SystemExit('eligible marker not found')
+          s = s.replace(old, new, 1)
+
+          old = "function wirePaloma(){if(!isExternal()||currentName()!=='paloma')return;"
+          new = "function wirePaloma(){if(!isExternal()||!eligible())return;"
+          if old not in s and new not in s:
+              raise SystemExit('external family wire marker not found')
+          s = s.replace(old, new, 1)
+          js.write_text(s)
+
+          html = Path('acesso-mobile.html')
+          h = html.read_text()
+          h = h.replace('./games-menu.js?v=4-mobile-reopen','./games-menu.js?v=5-family-all',1)
+          html.write_text(h)
+
+          print('Family mobile games menu enabled for Paloma, Elion, Vania and Davi')
+          PY
+      - name: Verify patch
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('games-menu.js').read_text()
+          for name in ['paloma','elion','vania','davi']:
+              if f"'{name}'" not in s: raise SystemExit(f'missing {name}')
+          if "if(!isExternal()||!eligible())return;" not in s: raise SystemExit('generic family wiring missing')
+          if 'games-menu.js?v=5-family-all' not in Path('acesso-mobile.html').read_text(): raise SystemExit('cache bust missing')
+          print('verification ok')
+          PY
+      - name: Commit changes
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add games-menu.js acesso-mobile.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'fix: show games menu on family mobile links'
+          git push
