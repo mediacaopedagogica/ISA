@@ -11,15 +11,18 @@ async function loadWithRetry(path){
 }
 
 const dedicatedMobile=new URLSearchParams(location.search).get('mobile')==='1'
+const common=[
+  './general-settings.js?v=1-all-profiles',
+  './notifications-v2.js?v=9-stable',
+  './extras-loader.js?v=48-settings-social-v3'
+]
 const paths=dedicatedMobile?[
   './call-manager.js?v=7-mobile-fast',
   './mobile-native.js?v=3-no-blank',
-  './notifications-v2.js?v=9-stable',
-  './extras-loader.js?v=47-social-network-v2'
+  ...common
 ]:[
   './mobile-responsive-v2.js?v=15-android-touch',
-  './notifications-v2.js?v=9-stable',
-  './extras-loader.js?v=47-social-network-v2'
+  ...common
 ]
 const results=await Promise.allSettled(paths.map(loadWithRetry))
 window.__ISA_EXTRAS_READY__=true
