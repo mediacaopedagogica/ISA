@@ -21,14 +21,15 @@ const dedicatedMobile=new URLSearchParams(location.search).get('mobile')==='1'
 
 async function loadCoreExtras(){
   const jobs=[
+    loadOnce('general-settings','./general-settings.js?v=1-all-profiles'),
     loadOnce('profile','./profile-mascot.js?v=4-stable'),
     loadOnce('groups','./group-controls.js?v=5-stable'),
     loadOnce('pins','./conversation-pins.js?v=5-direct-pin'),
     loadOnce('paused-friends','./paused-friends-filter.js?v=3-stable'),
     loadOnce('family-media','./family-media-menu-v2.js?v=9-audio-day'),
     loadOnce('links','./link-preview.js?v=6-inline-video'),
-    loadOnce('social-network','./social-network.js?v=2-family-feed'),
-    loadOnce('social-network-bridge','./social-network-bridge-v2.js?v=2-open-fix')
+    loadOnce('social-network','./social-network.js?v=3-family-feed'),
+    loadOnce('social-network-bridge','./social-network-bridge-v2.js?v=3-touch-open')
   ]
   if(!dedicatedMobile)jobs.push(loadOnce('calls','./call-manager.js?v=4-stable'))
 
