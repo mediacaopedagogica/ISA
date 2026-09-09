@@ -49,7 +49,7 @@ function bootKeise(){
   // porém não são mais carregados e não podem substituir o visual aprovado.
   load('./keise-access-mode.js?v=2-approved-final')
   load('./keise-chat-unified.js?v=3-approved-final')
-  later(25,'./keise-approved-layout-final.js?v=1-last-approved',()=>window.__ISA_SHOW_KEISE_HOME__?.())
+  later(25,'./keise-approved-layout-final.js?v=2-interactive',()=>window.__ISA_SHOW_KEISE_HOME__?.())
   later(210,'./keise-game-test.js?v=9-progressive',()=>{window.__ISA_ENSURE_TEST_GAME_NAV__?.();window.__ISA_ENSURE_PROFILE_MENU__?.()})
   return true
 }
