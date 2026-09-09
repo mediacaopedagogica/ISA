@@ -93,17 +93,15 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=res
   new MutationObserver(()=>{if(!main.classList.contains('hidden'))clear()}).observe(main,{attributes:true,attributeFilter:['class']});
 })();
 </script>
-<script defer src="./personal-access-recovery.js?v=1-alan"></script>
-<script defer src="./mobile-interaction-guard.js?v=5-personal"></script>
-<script defer src="./app-v33.js?v=stable-53-alan-personal"></script>
+<script defer src="./mobile-interaction-guard.js?v=4-early"></script>
+<script defer src="./app-v33.js?v=stable-52-avatar"></script>
 <script>
 (function(){
   let tries=0,loaded=false;
   const loadExtras=()=>{
     if(loaded)return;
     const main=document.getElementById('mainView'),name=String(document.getElementById('myName')?.textContent||'').trim();
-    const list=document.getElementById('chatList'),coreReady=!list||!/Carregando conversas/i.test(list.textContent||'');
-    if(main&&!main.classList.contains('hidden')&&name&&name!=='Família'&&coreReady){
+    if(main&&!main.classList.contains('hidden')&&name&&name!=='Família'){
       loaded=true;
       const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=23-access-and-dupla-fix';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
     }
