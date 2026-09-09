@@ -1,0 +1,38 @@
+name: Fix Alan root access
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-alan-root-access.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch root app for Alan-safe boot
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old="./postboot-loader.js?v=23-access-and-dupla-fix"
+          new="./postboot-loader.js?v=24-alan-core-safe"
+          if old in s:
+              s=s.replace(old,new,1)
+          elif new not in s:
+              raise SystemExit('postboot marker not found')
+          marker='</body>\n</html>'
+          safety='''<script>\n(function(){\n  const btn=document.getElementById('logoutBtn');\n  if(!btn||btn.dataset.rootLogoutFallback)return;\n  btn.dataset.rootLogoutFallback='1';\n  btn.addEventListener('click',()=>{\n    setTimeout(()=>{\n      const main=document.getElementById('mainView');\n      if(!main||main.classList.contains('hidden'))return;\n      try{\n        for(const store of [localStorage,sessionStorage]){\n          const keys=[];\n          for(let i=0;i<store.length;i++){const k=store.key(i)||'';if(/auth-token/i.test(k))keys.push(k)}\n          keys.forEach(k=>store.removeItem(k));\n        }\n      }catch{}\n      location.replace('./?sair=forcado&_cb='+Date.now());\n    },3500);\n  },true);\n})();\n</script>\n'''
+          if 'rootLogoutFallback' not in s:
+              if marker not in s: raise SystemExit('body marker not found')
+              s=s.replace(marker,safety+marker,1)
+          p.write_text(s)
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'fix: keep Alan chat and logout responsive on root app'
+          git push
