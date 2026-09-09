@@ -104,7 +104,7 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=res
     const list=document.getElementById('chatList'),coreReady=!list||!/Carregando conversas/i.test(list.textContent||'');
     if(main&&!main.classList.contains('hidden')&&name&&name!=='Família'&&coreReady){
       loaded=true;
-      const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=24-alan-core-safe';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
+      const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=25-social-network';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
     }
     if(++tries<100)setTimeout(loadExtras,120);
   };
