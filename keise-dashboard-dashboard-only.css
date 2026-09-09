@@ -1,0 +1,31 @@
+/* Keise: navegação única pelo dashboard, sem menu lateral duplicado. */
+body.keise-dashboard-mode.keise-home-active #mainView{
+  grid-template-columns:minmax(0,1fr)!important;
+}
+body.keise-dashboard-mode.keise-home-active .sidebar{
+  display:none!important;
+}
+body.keise-dashboard-mode.keise-home-active .content{
+  grid-column:1!important;
+  width:100%!important;
+}
+body.keise-dashboard-mode.keise-home-active #keiseDesktopTopbar{
+  grid-column:1!important;
+}
+@media (min-width:851px){
+  body.keise-dashboard-mode.keise-home-active .content{
+    padding-left:clamp(22px,4vw,64px)!important;
+    padding-right:clamp(22px,4vw,64px)!important;
+  }
+  body.keise-dashboard-mode.keise-home-active #keiseHomeDashboard{
+    max-width:1180px!important;
+  }
+}
+@media (max-width:850px){
+  body.keise-dashboard-mode.keise-home-active .sidebar{
+    display:none!important;
+  }
+  body.keise-dashboard-mode.keise-home-active .content{
+    width:100%!important;
+  }
+}
