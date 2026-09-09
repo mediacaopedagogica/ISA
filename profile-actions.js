@@ -1,6 +1,6 @@
 const $=id=>document.getElementById(id)
 const normalize=v=>String(v||'').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-const supported=new Set(['isa','keise','alan','paloma','elion','vania','davi'])
+const supported=new Set(['isa','keise','alan','paloma','elion','vania','evalda','davi'])
 const external=!!$('friendApp')
 
 function currentName(){
