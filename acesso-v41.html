@@ -46,7 +46,7 @@ async function start(){
    const {data:stored,error:storedError}=await supabase.auth.getSession();
    if(storedError||!stored?.session)throw new Error(storedError?.message||'A sessão não foi salva.');
    await new Promise(resolve=>setTimeout(resolve,220));
-   const u=new URL('./',location.href);u.searchParams.set('perfil',name);u.searchParams.set('entrada','pessoal');u.searchParams.set('v','54');u.hash='';
+   const u=new URL('./',location.href);u.searchParams.set('perfil',name);u.searchParams.set('entrada','pessoal');u.searchParams.set('v','55');u.searchParams.set('_cb',String(Date.now()));u.hash='';
    location.replace(u.href);
  }catch(e){fail(e?.name==='AbortError'?'A conexão demorou demais. Tente novamente.':(e?.message||'Não foi possível acessar.'))}
 }

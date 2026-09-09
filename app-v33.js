@@ -22231,7 +22231,14 @@ ${suffix}`;
       if ($("chatList")) $("chatList").innerHTML = '<p class="muted" style="padding:12px">Carregando conversas\u2026</p>';
       supabase.realtime.setAuth().catch(() => {
       });
-      await Promise.all([loadFamily(), loadConversations()]);
+      const coreBoot = Promise.allSettled([loadFamily(), loadConversations()]);
+      await Promise.race([coreBoot, new Promise((resolve) => setTimeout(resolve, 5e3))]);
+      const bootChatList = $("chatList");
+      if (bootChatList && /Carregando conversas/i.test(bootChatList.textContent || "")) {
+        bootChatList.innerHTML = '<div class="muted" style="padding:12px;line-height:1.45">As conversas demoraram para carregar.<br><button id="conversationRetryBtn" type="button" class="tiny-btn" style="margin-top:8px">Tentar novamente</button></div>';
+        const retry = $("conversationRetryBtn");
+        if (retry) retry.onclick = () => location.reload();
+      }
       hydrateAvatarElements().catch(() => {
       });
       upsertPresence(true).catch(() => {
