@@ -44,6 +44,7 @@ function isKeiseAccess(){
 function bootKeise(){
   if(keiseBooted||!isKeiseAccess())return false
   keiseBooted=true
+  load('./keise-access-mode.js?v=1-link-split')
   load('./keise-dashboard-hardstyle.js?v=2-state-safe')
   load('./keise-chat-unified.js?v=2-state-safe')
   css('./keise-dashboard-state-fix.css?v=1','keiseDashboardStateFix')
