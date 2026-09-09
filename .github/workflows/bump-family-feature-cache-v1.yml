@@ -1,0 +1,53 @@
+name: Refresh family feature assets v1
+on:
+  push:
+    paths:
+      - '.github/workflows/bump-family-feature-cache-v1.yml'
+permissions:
+  contents: write
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bump feature module versions
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          for path in ['acesso-mobile.html','acesso.html']:
+            p=Path(path);s=p.read_text()
+            s=s.replace('./familia-externa.js?v=11-all-family-features','./familia-externa.js?v=12-all-family-features')
+            s=s.replace('./external-chat-tools.js?v=2-all-family-features','./external-chat-tools.js?v=3-fixed-media-tools')
+            s=s.replace('./profile-status-stickers.js?v=8-all-family-features','./profile-status-stickers.js?v=9-all-family-features')
+            s=s.replace('./call-manager.js?v=14-all-family-features','./call-manager.js?v=15-all-family-features')
+            s=s.replace('./family-social.js?v=9-all-family-features','./family-social.js?v=10-all-family-features')
+            p.write_text(s)
+          p=Path('index.html');s=p.read_text();s=s.replace('./postboot-loader.js?v=34-profile-menus','./postboot-loader.js?v=35-all-family-features');p.write_text(s)
+          PY
+      - name: Validate modules and references
+        shell: bash
+        run: |
+          node --check external-chat-tools.js
+          node --check familia-externa.js
+          node --check postboot-loader.js
+          node --check profile-menu-guard.js
+          python - <<'PY'
+          from pathlib import Path
+          for path in ['acesso-mobile.html','acesso.html']:
+            s=Path(path).read_text()
+            for x in ['friendSocialBtn','friendProfileMenuBtn','friendStickerMenuBtn','friendSettingsBtn','friendCameraBtn','friendPhotoBtn','friendAudioBtn','external-chat-tools.js?v=3-fixed-media-tools']:
+              assert x in s,(path,x)
+            assert '⚙️ <span>Configurações</span>' not in s
+          s=Path('index.html').read_text();assert 'postboot-loader.js?v=35-all-family-features' in s
+          print('Cache/version validation: OK')
+          PY
+      - name: Commit refreshed assets
+        shell: bash
+        run: |
+          if git diff --quiet; then echo 'No changes'; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add acesso-mobile.html acesso.html index.html
+          git commit -m 'fix: refresh complete family features on every access link'
+          git push
