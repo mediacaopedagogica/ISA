@@ -11,56 +11,27 @@ async function loadWithRetry(path){
 }
 
 // Mantém exatamente um botão de Configurações no menu principal em qualquer tamanho de tela.
-// Vale para notebook/desktop, responsivo mobile e mobile dedicado; nunca aparece abaixo de Sair
-// e nunca fica flutuando sobre a conversa.
 function ensureSettingsMenuButton(){
   const nav=document.querySelector('.nav-tabs');
   if(!nav)return null;
-
   const candidates=[...nav.querySelectorAll('#settingsMenuBtn,#generalSettingsNav')];
   let btn=candidates[0]||null;
   candidates.slice(1).forEach(extra=>extra.remove());
-
   if(!btn){
-    btn=document.createElement('button');
-    btn.id='settingsMenuBtn';
-    btn.className='nav-btn';
-    btn.type='button';
-    btn.innerHTML='⚙️ <span>Configurações</span>';
+    btn=document.createElement('button');btn.id='settingsMenuBtn';btn.className='nav-btn';btn.type='button';btn.innerHTML='⚙️ <span>Configurações</span>';
     const calendar=nav.querySelector('[data-tab="calendar"]');
     if(calendar)calendar.insertAdjacentElement('afterend',btn);else nav.appendChild(btn);
-  }else if(btn.id!=='settingsMenuBtn'){
-    btn.id='settingsMenuBtn';
-  }
-
-  btn.classList.add('nav-btn');
-  btn.classList.remove('hidden');
-  btn.type='button';
-  btn.title='Configurações Gerais';
-  btn.setAttribute('aria-label','Configurações Gerais');
-  btn.setAttribute('data-settings-menu','1');
-  btn.removeAttribute('data-tab');
-  btn.style.removeProperty('display');
-  btn.style.removeProperty('visibility');
-  btn.style.removeProperty('opacity');
-
+  }else if(btn.id!=='settingsMenuBtn')btn.id='settingsMenuBtn';
+  if(!btn.classList.contains('nav-btn'))btn.classList.add('nav-btn');
+  if(btn.classList.contains('hidden'))btn.classList.remove('hidden');
+  btn.type='button';btn.title='Configurações Gerais';btn.setAttribute('aria-label','Configurações Gerais');btn.setAttribute('data-settings-menu','1');btn.removeAttribute('data-tab');
+  if(btn.style.display)btn.style.removeProperty('display');if(btn.style.visibility)btn.style.removeProperty('visibility');if(btn.style.opacity)btn.style.removeProperty('opacity');
   if(btn.dataset.settingsEntryBound!=='1'){
-    btn.dataset.settingsEntryBound='1';
-    // Impede o general-settings de adicionar um segundo listener ao mesmo botão.
-    btn.dataset.generalSettingsBound='1';
+    btn.dataset.settingsEntryBound='1';btn.dataset.generalSettingsBound='1';
     btn.addEventListener('click',async e=>{
       e.preventDefault();e.stopPropagation();
-      for(let i=0;i<20;i++){
-        if(typeof window.__ISA_OPEN_GENERAL_SETTINGS__==='function'){
-          window.__ISA_OPEN_GENERAL_SETTINGS__();
-          return;
-        }
-        await wait(120);
-      }
-      try{
-        await loadWithRetry('./general-settings.js?v=6-mobile-notebook');
-        window.__ISA_OPEN_GENERAL_SETTINGS__?.();
-      }catch(error){console.warn('Configurações não abriram:',error)}
+      for(let i=0;i<20;i++){if(typeof window.__ISA_OPEN_GENERAL_SETTINGS__==='function'){window.__ISA_OPEN_GENERAL_SETTINGS__();return}await wait(120)}
+      try{await loadWithRetry('./general-settings.js?v=7-unfreeze');window.__ISA_OPEN_GENERAL_SETTINGS__?.()}catch(error){console.warn('Configurações não abriram:',error)}
     },true);
   }
   return btn;
@@ -69,25 +40,18 @@ function ensureSettingsMenuButton(){
 window.__ISA_ENSURE_SETTINGS_MENU__=ensureSettingsMenuButton;
 ensureSettingsMenuButton();
 document.addEventListener('DOMContentLoaded',ensureSettingsMenuButton,{once:true});
-
-// Alguns módulos reorganizam o menu depois que o perfil abre. Observamos o app para recolocar
-// o mesmo botão caso a navegação seja reconstruída, sem gerar duplicação.
 const menuObserver=new MutationObserver(()=>ensureSettingsMenuButton());
 menuObserver.observe(document.getElementById('mainView')||document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
-let settingsMenuTries=0;
-const settingsMenuTimer=setInterval(()=>{
-  ensureSettingsMenuButton();
-  if(++settingsMenuTries>=40)clearInterval(settingsMenuTimer);
-},250);
+let settingsMenuTries=0;const settingsMenuTimer=setInterval(()=>{ensureSettingsMenuButton();if(++settingsMenuTries>=40)clearInterval(settingsMenuTimer)},250);
 
 const dedicatedMobile=new URLSearchParams(location.search).get('mobile')==='1'
 const common=[
-  './general-settings.js?v=6-mobile-notebook',
+  './general-settings.js?v=7-unfreeze',
   './notifications-v2.js?v=9-stable',
   './extras-loader.js?v=50-all-profile-features',
   './profile-status-stickers.js?v=2-all-links',
   './profile-actions.js?v=1-all-links',
-  './social-nav-guard.js?v=1-persistent'
+  './social-nav-guard.js?v=2-idempotent-unfreeze'
 ]
 const paths=dedicatedMobile?[
   './call-manager.js?v=8-header-safe',
@@ -101,27 +65,15 @@ const results=await Promise.allSettled(paths.map(loadWithRetry))
 ensureSettingsMenuButton();
 window.__ISA_ENSURE_SOCIAL_NAV__?.();
 
-// Fallback específico para o perfil pessoal da Keise: garante que o botão Teste Jogo
-// continue no menu mesmo se outro módulo reconstruir a navegação depois do boot.
+// O Teste Jogo é exclusivo da Keise e precisa existir mesmo se as conversas demorarem.
 const requestedProfile=String(new URLSearchParams(location.search).get('perfil')||'').trim().toLowerCase();
 const currentName=String(document.getElementById('myName')?.textContent||'').trim().toLowerCase();
 if(requestedProfile==='keise'||currentName==='keise'||currentName.startsWith('keise ')){
-  try{
-    await loadWithRetry('./keise-game-test.js?v=5-persistent-menu');
-    window.__ISA_ENSURE_TEST_GAME_NAV__?.();
-  }catch(error){console.warn('Teste Jogo da Keise não carregou:',error)}
+  try{await loadWithRetry('./keise-game-test.js?v=6-unfreeze-menu');window.__ISA_ENSURE_TEST_GAME_NAV__?.()}catch(error){console.warn('Teste Jogo da Keise não carregou:',error)}
 }
 
 window.__ISA_EXTRAS_READY__=true
 window.__ISA_EXTRAS_RESULTS__=results.map((r,i)=>({index:i,path:paths[i],ok:r.status==='fulfilled',error:r.status==='rejected'?String(r.reason?.message||r.reason||'Erro'):null}))
-
 const failed=results.filter(r=>r.status==='rejected')
 failed.forEach((r,i)=>console.warn('Módulo complementar não carregou',i,r.reason))
-if(failed.length){
-  const t=document.getElementById('toast')
-  if(t){
-    t.textContent='Alguns recursos extras demoraram para carregar. O Cantinho continua disponível.'
-    t.classList.remove('hidden')
-    setTimeout(()=>t.classList.add('hidden'),4200)
-  }
-}
+if(failed.length){const t=document.getElementById('toast');if(t){t.textContent='Alguns recursos extras demoraram para carregar. O Cantinho continua disponível.';t.classList.remove('hidden');setTimeout(()=>t.classList.add('hidden'),4200)}}
