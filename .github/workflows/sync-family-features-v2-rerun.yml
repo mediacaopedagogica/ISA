@@ -1,0 +1,64 @@
+name: Sync all family features v2 rerun
+on:
+  push:
+    paths:
+      - '.github/workflows/sync-family-features-v2-rerun.yml'
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Repair external media hook
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('familia-externa.js');s=p.read_text()
+          if '__ISA_FRIEND_SEND_PHOTO_FILE__' not in s:
+            marker="window.__ISA_FRIEND_REFRESH_LIST__=()=>refreshConversations()\n"
+            if marker not in s: raise SystemExit('refresh-list hook marker missing')
+            s=s.replace(marker,marker+"window.__ISA_FRIEND_SEND_PHOTO_FILE__=sendPhoto\n",1)
+            p.write_text(s)
+          PY
+      - name: Apply family feature sync
+        run: python scripts/sync_family_features_v2.py
+      - name: Validate JavaScript syntax
+        shell: bash
+        run: |
+          node --check familia-externa.js
+          node --check external-chat-tools.js
+          node --check postboot-loader.js
+          node --check extras-loader.js
+          node --check profile-actions.js
+          node --check profile-menu-guard.js
+      - name: Validate required capabilities
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          checks={
+            'acesso-mobile.html':['Nossa Rede','friendCameraBtn','friendPhotoBtn','friendAudioBtn','friendStickerMenuBtn','friendSettingsBtn'],
+            'acesso.html':['Nossa Rede','friendCameraBtn','friendPhotoBtn','friendAudioBtn','friendStickerMenuBtn','friendSettingsBtn'],
+            'familia-externa.js':['__ISA_FRIEND_GET_ACTIVE_CONVERSATION_ID__','__ISA_FRIEND_REFRESH_MESSAGES__','__ISA_FRIEND_SEND_PHOTO_FILE__'],
+            'external-chat-tools.js':['message_audio','capturePhoto','friendCameraBtn','friendAudioBtn'],
+            'postboot-loader.js':['call-manager.js','family-media-menu-v2.js','social-nav-guard.js','profile-status-stickers.js'],
+            'profile-menu-guard.js':['profileStatus','profileSticker']
+          }
+          for path,needles in checks.items():
+            text=Path(path).read_text();missing=[x for x in needles if x not in text]
+            if missing: raise SystemExit(f'{path}: missing {missing}')
+          for path in ['acesso-mobile.html','acesso.html']:
+            if '⚙️ <span>Configurações</span>' in Path(path).read_text(): raise SystemExit(f'{path}: settings label must be icon only')
+          print('Family feature quality gate: OK')
+          PY
+      - name: Commit synced features
+        shell: bash
+        run: |
+          if git diff --quiet; then echo 'No changes'; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add acesso-mobile.html acesso.html familia-externa.js external-chat-tools.js postboot-loader.js extras-loader.js profile-actions.js profile-menu-guard.js
+          git commit -m 'feat: sync complete family features across all links'
+          git push
