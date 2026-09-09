@@ -1,0 +1,49 @@
+name: Dupla na Pista Quality Gate
+on:
+  push:
+    paths:
+      - 'jogos/dupla-na-pista-teste.html'
+      - 'jogos/dupla-na-pista/**'
+      - '.github/workflows/dupla-quality-gate.yml'
+  pull_request:
+    paths:
+      - 'jogos/dupla-na-pista-teste.html'
+      - 'jogos/dupla-na-pista/**'
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate architecture and gameplay rules
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          html=Path('jogos/dupla-na-pista-teste.html').read_text()
+          required=[
+            'RaycastVehicle',
+            'ArrowUp',
+            'ArrowDown',
+            'ArrowLeft',
+            'ArrowRight',
+            'quickBar',
+          ]
+          missing=[x for x in required if x not in html]
+          if missing:
+            raise SystemExit('Missing gameplay markers: '+', '.join(missing))
+          forbidden=['autopilot','autoPilot','AI_DRIVES_PLAYER']
+          bad=[x for x in forbidden if x in html]
+          if bad:
+            raise SystemExit('Forbidden automatic driving markers: '+', '.join(bad))
+          files=[
+            Path('jogos/dupla-na-pista/ARCHITECTURE.md'),
+            Path('jogos/dupla-na-pista/src/core/event-bus.js'),
+            Path('jogos/dupla-na-pista/src/agents/race-director-agent.js'),
+          ]
+          absent=[str(x) for x in files if not x.exists()]
+          if absent:
+            raise SystemExit('Architecture files missing: '+', '.join(absent))
+          print('Dupla na Pista quality gate: OK')
+          PY
