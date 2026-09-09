@@ -46,13 +46,14 @@ if(!keiseAtBoot){
 
 later(520,'./profile-status-stickers.js?v=14-plus-menu')
 later(650,'./sticker-bg-remover.js?v=1-ai-cutout',()=>window.__ISA_ENSURE_STICKER_BG_REMOVER__?.())
-later(760,'./social-nav-guard.js?v=6-progressive',()=>{window.__ISA_ENSURE_SOCIAL_NAV__?.();if(!keiseAtBoot)window.__ISA_ENSURE_PROFILE_MENU__?.()})
+// social-nav-guard cria/observa um botão da navegação antiga; a Keise usa a API direta da Nossa Rede.
+if(!keiseAtBoot)later(760,'./social-nav-guard.js?v=6-progressive',()=>{window.__ISA_ENSURE_SOCIAL_NAV__?.();window.__ISA_ENSURE_PROFILE_MENU__?.()})
 later(840,'./nossa-rede-v4.js?v=1-approved',()=>window.__ISA_ENHANCE_NOSSA_REDE__?.())
 later(980,'./profile-actions.js?v=7-progressive')
 later(1200,'./call-manager.js?v=18-plus-menu')
 later(1450,'./family-media-menu-v2.js?v=12-compact-plus')
 later(1750,'./notifications-v2.js?v=11-progressive')
-later(2300,'./extras-loader.js?v=56-keise-single-layer',()=>{if(!keiseAtBoot)window.__ISA_ENSURE_PROFILE_MENU__?.()})
+later(2300,'./extras-loader.js?v=57-single-module-urls',()=>{if(!keiseAtBoot)window.__ISA_ENSURE_PROFILE_MENU__?.()})
 
 let keiseBooted=false
 function bootKeise(){
@@ -63,7 +64,7 @@ function bootKeise(){
   // keise-chat-unified fica somente como ponte funcional de conversa; sem camada visual própria.
   load('./keise-chat-unified.js?v=4-single-bridge')
   later(25,'./keise-approved-layout-final.js?v=3-single-layer',()=>window.__ISA_SHOW_KEISE_HOME__?.())
-  later(210,'./keise-game-test.js?v=9-progressive')
+  later(210,'./keise-game-test.js?v=10-direct-api')
   return true
 }
 bootKeise()
