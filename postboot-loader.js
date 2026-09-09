@@ -29,30 +29,29 @@ function ensureSettings(){
 }
 window.__ISA_ENSURE_SETTINGS_MENU__=ensureSettings
 
-// Perfis que ainda usam a navegação clássica continuam nela.
-// Keise, Isa e Alan usam somente os dashboards aprovados, sem uma segunda camada visual concorrente.
 if(!approvedDashboardAtBoot){
   ensureSettings();document.addEventListener('DOMContentLoaded',ensureSettings,{once:true})
   let n=0;const t=setInterval(()=>{ensureSettings();window.__ISA_ENSURE_PROFILE_MENU__?.();if(++n>24)clearInterval(t)},350)
   later(20,'./profile-menu-guard.js?v=6-classic-only',()=>window.__ISA_ENSURE_PROFILE_MENU__?.())
   later(80,'./general-settings.js?v=15-approved-profiles',()=>{ensureSettings();window.__ISA_APPLY_GENERAL_SETTINGS__?.()})
   later(120,'./personal-navigation-core.js?v=2-classic-only',()=>window.__ISA_PERSONAL_NAV_SYNC__?.())
-}else{
-  later(70,'./general-settings.js?v=15-approved-profiles')
-}
+}else later(70,'./general-settings.js?v=15-approved-profiles')
 
-// Recursos compartilhados continuam únicos para todos os perfis.
+// Recursos compartilhados: uma camada por função, evitando controladores visuais duplicados.
 later(260,'./social-privacy-guard.js?v=1-family-rules',()=>window.__ISA_SOCIAL_PRIVACY__?.apply?.())
 later(520,'./profile-status-stickers.js?v=14-plus-menu')
 later(650,'./sticker-bg-remover.js?v=1-ai-cutout',()=>window.__ISA_ENSURE_STICKER_BG_REMOVER__?.())
 if(!approvedDashboardAtBoot)later(760,'./social-nav-guard.js?v=8-classic-only',()=>{window.__ISA_ENSURE_SOCIAL_NAV__?.();window.__ISA_ENSURE_PROFILE_MENU__?.();window.__ISA_PERSONAL_NAV_SYNC__?.()})
 later(840,'./nossa-rede-v4.js?v=3-family-rules',()=>{window.__ISA_ENHANCE_NOSSA_REDE__?.();window.__ISA_SOCIAL_PRIVACY__?.apply?.();if(!approvedDashboardAtBoot)window.__ISA_PERSONAL_NAV_SYNC__?.()})
-later(920,'./nossa-rede-policy-v5-loader.js?v=1-timeline-social',()=>window.__ISA_NOSSA_REDE_V5__?.patch?.())
-later(980,'./profile-actions.js?v=7-progressive')
-later(1200,'./call-manager.js?v=18-plus-menu')
-later(1450,'./family-media-menu-v2.js?v=12-compact-plus')
-later(1750,'./notifications-v2.js?v=11-progressive')
-later(2150,'./extras-loader.js?v=60-social-profile-chat',()=>{window.__ISA_SOCIAL_PRIVACY__?.apply?.();window.__ISA_SOCIAL_PROFILE_CHAT_SYNC__?.();if(!approvedDashboardAtBoot){window.__ISA_ENSURE_PROFILE_MENU__?.();window.__ISA_PERSONAL_NAV_SYNC__?.()}})
+later(920,'./nossa-rede-policy-v5-loader.js?v=2-social-profiles',()=>window.__ISA_NOSSA_REDE_V5__?.patch?.())
+later(1010,'./social-profile-pages-v1.js?v=1-profiles-gallery',()=>window.__ISA_SOCIAL_PROFILE_PAGES__?.decorate?.())
+later(1080,'./profile-actions.js?v=7-progressive')
+later(1240,'./call-manager.js?v=18-plus-menu')
+later(1420,'./message-interactions-v1.js?v=2-live',()=>window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.())
+later(1540,'./family-media-menu-v2.js?v=12-compact-plus')
+later(1740,'./notifications-v2.js?v=11-progressive')
+later(1840,'./social-tag-notifications.js?v=2-live-tags',()=>window.__ISA_SOCIAL_TAG_NOTIFICATIONS__?.poll?.())
+later(2200,'./extras-loader.js?v=61-social-profile-pages',()=>{window.__ISA_SOCIAL_PRIVACY__?.apply?.();window.__ISA_SOCIAL_PROFILE_CHAT_SYNC__?.();window.__ISA_SOCIAL_PROFILE_PAGES__?.decorate?.();window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.();if(!approvedDashboardAtBoot){window.__ISA_ENSURE_PROFILE_MENU__?.();window.__ISA_PERSONAL_NAV_SYNC__?.()}})
 
 let keiseBooted=false
 function bootKeise(){
@@ -69,9 +68,8 @@ let sharedBooted=false
 function bootSharedApproved(){
   const p=currentProfile();if(sharedBooted||!(p==='isa'||p==='alan'))return false
   sharedBooted=true
-  later(25,'./approved-profile-dashboard.js?v=1-isa-alan',()=>window.__ISA_SHOW_APPROVED_PROFILE_HOME__?.())
+  later(25,'./approved-profile-dashboard.js?v=2-social-mobile-fix',()=>window.__ISA_SHOW_APPROVED_PROFILE_HOME__?.())
   return true
 }
 bootSharedApproved();let sc=0;const st=setInterval(()=>{if(bootSharedApproved()||++sc>50)clearInterval(st)},120)
-
 window.__ISA_EXTRAS_READY__=true
