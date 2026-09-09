@@ -14,7 +14,8 @@ const dedicatedMobile=new URLSearchParams(location.search).get('mobile')==='1'
 const common=[
   './general-settings.js?v=3-single-entry',
   './notifications-v2.js?v=9-stable',
-  './extras-loader.js?v=48-settings-social-v3'
+  './extras-loader.js?v=48-settings-social-v3',
+  './profile-status-stickers.js?v=1-all-profiles'
 ]
 const paths=dedicatedMobile?[
   './call-manager.js?v=8-header-safe',
