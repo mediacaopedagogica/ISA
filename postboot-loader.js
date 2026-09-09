@@ -44,16 +44,16 @@ function isKeiseAccess(){
 function bootKeise(){
   if(keiseBooted||!isKeiseAccess())return false
   keiseBooted=true
-  load('./keise-access-mode.js?v=1-link-split')
-  load('./keise-dashboard-hardstyle.js?v=2-state-safe')
-  load('./keise-chat-unified.js?v=2-state-safe')
-  css('./keise-dashboard-state-fix.css?v=1','keiseDashboardStateFix')
-  css('./keise-dashboard-dashboard-only.css?v=4-no-sidebar','keiseDashboardOnly')
-  later(40,'./keise-dashboard-v1.js?v=7-state-safe',()=>window.__ISA_SHOW_KEISE_HOME__?.())
+
+  // Fonte única do layout Keise. Os arquivos antigos continuam no repositório,
+  // porém não são mais carregados e não podem substituir o visual aprovado.
+  load('./keise-access-mode.js?v=2-approved-final')
+  load('./keise-chat-unified.js?v=3-approved-final')
+  later(25,'./keise-approved-layout-final.js?v=1-last-approved',()=>window.__ISA_SHOW_KEISE_HOME__?.())
   later(210,'./keise-game-test.js?v=9-progressive',()=>{window.__ISA_ENSURE_TEST_GAME_NAV__?.();window.__ISA_ENSURE_PROFILE_MENU__?.()})
   return true
 }
 bootKeise()
-let keiseChecks=0;const keiseTimer=setInterval(()=>{if(bootKeise()||++keiseChecks>40)clearInterval(keiseTimer)},150)
+let keiseChecks=0;const keiseTimer=setInterval(()=>{if(bootKeise()||++keiseChecks>50)clearInterval(keiseTimer)},120)
 
 window.__ISA_EXTRAS_READY__=true
