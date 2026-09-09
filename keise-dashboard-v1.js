@@ -7,11 +7,31 @@ function requested(){return norm(new URLSearchParams(location.search).get('perfi
 function current(){return norm($('myName')?.textContent)}
 function isKeise(){const p=current(),q=requested();return p==='keise'||p.startsWith('keise ')||q==='keise'}
 function mainReady(){const m=$('mainView');return !!m&&!m.classList.contains('hidden')&&isKeise()}
-function ensureCss(){if(document.querySelector('link[data-keise-dashboard]'))return;const l=document.createElement('link');l.rel='stylesheet';l.href='./keise-dashboard-v1.css?v=2-approved-exact';l.dataset.keiseDashboard='1';document.head.appendChild(l)}
+function ensureCss(){if(document.querySelector('link[data-keise-dashboard]'))return;const l=document.createElement('link');l.rel='stylesheet';l.href='./keise-dashboard-v1.css?v=4-dashboard-only';l.dataset.keiseDashboard='1';document.head.appendChild(l)}
 function toast(text){const t=$('toast');if(t){t.textContent=text;t.classList.remove('hidden');clearTimeout(t._kd);t._kd=setTimeout(()=>t.classList.add('hidden'),2600);return}console.info(text)}
 
 async function find(selector,tries=24,delay=90){for(let i=0;i<tries;i++){const el=document.querySelector(selector);if(el)return el;await wait(delay)}return null}
 async function clickTarget(selector,modulePath,after){let el=document.querySelector(selector);if(!el&&modulePath){try{await import(modulePath)}catch(e){console.warn('Keise dashboard module:',modulePath,e)}el=await find(selector,18,80)}if(el){el.click();after?.();return true}return false}
+
+function forceDashboardLayout(){
+  const main=$('mainView'),sidebar=main?.querySelector('.sidebar'),content=main?.querySelector('.content')
+  document.querySelectorAll('.kd-side-menu').forEach(el=>el.remove())
+  if(main){main.style.setProperty('grid-template-columns','minmax(0,1fr)','important')}
+  if(sidebar){
+    sidebar.style.setProperty('display','none','important')
+    sidebar.style.setProperty('visibility','hidden','important')
+    sidebar.style.setProperty('width','0','important')
+    sidebar.style.setProperty('min-width','0','important')
+    sidebar.style.setProperty('padding','0','important')
+    sidebar.style.setProperty('margin','0','important')
+  }
+  if(content){
+    content.style.setProperty('grid-column','1 / -1','important')
+    content.style.setProperty('width','100%','important')
+    content.style.setProperty('max-width','none','important')
+    content.style.setProperty('margin-left','0','important')
+  }
+}
 
 function hideHome(){document.body.classList.remove('keise-home-active');$('keiseHomeDashboard')?.classList.add('hidden')}
 function clearMainPanels(){
@@ -20,8 +40,7 @@ function clearMainPanels(){
 }
 function showHome({scrollConversations=false}={}){
   if(!built||!mainReady())return
-  clearMainPanels();$('keiseHomeDashboard')?.classList.remove('hidden');document.body.classList.add('keise-home-active');
-  document.querySelectorAll('.kd-side-btn').forEach(b=>b.classList.toggle('active',b.dataset.kdAction==='home'))
+  forceDashboardLayout();clearMainPanels();$('keiseHomeDashboard')?.classList.remove('hidden');document.body.classList.add('keise-home-active');
   syncIdentity();syncConversations();
   if(scrollConversations)setTimeout(()=>$('kdConversations')?.scrollIntoView({behavior:'smooth',block:'start'}),60)
 }
@@ -51,24 +70,18 @@ async function runAction(action){
   if(action==='profile'||action==='status'){await openStatus();return}
   if(action==='settings'){await openSettings();return}
   if(action==='group'){$('newGroupBtn')?.click();return}
-  if(action==='help'){toast('Ajuda do Cantinho: use os cartões para abrir cada área e as conversas para falar com a família.');return}
-  if(action==='about'){toast('Cantinho da Isa 💕 — espaço privado da família.');return}
 }
 
 function feature(icon,label,action,cls=''){return `<button type="button" class="kd-feature ${cls}" data-kd-action="${action}"><span class="kd-feature-icon">${icon}</span><span>${label}</span></button>`}
-function side(icon,label,action,active=false){return `<button type="button" class="kd-side-btn${active?' active':''}" data-kd-action="${action}"><span class="kd-side-icon">${icon}</span><span>${label}</span></button>`}
 
 function build(){
   if(built||!mainReady())return false
   ensureCss();built=true;document.body.classList.add('keise-dashboard-mode')
   const main=$('mainView'),sidebar=main?.querySelector('.sidebar'),content=main?.querySelector('.content');if(!main||!sidebar||!content){built=false;return false}
+  forceDashboardLayout()
 
   if(!$('keiseDesktopTopbar')){
     const top=document.createElement('header');top.id='keiseDesktopTopbar';top.innerHTML=`<div class="kd-brand"><span class="kd-brand-heart">💗</span><span class="kd-brand-name">Cantinho da Isa 💕</span></div><label class="kd-search"><input id="kdSearchInput" type="search" placeholder="Pesquisar no Cantinho da Isa..." aria-label="Pesquisar no Cantinho da Isa"></label><div class="kd-top-actions"><button class="kd-bell" type="button" aria-label="Notificações">🔔</button><button class="kd-top-profile" type="button" data-kd-action="profile"><span id="kdTopAvatar" class="kd-top-avatar">🦋</span><span>Keise</span><span>⌄</span></button></div>`;main.insertBefore(top,main.firstChild)
-  }
-
-  if(!sidebar.querySelector('.kd-side-menu')){
-    const menu=document.createElement('div');menu.className='kd-side-menu';menu.innerHTML=`${side('⌂','Início','home',true)}${side('💬','Chat','chat')}${side('📅','Calendário','calendar')}${side('🌸','Nossa Rede','social')}${side('🧪','Teste','test')}${side('👀','Supervisão','supervision')}${side('🛡️','Super Pais','parents')}${side('🔐','Meu acesso','access')}${side('👤','Meu perfil','profile')}${side('⚙️','Configurações','settings')}<div class="kd-side-sep"></div>${side('❔','Ajuda','help')}${side('♡','Sobre o app','about')}<div class="kd-side-note">Família<br>é tudo 💕</div>`;sidebar.appendChild(menu)
   }
 
   if(!$('keiseHomeDashboard')){
@@ -104,7 +117,7 @@ function build(){
   const list=$('chatList');if(list){chatObserver=new MutationObserver(syncConversations);chatObserver.observe(list,{childList:true,subtree:true,characterData:true})}
   $('mobileBackBtn')?.addEventListener('click',()=>setTimeout(()=>{if($('chatPanel')?.classList.contains('hidden'))showHome()},180))
   document.querySelector('.nav-tabs .nav-btn[data-tab="chats"]')?.addEventListener('click',()=>setTimeout(()=>{if($('chatPanel')?.classList.contains('hidden'))showHome()},80))
-  identityTimer=setInterval(()=>{if(!mainReady()){clearInterval(identityTimer);return}syncIdentity();if(document.body.classList.contains('keise-home-active'))syncConversations()},900)
+  identityTimer=setInterval(()=>{if(!mainReady()){clearInterval(identityTimer);return}forceDashboardLayout();syncIdentity();if(document.body.classList.contains('keise-home-active'))syncConversations()},900)
   syncIdentity();syncConversations();showHome();return true
 }
 
