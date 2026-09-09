@@ -2,6 +2,7 @@
 const wait=ms=>new Promise(r=>setTimeout(r,ms))
 async function load(path){try{return await import(path)}catch(e){console.warn('Módulo não carregou:',path,e);return null}}
 function later(ms,path,after){setTimeout(async()=>{await load(path);try{after?.()}catch{}},ms)}
+function css(path,id){if(document.getElementById(id))return;const l=document.createElement('link');l.id=id;l.rel='stylesheet';l.href=path;document.head.appendChild(l)}
 
 function ensureSettings(){
   const nav=document.querySelector('.nav-tabs');if(!nav)return null
@@ -41,6 +42,7 @@ later(2300,'./extras-loader.js?v=55-snake-restored',()=>window.__ISA_ENSURE_PROF
 const requested=String(new URLSearchParams(location.search).get('perfil')||'').trim().toLowerCase()
 const current=String(document.getElementById('myName')?.textContent||'').trim().toLowerCase()
 if(requested==='keise'||current==='keise'||current.startsWith('keise ')){
+  css('./keise-dashboard-state-fix.css?v=1','keiseDashboardStateFix')
   later(260,'./keise-dashboard-v1.js?v=2-approved-exact',()=>window.__ISA_SHOW_KEISE_HOME__?.())
   later(420,'./keise-game-test.js?v=9-progressive',()=>{window.__ISA_ENSURE_TEST_GAME_NAV__?.();window.__ISA_ENSURE_PROFILE_MENU__?.()})
 }
