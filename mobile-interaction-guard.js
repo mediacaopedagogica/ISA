@@ -1,7 +1,15 @@
 const waitSettings=ms=>new Promise(r=>setTimeout(r,ms))
 
-// Entrada de Configurações garantida em todos os acessos pessoais (?perfil=Alan, Isa, Keise etc.).
+function isKeiseApprovedAccess(){
+  const requested=String(new URLSearchParams(location.search).get('perfil')||'').trim().toLowerCase()
+  const current=String(document.getElementById('myName')?.textContent||'').trim().toLowerCase()
+  return requested==='keise'||current==='keise'||current.startsWith('keise ')
+}
+
+// Entrada de Configurações garantida em todos os acessos pessoais.
+// No dashboard aprovado da Keise, a própria camada aprovada abre Configurações diretamente.
 function ensureGlobalSettingsEntry(){
+  if(isKeiseApprovedAccess())return document.getElementById('settingsMenuBtn')||null
   const nav=document.querySelector('.nav-tabs')
   if(!nav)return null
   let btn=document.getElementById('settingsMenuBtn')
@@ -28,7 +36,7 @@ function ensureGlobalSettingsEntry(){
         window.__ISA_OPEN_GENERAL_SETTINGS__();return
       }
       try{
-        await import('./general-settings.js?v=8-native-tap')
+        await import('./general-settings.js?v=13-keise-single-layer')
         for(let i=0;i<16;i++){
           if(typeof window.__ISA_OPEN_GENERAL_SETTINGS__==='function'){
             window.__ISA_OPEN_GENERAL_SETTINGS__();return
@@ -42,9 +50,11 @@ function ensureGlobalSettingsEntry(){
 }
 
 function startSettingsEntry(){
+  if(isKeiseApprovedAccess())return
   ensureGlobalSettingsEntry()
   let tries=0
   const timer=setInterval(()=>{
+    if(isKeiseApprovedAccess()){clearInterval(timer);return}
     ensureGlobalSettingsEntry()
     if(++tries>=24)clearInterval(timer)
   },300)
@@ -52,7 +62,12 @@ function startSettingsEntry(){
 startSettingsEntry()
 document.addEventListener('DOMContentLoaded',startSettingsEntry,{once:true})
 
-if(new URLSearchParams(location.search).get('mobile')==='1'){
+// O dashboard da Keise possui um único controlador de navegação.
+// Este arquivo permanece carregado pelo HTML por compatibilidade com os demais perfis,
+// mas não pode mais adicionar classes mobile, esconder painéis ou observar cliques da Keise.
+if(isKeiseApprovedAccess()){
+  window.__ISA_MOBILE_GUARD__={keiseApproved:true}
+}else if(new URLSearchParams(location.search).get('mobile')==='1'){
   const $m=id=>document.getElementById(id)
   document.body.classList.add('mobile-native-mode')
   if(!document.querySelector('link[data-mobile-native-early]')){
@@ -61,6 +76,7 @@ if(new URLSearchParams(location.search).get('mobile')==='1'){
     document.head.appendChild(l)
   }
   function syncDedicated(){
+    if(isKeiseApprovedAccess())return
     ensureGlobalSettingsEntry()
     const main=$m('mainView');if(!main)return
     const visible=el=>!!el&&!el.classList.contains('hidden')
@@ -73,6 +89,7 @@ if(new URLSearchParams(location.search).get('mobile')==='1'){
   }
   const observer=new MutationObserver(syncDedicated)
   function startDedicated(){
+    if(isKeiseApprovedAccess())return
     ensureGlobalSettingsEntry()
     ;['chatPanel','calendarPanel','supervisionPanel','parentsPanel','studyPanel'].forEach(id=>{
       const el=$m(id)
@@ -93,6 +110,7 @@ if(new URLSearchParams(location.search).get('mobile')==='1'){
   function mobileReady(){const m=mobileMain();return !!m&&!m.classList.contains('hidden')}
 
   function ensureTouchCss(){
+    if(isKeiseApprovedAccess()||!mobileReady())return
     if(document.querySelector('style[data-mobile-touch-fix]'))return
     const s=document.createElement('style')
     s.dataset.mobileTouchFix='1'
@@ -101,6 +119,7 @@ if(new URLSearchParams(location.search).get('mobile')==='1'){
   }
 
   function ensurePanelBack(){
+    if(isKeiseApprovedAccess())return null
     let b=$m('mobilePanelBack')
     if(!b){
       b=document.createElement('button')
@@ -111,22 +130,20 @@ if(new URLSearchParams(location.search).get('mobile')==='1'){
   }
 
   function showMobileList(){
-    if(!mobileMQ.matches||!mobileReady())return
+    if(isKeiseApprovedAccess()||!mobileMQ.matches||!mobileReady())return
     const m=mobileMain();m.classList.remove('mobile-content-open','mobile-chat-open','mobile-panel-open')
     ensurePanelBack()?.classList.add('hidden')
     const list=$m('chatList');if(list){list.style.removeProperty('display');list.style.removeProperty('pointer-events')}
   }
 
   function showMobileContent(kind='panel'){
-    if(!mobileMQ.matches||!mobileReady())return
+    if(isKeiseApprovedAccess()||!mobileMQ.matches||!mobileReady())return
     const m=mobileMain();m.classList.add('mobile-content-open');m.classList.toggle('mobile-chat-open',kind==='chat');m.classList.toggle('mobile-panel-open',kind!=='chat')
     const back=ensurePanelBack();if(back)back.classList.toggle('hidden',kind==='chat')
   }
 
-  // IMPORTANTE: não interceptamos touchend e não fabricamos .click().
-  // iOS/Android executam o clique nativo; isso preserva Sair, conversas, arquivos e botões que exigem gesto real.
   function syncAfterClick(event){
-    if(!mobileMQ.matches||!mobileReady())return
+    if(isKeiseApprovedAccess()||!mobileMQ.matches||!mobileReady())return
     const nav=event.target.closest?.('.nav-btn[data-tab]')
     if(nav){const tab=nav.dataset.tab;if(tab==='chats')setTimeout(showMobileList,0);else if(tab!=='study'&&tab!=='diary')setTimeout(()=>showMobileContent('panel'),0)}
     const card=event.target.closest?.('#chatList .chat-item[data-conv]')
@@ -136,6 +153,7 @@ if(new URLSearchParams(location.search).get('mobile')==='1'){
   document.addEventListener('click',syncAfterClick,false)
 
   const contentObserver=new MutationObserver(()=>{
+    if(isKeiseApprovedAccess())return
     ensureGlobalSettingsEntry()
     if(!mobileMQ.matches||!mobileReady())return
     const chat=$m('chatPanel'),calendar=$m('calendarPanel'),supervision=$m('supervisionPanel'),parents=$m('parentsPanel')
@@ -144,10 +162,11 @@ if(new URLSearchParams(location.search).get('mobile')==='1'){
   })
 
   function startMobileGuard(){
+    if(isKeiseApprovedAccess())return
+    if(!mobileReady())return
     ensureGlobalSettingsEntry();ensureTouchCss();ensurePanelBack()
     ;['chatPanel','calendarPanel','supervisionPanel','parentsPanel'].forEach(id=>{const el=$m(id);if(el&&!el.dataset.mobileGuardObserved){el.dataset.mobileGuardObserved='1';contentObserver.observe(el,{attributes:true,attributeFilter:['class']})}})
-    // Defesa contra estilos antigos que tenham deixado a lista sem clique.
-    if(mobileMQ.matches&&mobileReady()&&!mobileMain().classList.contains('mobile-content-open'))showMobileList()
+    if(mobileMQ.matches&&!mobileMain().classList.contains('mobile-content-open'))showMobileList()
   }
   startMobileGuard();document.addEventListener('DOMContentLoaded',startMobileGuard,{once:true});setTimeout(startMobileGuard,250);setTimeout(startMobileGuard,1200)
   window.__ISA_MOBILE_GUARD__={showMobileList,showMobileContent}
