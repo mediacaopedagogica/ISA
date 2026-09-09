@@ -1,0 +1,50 @@
+name: Fix Nossa Rede v2
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-social-network-v2.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Repair Nossa Rede navigation and interactions
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p=Path('social-network.js')
+          s=p.read_text()
+          s=s.replace("reactions.slice(0,4).map", "reactions.map")
+          if "window.__ISA_OPEN_SOCIAL__=openSocial" not in s:
+              s=s.replace("function waitBoot(){", "window.__ISA_OPEN_SOCIAL__=openSocial\nfunction waitBoot(){")
+          s=s.replace("./social-network.css?v=1", "./social-network.css?v=2")
+          p.write_text(s)
+
+          p=Path('postboot-loader.js')
+          s=p.read_text().replace("./extras-loader.js?v=46-social-network", "./extras-loader.js?v=47-social-network-v2")
+          p.write_text(s)
+
+          p=Path('index.html')
+          s=p.read_text().replace("./postboot-loader.js?v=25-social-network", "./postboot-loader.js?v=26-social-network-v2")
+          p.write_text(s)
+          PY
+      - name: Validate modules
+        run: |
+          node --check social-network.js
+          node --check social-network-bridge-v2.js
+          node --check extras-loader.js
+          node --check postboot-loader.js
+          grep -q "reactions.map" social-network.js
+          grep -q "social-network-bridge-v2" extras-loader.js
+          grep -q "postboot-loader.js?v=26-social-network-v2" index.html
+      - name: Commit repair
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add social-network.js postboot-loader.js index.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'fix: open Nossa Rede reliably and show full reactions'
+          git push
