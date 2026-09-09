@@ -7,7 +7,7 @@ const $=id=>document.getElementById(id)
 const norm=v=>String(v||'').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
 const mobileContext=new URLSearchParams(location.search).get('mobile')==='1'||/acesso-mobile\.html$/i.test(location.pathname)||matchMedia('(max-width:700px)').matches
 function currentName(){const main=norm($('myName')?.textContent);if(main&&main!=='família')return main;const external=norm($('friendName')?.textContent);if(external&&external!=='perfil')return external;return''}
-function eligible(){const n=currentName();return['isa','keise','alan','paloma','elion','vania','davi'].includes(n)}
+function eligible(){const n=currentName();return['isa','keise','alan','paloma','elion','vania','evalda','davi'].includes(n)}
 function isExternal(){return!!$('friendApp')}
 function injectStyles(){
   if($('cantinhoGamesStyles'))return
