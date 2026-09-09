@@ -27,7 +27,8 @@ async function loadCoreExtras(){
     loadOnce('paused-friends','./paused-friends-filter.js?v=3-stable'),
     loadOnce('family-media','./family-media-menu-v2.js?v=9-audio-day'),
     loadOnce('links','./link-preview.js?v=6-inline-video'),
-    loadOnce('social-network','./social-network.js?v=1-family-feed')
+    loadOnce('social-network','./social-network.js?v=2-family-feed'),
+    loadOnce('social-network-bridge','./social-network-bridge-v2.js?v=2-open-fix')
   ]
   if(!dedicatedMobile)jobs.push(loadOnce('calls','./call-manager.js?v=4-stable'))
 
