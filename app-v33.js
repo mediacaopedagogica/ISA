@@ -21287,7 +21287,28 @@ ${suffix}`;
         try {
           await adminAction("set_permissions", { memberId: id, permissions: { text: true, photo: $("permPhoto").checked, poll: $("permPoll").checked, calendar: $("permCalendar").checked, audio: false, sticker: false, voice: false, video: false, status: false }, allowChild: m.role === "child" ? void 0 : $("permIsa").checked });
           closeDialog();
-          await Promise.all([loadFamily(), loadConversations()]);
+          const coreLoad = Promise.allSettled([loadFamily(), loadConversations()]);
+      const coreBootResult = await Promise.race([
+        coreLoad.then(() => "ready"),
+        new Promise((resolve) => setTimeout(() => resolve("timeout"), 6500))
+      ]);
+      const bootChatList = $("chatList");
+      if (coreBootResult === "timeout" && bootChatList && /Carregando conversas/i.test(bootChatList.textContent || "")) {
+        bootChatList.innerHTML = '<div class="muted" style="padding:12px;line-height:1.5">As conversas demoraram para responder.<br><button id="conversationRetryBtn" type="button" class="tiny-btn" style="margin-top:8px">Tentar carregar novamente</button></div>';
+        const retry = $("conversationRetryBtn");
+        if (retry) retry.onclick = async () => {
+          retry.disabled = true;
+          retry.textContent = "Carregando…";
+          await Promise.race([
+            Promise.allSettled([loadFamily(), loadConversations()]),
+            new Promise((resolve) => setTimeout(resolve, 6500))
+          ]);
+          if (/Carregando conversas|demoraram para responder/i.test(bootChatList.textContent || "")) {
+            retry.disabled = false;
+            retry.textContent = "Tentar carregar novamente";
+          }
+        };
+      }
           toast("Permiss\xF5es atualizadas");
         } catch (e) {
           setStatus("dialogMsg", e.message);
