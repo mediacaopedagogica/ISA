@@ -35,7 +35,7 @@ async function createGroupFromDialog(btn){
   const memberIds=checks.map(x=>String(x.dataset.groupMember||'')).filter(Boolean)
   btn.disabled=true;btn.textContent='Criando…'
   try{
-    const {data,error}=await db.functions.invoke('chat-actions',{body:{action:'create_group',title,memberIds}})
+    const {data,error}=await db.functions.invoke('group-actions-v2',{body:{action:'create_group',title,memberIds}})
     if(error)throw error;if(data?.error)throw new Error(data.error)
     $('simpleDialog')?.close();toast('Grupo criado 💕')
     setTimeout(()=>location.reload(),650)
