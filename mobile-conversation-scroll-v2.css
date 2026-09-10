@@ -1,0 +1,25 @@
+/* Conversas em telas pequenas: rolagem vertical real e visível em mais aparelhos. */
+@media(max-width:850px){
+  #chatList,.chat-list,#kaConversationListStable,.friend-conversation-list,#friendConversationList{
+    min-height:0!important;
+    overflow-y:scroll!important;
+    overflow-x:hidden!important;
+    -webkit-overflow-scrolling:touch!important;
+    overscroll-behavior:contain!important;
+    scrollbar-gutter:stable!important;
+    scrollbar-width:auto!important;
+    scrollbar-color:#c9a9dc #f5ecf8!important;
+    padding-right:12px!important;
+  }
+  #chatList::-webkit-scrollbar,.chat-list::-webkit-scrollbar,#kaConversationListStable::-webkit-scrollbar,.friend-conversation-list::-webkit-scrollbar,#friendConversationList::-webkit-scrollbar{width:8px!important}
+  #chatList::-webkit-scrollbar-track,.chat-list::-webkit-scrollbar-track,#kaConversationListStable::-webkit-scrollbar-track,.friend-conversation-list::-webkit-scrollbar-track,#friendConversationList::-webkit-scrollbar-track{background:#f5ecf8!important;border-radius:999px!important}
+  #chatList::-webkit-scrollbar-thumb,.chat-list::-webkit-scrollbar-thumb,#kaConversationListStable::-webkit-scrollbar-thumb,.friend-conversation-list::-webkit-scrollbar-thumb,#friendConversationList::-webkit-scrollbar-thumb{background:#c9a9dc!important;border-radius:999px!important;border:2px solid #f5ecf8!important}
+  #kaConversationListStable{max-height:calc(100dvh - 285px)!important;padding-bottom:18px!important}
+  .friend-conversation-list,#friendConversationList{max-height:calc(100dvh - 235px)!important;padding-bottom:18px!important}
+  .app-shell>.sidebar #chatList,.app-shell>.sidebar .chat-list{max-height:calc(100dvh - 280px)!important;flex:1 1 auto!important;padding-bottom:calc(18px + env(safe-area-inset-bottom))!important}
+}
+@media(max-width:430px){
+  #kaConversationListStable{max-height:calc(100dvh - 265px)!important}
+  .friend-conversation-list,#friendConversationList{max-height:calc(100dvh - 215px)!important}
+  .app-shell>.sidebar #chatList,.app-shell>.sidebar .chat-list{max-height:calc(100dvh - 260px)!important}
+}
