@@ -48,10 +48,12 @@ later(1060,'./social-profile-directory-v1.js?v=1-visible-only',()=>window.__ISA_
 later(1110,'./profile-actions.js?v=7-progressive')
 later(1240,'./call-manager.js?v=18-plus-menu')
 later(1420,'./message-interactions-v1.js?v=2-live',()=>window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.())
+later(1480,'./chat-rich-format-v1.js?v=1-rich-chat',()=>window.__ISA_REFRESH_RICH_CHAT__?.())
 later(1540,'./family-media-menu-v2.js?v=12-compact-plus')
+later(1600,'./group-creation-guard-v1.js?v=2-safe-groups',()=>window.__ISA_GROUP_RULES_REFRESH__?.())
 later(1740,'./notifications-v2.js?v=11-progressive')
 later(1840,'./social-tag-notifications.js?v=2-live-tags',()=>window.__ISA_SOCIAL_TAG_NOTIFICATIONS__?.poll?.())
-later(2200,'./extras-loader.js?v=61-social-profile-pages',()=>{window.__ISA_SOCIAL_PRIVACY__?.apply?.();window.__ISA_SOCIAL_PROFILE_CHAT_SYNC__?.();window.__ISA_SOCIAL_PROFILE_PAGES__?.decorate?.();window.__ISA_SOCIAL_PROFILE_DIRECTORY__?.patch?.();window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.();if(!approvedDashboardAtBoot){window.__ISA_ENSURE_PROFILE_MENU__?.();window.__ISA_PERSONAL_NAV_SYNC__?.()}})
+later(2200,'./extras-loader.js?v=61-social-profile-pages',()=>{window.__ISA_SOCIAL_PRIVACY__?.apply?.();window.__ISA_SOCIAL_PROFILE_CHAT_SYNC__?.();window.__ISA_SOCIAL_PROFILE_PAGES__?.decorate?.();window.__ISA_SOCIAL_PROFILE_DIRECTORY__?.patch?.();window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.();window.__ISA_REFRESH_RICH_CHAT__?.();window.__ISA_GROUP_RULES_REFRESH__?.();if(!approvedDashboardAtBoot){window.__ISA_ENSURE_PROFILE_MENU__?.();window.__ISA_PERSONAL_NAV_SYNC__?.()}})
 
 let keiseBooted=false
 function bootKeise(){
