@@ -1,0 +1,35 @@
+/* Acessos familiares: mesmo idioma visual do dashboard aprovado, preservando recursos de cada perfil. */
+:root{--ext-ink:#563b65;--ext-muted:#927f9c;--ext-shadow:0 16px 34px rgba(96,72,119,.12),0 5px 0 rgba(183,161,208,.12)}
+body.friend-portal-open{background:radial-gradient(circle at 10% 10%,rgba(255,221,235,.66),transparent 30%),radial-gradient(circle at 92% 12%,rgba(224,214,255,.72),transparent 32%),linear-gradient(135deg,#fff9fc,#f8f2ff 54%,#f2f8ff)!important;color:var(--ext-ink)}
+.friend-chat{gap:18px!important;padding:18px!important;background:transparent!important}
+.friend-sidebar{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;overflow:auto!important}
+.friend-profile{display:flex!important;align-items:center!important;gap:13px!important;padding:16px!important;margin:0 0 14px!important;border:1px solid rgba(255,255,255,.98)!important;border-radius:28px!important;background:linear-gradient(120deg,rgba(255,248,251,.98),rgba(240,235,255,.96),rgba(255,237,246,.95))!important;box-shadow:var(--ext-shadow)!important}
+.friend-avatar{width:72px!important;height:72px!important;min-width:72px!important;border-radius:22px!important;background:linear-gradient(145deg,#fff0d8,#ffdee8 48%,#e7deff)!important;box-shadow:0 12px 24px rgba(96,71,116,.13),inset 0 0 0 2px rgba(255,255,255,.9)!important}
+.friend-profile>div:nth-child(2){min-width:0;flex:1}.friend-profile small{display:block;color:#927d9d!important;font-size:11px!important}.friend-profile strong{display:block;color:#4d315d!important;font-size:18px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.friend-profile-quick,.friend-exit-btn{border:1px solid rgba(255,255,255,.95)!important;border-radius:18px!important;background:linear-gradient(145deg,#fff8fb,#eee7ff)!important;box-shadow:0 7px 16px rgba(93,70,111,.10)!important;color:#654d72!important}
+.friend-exit-btn{background:linear-gradient(145deg,#fff9fa,#ffe8ee)!important;color:#9b506e!important}
+.family-primary-nav{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important;padding:0!important;margin:0 0 18px!important;background:transparent!important;box-shadow:none!important}
+.family-primary-tab{min-height:94px!important;border-radius:23px!important;border:1px solid rgba(255,255,255,.98)!important;box-shadow:var(--ext-shadow)!important;display:flex!important;flex-direction:column!important;gap:7px!important;align-items:center!important;justify-content:center!important;font-size:28px!important;color:#5a3e69!important;background:linear-gradient(145deg,#f7f2ff,#edf7ff)!important}
+.family-primary-tab:nth-child(2){background:linear-gradient(145deg,#fff4f9,#f4e8ff)!important}.family-primary-tab:nth-child(3){background:linear-gradient(145deg,#eef9ff,#edf3ff)!important}.family-primary-tab:nth-child(4){background:linear-gradient(145deg,#fff8e8,#f6efff)!important}.family-primary-tab:nth-child(5){background:linear-gradient(145deg,#effcf5,#eef7ff)!important}
+.family-primary-tab span{font-size:12px!important;line-height:1.05!important}.family-primary-tab.icon-only{font-size:29px!important}.family-primary-tab:hover{transform:translateY(-2px)}
+.friend-side-title{padding:4px 3px 10px!important}.friend-side-title strong{font-size:24px!important;color:#4d315d!important}.friend-side-title small{margin-top:3px;color:#9a879f!important}
+.friend-conversation-list{display:grid!important;gap:10px!important;padding:0 2px 16px!important}
+.friend-conversation{width:100%!important;min-height:82px!important;border-radius:23px!important;border:1px solid rgba(255,255,255,.98)!important;background:linear-gradient(120deg,#fff7e8,#ffedf4)!important;box-shadow:0 11px 24px rgba(93,70,111,.10)!important;text-align:left!important;padding:14px 16px!important;color:#553c63!important}
+.friend-conversation:nth-child(2n){background:linear-gradient(120deg,#edf7ff,#f0f0ff)!important}.friend-conversation:nth-child(3n){background:linear-gradient(120deg,#f0fff7,#fff8e9)!important}.friend-conversation strong{font-size:15px!important}.friend-conversation small{color:#927e9a!important;margin-top:4px!important}
+.friend-link-note{border:0!important;background:rgba(255,255,255,.52)!important;border-radius:16px!important;color:#8c7895!important}
+.friend-main{border:1px solid rgba(255,255,255,.95)!important;border-radius:30px!important;background:rgba(255,255,255,.48)!important;box-shadow:0 16px 38px rgba(93,70,111,.08)!important;overflow:hidden!important}
+.friend-empty{background:linear-gradient(145deg,rgba(255,255,255,.76),rgba(246,240,255,.78))!important}
+
+/* A própria foto não exibe controles soltos: edição fica pelo Perfil. */
+.friend-avatar{cursor:default!important}.friend-avatar:after{display:none!important}
+
+@media(max-width:780px){
+  .friend-chat{padding:0!important}.friend-sidebar{padding:12px 10px 20px!important;background:linear-gradient(160deg,#fffafd,#f4ecff 55%,#eef7ff)!important;overflow-y:auto!important}
+  .friend-profile{padding:13px!important;margin-bottom:12px!important;border-radius:25px!important}.friend-avatar{width:64px!important;height:64px!important;min-width:64px!important;border-radius:20px!important}.friend-profile strong{font-size:16px!important}
+  .family-primary-nav{position:relative!important;top:auto!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:8px!important;margin:0 0 16px!important;padding:0!important;background:transparent!important;backdrop-filter:none!important}
+  .family-primary-tab{min-height:84px!important;border-radius:20px!important;font-size:25px!important;padding:8px 3px!important}.family-primary-tab span{font-size:10px!important;white-space:normal!important;text-align:center!important}.family-primary-tab.icon-only{font-size:26px!important}
+  .friend-side-title strong{font-size:22px!important}.friend-conversation-list{overflow:visible!important;flex:none!important}.friend-conversation{min-height:78px!important;border-radius:21px!important;padding:13px 14px!important}
+  .friend-link-note{margin-bottom:20px!important}
+  .friend-chat.thread-open .friend-main{display:block!important;position:fixed!important;inset:0!important;width:100%!important;height:100dvh!important;max-height:100dvh!important;border-radius:0!important;z-index:1000!important}
+}
+@media(max-width:390px){.family-primary-nav{grid-template-columns:repeat(3,minmax(0,1fr))!important}.family-primary-tab{min-height:80px!important}}
