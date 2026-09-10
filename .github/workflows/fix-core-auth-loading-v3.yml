@@ -1,0 +1,73 @@
+name: Fix core auth loading v3
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-core-auth-loading-v3.yml'
+permissions:
+  contents: write
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch core boot and initial script loading
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          # 1) Core auth: no Supabase auth call may keep the app pending forever.
+          p=Path('app-v33.js')
+          s=p.read_text()
+          old='''const { data: { user } } = await supabase.auth.getUser();\n      if (!user) {'''
+          new='''let user = null;\n      try {\n        const authResult = await Promise.race([\n          supabase.auth.getUser(),\n          new Promise((_, reject) => setTimeout(() => reject(new Error("auth timeout")), 5500))\n        ]);\n        user = authResult?.data?.user || null;\n      } catch (authError) {\n        console.warn("Autenticação demorou; liberando a tela de entrada.", authError);\n        showView("loginView");\n        window.__ISA_HIDE_BOOT_GUARD__?.();\n        return;\n      }\n      if (!user) {'''
+          if old not in s:
+              raise SystemExit('Trecho de auth esperado não encontrado em app-v33.js')
+          s=s.replace(old,new,1)
+          p.write_text(s)
+
+          # 2) DOMContentLoaded não deve esperar os módulos visuais opcionais.
+          p=Path('index.html')
+          s=p.read_text()
+          s=re.sub(r'<script defer src="\./app-v33\.js\?v=[^"]+"></script>',
+                   '<script async src="./app-v33.js?v=63-auth-timeout"></script>',s, count=1)
+          s=re.sub(r'<script type="module" src="\./final-shell-bootstrap-v2\.js\?v=[^"]+"></script>',
+                   '<script async src="./final-shell-bootstrap-v2.js?v=2-auth-timeout"></script>',s, count=1)
+          # O compositor já é carregado pelo postboot. Não deve bloquear o primeiro carregamento.
+          s=re.sub(r'\n?<script type="module" src="\./nuvem-compose-compact-v1\.js\?v=[^"]+"></script>','',s, count=1)
+          s=re.sub(r'postboot-loader\.js\?v=[^\'\"]+', 'postboot-loader.js?v=74-auth-timeout', s)
+          s=re.sub(r'sw\.js\?v=[^\'\"]+', 'sw.js?v=single-nav-71-auth-timeout', s)
+          p.write_text(s)
+
+          # 3) Keep the postboot recovery aligned with the same non-blocking shell.
+          p=Path('postboot-loader.js')
+          s=p.read_text().replace('final-shell-bootstrap-v2.js?v=1-fail-open','final-shell-bootstrap-v2.js?v=2-auth-timeout')
+          p.write_text(s)
+          PY
+      - name: Validate patched JavaScript and references
+        shell: bash
+        run: |
+          node --check app-v33.js
+          node --check final-shell-bootstrap-v2.js
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text()
+          assert 'app-v33.js?v=63-auth-timeout' in s
+          assert 'final-shell-bootstrap-v2.js?v=2-auth-timeout' in s
+          assert 'nuvem-compose-compact-v1.js?v=3-direct-html' not in s
+          core=Path('app-v33.js').read_text()
+          assert 'auth timeout' in core
+          print('Core loading validation OK')
+          PY
+      - name: Commit core loading repair
+        shell: bash
+        run: |
+          if git diff --quiet; then echo 'No changes'; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app-v33.js index.html postboot-loader.js
+          git commit -m 'fix: timeout auth and remove first-paint blockers'
+          git push
