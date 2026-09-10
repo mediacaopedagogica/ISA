@@ -13,7 +13,8 @@ function allowedByHardRule(viewer,target){
   if(v==='elion')return ['isa','keise','alan','davi'].includes(t)
   if(v==='evalda')return ['isa','alan','keise','paloma','vania'].includes(t)
   if(v==='paloma')return ['keise','alan','davi','isa','evalda'].includes(t)
-  if(v==='vania'||v==='silvane')return t!=='elion'
+  if(v==='vania')return t!=='elion'
+  if(v==='silvane')return ['alan','isa','keise'].includes(t)
   return true
 }
 async function load(){
