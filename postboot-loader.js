@@ -59,7 +59,7 @@ if(keiseAtBoot)later(1660,'./keise-group-permission-ui-v1.js?v=2-stable-interact
 later(1760,'./notifications-v2.js?v=12-stable-interactions')
 later(1860,'./social-tag-notifications.js?v=3-stable-interactions',()=>window.__ISA_SOCIAL_TAG_NOTIFICATIONS__?.poll?.())
 later(2220,'./extras-loader.js?v=62-stable-interactions',()=>{window.__ISA_SOCIAL_PRIVACY__?.apply?.();window.__ISA_SOCIAL_PROFILE_CHAT_SYNC__?.();window.__ISA_SOCIAL_PROFILE_PAGES__?.decorate?.();window.__ISA_SOCIAL_PROFILE_DIRECTORY__?.patch?.();window.__ISA_ENHANCE_REACTION_NAMES__?.();window.__ISA_PROFILE_BIRTHDAY__?.inject?.();window.__ISA_COMMENT_MEDIA_MENU__?.scan?.();window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.();window.__ISA_REFRESH_RICH_CHAT__?.();window.__ISA_CLEAN_EMPTY_CHAT_FORMATS__?.();window.__ISA_GROUP_RULES_REFRESH__?.();if(!approvedDashboardAtBoot){window.__ISA_ENSURE_PROFILE_MENU__?.();window.__ISA_PERSONAL_NAV_SYNC__?.()}})
-later(2280,'./nuvem-ui-ideas-v10.js?v=3-tools-only',()=>window.__ISA_NUVEM_UI_IDEAS__?.scan?.())
+later(2280,'./nuvem-ui-ideas-v10.js?v=4-tools-only',()=>window.__ISA_NUVEM_UI_IDEAS__?.scan?.())
 later(2360,'./nuvem-pin-picker-v2.js?v=3-stable',()=>window.__ISA_NUVEM_PIN_PICKER__?.scan?.())
 
 let keiseBooted=false
