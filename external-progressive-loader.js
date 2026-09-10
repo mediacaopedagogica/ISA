@@ -16,6 +16,12 @@ function start(){
   later(430,'./chat-rich-format-guard-v2.js?v=2-no-empty-tags',()=>window.__ISA_CLEAN_EMPTY_CHAT_FORMATS__?.())
   later(520,'./familia-emoji-completo.js?v=9-controls')
 
+  // Mesmo perfil completo do link principal, também como fallback do carregador inicial.
+  later(650,'./external-profile-parity-v1.js?v=1-keise-profile-parity',()=>window.__ISA_EXTERNAL_PROFILE_PARITY__?.start?.())
+  later(720,'./social-profile-pages-v1.js?v=2-all-family-profile-parity',()=>window.__ISA_SOCIAL_PROFILE_PAGES__?.decorate?.())
+  later(790,'./social-profile-directory-v1.js?v=2-all-family-profile-parity',()=>window.__ISA_SOCIAL_PROFILE_DIRECTORY__?.patch?.())
+  later(860,'./social-reaction-names-v1.js?v=2-all-family-profile-parity',()=>window.__ISA_ENHANCE_REACTION_NAMES__?.())
+
   later(1050,'./profile-status-stickers.js?v=13-click-fix',()=>{window.__ISA_ENSURE_EXTERNAL_MENU__?.();window.__ISA_EXTERNAL_DECOR_CLEANUP__?.()})
   later(1220,'./profile-birthday-v1.js?v=3-input-stable',()=>window.__ISA_PROFILE_BIRTHDAY__?.inject?.())
   later(1300,'./interaction-recovery-v2.js?v=1-chat-date',()=>window.__ISA_INTERACTION_RECOVERY__?.scan?.())
