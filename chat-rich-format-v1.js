@@ -6,9 +6,9 @@ let formatTimer=0
 
 function ensureCss(){
   if($('chatRichFormatCss'))return
-  const l=document.createElement('link');l.id='chatRichFormatCss';l.rel='stylesheet';l.href='./chat-rich-format-v1.css?v=1';document.head.appendChild(l)
+  const l=document.createElement('link');l.id='chatRichFormatCss';l.rel='stylesheet';l.href='./chat-rich-format-v1.css?v=2-clean-toolbar';document.head.appendChild(l)
 }
-function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]))}
 function hash(s){let h=0;for(const ch of String(s||'')){h=((h<<5)-h)+ch.codePointAt(0);h|=0}return Math.abs(h)}
 function stripTokens(s){
   return String(s??'')
@@ -53,39 +53,43 @@ function decorateRow(row){
   const out=formatHtml(raw);node.innerHTML=out.html
   if(out.important){row.classList.add('mi-important-message');const flag=document.createElement('div');flag.className='mi-important-flag';flag.textContent='❗ IMPORTANTE';b.insertBefore(flag,node)}
 }
-function refreshRows(){
-  document.querySelectorAll('#messages .message-row,#friendMessages .friend-msg').forEach(decorateRow)
-}
-function toast(text){
-  const t=$('friendToast')||$('toast');if(!t)return
-  t.textContent=text;t.classList.remove('hidden');clearTimeout(t._rf);t._rf=setTimeout(()=>t.classList.add('hidden'),2200)
+function refreshRows(){document.querySelectorAll('#messages .message-row,#friendMessages .friend-msg').forEach(decorateRow)}
+function toast(text){const t=$('friendToast')||$('toast');if(!t)return;t.textContent=text;t.classList.remove('hidden');clearTimeout(t._rf);t._rf=setTimeout(()=>t.classList.add('hidden'),2200)}
+function cleanEmptyTokens(input){
+  if(!input)return
+  let v=input.value||'',next=v
+  for(let i=0;i<3;i++)next=next.replace(/\[(b|i|u)\]\s*\[\/\1\]/gi,'').replace(/\[(?:m|c)=#[0-9a-f]{6}\]\s*\[\/(?:m|c)\]/gi,'').replace(/\[f=(?:rounded|clean|serif|mono|hand)\]\s*\[\/f\]/gi,'').replace(/\[s=(?:8[0-9]|9[0-9]|1[0-7][0-9]|180)\]\s*\[\/s\]/gi,'')
+  if(next!==v){input.value=next;input.dispatchEvent(new Event('input',{bubbles:true}))}
 }
 function wrapSelection(input,open,close){
-  if(!input)return
+  if(!input)return false
   const start=input.selectionStart??input.value.length,end=input.selectionEnd??start
+  if(end<=start){cleanEmptyTokens(input);toast('Selecione primeiro o trecho que deseja formatar.');input.focus();return false}
   const value=input.value||'',selected=value.slice(start,end)
   input.value=value.slice(0,start)+open+selected+close+value.slice(end)
-  const caret=selected?start+open.length+selected.length+close.length:start+open.length
-  input.focus();input.setSelectionRange(caret,caret);input.dispatchEvent(new Event('input',{bubbles:true}))
+  const selStart=start+open.length,selEnd=selStart+selected.length
+  input.focus();input.setSelectionRange(selStart,selEnd);input.dispatchEvent(new Event('input',{bubbles:true}));return true
 }
 function toggleImportant(input,btn){
   if(!input)return
+  cleanEmptyTokens(input)
   if(/^\s*\[important\]/i.test(input.value)){input.value=input.value.replace(/^\s*\[important\]\s*/i,'');btn?.classList.remove('active')}
-  else{input.value='[important] '+input.value;btn?.classList.add('active')}
+  else if((input.value||'').trim()){input.value='[important] '+input.value;btn?.classList.add('active')}
+  else{toast('Digite a mensagem antes de marcar como importante.');input.focus();return}
   input.focus();input.dispatchEvent(new Event('input',{bubbles:true}))
 }
 function toolbarHtml(){return `
   <div class="mi-format-scroll" aria-label="Formatação da mensagem">
-    <button type="button" class="mi-fmt-btn" data-fmt="b" title="Negrito"><strong>B</strong></button>
-    <button type="button" class="mi-fmt-btn" data-fmt="i" title="Itálico"><em>I</em></button>
-    <button type="button" class="mi-fmt-btn" data-fmt="u" title="Sublinhado"><u>U</u></button>
-    <button type="button" class="mi-fmt-btn" data-fmt="small" title="Diminuir trecho selecionado">A−</button>
-    <button type="button" class="mi-fmt-btn" data-fmt="large" title="Aumentar trecho selecionado">A+</button>
-    <label class="mi-fmt-select-wrap" title="Mudar tipografia"><span>Aa</span><select data-fmt-font aria-label="Tipografia"><option value="">Tipografia</option><option value="rounded">Arredondada</option><option value="clean">Limpa</option><option value="serif">Clássica</option><option value="mono">Mono</option><option value="hand">Divertida</option></select></label>
-    <label class="mi-color-wrap" title="Cor da letra"><span>Cor</span><input type="color" data-fmt-color value="#6b4d75" aria-label="Cor da letra"></label>
-    <button type="button" class="mi-fmt-btn mi-highlight-btn" data-fmt="highlight" title="Grifar com a cor escolhida">🖍️ Grifar</button>
-    <label class="mi-color-wrap" title="Cor do marca-texto"><span>Marca-texto</span><input type="color" data-fmt-mark value="#fff09a" aria-label="Cor do marca-texto"></label>
-    <button type="button" class="mi-fmt-btn mi-important-btn" data-fmt="important" title="Marcar toda a mensagem como importante">❗ Importante</button>
+    <button type="button" class="mi-fmt-btn" data-fmt="b" title="Negrito" aria-label="Negrito"><strong>B</strong></button>
+    <button type="button" class="mi-fmt-btn" data-fmt="i" title="Itálico" aria-label="Itálico"><em>I</em></button>
+    <button type="button" class="mi-fmt-btn" data-fmt="u" title="Sublinhado" aria-label="Sublinhado"><u>U</u></button>
+    <button type="button" class="mi-fmt-btn" data-fmt="small" title="Diminuir texto selecionado" aria-label="Diminuir texto">A−</button>
+    <button type="button" class="mi-fmt-btn" data-fmt="large" title="Aumentar texto selecionado" aria-label="Aumentar texto">A+</button>
+    <label class="mi-fmt-select-wrap" title="Tipografia"><span>Aa</span><select data-fmt-font aria-label="Tipografia"><option value="">Fonte</option><option value="rounded">Arredondada</option><option value="clean">Limpa</option><option value="serif">Clássica</option><option value="mono">Mono</option><option value="hand">Divertida</option></select></label>
+    <label class="mi-color-wrap" title="Cor da letra"><span>🎨</span><input type="color" data-fmt-color value="#6b4d75" aria-label="Cor da letra"></label>
+    <button type="button" class="mi-fmt-btn mi-highlight-btn" data-fmt="highlight" title="Grifar trecho selecionado" aria-label="Grifar">🖍️</button>
+    <label class="mi-color-wrap" title="Cor do marca-texto"><span>Marca</span><input type="color" data-fmt-mark value="#fff09a" aria-label="Cor do marca-texto"></label>
+    <button type="button" class="mi-fmt-btn mi-important-btn" data-fmt="important" title="Marcar mensagem como importante">❗ Importante</button>
   </div>`}
 function bindToolbar(host,input){
   if(!host||!input||host.querySelector('.mi-format-toolbar'))return
@@ -102,15 +106,12 @@ function bindToolbar(host,input){
     if(kind==='highlight')wrapSelection(input,`[m=${mark?.value||'#fff09a'}]`,'[/m]')
     if(kind==='important')toggleImportant(input,btn)
   }))
-  bar.querySelector('[data-fmt-font]')?.addEventListener('change',e=>{const v=e.target.value;if(v){wrapSelection(input,`[f=${v}]`,'[/f]');e.target.value=''}})
+  bar.querySelector('[data-fmt-font]')?.addEventListener('change',e=>{const v=e.target.value;if(v)wrapSelection(input,`[f=${v}]`,'[/f]');e.target.value=''})
   bar.querySelector('[data-fmt-color]')?.addEventListener('change',e=>wrapSelection(input,`[c=${e.target.value}]`,'[/c]'))
-  mark?.addEventListener('change',()=>toast('Cor do marca-texto escolhida. Selecione um trecho e toque em “Grifar”.'))
-  input.addEventListener('input',()=>{const btn=bar.querySelector('[data-fmt="important"]');btn?.classList.toggle('active',/^\s*\[important\]/i.test(input.value))})
+  mark?.addEventListener('change',()=>toast('Cor do marca-texto escolhida. Agora selecione um trecho e toque no lápis.'))
+  input.addEventListener('input',()=>{cleanEmptyTokens(input);const btn=bar.querySelector('[data-fmt="important"]');btn?.classList.toggle('active',/^\s*\[important\]/i.test(input.value))})
 }
-function ensureToolbars(){
-  bindToolbar($('composer'),$('messageInput'))
-  bindToolbar(document.querySelector('.friend-composer'),$('friendMessageInput'))
-}
+function ensureToolbars(){bindToolbar($('composer'),$('messageInput'));bindToolbar(document.querySelector('.friend-composer'),$('friendMessageInput'))}
 function initObservers(){
   const main=$('messages');if(main)new MutationObserver(()=>{clearTimeout(formatTimer);formatTimer=setTimeout(refreshRows,70)}).observe(main,{childList:true,subtree:true})
   const ext=$('friendMessages');if(ext)new MutationObserver(()=>{clearTimeout(formatTimer);formatTimer=setTimeout(refreshRows,70)}).observe(ext,{childList:true,subtree:true})
