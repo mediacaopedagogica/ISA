@@ -1,5 +1,5 @@
 // Entrada única e direta da Nossa Rede para TODOS os acessos familiares externos.
-// Não cria outra rede: apenas abre o family-social já existente com o token pessoal atual.
+// Não cria outra rede: abre o mesmo family-social com o token pessoal atual.
 const $=id=>document.getElementById(id)
 let loading=false
 function toast(text){if(typeof window.__ISA_FRIEND_TOAST__==='function')return window.__ISA_FRIEND_TOAST__(text);const t=$('friendToast');if(!t)return;t.textContent=text;t.classList.remove('hidden');clearTimeout(t._socialEntry);t._socialEntry=setTimeout(()=>t.classList.add('hidden'),2600)}
@@ -19,12 +19,16 @@ async function openSocial(){
 function bind(){
   const b=$('friendSocialBtn');if(!b)return false
   b.disabled=false;b.removeAttribute('aria-disabled');b.classList.remove('is-locked');b.style.removeProperty('pointer-events');b.style.removeProperty('display')
-  if(b.dataset.directSocialBound==='1')return true
   b.dataset.directSocialBound='1'
-  b.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openSocial()},true)
   return true
 }
+// Captura no document é registrada antes do controlador externo legado.
+// Assim um manipulador antigo não consegue engolir o clique da Nossa Rede.
+document.addEventListener('click',e=>{
+  const b=e.target.closest?.('#friendSocialBtn');if(!b)return
+  e.preventDefault();e.stopImmediatePropagation();openSocial()
+},true)
 window.__ISA_OPEN_EXTERNAL_SOCIAL_DIRECT__=openSocial
 window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__=bind
 bind();document.addEventListener('isa:friend-access-valid',bind);document.addEventListener('isa:friend-portal-entered',bind)
-let tries=0;const timer=setInterval(()=>{if(bind()&&window.__ISA_FRIEND_PORTAL_ENTERED__===true&&++tries>12)clearInterval(timer);else if(++tries>80)clearInterval(timer)},180)
+let tries=0;const timer=setInterval(()=>{bind();if(window.__ISA_FRIEND_PORTAL_ENTERED__===true&&++tries>12)clearInterval(timer);else if(++tries>80)clearInterval(timer)},180)
