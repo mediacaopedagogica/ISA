@@ -184,7 +184,17 @@ function renderConversationList(){
   if($('friendRelationship'))$('friendRelationship').textContent=person?.relationship||'Família'
   const box=$('friendConversationList')
   if(!box)return
-  box.innerHTML=conversations.map(c=>`<button class="friend-conversation ${activeConversation?.id===c.id?'active':''}" data-friend-conv="${esc(c.id)}" type="button"><strong>${c.type==='group'?'👥 ':''}${esc(c.title||'Isa')}</strong><small>${esc(c.preview||(c.type==='direct'?'Conversa com a Isa':(c.participants||[]).join(', ')))}</small></button>`).join('')||'<p class="muted">Nenhuma conversa disponível.</p>'
+  const visibleConversations=(()=>{
+    if(!/silvane/i.test(String(person?.name||'')))return conversations
+    const seen=new Set()
+    return conversations.filter(c=>{
+      if(c.type!=='direct')return true
+      const key=String(c.title||'Isa').trim().toLocaleLowerCase('pt-BR')
+      if(seen.has(key))return false
+      seen.add(key);return true
+    })
+  })()
+  box.innerHTML=visibleConversations.map(c=>`<button class="friend-conversation ${activeConversation?.id===c.id?'active':''}" data-friend-conv="${esc(c.id)}" type="button"><strong>${c.type==='group'?'👥 ':''}${esc(c.title||'Isa')}</strong><small>${esc(c.preview||(c.type==='direct'?'Conversa com a Isa':(c.participants||[]).join(', ')))}</small></button>`).join('')||'<p class="muted">Nenhuma conversa disponível.</p>'
   box.querySelectorAll('[data-friend-conv]').forEach(b=>b.onclick=()=>openConversation(b.dataset.friendConv))
   ensureExitButton()
 }
@@ -360,6 +370,7 @@ window.__ISA_FRIEND_SEND_PHOTO_FILE__=sendPhoto
 window.__ISA_FRIEND_TOAST__=toast
 window.__ISA_FRIEND_BOOTSTRAP__=()=>bootstrap(false)
 window.__ISA_FRIEND_ENTER_PORTAL__=enterPortal
+window.__ISA_FRIEND_EXIT_PORTAL__=exitPortal
 
 $('friendEnterBtn').onclick=()=>$('friendEnterBtn').dataset.mode==='retry'?bootstrap(false):enterPortal()
 $('friendSendBtn').onclick=sendMessage

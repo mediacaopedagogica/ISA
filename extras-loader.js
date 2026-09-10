@@ -27,8 +27,9 @@ async function loadCoreExtras(){
     loadOnce('links','./link-preview.js?v=6-inline-video'),
     loadOnce('social-network','./social-network-stable-v9.js?v=1-final-only'),
     loadOnce('social-profile-chat-bridge','./social-profile-chat-bridge.js?v=1-separated-photo-chat-rules'),
-    loadOnce('profile-theme-v2','./social-profile-theme-v2.js?v=2-color-only-video-bg-moved'),
+    loadOnce('profile-theme-v2','./social-profile-theme-v2.js?v=3-live-visible'),
     loadOnce('profile-theme-page','./social-profile-theme-page-addon-v1.js?v=1-own-profile-visible-theme'),
+    loadOnce('seasonal-theme','./seasonal-theme-engine-v1.js?v=2-calendar-live'),
     loadOnce('postit-quick-actions','./collaborative-postit-quick-actions-v1.js?v=1-tap-edit-cancel'),
     loadOnce('games','./games-menu.js?v=15-approved-profiles'),
     loadOnce('snake-game','./games-menu-snake.js?v=3-all-users')
