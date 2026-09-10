@@ -39,7 +39,7 @@ if(!approvedDashboardAtBoot){
 
 later(260,'./social-privacy-guard.js?v=2-stable-interactions',()=>window.__ISA_SOCIAL_PRIVACY__?.apply?.())
 later(520,'./profile-status-stickers.js?v=15-stable-interactions')
-later(600,'./profile-birthday-v1.js?v=2-stable-interactions',()=>window.__ISA_PROFILE_BIRTHDAY__?.inject?.())
+later(600,'./profile-birthday-v1.js?v=3-input-stable',()=>window.__ISA_PROFILE_BIRTHDAY__?.inject?.())
 later(650,'./sticker-bg-remover.js?v=2-stable-interactions',()=>window.__ISA_ENSURE_STICKER_BG_REMOVER__?.())
 later(680,'./interaction-recovery-v2.js?v=1-chat-date',()=>window.__ISA_INTERACTION_RECOVERY__?.scan?.())
 later(720,'./approved-conversation-stability-v1.js?v=1-no-shake',()=>window.__ISA_STABILIZE_APPROVED_CONVERSATIONS__?.())
