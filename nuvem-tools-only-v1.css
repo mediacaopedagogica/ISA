@@ -29,4 +29,20 @@
 /* Selo funcional nos vídeos enviados no chat, sem alterar o player. */
 .nuvem-no-ads-badge{display:inline-flex;align-items:center;gap:4px;margin:6px 0 0;padding:5px 8px;border-radius:999px;background:rgba(255,255,255,.78);border:1px solid rgba(222,211,238,.75);color:#67577c;font-size:9px;font-weight:800;box-shadow:0 4px 10px rgba(78,57,103,.07)}
 
-@media(max-width:760px){.nuvem-board-backdrop{padding:8px}.nuvem-postit-board{width:100%;max-height:94dvh;border-radius:26px}.nuvem-postit-canvas{height:63dvh;min-height:390px;margin:0 8px 8px}.nuvem-postit{width:142px;min-height:126px;padding:25px 10px 10px}.nuvem-postit-label{font-size:15px}.nuvem-postit-text{font-size:11px;min-height:58px}}
+/* Nossa Rede: restaura apenas o título rosa manuscrito aprovado. */
+#socialPanel .social-composer::before,#familySocialOverlay .social-composer::before{
+  content:'compartilhe nossa história...'!important;
+  display:block!important;
+  margin:0 0 10px!important;
+  font-family:"Segoe Print","Bradley Hand","Comic Sans MS",cursive!important;
+  font-size:26px!important;
+  line-height:1.08!important;
+  font-style:italic!important;
+  font-weight:800!important;
+  letter-spacing:.2px!important;
+  color:#ef58a8!important;
+  text-shadow:0 1px 0 rgba(255,255,255,.95),0 4px 10px rgba(239,88,168,.16)!important;
+  text-align:left!important;
+}
+
+@media(max-width:760px){.nuvem-board-backdrop{padding:8px}.nuvem-postit-board{width:100%;max-height:94dvh;border-radius:26px}.nuvem-postit-canvas{height:63dvh;min-height:390px;margin:0 8px 8px}.nuvem-postit{width:142px;min-height:126px;padding:25px 10px 10px}.nuvem-postit-label{font-size:15px}.nuvem-postit-text{font-size:11px;min-height:58px}#socialPanel .social-composer::before,#familySocialOverlay .social-composer::before{font-size:23px!important}}
