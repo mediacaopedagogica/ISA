@@ -1,0 +1,59 @@
+name: Smoke loading v1
+on:
+  push:
+    paths:
+      - '.github/workflows/smoke-loading-v1.yml'
+      - 'index.html'
+      - 'final-shell-bootstrap-v2.js'
+      - 'personal-boot-failopen-v1.js'
+      - 'acesso.html'
+      - 'acesso-mobile.html'
+      - 'familia-externa.js'
+      - 'external-safe-loader-v71.js'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.55.0 --silent
+          npx playwright install --with-deps chromium
+      - name: Verify loaders always resolve
+        run: |
+          cat > smoke.mjs <<'JS'
+          import { chromium } from 'playwright';
+          const browser=await chromium.launch({headless:true});
+          const base='https://mediacaopedagogica.github.io/ISA/';
+          async function root(){
+            const p=await browser.newPage({viewport:{width:390,height:844}});
+            const errors=[];p.on('pageerror',e=>errors.push(e.message));
+            await p.goto(base+'?perfil=keise&smoke='+Date.now(),{waitUntil:'domcontentloaded',timeout:20000});
+            await p.waitForTimeout(11500);
+            const s=await p.evaluate(()=>({guard:!document.getElementById('personalBootGuard')?.classList.contains('hidden'),final:!!document.getElementById('keiseApprovedHome')&&!document.getElementById('keiseApprovedHome').classList.contains('hidden'),main:!!document.getElementById('mainView')&&!document.getElementById('mainView').classList.contains('hidden'),login:!!document.getElementById('loginView')&&!document.getElementById('loginView').classList.contains('hidden'),last:window.__ISA_LAST_RUNTIME_ERROR__||''}));
+            console.log('ROOT',JSON.stringify(s),errors);
+            await p.close();
+            if(s.guard||(!s.final&&!s.main&&!s.login))throw new Error('Root ficou preso no carregamento');
+          }
+          async function external(file,name){
+            const p=await browser.newPage({viewport:{width:390,height:844}});
+            await p.goto(base+file+'?smoke='+Date.now()+'#acesso='+name,{waitUntil:'domcontentloaded',timeout:20000});
+            await p.waitForTimeout(12500);
+            const s=await p.evaluate(()=>({state:window.__ISA_FRIEND_BOOTSTRAP_STATE__||'',title:document.getElementById('friendGateTitle')?.textContent||'',button:!!document.querySelector('#friendEnterBtn:not(.hidden)'),chat:!!document.querySelector('#friendChat:not(.hidden)')}));
+            console.log(file,name,JSON.stringify(s));
+            await p.close();
+            if(s.state==='loading'&&!s.button&&!s.chat)throw new Error(file+' ficou preso verificando acesso');
+          }
+          await root();
+          await Promise.all([external('acesso-mobile.html','smoke-invalid'),external('acesso.html','smoke-invalid')]);
+          await browser.close();
+          JS
+          node smoke.mjs
