@@ -30,6 +30,7 @@ function ensureSettings(){
 window.__ISA_ENSURE_SETTINGS_MENU__=ensureSettings
 
 later(5,'./mobile-conversation-scroll-v2.js?v=1-visible-scroll')
+later(12,'./mobile-responsive-v2.js?v=62-updated-ui')
 
 if(!approvedDashboardAtBoot){
   ensureSettings();document.addEventListener('DOMContentLoaded',ensureSettings,{once:true})
