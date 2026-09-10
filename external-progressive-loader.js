@@ -15,6 +15,7 @@ function start(){
   later(410,'./social-profile-pages-v1.js?v=2-alias-ready',()=>window.__ISA_SOCIAL_PROFILE_PAGES__?.decorate?.())
   later(455,'./social-profile-directory-v1.js?v=1-visible-only',()=>window.__ISA_SOCIAL_PROFILE_DIRECTORY__?.patch?.())
   later(510,'./external-chat-tools.js?v=5-controls')
+  later(600,'./social-reaction-names-v1.js?v=1-who-reacted',()=>window.__ISA_ENHANCE_REACTION_NAMES__?.())
   later(620,'./message-interactions-v1.js?v=4-bubble-edge',()=>window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.())
   later(670,'./chat-rich-format-v1.js?v=3-compact-menu',()=>window.__ISA_REFRESH_RICH_CHAT__?.())
   later(705,'./chat-rich-format-guard-v2.js?v=2-no-empty-tags',()=>window.__ISA_CLEAN_EMPTY_CHAT_FORMATS__?.())
