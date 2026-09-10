@@ -23,6 +23,7 @@
 .mi-fmt-select-wrap,.mi-color-wrap{display:flex;align-items:center;gap:4px;padding:2px 6px}
 .mi-fmt-select-wrap>span{font-size:12px;font-weight:950}.mi-fmt-select-wrap select{width:auto;min-width:72px;max-width:92px;border:0;background:transparent;padding:2px 0;box-shadow:none;font-size:10px;color:#66506f;outline:0}
 .mi-color-wrap>span{font-size:11px;white-space:nowrap}.mi-color-wrap input[type=color]{width:22px;height:22px;border:0;border-radius:7px;padding:0;background:transparent;cursor:pointer}
+.friend-plus-menu [data-fplus="format"]{display:none!important}
 
 @media(max-width:760px){
   .message-row .bubble,.friend-msg .friend-bubble{max-width:84%!important}
