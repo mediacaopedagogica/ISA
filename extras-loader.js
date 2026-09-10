@@ -25,7 +25,7 @@ async function loadCoreExtras(){
     loadOnce('pins','./conversation-pins.js?v=5-direct-pin'),
     loadOnce('paused-friends','./paused-friends-filter.js?v=3-stable'),
     loadOnce('links','./link-preview.js?v=6-inline-video'),
-    loadOnce('social-network','./social-network.js?v=8-privacy'),
+    loadOnce('social-network','./social-network-stable-v9.js?v=1-final-only'),
     loadOnce('social-profile-chat-bridge','./social-profile-chat-bridge.js?v=1-separated-photo-chat-rules'),
     loadOnce('games','./games-menu.js?v=15-approved-profiles'),
     loadOnce('snake-game','./games-menu-snake.js?v=3-all-users')
