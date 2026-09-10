@@ -73,9 +73,10 @@
   </main>
   <div id="friendToast" class="friend-toast hidden"></div>
 
-  <!-- Boot mínimo: nenhum módulo pesado roda antes de o acesso ser confirmado. -->
+  <!-- A entrada da Nossa Rede é leve e já fica pronta; o conteúdo pesado só carrega ao clicar. -->
+  <script type="module" src="./external-social-entry-v2.js?v=71-nonblocking-social"></script>
   <script type="module" src="./familia-externa.js?v=70-safe-boot"></script>
-  <script type="module" src="./external-safe-loader-v70.js?v=1"></script>
+  <script type="module" src="./external-safe-loader-v70.js?v=2-social-fixed"></script>
   <script>
     (function(){
       const rescue=()=>{
