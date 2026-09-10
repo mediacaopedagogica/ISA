@@ -27,6 +27,8 @@ async function loadCoreExtras(){
     loadOnce('links','./link-preview.js?v=6-inline-video'),
     loadOnce('social-network','./social-network-stable-v9.js?v=1-final-only'),
     loadOnce('social-profile-chat-bridge','./social-profile-chat-bridge.js?v=1-separated-photo-chat-rules'),
+    loadOnce('profile-theme-v2','./social-profile-theme-v2.js?v=1-all-colors-smart-bg'),
+    loadOnce('postit-quick-actions','./collaborative-postit-quick-actions-v1.js?v=1-tap-edit-cancel'),
     loadOnce('games','./games-menu.js?v=15-approved-profiles'),
     loadOnce('snake-game','./games-menu-snake.js?v=3-all-users')
   ]
@@ -53,6 +55,7 @@ async function loadCoreExtras(){
   result.forEach((r,i)=>{if(r.status==='rejected')console.warn('Módulo extra não carregou',i,r.reason)})
   window.__ISA_SOCIAL_PRIVACY__?.apply?.()
   window.__ISA_SOCIAL_PROFILE_CHAT_SYNC__?.()
+  window.__ISA_PROFILE_THEME_V2__?.scan?.()
 }
 async function loadSupervisionExtras(){if(!isParent())return;await Promise.allSettled([loadOnce('diary-parent','./diary-parent.js?v=5-stable')])}
 function wire(){
