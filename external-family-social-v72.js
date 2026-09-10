@@ -1,7 +1,7 @@
 import { CONFIG } from './config.js?v=20260910-social-current'
 
 // Núcleo de dados dos acessos externos.
-// IMPORTANTE: não remove, não recria e não troca #familySocialOverlay.
+// Mantém a MESMA estrutura visual da Nossa Rede original e apenas injeta os dados permitidos do link familiar.
 const $=id=>document.getElementById(id)
 const token=new URLSearchParams(location.hash.replace(/^#/, '')).get('acesso')||''
 const reactions=['🩷','🩵','💜','😂','😍','🌸','🥰','✨']
@@ -10,100 +10,50 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const ready=()=>!!token&&window.__ISA_FRIEND_ACCESS_VALID__===true
 
 function toast(text){if(typeof window.__ISA_FRIEND_TOAST__==='function')return window.__ISA_FRIEND_TOAST__(text);const t=$('friendToast');if(!t)return;t.textContent=text;t.classList.remove('hidden');clearTimeout(t._socialCurrent);t._socialCurrent=setTimeout(()=>t.classList.add('hidden'),2800)}
-
-async function api(action,payload={},timeout=8500){
-  if(!ready())throw new Error('Este acesso ainda não foi validado.')
-  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeout)
-  try{
-    const r=await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/friend-social`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({token,action,...payload}),cache:'no-store',signal:controller.signal})
-    let data={};try{data=await r.json()}catch{}
-    if(!r.ok)throw new Error(data?.error||data?.message||'Não foi possível atualizar a Nossa Rede.')
-    return data
-  }catch(e){if(e?.name==='AbortError')throw new Error('A atualização demorou demais. Tente novamente.');throw e}
-  finally{clearTimeout(timer)}
-}
-
-async function upload(postId,file){
-  const form=new FormData();form.append('token',token);form.append('action','upload_media');form.append('postId',postId);form.append('file',file)
-  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),30000)
-  try{
-    const r=await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/friend-social`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY},body:form,cache:'no-store',signal:controller.signal})
-    let data={};try{data=await r.json()}catch{}
-    if(!r.ok)throw new Error(data?.error||'Não foi possível enviar a mídia.')
-    return data
-  }catch(e){if(e?.name==='AbortError')throw new Error('O envio demorou demais.');throw e}
-  finally{clearTimeout(timer)}
-}
+async function api(action,payload={},timeout=8500){if(!ready())throw new Error('Este acesso ainda não foi validado.');const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeout);try{const r=await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/friend-social`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({token,action,...payload}),cache:'no-store',signal:controller.signal});let data={};try{data=await r.json()}catch{}if(!r.ok)throw new Error(data?.error||data?.message||'Não foi possível atualizar a Nossa Rede.');return data}catch(e){if(e?.name==='AbortError')throw new Error('A atualização demorou demais. Tente novamente.');throw e}finally{clearTimeout(timer)}}
+async function upload(postId,file){const form=new FormData();form.append('token',token);form.append('action','upload_media');form.append('postId',postId);form.append('file',file);const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),30000);try{const r=await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/friend-social`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY},body:form,cache:'no-store',signal:controller.signal});let data={};try{data=await r.json()}catch{}if(!r.ok)throw new Error(data?.error||'Não foi possível enviar a mídia.');return data}catch(e){if(e?.name==='AbortError')throw new Error('O envio demorou demais.');throw e}finally{clearTimeout(timer)}}
 
 function fmt(ts){try{const d=new Date(ts),now=new Date();return d.toDateString()===now.toDateString()?`Hoje, ${d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`:d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})}catch{return''}}
 function initial(name='?'){return String(name||'?').trim().charAt(0).toUpperCase()||'?'}
 function profileFor(id){return (state.profiles||[]).find(p=>String(p.memberId)===String(id))||null}
 function myProfile(){return profileFor(state.me?.id)||state.me?.profile||{}}
-
 function showError(message){const e=$('fsError');if(!e)return;e.innerHTML=`${esc(message)} <button id="fsRetry" type="button">Tentar atualizar</button>`;e.classList.remove('hidden');$('fsRetry')?.addEventListener('click',refresh,{once:true})}
 function hideError(){$('fsError')?.classList.add('hidden')}
 function sync(on){const s=$('fsSync');if(s)s.classList.toggle('hidden',!on)}
 
-function renderProfile(){
-  const box=$('fsMyProfile');if(!box)return
-  const p=myProfile(),name=p.name||state.me?.name||window.__ISA_FRIEND_PERSON__?.name||'Família'
-  box.innerHTML=`<div class="social-profile-head"><div class="social-avatar">${esc(initial(name))}</div><div><strong>${esc(name)}</strong><small>${esc(state.me?.relationship||window.__ISA_FRIEND_PERSON__?.relationship||'Família')}</small></div></div><div class="social-bio">${esc(p.bio||'Adicione uma bio ao seu perfil ✨')}</div><div class="social-now"><div class="social-pill"><b>${esc(p.moodEmoji||'💜')}</b><span>${esc(p.statusText||'Como estou hoje')}</span></div><div class="social-pill">${esc(p.activityLabel||'✨ Livre agora')}</div></div><button id="fsEditProfile" class="social-btn primary fs-profile-button" type="button">Meu perfil</button>`
-}
+function renderProfile(){const box=$('fsMyProfile');if(!box)return;const p=myProfile(),name=p.name||state.me?.name||window.__ISA_FRIEND_PERSON__?.name||'Família';box.innerHTML=`<div class="social-profile-head"><div class="social-avatar">${esc(initial(name))}</div><div><strong>${esc(name)}</strong><small>${esc(state.me?.relationship||window.__ISA_FRIEND_PERSON__?.relationship||'Família')}</small></div></div><div class="social-bio">${esc(p.bio||'Adicione uma bio ao seu perfil ✨')}</div><div class="social-now"><div class="social-pill"><b>${esc(p.moodEmoji||'💜')}</b><span>${esc(p.statusText||'Como estou hoje')}</span></div><div class="social-pill">${esc(p.activityLabel||'✨ Livre agora')}</div></div><button id="fsEditProfile" class="social-btn primary fs-profile-button" type="button">Meu perfil</button>`}
 function renderStatuses(){const b=$('fsStatusStrip');if(!b)return;const rows=(state.profiles||[]).filter(p=>p.statusText||p.activityLabel).slice(0,14);b.innerHTML=rows.map(p=>`<div class="social-status-card"><b>${esc(p.moodEmoji||'💜')}</b><strong>${esc(p.name||'Família')}</strong><small>${esc(p.activityLabel||p.statusText||'')}</small></div>`).join('')}
 function renderFamily(){const b=$('fsFamilyList');if(!b)return;b.innerHTML=(state.profiles||[]).map(p=>`<div class="social-family-item"><div class="social-avatar">${esc(initial(p.name))}</div><div><strong>${esc(p.name||'Família')}</strong><small>${esc(p.activityLabel||p.statusText||'Sem atualização')}</small></div></div>`).join('')||'<div class="social-empty">A família vai aparecer aqui 💜</div>'}
 function mediaHtml(post){if(!post.media?.length)return'';return `<div class="fs-media-grid ${post.media.length===1?'one':''}">${post.media.map(m=>m.type==='video'?`<video src="${esc(m.url)}" controls playsinline preload="metadata"></video>`:`<img src="${esc(m.url)}" loading="lazy" alt="Publicação">`).join('')}</div>`}
 function reactionSummary(post){const c={};for(const r of post.reactions||[])c[r.reaction]=(c[r.reaction]||0)+1;return Object.entries(c).map(([e,n])=>`${e} ${n}`).join('   ')}
 function postHtml(post){const mine=String(post.authorId)===String(state.me?.id),myReaction=(post.reactions||[]).find(r=>String(r.memberId)===String(state.me?.id))?.reaction||'';return `<article class="social-card social-post" data-fs-post="${esc(post.id)}"><div class="social-post-head"><div class="social-avatar">${esc(initial(post.author?.name))}</div><div class="grow"><strong>${esc(post.author?.name||'Família')}</strong><small>${esc(fmt(post.createdAt))}${post.locationLabel?' • 📍 '+esc(post.locationLabel):''}</small></div>${mine?`<button class="fs-post-delete" data-fs-delete="${esc(post.id)}" type="button">Excluir</button>`:''}</div>${post.caption?`<div class="social-caption">${esc(post.caption)}</div>`:''}${mediaHtml(post)}<div class="fs-reactions">${reactions.map(e=>`<button class="fs-react ${myReaction===e?'mine':''}" data-fs-react="${e}" data-fs-id="${esc(post.id)}" type="button">${e}</button>`).join('')}</div><div class="social-reaction-summary">${esc(reactionSummary(post))}</div><div class="fs-comments">${(post.comments||[]).slice(-8).map(c=>`<div class="fs-comment"><strong>${esc(c.authorName||'Família')}</strong>${esc(c.body)}</div>`).join('')}<form class="fs-comment-form" data-fs-comment="${esc(post.id)}"><input maxlength="1200" placeholder="Comentar com carinho..."><button>➤</button></form></div></article>`}
 function renderFeed(){const b=$('fsFeed');if(!b)return;b.innerHTML=(state.posts||[]).length?(state.posts||[]).map(postHtml).join(''):'<div class="social-card social-empty">Ainda não tem publicação por aqui. Que tal inaugurar a Nossa Rede? 🌷</div>'}
-function render(){renderProfile();renderStatuses();renderFamily();renderFeed();const comp=$('fsCaption')?.closest('.social-composer');if(comp)comp.style.display=state.me?.canPost===false?'none':'';window.__ISA_ENHANCE_NOSSA_REDE__?.();window.__ISA_NUVEM_COMPACT_COMPOSER__?.scan?.();window.__ISA_NUVEM_CAROUSEL__?.scan?.()}
+function render(){renderProfile();renderStatuses();renderFamily();renderFeed();const comp=$('fsCaption')?.closest('.social-composer');if(comp)comp.style.display=state.me?.canPost===false?'none':'';window.__ISA_ENHANCE_NOSSA_REDE__?.();window.__ISA_NOSSA_REDE_V5__?.patch?.();window.__ISA_NUVEM_COMPACT_COMPOSER__?.scan?.();window.__ISA_NUVEM_CAROUSEL__?.scan?.()}
 
-async function refresh(){
-  const run=++refreshRun;if(!ready()){showError('Este acesso ainda não foi validado.');return false}
-  sync(true);hideError()
-  try{const data=await api('bootstrap');if(run!==refreshRun)return false;state=data||{me:null,profiles:[],posts:[]};render();return true}
-  catch(e){if(run===refreshRun)showError(e?.message||'Não foi possível atualizar agora.');return false}
-  finally{if(run===refreshRun)sync(false)}
-}
+async function refresh(){const run=++refreshRun;if(!ready()){showError('Este acesso ainda não foi validado.');return false}sync(true);hideError();try{const data=await api('bootstrap');if(run!==refreshRun)return false;state=data||{me:null,profiles:[],posts:[]};render();return true}catch(e){if(run===refreshRun)showError(e?.message||'Não foi possível atualizar agora.');return false}finally{if(run===refreshRun)sync(false)}}
 
-function previewFiles(){const b=$('fsPreview');if(b)b.innerHTML=files.map(f=>`<span>${f.type.startsWith('video/')?'🎬':'🖼️'} ${esc(f.name.slice(0,25))}</span>`).join('')}
-async function publish(){
-  if(busy)return
-  const caption=$('fsCaption')?.value.trim()||'',location=$('fsLocation')?.value.trim()||''
-  if(!caption&&!files.length)return toast('Escreva algo ou escolha uma foto/vídeo.')
-  busy=true;const btn=$('fsPublish');if(btn){btn.disabled=true;btn.textContent='Publicando…'}
-  try{const created=await api('create_post',{caption,locationLabel:location});for(const f of files)await upload(created.id,f);if($('fsCaption'))$('fsCaption').value='';if($('fsLocation'))$('fsLocation').value='';if($('fsMedia'))$('fsMedia').value='';files=[];previewFiles();await refresh();toast('Publicado na Nossa Rede 💕')}
-  catch(e){toast(e?.message||'Não foi possível publicar.')}
-  finally{busy=false;if(btn){btn.disabled=false;btn.textContent='Publicar'}}
-}
+function clearPreviewUrls(){const b=$('fsPreview');if(!b)return;b.querySelectorAll('[data-local-url]').forEach(el=>{try{URL.revokeObjectURL(el.dataset.localUrl)}catch{}})}
+function previewFiles(){const b=$('fsPreview');if(!b)return;clearPreviewUrls();b.innerHTML='';for(const file of files){const url=URL.createObjectURL(file),item=document.createElement('div');item.className='social-preview-item';item.dataset.localUrl=url;item.innerHTML=file.type.startsWith('video/')?`<video src="${url}" muted playsinline></video>`:`<img src="${url}" alt="Prévia">`;b.appendChild(item)}}
+async function publish(){if(busy)return;const caption=$('fsCaption')?.value.trim()||'',location=$('fsLocation')?.value.trim()||'';if(!caption&&!files.length)return toast('Escreva algo ou escolha uma foto/vídeo.');busy=true;const btn=$('fsPublish');if(btn){btn.disabled=true;btn.textContent='Publicando…'}try{const created=await api('create_post',{caption,locationLabel:location});for(const f of files)await upload(created.id,f);if($('fsCaption'))$('fsCaption').value='';if($('fsLocation'))$('fsLocation').value='';if($('fsMedia'))$('fsMedia').value='';files=[];previewFiles();await refresh();toast('Publicado na Nossa Rede 💕')}catch(e){toast(e?.message||'Não foi possível publicar.')}finally{busy=false;if(btn){btn.disabled=false;btn.textContent='Publicar'}}}
 
 function openProfile(){const p=myProfile();if(!$('fsProfileModal'))return;$('fsName').value=p.name||state.me?.name||window.__ISA_FRIEND_PERSON__?.name||'';$('fsBio').value=p.bio||'';$('fsStatus').value=p.statusText||'';$('fsMood').value=p.moodEmoji||'💜';$('fsActivity').value=p.activityLabel||'';$('fsTheme').value=p.theme||'lilac';$('fsProfileModal').classList.add('show')}
 async function saveProfile(){try{await api('save_profile',{name:$('fsName').value,bio:$('fsBio').value,statusText:$('fsStatus').value,moodEmoji:$('fsMood').value,activityLabel:$('fsActivity').value,theme:$('fsTheme').value});$('fsProfileModal').classList.remove('show');await refresh();toast('Perfil atualizado ✨')}catch(e){toast(e?.message||'Não foi possível salvar o perfil.')}}
 
 function wire(){
   const o=$('familySocialOverlay');if(!o||wired)return false;wired=true
+  $('fsRefresh')?.addEventListener('click',()=>refresh())
+  $('fsEmojiBtn')?.addEventListener('click',()=>$('fsEmojiRow')?.classList.toggle('show'))
   $('fsPublish')?.addEventListener('click',publish)
   $('fsMedia')?.addEventListener('change',e=>{files=[...e.target.files].slice(0,3);previewFiles();if(e.target.files.length>3)toast('O carrossel aceita até 3 fotos ou vídeos. ✨')})
   $('fsProfileCancel')?.addEventListener('click',()=>$('fsProfileModal')?.classList.remove('show'))
   $('fsProfileSave')?.addEventListener('click',saveProfile)
   $('fsProfileModal')?.addEventListener('click',e=>{if(e.target.id==='fsProfileModal')$('fsProfileModal').classList.remove('show')})
-  o.addEventListener('click',async e=>{
-    const emoji=e.target.closest?.('[data-fs-emoji]');if(emoji){const t=$('fsCaption');if(t){t.value+=emoji.dataset.fsEmoji;t.focus()}return}
-    if(e.target.closest?.('#fsEditProfile')){openProfile();return}
-    const react=e.target.closest?.('[data-fs-react]');if(react){try{await api('react',{postId:react.dataset.fsId,reaction:react.dataset.fsReact});await refresh()}catch(err){toast(err.message)}return}
-    const del=e.target.closest?.('[data-fs-delete]');if(del){if(!confirm('Excluir esta publicação da Nossa Rede?'))return;try{await api('delete_post',{postId:del.dataset.fsDelete});await refresh();toast('Publicação excluída.')}catch(err){toast(err.message)}return}
-  })
+  o.addEventListener('click',async e=>{const emoji=e.target.closest?.('[data-fs-emoji]');if(emoji){const t=$('fsCaption');if(t){t.value+=emoji.dataset.fsEmoji;t.focus()}return}if(e.target.closest?.('#fsEditProfile')){openProfile();return}const react=e.target.closest?.('[data-fs-react]');if(react){try{await api('react',{postId:react.dataset.fsId,reaction:react.dataset.fsReact});await refresh()}catch(err){toast(err.message)}return}const del=e.target.closest?.('[data-fs-delete]');if(del){if(!confirm('Excluir esta publicação da Nossa Rede?'))return;try{await api('delete_post',{postId:del.dataset.fsDelete});await refresh();toast('Publicação excluída.')}catch(err){toast(err.message)}return}})
   o.addEventListener('submit',async e=>{const f=e.target.closest?.('[data-fs-comment]');if(!f)return;e.preventDefault();const i=f.querySelector('input'),body=i.value.trim();if(!body)return;try{i.disabled=true;await api('comment',{postId:f.dataset.fsComment,body});await refresh()}catch(err){toast(err.message)}finally{i.disabled=false}})
   return true
 }
 
-async function open(){
-  const o=$('familySocialOverlay');if(!o)return false
-  // A tela atual já foi aberta pelo controlador prioritário; aqui só ativamos e atualizamos os dados.
-  o.classList.remove('hidden');o.setAttribute('aria-hidden','false');document.documentElement.style.overflow='hidden';wire()
-  requestAnimationFrame(()=>refresh())
-  return true
-}
-
+async function open(){const o=$('familySocialOverlay');if(!o)return false;o.classList.remove('hidden');o.setAttribute('aria-hidden','false');document.documentElement.style.overflow='hidden';wire();requestAnimationFrame(()=>refresh());return true}
 window.__ISA_OPEN_EXTERNAL_SOCIAL_V72__=open
 window.__ISA_REFRESH_EXTERNAL_SOCIAL_V72__=refresh
 window.__ISA_WIRE_EXTERNAL_SOCIAL_CURRENT__=wire
