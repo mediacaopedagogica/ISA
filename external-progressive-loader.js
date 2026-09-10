@@ -17,7 +17,7 @@ function start(){
   later(520,'./familia-emoji-completo.js?v=9-controls')
 
   later(1050,'./profile-status-stickers.js?v=13-click-fix',()=>{window.__ISA_ENSURE_EXTERNAL_MENU__?.();window.__ISA_EXTERNAL_DECOR_CLEANUP__?.()})
-  later(1220,'./profile-birthday-v1.js?v=1-required',()=>window.__ISA_PROFILE_BIRTHDAY__?.inject?.())
+  later(1220,'./profile-birthday-v1.js?v=3-input-stable',()=>window.__ISA_PROFILE_BIRTHDAY__?.inject?.())
   later(1300,'./interaction-recovery-v2.js?v=1-chat-date',()=>window.__ISA_INTERACTION_RECOVERY__?.scan?.())
   later(1440,'./social-tag-notifications.js?v=2-live-tags',()=>window.__ISA_SOCIAL_TAG_NOTIFICATIONS__?.poll?.())
   later(1760,'./link-preview.js?v=13-controls')
