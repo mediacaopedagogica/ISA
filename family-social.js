@@ -1,4 +1,4 @@
-import { CONFIG } from './config.js'
+import { CONFIG } from './config.js?v=20260910-safe-social'
 
 const $=id=>document.getElementById(id)
 const token=new URLSearchParams(location.hash.replace(/^#/, '')).get('acesso')||''
@@ -11,18 +11,30 @@ const accessReady=()=>!!token&&window.__ISA_FRIEND_ACCESS_VALID__===true
 function toast(text){const t=$('friendToast');if(!t)return;t.textContent=text;t.classList.remove('hidden');clearTimeout(t._familySocial);t._familySocial=setTimeout(()=>t.classList.add('hidden'),3000)}
 async function api(action,payload={}){
   if(!accessReady())throw new Error('Este link pessoal não está autorizado.')
-  const r=await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/friend-social`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${CONFIG.SUPABASE_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({token,action,...payload}),cache:'no-store'})
-  let data={};try{data=await r.json()}catch{}
-  if(!r.ok)throw new Error(data?.error||'Não foi possível abrir a Nossa Rede.')
-  return data
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),9000)
+  try{
+    const r=await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/friend-social`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({token,action,...payload}),cache:'no-store',signal:controller.signal})
+    let data={};try{data=await r.json()}catch{}
+    if(!r.ok)throw new Error(data?.error||'Não foi possível abrir a Nossa Rede.')
+    return data
+  }catch(e){
+    if(e?.name==='AbortError')throw new Error('A Nossa Rede demorou demais para responder. Tente novamente.')
+    throw e
+  }finally{clearTimeout(timer)}
 }
 async function upload(postId,file){
   if(!accessReady())throw new Error('Este link pessoal não está autorizado.')
   const form=new FormData();form.append('token',token);form.append('action','upload_media');form.append('postId',postId);form.append('file',file)
-  const r=await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/friend-social`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,Authorization:`Bearer ${CONFIG.SUPABASE_KEY}`},body:form,cache:'no-store'})
-  let data={};try{data=await r.json()}catch{}
-  if(!r.ok)throw new Error(data?.error||'Não foi possível enviar a mídia.')
-  return data
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),30000)
+  try{
+    const r=await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/friend-social`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY},body:form,cache:'no-store',signal:controller.signal})
+    let data={};try{data=await r.json()}catch{}
+    if(!r.ok)throw new Error(data?.error||'Não foi possível enviar a mídia.')
+    return data
+  }catch(e){
+    if(e?.name==='AbortError')throw new Error('O envio demorou demais. Tente novamente.')
+    throw e
+  }finally{clearTimeout(timer)}
 }
 function ensureStyle(){
   if(!$('familySocialBaseCss')){const l=document.createElement('link');l.id='familySocialBaseCss';l.rel='stylesheet';l.href='./social-network.css?v=4-family-private';document.head.appendChild(l)}
@@ -52,7 +64,22 @@ async function publish(){if(busy)return;const caption=$('fsCaption').value.trim(
 function openProfile(){const p=myProfile();$('fsName').value=p.name||state.me?.name||'';$('fsBio').value=p.bio||'';$('fsStatus').value=p.statusText||'';$('fsMood').value=p.moodEmoji||'💜';$('fsActivity').value=p.activityLabel||'';$('fsTheme').value=p.theme||'lilac';$('fsProfileModal').classList.add('show')}
 async function saveProfile(){try{await api('save_profile',{name:$('fsName').value,bio:$('fsBio').value,statusText:$('fsStatus').value,moodEmoji:$('fsMood').value,activityLabel:$('fsActivity').value,theme:$('fsTheme').value});$('fsProfileModal').classList.remove('show');await refresh();toast('Perfil atualizado ✨')}catch(e){toast(e.message)}}
 function build(){if($('familySocialOverlay'))return;ensureStyle();const o=document.createElement('section');o.id='familySocialOverlay';o.className='hidden';o.innerHTML=`<div class="fs-top"><div>🌸</div><div class="grow"><strong>Nossa Rede</strong><small>Rede social privada da família 💕</small></div><button id="fsClose" class="fs-close" type="button">✕ Fechar</button></div><div id="fsLoading" class="fs-loading">Carregando a Nossa Rede…</div><div id="fsShell" class="social-shell hidden"><aside class="social-card social-side"><div class="social-brand">Nossa <span>Rede</span> ✨</div><div id="fsMyProfile"></div></aside><section class="social-main"><div id="fsStatusStrip" class="social-status-strip"></div><div class="social-card social-composer"><textarea id="fsCaption" maxlength="2200" placeholder="Compartilhe um momento, uma frase, uma foto... ✨"></textarea><div class="social-emoji-row show">${quickEmoji.map(e=>`<button type="button" data-fs-emoji="${e}">${e}</button>`).join('')}</div><div id="fsPreview" class="fs-preview"></div><div class="social-compose-actions"><label class="social-btn soft">🖼️ Fotos / vídeo<input id="fsMedia" class="social-file-input" type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime" multiple></label><input id="fsLocation" maxlength="80" placeholder="📍 Lugar (opcional)" style="flex:1;min-width:140px;border:1px solid #eadff0;border-radius:14px;padding:9px 11px;background:#fff"><button id="fsPublish" class="social-btn primary" type="button">Publicar</button></div><div class="fs-file-note">Até 10 fotos ou vídeos por publicação.</div></div><div id="fsFeed" class="social-feed"></div></section><aside class="social-card social-right"><h3>Família agora 💫</h3><div id="fsFamilyList" class="social-family-list"></div></aside></div><div id="fsProfileModal" class="fs-profile-modal"><div class="social-card fs-profile-card"><h3>Personalizar meu perfil ✨</h3><label>Nome na Nossa Rede<input id="fsName" maxlength="50"></label><label>Bio<textarea id="fsBio" maxlength="240" rows="3"></textarea></label><label>Frase do dia<input id="fsStatus" maxlength="120"></label><label>Como estou me sentindo<select id="fsMood"><option>💜</option><option>🥰</option><option>😊</option><option>😂</option><option>😴</option><option>🤩</option><option>😌</option><option>🥳</option><option>🤗</option><option>🤔</option><option>😎</option><option>💪</option></select></label><label>O que estou fazendo<select id="fsActivity"><option value="">Nada agora</option><option>🏫 Na escola</option><option>💼 No trabalho</option><option>📚 Estudando</option><option>🏡 Em casa</option><option>🎶 Ouvindo música</option><option>🎮 Jogando</option><option>🚗 Na estrada</option><option>☕ Relaxando</option><option>🛍️ Passeando</option><option>✈️ Viajando</option></select></label><label>Tema<select id="fsTheme"><option value="lilac">Lilás</option><option value="pink">Rosa</option><option value="blue">Azul</option><option value="green">Verde</option><option value="yellow">Amarelo</option></select></label><div class="fs-modal-actions"><button id="fsProfileCancel" class="social-btn soft" type="button">Cancelar</button><button id="fsProfileSave" class="social-btn primary" type="button">Salvar</button></div></div></div>`;document.body.appendChild(o);$('fsClose').onclick=close;$('fsPublish').onclick=publish;$('fsProfileCancel').onclick=()=>$('fsProfileModal').classList.remove('show');$('fsProfileSave').onclick=saveProfile;$('fsProfileModal').onclick=e=>{if(e.target.id==='fsProfileModal')$('fsProfileModal').classList.remove('show')};$('fsMedia').onchange=e=>{files=[...e.target.files].slice(0,10);previewFiles()};document.querySelectorAll('[data-fs-emoji]').forEach(b=>b.onclick=()=>{const t=$('fsCaption');t.value+=b.dataset.fsEmoji;t.focus()})}
-async function open(){if(!accessReady())return toast('Este link pessoal ainda não foi validado.');build();const o=$('familySocialOverlay');o.classList.remove('hidden');document.documentElement.style.overflow='hidden';$('friendChatsTab')?.classList.remove('active');$('friendSocialBtn')?.classList.add('active');$('fsLoading').textContent='Carregando a Nossa Rede…';$('fsLoading').classList.remove('hidden');$('fsShell').classList.add('hidden');try{await refresh();$('fsLoading').classList.add('hidden');$('fsShell').classList.remove('hidden')}catch(e){$('fsLoading').textContent='Não foi possível abrir a Nossa Rede.';toast(e.message)}}
+async function open(){
+  if(!accessReady())return toast('Este link pessoal ainda não foi validado.')
+  build()
+  const o=$('familySocialOverlay');o.classList.remove('hidden');document.documentElement.style.overflow='hidden'
+  $('friendChatsTab')?.classList.remove('active');$('friendSocialBtn')?.classList.add('active')
+  const loading=$('fsLoading'),shell=$('fsShell')
+  loading.textContent='Carregando a Nossa Rede…';loading.classList.remove('hidden');shell.classList.add('hidden')
+  try{
+    await refresh()
+    loading.classList.add('hidden');shell.classList.remove('hidden')
+  }catch(e){
+    loading.innerHTML='<strong>Não foi possível abrir a Nossa Rede agora.</strong><br><button id="fsRetryLoad" type="button" style="margin-top:14px;border:0;border-radius:14px;padding:10px 14px;background:#eadfff;color:#5f4d70;font-weight:900">Tentar novamente</button>'
+    $('fsRetryLoad')?.addEventListener('click',()=>open(),{once:true})
+    toast(e?.message||'Não foi possível abrir a Nossa Rede.')
+  }
+}
 function close(){$('familySocialOverlay')?.classList.add('hidden');$('fsProfileModal')?.classList.remove('show');document.documentElement.style.overflow='';$('friendSocialBtn')?.classList.remove('active');$('friendChatsTab')?.classList.add('active')}
 function ensureButton(){const profile=document.querySelector('.friend-profile');if(!profile)return null;const nav=document.querySelector('.family-primary-nav');let b=$('friendSocialBtn');if(!b){b=document.createElement('button');b.id='friendSocialBtn';b.type='button';b.innerHTML='🌸 <span>Nossa Rede</span>'}b.classList.add('family-primary-tab');b.classList.remove('friend-social-menu','hidden');if(nav&&b.parentNode!==nav)nav.appendChild(b);const valid=accessReady();b.disabled=!valid;b.setAttribute('aria-disabled',String(!valid));b.classList.toggle('is-locked',!valid);b.onclick=e=>{e.preventDefault();valid?open():toast('Este link pessoal ainda não foi validado.')};const chat=$('friendChatsTab');if(chat)chat.onclick=e=>{e.preventDefault();close()};b.style.removeProperty('display');return b}
 window.__ISA_OPEN_FAMILY_SOCIAL__=open;window.__ISA_CLOSE_FAMILY_SOCIAL__=close;window.__ISA_ENSURE_FAMILY_SOCIAL__=ensureButton
