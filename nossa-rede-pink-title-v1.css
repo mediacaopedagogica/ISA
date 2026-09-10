@@ -1,0 +1,37 @@
+/* Ajuste pontual aprovado: somente o título do compositor da Nossa Rede. */
+#socialPanel .social-composer::before,
+#familySocialOverlay .social-composer::before{
+  content:none!important;
+  display:none!important;
+}
+
+#socialPanel .social-composer::after,
+#familySocialOverlay .social-composer::after{
+  content:'compartilhe nossa história...'!important;
+  position:static!important;
+  display:block!important;
+  width:auto!important;
+  max-width:none!important;
+  right:auto!important;
+  top:auto!important;
+  margin:0 0 10px!important;
+  padding:0!important;
+  white-space:normal!important;
+  font-family:"Segoe Print","Bradley Hand","Comic Sans MS",cursive!important;
+  font-size:26px!important;
+  line-height:1.08!important;
+  font-style:italic!important;
+  font-weight:800!important;
+  letter-spacing:.2px!important;
+  color:#ef58a8!important;
+  text-shadow:0 1px 0 rgba(255,255,255,.95),0 4px 10px rgba(239,88,168,.16)!important;
+  text-align:left!important;
+  transform:none!important;
+}
+
+@media(max-width:760px){
+  #socialPanel .social-composer::after,
+  #familySocialOverlay .social-composer::after{
+    font-size:23px!important;
+  }
+}
