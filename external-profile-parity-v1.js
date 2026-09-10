@@ -8,7 +8,7 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const themes=[['pink','#efb0ce'],['lilac','#b9a9e6'],['green','#add8b0'],['yellow','#f3df95'],['blue','#b3d5ea']]
 const moods=['💜','🥰','😊','😂','😴','🤩','😌','🥳','🤗','🤔','😎','💪']
 const activities=[['','Nada agora'],['🏫 Na escola','🏫 Na escola'],['💼 No trabalho','💼 No trabalho'],['📚 Estudando','📚 Estudando'],['🏡 Em casa','🏡 Em casa'],['🎶 Ouvindo música','🎶 Ouvindo música'],['🎮 Jogando','🎮 Jogando'],['🚗 Na estrada','🚗 Na estrada'],['☕ Relaxando','☕ Relaxando'],['🛍️ Passeando','🛍️ Passeando'],['✈️ Viajando','✈️ Viajando']]
-let own=null,busy=false,stackPromise=null,modalObserver=null
+let own=null,busy=false,stackPromise=null,modalObserver=null,patchQueued=false
 
 function toast(text){
   if(typeof window.__ISA_FRIEND_TOAST__==='function')return window.__ISA_FRIEND_TOAST__(text)
@@ -54,8 +54,12 @@ function addStyle(){
 
 function ensureSelectOptions(){
   const mood=$('fsMood'),activity=$('fsActivity')
-  if(mood){const current=mood.value||'💜';mood.innerHTML=moods.map(x=>`<option>${x}</option>`).join('');mood.value=moods.includes(current)?current:'💜'}
-  if(activity){const current=activity.value||'';activity.innerHTML=activities.map(([v,l])=>`<option value="${esc(v)}">${esc(l)}</option>`).join('');activity.value=activities.some(([v])=>v===current)?current:''}
+  if(mood&&mood.dataset.profileParityOptions!=='1'){
+    const current=mood.value||'💜';mood.innerHTML=moods.map(x=>`<option>${x}</option>`).join('');mood.value=moods.includes(current)?current:'💜';mood.dataset.profileParityOptions='1'
+  }
+  if(activity&&activity.dataset.profileParityOptions!=='1'){
+    const current=activity.value||'';activity.innerHTML=activities.map(([v,l])=>`<option value="${esc(v)}">${esc(l)}</option>`).join('');activity.value=activities.some(([v])=>v===current)?current:'';activity.dataset.profileParityOptions='1'
+  }
 }
 function ensurePhotoEditor(card){
   if(card.querySelector('[data-external-profile-photo]'))return
@@ -65,11 +69,14 @@ function ensurePhotoEditor(card){
   input?.addEventListener('change',async e=>{const file=e.target.files?.[0];e.target.value='';if(!file)return;if(!['image/jpeg','image/png','image/webp','image/gif'].includes(file.type))return toast('Use JPG, PNG, WEBP ou GIF.');if(file.size>5*1024*1024)return toast('A foto pode ter até 5 MB.');if(busy)return;busy=true;try{toast('Atualizando a foto da Nossa Rede…');const d=await uploadAvatar(file);own={...(own||{}),avatarUrl:d.avatarUrl||'',avatarRef:d.avatarRef||''};updatePhotoPreview();await refreshEverything();toast('Foto da Nossa Rede atualizada 💜')}catch(err){toast(err?.message||'Não foi possível atualizar a foto.')}finally{busy=false}})
   remove?.addEventListener('click',async()=>{if(busy)return;busy=true;try{await friendApi('remove_avatar');if(own)own={...own,avatarUrl:'',avatarRef:''};updatePhotoPreview();await refreshEverything();toast('Foto removida somente da Nossa Rede.')}catch(err){toast(err?.message||'Não foi possível remover a foto.')}finally{busy=false}})
 }
-function ensureThemeSwatches(card){
+function ensureThemeSwatches(){
   const select=$('fsTheme');if(!select)return
   const field=select.closest('.social-field')||select.parentElement;if(!field)return
   let box=field.querySelector('.external-theme-swatches')
-  if(!box){box=document.createElement('div');box.className='external-theme-swatches';box.setAttribute('role','group');box.setAttribute('aria-label','Tema do perfil');box.innerHTML=themes.map(([v,c])=>`<button type="button" class="external-theme-swatch" data-theme="${v}" style="background:${c}" aria-label="Tema ${v}"></button>`).join('');field.appendChild(box);box.addEventListener('click',e=>{const b=e.target.closest('[data-theme]');if(!b)return;select.value=b.dataset.theme;select.dispatchEvent(new Event('change',{bubbles:true}));syncThemes()})}
+  if(!box){
+    box=document.createElement('div');box.className='external-theme-swatches';box.setAttribute('role','group');box.setAttribute('aria-label','Tema do perfil');box.innerHTML=themes.map(([v,c])=>`<button type="button" class="external-theme-swatch" data-theme="${v}" style="background:${c}" aria-label="Tema ${v}"></button>`).join('');field.appendChild(box)
+    box.addEventListener('click',e=>{const b=e.target.closest('[data-theme]');if(!b)return;select.value=b.dataset.theme;select.dispatchEvent(new Event('change',{bubbles:true}));syncThemes()})
+  }
   syncThemes()
 }
 function syncThemes(){const value=$('fsTheme')?.value||'lilac';document.querySelectorAll('#fsProfileModal .external-theme-swatch').forEach(b=>b.classList.toggle('active',b.dataset.theme===value))}
@@ -78,10 +85,11 @@ function updatePhotoPreview(){const p=$('externalProfilePhotoPreview');if(!p)ret
 function patch(){
   if(!$('friendApp'))return false
   addStyle();const modal=$('fsProfileModal'),card=modal?.querySelector('.social-modal-card,.fs-profile-card');if(!modal||!card)return false
-  ensurePhotoEditor(card);ensureSelectOptions();ensureThemeSwatches(card);updatePhotoPreview()
+  ensurePhotoEditor(card);ensureSelectOptions();ensureThemeSwatches();updatePhotoPreview()
   if(!modalObserver){modalObserver=new MutationObserver(()=>{if(modal.classList.contains('show')){ensureSelectOptions();syncThemes();refreshOwn().catch(()=>{})}});modalObserver.observe(modal,{attributes:true,attributeFilter:['class']})}
   return true
 }
+function schedulePatch(){if(patchQueued)return;patchQueued=true;requestAnimationFrame(()=>{patchQueued=false;patch()})}
 
 async function loadProfileStack(){
   if(stackPromise)return stackPromise
@@ -95,7 +103,7 @@ async function loadProfileStack(){
   return stackPromise
 }
 async function refreshEverything(){
-  await window.__ISA_REFRESH_EXTERNAL_SOCIAL_V72__?.().catch?.(()=>{})
+  try{await window.__ISA_REFRESH_EXTERNAL_SOCIAL_V72__?.()}catch{}
   await refreshOwn().catch(()=>{})
   window.__ISA_SOCIAL_PROFILE_PAGES__?.decorate?.();window.__ISA_SOCIAL_PROFILE_DIRECTORY__?.patch?.();window.__ISA_ENHANCE_REACTION_NAMES__?.()
 }
@@ -106,6 +114,6 @@ async function start(){
 document.addEventListener('isa:friend-access-valid',()=>start())
 document.addEventListener('isa:friend-portal-entered',()=>start())
 document.addEventListener('click',e=>{if(e.target?.closest?.('#fsEditProfile')&&window.__ISA_SPP_BYPASS__===true)setTimeout(()=>{patch();refreshOwn().catch(()=>{})},0)},true)
-new MutationObserver(()=>patch()).observe(document.documentElement,{childList:true,subtree:true})
+new MutationObserver(schedulePatch).observe(document.documentElement,{childList:true,subtree:true})
 if(window.__ISA_FRIEND_ACCESS_VALID__===true)start();else patch()
 window.__ISA_EXTERNAL_PROFILE_PARITY__={patch,start,loadProfileStack,refreshOwn,refreshEverything}
