@@ -9,7 +9,7 @@ async function openSocial(){
   loading=true
   const btn=$('friendSocialBtn');btn?.classList.add('is-loading')
   try{
-    if(typeof window.__ISA_OPEN_FAMILY_SOCIAL__!=='function')await import('./family-social.js?v=13-direct-entry')
+    if(typeof window.__ISA_OPEN_FAMILY_SOCIAL__!=='function')await import('./family-social.js?v=14-alias-ready')
     for(let i=0;i<30&&typeof window.__ISA_OPEN_FAMILY_SOCIAL__!=='function';i++)await new Promise(r=>setTimeout(r,60))
     if(typeof window.__ISA_OPEN_FAMILY_SOCIAL__!=='function')throw new Error('A Nossa Rede ainda não terminou de carregar.')
     await window.__ISA_OPEN_FAMILY_SOCIAL__()
@@ -22,8 +22,6 @@ function bind(){
   b.dataset.directSocialBound='1'
   return true
 }
-// Captura no document é registrada antes do controlador externo legado.
-// Assim um manipulador antigo não consegue engolir o clique da Nossa Rede.
 document.addEventListener('click',e=>{
   const b=e.target.closest?.('#friendSocialBtn');if(!b)return
   e.preventDefault();e.stopImmediatePropagation();openSocial()
