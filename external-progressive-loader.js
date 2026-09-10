@@ -20,7 +20,7 @@ function start(){
   later(1230,'./profile-birthday-v1.js?v=1-required',()=>window.__ISA_PROFILE_BIRTHDAY__?.inject?.())
   later(1450,'./social-tag-notifications.js?v=2-live-tags',()=>window.__ISA_SOCIAL_TAG_NOTIFICATIONS__?.poll?.())
   later(1800,'./link-preview.js?v=13-controls')
-  later(2050,'./nuvem-ui-ideas-v10.js?v=3-tools-only',()=>window.__ISA_NUVEM_UI_IDEAS__?.scan?.())
+  later(2050,'./nuvem-ui-ideas-v10.js?v=4-tools-only',()=>window.__ISA_NUVEM_UI_IDEAS__?.scan?.())
 
   // Estudos da Paloma continuam exclusivos e também são tardios.
   if(name.includes('paloma')){
