@@ -1,0 +1,111 @@
+name: Fix early watchdog v3
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-early-watchdog-v3.yml'
+permissions:
+  contents: write
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Insert parser-time fail-open watchdogs
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          root_watchdog = r'''<script id="personalBootEarlyWatchdogV1">
+          (function(){
+            var params=new URLSearchParams(location.search), personal=params.get('perfil');
+            if(!personal)return;
+            var released=false;
+            function visible(el){return !!el&&!el.classList.contains('hidden')}
+            function hide(id){var el=document.getElementById(id);if(el)el.classList.add('hidden')}
+            function release(reason){
+              if(released)return;released=true;
+              hide('personalBootGuard');hide('isaApprovedShellShield');hide('isaFinalShellShield');hide('isaFinalShellShieldV2');
+              if(document.body)document.body.classList.remove('isa-final-shell-managed','isa-approved-shell-lock');
+              var final=document.getElementById('keiseApprovedHome'),main=document.getElementById('mainView'),login=document.getElementById('loginView');
+              if(!visible(final)&&!visible(main)&&login)login.classList.remove('hidden');
+              window.__ISA_EARLY_BOOT_RELEASED__=reason||true;
+              try{document.dispatchEvent(new CustomEvent('isa:early-boot-release',{detail:{reason:reason||'watchdog'}}))}catch(e){}
+            }
+            window.__ISA_EARLY_BOOT_RELEASE__=release;
+            setTimeout(function(){
+              var final=document.getElementById('keiseApprovedHome'),main=document.getElementById('mainView'),login=document.getElementById('loginView');
+              if(!visible(final)&&!visible(main)&&!visible(login))release('watchdog-6500');
+              else hide('personalBootGuard');
+            },6500);
+          })();
+          </script>'''
+
+          p=Path('index.html'); s=p.read_text()
+          s=re.sub(r'\s*<script id="personalBootEarlyWatchdogV1">.*?</script>', '', s, flags=re.S)
+          anchor='<div id="app">'
+          if anchor not in s: raise SystemExit('index app anchor not found')
+          s=s.replace(anchor,root_watchdog+'\n'+anchor,1)
+          p.write_text(s)
+
+          external_watchdog = r'''<script id="externalBootEarlyWatchdogV1">
+          (function(){
+            if(!/acesso=/i.test((location.hash||'')+(location.search||'')))return;
+            var released=false;
+            function release(){
+              if(released)return;released=true;
+              if(window.__ISA_FRIEND_BOOTSTRAP_STATE__==='ready'||window.__ISA_FRIEND_PORTAL_ENTERED__===true)return;
+              var title=document.getElementById('friendGateTitle'),text=document.getElementById('friendGateText'),err=document.getElementById('friendGateError'),btn=document.getElementById('friendEnterBtn');
+              if(title)title.textContent='Vamos tentar novamente 💜';
+              if(text)text.textContent='A verificação demorou mais do que o esperado.';
+              if(err)err.textContent='Seu link continua aqui. Toque em tentar novamente.';
+              if(btn){btn.textContent='Tentar novamente';btn.classList.remove('hidden');btn.disabled=false;btn.dataset.mode='retry'}
+              window.__ISA_EXTERNAL_EARLY_RELEASED__=true;
+            }
+            window.__ISA_EXTERNAL_EARLY_RELEASE__=release;
+            setTimeout(release,10500);
+          })();
+          </script>'''
+
+          for name in ['acesso-mobile.html','acesso.html']:
+            p=Path(name); s=p.read_text()
+            s=re.sub(r'\s*<script id="externalBootEarlyWatchdogV1">.*?</script>', '', s, flags=re.S)
+            marker=re.search(r'\s*<script\s+src="\./external-access-controls-v1\.js[^>]*></script>',s)
+            if not marker: raise SystemExit(f'{name}: core script anchor not found')
+            s=s[:marker.start()]+'\n  '+external_watchdog+'\n'+s[marker.start():]
+            # Classic helpers cannot block parsing before the watchdog timer has been installed.
+            s=re.sub(r'<script src="(\./external-access-controls-v1\.js[^"]*)"></script>',r'<script defer src="\1"></script>',s)
+            s=re.sub(r'<script src="(\./external-enter-rescue-v77\.js[^"]*)"></script>',r'<script defer src="\1"></script>',s)
+            s=re.sub(r'<script src="(\./external-social-click-rescue-v74\.js[^"]*)"></script>',r'<script defer src="\1"></script>',s)
+            p.write_text(s)
+
+          print('Parser-time watchdogs installed')
+          PY
+      - name: Validate HTML patches
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text()
+          assert s.count('personalBootEarlyWatchdogV1')==1
+          assert s.index('personalBootEarlyWatchdogV1') < s.index('id="app"')
+          for name in ['acesso-mobile.html','acesso.html']:
+            t=Path(name).read_text()
+            assert t.count('externalBootEarlyWatchdogV1')==1
+            assert t.index('externalBootEarlyWatchdogV1') < t.index('external-access-controls-v1.js')
+            assert '<script defer src="./external-access-controls-v1.js' in t
+            assert '<script defer src="./external-enter-rescue-v77.js' in t
+          print('Validation OK')
+          PY
+      - name: Commit
+        shell: bash
+        run: |
+          if git diff --quiet; then echo 'No changes'; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html acesso-mobile.html acesso.html
+          git commit -m 'fix: start loading watchdogs before external modules'
+          git push
