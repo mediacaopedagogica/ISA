@@ -20881,7 +20881,19 @@ ${suffix}`;
       await boot();
     }
     async function boot() {
-      const { data: { user } } = await supabase.auth.getUser();
+      let user = null;
+      try {
+        const authResult = await Promise.race([
+          supabase.auth.getUser(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error("auth timeout")), 5500))
+        ]);
+        user = authResult?.data?.user || null;
+      } catch (authError) {
+        console.warn("Autenticação demorou; liberando a tela de entrada.", authError);
+        showView("loginView");
+        window.__ISA_HIDE_BOOT_GUARD__?.();
+        return;
+      }
       if (!user) {
         showView("loginView");
         return;

@@ -3,7 +3,7 @@ const wait=ms=>new Promise(r=>setTimeout(r,ms))
 async function load(path){try{return await import(path)}catch(e){console.warn('Módulo não carregou:',path,e);return null}}
 function later(ms,path,after){setTimeout(async()=>{await load(path);try{after?.()}catch{}},ms)}
 // Recuperação prioritária: nunca expor a casca legada enquanto os extras carregam.
-later(1,'./final-shell-bootstrap-v2.js?v=1-fail-open',()=>window.__ISA_FINAL_SHELL__?.recover?.())
+later(1,'./final-shell-bootstrap-v2.js?v=2-auth-timeout',()=>window.__ISA_FINAL_SHELL__?.recover?.())
 
 
 function currentProfile(){
