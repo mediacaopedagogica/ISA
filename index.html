@@ -29,6 +29,30 @@
 </head>
 <body>
 <div id="personalBootGuard" class="hidden" aria-live="polite"><div class="guard-card"><div class="guard-heart">♥</div><h2 id="personalBootTitle">Abrindo seu Cantinho…</h2><p>Carregando suas conversas com segurança.</p><div class="guard-spinner"></div></div></div>
+<script id="personalBootEarlyWatchdogV1">
+(function(){
+  var params=new URLSearchParams(location.search), personal=params.get('perfil');
+  if(!personal)return;
+  var released=false;
+  function visible(el){return !!el&&!el.classList.contains('hidden')}
+  function hide(id){var el=document.getElementById(id);if(el)el.classList.add('hidden')}
+  function release(reason){
+    if(released)return;released=true;
+    hide('personalBootGuard');hide('isaApprovedShellShield');hide('isaFinalShellShield');hide('isaFinalShellShieldV2');
+    if(document.body)document.body.classList.remove('isa-final-shell-managed','isa-approved-shell-lock');
+    var final=document.getElementById('keiseApprovedHome'),main=document.getElementById('mainView'),login=document.getElementById('loginView');
+    if(!visible(final)&&!visible(main)&&login)login.classList.remove('hidden');
+    window.__ISA_EARLY_BOOT_RELEASED__=reason||true;
+    try{document.dispatchEvent(new CustomEvent('isa:early-boot-release',{detail:{reason:reason||'watchdog'}}))}catch(e){}
+  }
+  window.__ISA_EARLY_BOOT_RELEASE__=release;
+  setTimeout(function(){
+    var final=document.getElementById('keiseApprovedHome'),main=document.getElementById('mainView'),login=document.getElementById('loginView');
+    if(!visible(final)&&!visible(main)&&!visible(login))release('watchdog-6500');
+    else hide('personalBootGuard');
+  },6500);
+})();
+</script>
 <div id="app">
   <section id="loginView" class="screen center-screen hidden">
     <div class="login-card glass">
