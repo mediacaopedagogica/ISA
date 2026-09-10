@@ -1,0 +1,82 @@
+name: Fix loading deadlock v2
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-loading-deadlock-v2.yml'
+permissions:
+  contents: write
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch personal and external boot flow
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          # Root/personal links: remove the old locking layer and use the fail-open bootstrap.
+          p=Path('index.html'); s=p.read_text()
+          s=re.sub(r'\n?<script src="\./approved-shell-lock-v1\.js\?v=[^"]+"></script>', '', s)
+          s=re.sub(r'<script type="module" src="\./final-shell-bootstrap-v1\.js\?v=[^"]+"></script>',
+                   '<script type="module" src="./final-shell-bootstrap-v2.js?v=1-fail-open"></script>\n<script src="./personal-boot-failopen-v1.js?v=1-no-eternal-loader"></script>',s)
+          s=re.sub(r'postboot-loader\.js\?v=[^\'\"]+', 'postboot-loader.js?v=73-fail-open', s)
+          s=re.sub(r'sw\.js\?v=[^\'\"]+', 'sw.js?v=single-nav-70-fail-open', s)
+          p.write_text(s)
+
+          # Progressive loader must never resurrect the trapping v1 shell.
+          p=Path('postboot-loader.js'); s=p.read_text()
+          s=re.sub(r'final-shell-bootstrap-v1\.js\?v=[^\'\"]+', 'final-shell-bootstrap-v2.js?v=1-fail-open', s)
+          p.write_text(s)
+
+          # External family pages: only access/bootstrap code runs before entry.
+          optional_patterns=[
+            r'\s*<script type="module" src="\./isa-social-emoji-suite-v1\.js\?v=[^"]+"></script>',
+            r'\s*<script type="module" src="\./nuvem-pin-picker-v2\.js\?v=[^"]+"></script>',
+            r'\s*<script type="module" src="\./video-call-background-v1\.js\?v=[^"]+"></script>',
+            r'\s*<script type="module" src="\./social-theme-live-rescue-v1\.js\?v=[^"]+"></script>',
+            r'\s*<script type="module" src="\./seasonal-theme-engine-v1\.js\?v=[^"]+"></script>',
+          ]
+          for name in ['acesso-mobile.html','acesso.html']:
+            p=Path(name); s=p.read_text()
+            for pat in optional_patterns:s=re.sub(pat,'',s)
+            s=re.sub(r'external-safe-loader-v70\.js\?v=[^\'\"]+', 'external-safe-loader-v71.js?v=1-postenter-only', s)
+            s=re.sub(r'familia-externa\.js\?v=[^\'\"]+', 'familia-externa.js?v=73-boot-priority', s)
+            s=re.sub(r'external-access-controls-v1\.js\?v=[^\'\"]+', 'external-access-controls-v1.js?v=2-boot-priority', s)
+            s=re.sub(r'external-enter-rescue-v77\.js\?v=[^\'\"]+', 'external-enter-rescue-v77.js?v=4-boot-priority', s)
+            p.write_text(s)
+
+          print('Patched root and external boot flows')
+          PY
+      - name: Validate scripts and references
+        shell: bash
+        run: |
+          node --check final-shell-bootstrap-v2.js
+          node --check personal-boot-failopen-v1.js
+          node --check external-safe-loader-v71.js
+          python - <<'PY'
+          from pathlib import Path
+          main=Path('index.html').read_text()
+          assert 'final-shell-bootstrap-v2.js?v=1-fail-open' in main
+          assert 'personal-boot-failopen-v1.js?v=1-no-eternal-loader' in main
+          assert 'approved-shell-lock-v1.js' not in main
+          post=Path('postboot-loader.js').read_text()
+          assert 'final-shell-bootstrap-v2.js?v=1-fail-open' in post
+          for name in ['acesso-mobile.html','acesso.html']:
+            s=Path(name).read_text()
+            assert 'external-safe-loader-v71.js?v=1-postenter-only' in s
+          print('Static validation OK')
+          PY
+      - name: Commit repaired boot flow
+        shell: bash
+        run: |
+          if git diff --quiet; then echo 'No changes'; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html postboot-loader.js acesso-mobile.html acesso.html
+          git commit -m 'fix: release loading screens and defer family extras'
+          git push
