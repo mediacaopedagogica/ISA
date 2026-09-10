@@ -45,16 +45,18 @@ later(840,'./nossa-rede-v4.js?v=3-family-rules',()=>{window.__ISA_ENHANCE_NOSSA_
 later(920,'./nossa-rede-policy-v5-loader.js?v=2-social-profiles',()=>window.__ISA_NOSSA_REDE_V5__?.patch?.())
 later(1010,'./social-profile-pages-v1.js?v=1-profiles-gallery',()=>window.__ISA_SOCIAL_PROFILE_PAGES__?.decorate?.())
 later(1060,'./social-profile-directory-v1.js?v=1-visible-only',()=>window.__ISA_SOCIAL_PROFILE_DIRECTORY__?.patch?.())
+later(1090,'./social-reaction-names-v1.js?v=1-who-reacted',()=>window.__ISA_ENHANCE_REACTION_NAMES__?.())
 later(1110,'./profile-actions.js?v=7-progressive')
 later(1240,'./call-manager.js?v=18-plus-menu')
 later(1420,'./message-interactions-v1.js?v=4-bubble-edge',()=>window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.())
 later(1480,'./chat-rich-format-v1.js?v=2-clean-toolbar',()=>window.__ISA_REFRESH_RICH_CHAT__?.())
 later(1515,'./chat-rich-format-guard-v2.js?v=2-no-empty-tags',()=>window.__ISA_CLEAN_EMPTY_CHAT_FORMATS__?.())
 later(1560,'./family-media-menu-v2.js?v=12-compact-plus')
-later(1620,'./group-creation-guard-v1.js?v=2-safe-groups',()=>window.__ISA_GROUP_RULES_REFRESH__?.())
+later(1620,'./group-creation-guard-v1.js?v=3-permission-backed',()=>window.__ISA_GROUP_RULES_REFRESH__?.())
+if(keiseAtBoot)later(1660,'./keise-group-permission-ui-v1.js?v=1-real-permission',()=>window.__ISA_PATCH_KEISE_GROUP_PERMISSION__?.())
 later(1760,'./notifications-v2.js?v=11-progressive')
 later(1860,'./social-tag-notifications.js?v=2-live-tags',()=>window.__ISA_SOCIAL_TAG_NOTIFICATIONS__?.poll?.())
-later(2220,'./extras-loader.js?v=61-social-profile-pages',()=>{window.__ISA_SOCIAL_PRIVACY__?.apply?.();window.__ISA_SOCIAL_PROFILE_CHAT_SYNC__?.();window.__ISA_SOCIAL_PROFILE_PAGES__?.decorate?.();window.__ISA_SOCIAL_PROFILE_DIRECTORY__?.patch?.();window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.();window.__ISA_REFRESH_RICH_CHAT__?.();window.__ISA_CLEAN_EMPTY_CHAT_FORMATS__?.();window.__ISA_GROUP_RULES_REFRESH__?.();if(!approvedDashboardAtBoot){window.__ISA_ENSURE_PROFILE_MENU__?.();window.__ISA_PERSONAL_NAV_SYNC__?.()}})
+later(2220,'./extras-loader.js?v=61-social-profile-pages',()=>{window.__ISA_SOCIAL_PRIVACY__?.apply?.();window.__ISA_SOCIAL_PROFILE_CHAT_SYNC__?.();window.__ISA_SOCIAL_PROFILE_PAGES__?.decorate?.();window.__ISA_SOCIAL_PROFILE_DIRECTORY__?.patch?.();window.__ISA_ENHANCE_REACTION_NAMES__?.();window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.();window.__ISA_REFRESH_RICH_CHAT__?.();window.__ISA_CLEAN_EMPTY_CHAT_FORMATS__?.();window.__ISA_GROUP_RULES_REFRESH__?.();if(!approvedDashboardAtBoot){window.__ISA_ENSURE_PROFILE_MENU__?.();window.__ISA_PERSONAL_NAV_SYNC__?.()}})
 
 let keiseBooted=false
 function bootKeise(){
