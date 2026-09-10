@@ -7,6 +7,15 @@
 #socialPanel .social-direct-btn,#familySocialOverlay .social-direct-btn{display:none!important}
 body.approved-family-dashboard.keise-panel-active #socialPanel:not(.hidden),body.keise-approved-layout.keise-panel-active #socialPanel:not(.hidden){display:block!important;position:relative!important;inset:auto!important;z-index:1!important}
 body.approved-family-dashboard.keise-panel-active #mainView>.content:has(#socialPanel:not(.hidden)),body.keise-approved-layout.keise-panel-active #mainView>.content:has(#socialPanel:not(.hidden)){overflow:visible!important;height:100dvh!important;max-height:100dvh!important}
+
+/* Modais da Nossa Rede precisam ficar SEMPRE acima da timeline. Isso evita a tela visível porém sem clique. */
+#socialProfileModal.social-modal,#fsProfileModal,#nr5SettingsModal,#nr5TagPicker,#socialProfilePage.spp-modal,#pssStatusModal.pss-modal,#pssStickerModal.pss-modal{
+  position:fixed!important;inset:0!important;z-index:2147482500!important;pointer-events:auto!important
+}
+#socialProfileModal.social-modal.show,#fsProfileModal.show,#nr5SettingsModal.show,#nr5TagPicker.show,#socialProfilePage.spp-modal.show,#pssStatusModal.pss-modal.show,#pssStickerModal.pss-modal.show{pointer-events:auto!important}
+#socialProfileModal .social-modal-card{width:min(620px,96vw)!important;max-width:620px!important;max-height:92dvh!important;overflow:auto!important;margin:auto!important;padding:20px!important;box-sizing:border-box!important;border-radius:26px!important;background:#fffafd!important}
+#socialProfileModal button,#socialProfileModal input,#socialProfileModal textarea,#socialProfileModal select,#fsProfileModal button,#fsProfileModal input,#fsProfileModal textarea,#fsProfileModal select,#nr5SettingsModal button,#nr5TagPicker button,#socialProfilePage button,#pssStatusModal button,#pssStatusModal input,#pssStatusModal textarea,#pssStatusModal select{pointer-events:auto!important;touch-action:manipulation!important}
+
 @media(max-width:760px){
   #socialPanel:not(.hidden),#familySocialOverlay:not(.hidden){position:fixed!important;inset:0!important;z-index:120000!important;padding:0 0 max(74px,env(safe-area-inset-bottom))!important;background:var(--nr5-bg)!important}
   #socialPanel .social-shell,#familySocialOverlay .social-shell{display:block!important;width:100%!important;max-width:100%!important;min-height:100%!important;margin:0!important;padding:max(8px,env(safe-area-inset-top)) 8px 90px!important}
@@ -20,4 +29,6 @@ body.approved-family-dashboard.keise-panel-active #mainView>.content:has(#social
   #socialPanel .social-status-card,#familySocialOverlay .social-status-card{flex:0 0 104px!important;min-width:104px!important}
   #socialPanel .isa-social-header,#familySocialOverlay .isa-social-header{width:100%!important;max-width:100%!important;box-sizing:border-box!important}
   #socialPanel .social-caption,#familySocialOverlay .social-caption,#socialPanel .social-comment,#familySocialOverlay .social-comment{overflow-wrap:anywhere!important;word-break:break-word!important}
+  #socialProfileModal.social-modal,#fsProfileModal,#nr5SettingsModal,#nr5TagPicker,#socialProfilePage.spp-modal,#pssStatusModal.pss-modal,#pssStickerModal.pss-modal{padding:max(10px,env(safe-area-inset-top)) 10px max(10px,env(safe-area-inset-bottom))!important;overflow:auto!important}
+  #socialProfileModal .social-modal-card{width:100%!important;max-width:560px!important;max-height:none!important;min-height:auto!important;margin:auto!important;border-radius:24px!important}
 }
