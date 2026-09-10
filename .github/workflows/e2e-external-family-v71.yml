@@ -22,7 +22,7 @@ jobs:
       - name: Test real external family flow in Chromium
         shell: bash
         run: |
-          cat > /tmp/e2e.mjs <<'JS'
+          cat > ./e2e-external.mjs <<'JS'
           import { chromium } from 'playwright';
           const people=['vania','paloma','davi','evalda','elion','silvane'];
           const browser=await chromium.launch({headless:true});
@@ -71,7 +71,7 @@ jobs:
           await browser.close();
           if(failures)process.exit(1);
           JS
-          node /tmp/e2e.mjs
+          node ./e2e-external.mjs
       - name: Upload failure screenshots
         if: failure()
         uses: actions/upload-artifact@v4
