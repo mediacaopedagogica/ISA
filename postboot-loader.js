@@ -50,6 +50,7 @@ later(1090,'./social-reaction-names-v1.js?v=1-who-reacted',()=>window.__ISA_ENHA
 later(1110,'./profile-actions.js?v=7-progressive')
 later(1240,'./call-manager.js?v=18-plus-menu')
 later(1420,'./message-interactions-v1.js?v=4-bubble-edge',()=>window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.())
+later(1470,'./nuvem-reactions-v1.js?v=1',()=>window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.())
 later(1480,'./chat-rich-format-v1.js?v=4-selection-popover',()=>window.__ISA_REFRESH_RICH_CHAT__?.())
 later(1515,'./chat-rich-format-guard-v2.js?v=2-no-empty-tags',()=>window.__ISA_CLEAN_EMPTY_CHAT_FORMATS__?.())
 later(1560,'./family-media-menu-v2.js?v=12-compact-plus')
@@ -58,6 +59,8 @@ if(keiseAtBoot)later(1660,'./keise-group-permission-ui-v1.js?v=1-real-permission
 later(1760,'./notifications-v2.js?v=11-progressive')
 later(1860,'./social-tag-notifications.js?v=2-live-tags',()=>window.__ISA_SOCIAL_TAG_NOTIFICATIONS__?.poll?.())
 later(2220,'./extras-loader.js?v=61-social-profile-pages',()=>{window.__ISA_SOCIAL_PRIVACY__?.apply?.();window.__ISA_SOCIAL_PROFILE_CHAT_SYNC__?.();window.__ISA_SOCIAL_PROFILE_PAGES__?.decorate?.();window.__ISA_SOCIAL_PROFILE_DIRECTORY__?.patch?.();window.__ISA_ENHANCE_REACTION_NAMES__?.();window.__ISA_PROFILE_BIRTHDAY__?.inject?.();window.__ISA_COMMENT_MEDIA_MENU__?.scan?.();window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.();window.__ISA_REFRESH_RICH_CHAT__?.();window.__ISA_CLEAN_EMPTY_CHAT_FORMATS__?.();window.__ISA_GROUP_RULES_REFRESH__?.();if(!approvedDashboardAtBoot){window.__ISA_ENSURE_PROFILE_MENU__?.();window.__ISA_PERSONAL_NAV_SYNC__?.()}})
+later(2280,'./nuvem-ui-ideas-v10.js?v=1',()=>window.__ISA_NUVEM_UI_IDEAS__?.scan?.())
+later(2360,'./nuvem-pin-picker-v1.js?v=1',()=>window.__ISA_NUVEM_PIN_PICKER__?.scan?.())
 
 let keiseBooted=false
 function bootKeise(){
