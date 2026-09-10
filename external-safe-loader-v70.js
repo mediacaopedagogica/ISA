@@ -17,6 +17,7 @@ function ensureHostCss(){
 }
 
 load('./mobile-conversation-scroll-v2.js?v=1-visible-scroll')
+load('./nossa-rede-ui-fixes-sep10.js?v=1-overlay-birthday-cover')
 ensureHostCss()
 load('./external-enter-rescue-v77.js?v=2-enter-final')
 load('./collaborative-chat-postits-v2.js?v=2-cancel-reopen-fixers')
