@@ -47,7 +47,7 @@ later(1010,'./social-profile-pages-v1.js?v=1-profiles-gallery',()=>window.__ISA_
 later(1060,'./social-profile-directory-v1.js?v=1-visible-only',()=>window.__ISA_SOCIAL_PROFILE_DIRECTORY__?.patch?.())
 later(1110,'./profile-actions.js?v=7-progressive')
 later(1240,'./call-manager.js?v=18-plus-menu')
-later(1420,'./message-interactions-v1.js?v=2-live',()=>window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.())
+later(1420,'./message-interactions-v1.js?v=3-click-behavior',()=>window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.())
 later(1480,'./chat-rich-format-v1.js?v=1-rich-chat',()=>window.__ISA_REFRESH_RICH_CHAT__?.())
 later(1540,'./family-media-menu-v2.js?v=12-compact-plus')
 later(1600,'./group-creation-guard-v1.js?v=2-safe-groups',()=>window.__ISA_GROUP_RULES_REFRESH__?.())
