@@ -16,7 +16,8 @@
     return''
   }
   function mainReady(){const m=$('mainView');return !!m&&!m.classList.contains('hidden')}
-  function finalReady(){return !!$('keiseApprovedHome')&&!$('keiseApprovedHome').classList.contains('hidden')&&!!$('keiseApprovedTopbar')&&!$('keiseApprovedTopbar').classList.contains('hidden')}
+  // No acesso mobile a barra superior pode ser ocultada de propósito; o HOME aprovado visível é a fonte de verdade.
+  function finalReady(){const h=$('keiseApprovedHome');return !!h&&!h.classList.contains('hidden')}
   function css(){
     if($('isaFinalShellBootstrapCss'))return
     const s=document.createElement('style');s.id='isaFinalShellBootstrapCss';s.textContent=`
@@ -69,13 +70,11 @@
   }
   function schedule(){clearTimeout(timer);timer=setTimeout(()=>{const p=profile();if(p&&mainReady())ensureDashboard(p)},20)}
 
-  // Se qualquer módulo tentar ressuscitar a casca antiga, reaplica a interface final imediatamente.
   const obs=new MutationObserver(schedule);obs.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class']})
   document.addEventListener('isa:approved-home-ready',schedule)
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')schedule()})
   window.addEventListener('pageshow',schedule)
 
-  // Fallback do botão Sair dos dashboards aprovados: o clique nativo continua sendo a primeira opção.
   document.addEventListener('click',e=>{
     const b=e.target?.closest?.('[data-ka-action="logout"],[data-approved-action="logout"],#kaLogout')
     if(!b)return
@@ -91,7 +90,6 @@
     },350)
   },false)
 
-  // O script pode entrar antes do app principal; fica aguardando a identidade real sem mostrar o legado.
   let tries=0;const tick=()=>{schedule();if(++tries<180)setTimeout(tick,100)};tick()
   window.__ISA_FINAL_SHELL__={recover:schedule,ensureDashboard,theme:loadThemeStack}
 })()
