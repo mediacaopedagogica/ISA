@@ -33,11 +33,12 @@ async function enhance(){
   try{
     await Promise.allSettled([
       safe('./nossa-rede-v4.js?v=8-all-family-social'),
-      safe('./nossa-rede-policy-v5-loader.js?v=10-all-family-social'),
+      safe('./nossa-rede-policy-v5-loader.js?v=11-pastel-header'),
       safe('./nuvem-ui-ideas-v10.js?v=6-all-family-social'),
       safe('./nuvem-compose-compact-v1.js?v=6-pink-simple'),
       safe('./nuvem-carousel-v1.js?v=3-all-family-social'),
       safe('./nossa-rede-comment-menu-v1.js?v=4-all-family-social'),
+      safe('./nossa-rede-header-cleanup-v1.js?v=1-pastel-decor'),
       safe('./social-profile-pages-v1.js?v=6-all-family-social'),
       safe('./social-profile-directory-v1.js?v=5-all-family-social'),
       safe('./social-reaction-names-v1.js?v=5-all-family-social'),
@@ -49,6 +50,7 @@ async function enhance(){
     window.__ISA_NUVEM_COMPACT_COMPOSER__?.scan?.()
     window.__ISA_NUVEM_CAROUSEL__?.scan?.()
     window.__ISA_COMMENT_MEDIA_MENU__?.scan?.()
+    window.__ISA_NOSSA_REDE_HEADER_CLEANUP__?.()
     window.__ISA_SOCIAL_PROFILE_PAGES__?.decorate?.()
     window.__ISA_SOCIAL_PROFILE_DIRECTORY__?.patch?.()
     window.__ISA_ENHANCE_REACTION_NAMES__?.()
@@ -67,7 +69,7 @@ async function openSocial(){
     await open()
     ensureTitle()
     setTimeout(()=>{ensureTitle();enhance()},80)
-    setTimeout(ensureTitle,650)
+    setTimeout(()=>{ensureTitle();window.__ISA_NOSSA_REDE_HEADER_CLEANUP__?.()},650)
     return true
   }catch(e){
     console.warn('Nossa Rede externa:',e);toast(e?.message||'Não foi possível abrir a Nossa Rede agora.');return false
@@ -102,6 +104,6 @@ bind()
 document.addEventListener('isa:friend-access-valid',()=>{bind();setTimeout(()=>ensureCore().catch(()=>{}),60)})
 document.addEventListener('isa:friend-portal-entered',()=>{bind();setTimeout(bind,180)})
 
-const observer=new MutationObserver(()=>{clearTimeout(observer._t);observer._t=setTimeout(()=>{bind();if(document.getElementById('familySocialOverlay'))ensureTitle()},55)})
+const observer=new MutationObserver(()=>{clearTimeout(observer._t);observer._t=setTimeout(()=>{bind();if(document.getElementById('familySocialOverlay')){ensureTitle();window.__ISA_NOSSA_REDE_HEADER_CLEANUP__?.()}},55)})
 observer.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','disabled','aria-disabled']})
 let tries=0;const timer=setInterval(()=>{bind();if(++tries>120)clearInterval(timer)},300)
