@@ -14,6 +14,7 @@ function start(){
   later(440,'./social-profile-directory-v1.js?v=1-visible-only',()=>window.__ISA_SOCIAL_PROFILE_DIRECTORY__?.patch?.())
   later(500,'./external-chat-tools.js?v=5-controls')
   later(620,'./message-interactions-v1.js?v=2-live',()=>window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.())
+  later(670,'./chat-rich-format-v1.js?v=1-rich-chat',()=>window.__ISA_REFRESH_RICH_CHAT__?.())
   later(720,'./familia-emoji-completo.js?v=9-controls')
   later(900,'./social-tag-notifications.js?v=2-live-tags',()=>window.__ISA_SOCIAL_TAG_NOTIFICATIONS__?.poll?.())
   later(1030,'./profile-status-stickers.js?v=13-click-fix',()=>window.__ISA_ENSURE_EXTERNAL_MENU__?.())
