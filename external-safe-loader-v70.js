@@ -23,6 +23,7 @@ load('./nuvem-pin-picker-v2.js?v=6-all-family-links')
 ensureHostCss()
 load('./external-enter-rescue-v77.js?v=2-enter-final')
 load('./collaborative-chat-postits-v2.js?v=2-cancel-reopen-fixers')
+load('./collaborative-postit-quick-actions-v1.js?v=1-tap-edit-cancel')
 load('./conversation-important-v2.js?v=4-collab-chat')
 
 async function start(){
@@ -33,6 +34,8 @@ async function start(){
   await load('./external-ui-controller.js?v=14-profile-parity')
   await load('./external-profile-parity-v1.js?v=2-keise-profile-parity')
   try{await window.__ISA_EXTERNAL_PROFILE_PARITY__?.start?.()}catch(error){console.warn('[Cantinho externo] perfil completo não terminou de carregar',error)}
+  await load('./social-profile-theme-v2.js?v=1-all-colors-smart-bg')
+  try{await window.__ISA_PROFILE_THEME_V2__?.loadState?.();window.__ISA_PROFILE_THEME_V2__?.scan?.()}catch{}
   await load('./message-reaction-delegate-v2.js?v=4-expanded-emotions')
   await load('./isa-social-emoji-suite-v1.js?v=1-full-isa-chat-emojis')
   try{window.__ISA_SOCIAL_EMOJI_SUITE__?.scan?.();window.__ISA_REACTION_DELEGATE_REFRESH__?.()}catch{}
@@ -48,10 +51,11 @@ async function start(){
     window.__ISA_NOSSA_REDE_MEDIA_WORKFLOW__?.scan?.()
     window.__ISA_PATCH_MEDIA_MAKE__?.()
     window.__ISA_NUVEM_PIN_PICKER__?.scan?.()
+    window.__ISA_PROFILE_THEME_V2__?.scan?.()
   }catch{}
   setTimeout(()=>load('./external-decoration-cleanup-v1.js?v=2-portal-only'),100)
   setTimeout(()=>load('./nossa-rede-header-cleanup-v1.js?v=4-all-family-final'),180)
-  setTimeout(()=>load('./external-progressive-loader.js?v=34-all-family-fixers'),320)
+  setTimeout(()=>load('./external-progressive-loader.js?v=35-profile-theme-postit-tap'),320)
 }
 
 document.addEventListener('isa:friend-portal-entered',start,{once:true})
