@@ -9,7 +9,7 @@ await import('./nossa-rede-policy-v5.js?v=2-organic-layout');
 await import('./nossa-rede-comment-menu-v1.js?v=4-all-family-final').catch(()=>null);
 await import('./nuvem-compose-compact-v1.js?v=11-flat-pink-live').catch(()=>null);
 await import('./nuvem-carousel-v1.js?v=7-edit-delete-api').catch(()=>null);
-await import('./nossa-rede-media-workflow-v3.js?v=1-rich-editor').catch(()=>null);
+await import('./nossa-rede-media-workflow-v4.js?v=1-rich-editor-runtime').catch(()=>null);
 await import('./message-reaction-delegate-v2.js?v=4-expanded-emotions').catch(()=>null);
 await import('./isa-social-emoji-suite-v1.js?v=1-full-isa-chat-emojis').catch(()=>null);
 await import('./nossa-rede-header-cleanup-v1.js?v=4-all-family-final').catch(()=>null);
