@@ -1,0 +1,38 @@
+#familySocialOverlay.fs-static-overlay{position:fixed;inset:0;z-index:120000;display:block;background:linear-gradient(145deg,#fff9fc 0%,#f5efff 52%,#eef8ff 100%);color:#5d5067;overflow:auto;overscroll-behavior:contain}
+#familySocialOverlay.fs-static-overlay.hidden{display:none!important}
+#familySocialOverlay .fs-static-top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;padding:12px 16px;background:rgba(255,250,253,.93);backdrop-filter:blur(16px);border-bottom:1px solid rgba(225,211,235,.8)}
+#familySocialOverlay .fs-static-brand-icon{width:38px;height:38px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(145deg,#ffd8eb,#e7dbff);box-shadow:inset 0 1px 0 #fff,0 8px 20px rgba(170,126,180,.16);font-size:21px}
+#familySocialOverlay .fs-static-title{display:flex;flex-direction:column;min-width:0;flex:1}
+#familySocialOverlay .fs-static-title strong{font-size:16px;color:#5b4c68}
+#familySocialOverlay .fs-static-title small{font-size:10px;color:#95869c}
+#familySocialOverlay .fs-static-close{border:0;border-radius:14px;padding:9px 12px;background:#efe6f7;color:#685975;font-weight:900;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.9)}
+#familySocialOverlay .fs-static-wrap{width:min(1180px,calc(100% - 28px));margin:18px auto 28px;display:grid;grid-template-columns:230px minmax(0,1fr) 230px;gap:14px;align-items:start}
+#familySocialOverlay .fs-static-card{border-radius:24px;background:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.95);box-shadow:0 16px 42px rgba(104,77,122,.10),inset 0 1px 0 rgba(255,255,255,.95);backdrop-filter:blur(12px)}
+#familySocialOverlay .fs-static-profile{padding:18px;position:sticky;top:78px}
+#familySocialOverlay .fs-static-logo{font-weight:950;font-size:23px;letter-spacing:-.6px;color:#6c5978}.fs-static-logo span{color:#e663a9}
+#familySocialOverlay .fs-static-avatar{width:62px;height:62px;border-radius:22px;display:grid;place-items:center;margin:18px 0 10px;background:linear-gradient(145deg,#fbd5e8,#ddd1ff);box-shadow:inset 0 2px 1px rgba(255,255,255,.95),0 9px 22px rgba(172,127,184,.16);font-size:30px}
+#familySocialOverlay .fs-static-profile strong{display:block;font-size:15px;color:#64546f}
+#familySocialOverlay .fs-static-profile small{display:block;margin-top:4px;color:#9a899f;font-size:10px;line-height:1.4}
+#familySocialOverlay .fs-static-main{display:grid;gap:14px}
+#familySocialOverlay .fs-static-welcome{padding:20px 20px 17px}
+#familySocialOverlay .fs-static-handwrite{font-family:"Segoe Print","Bradley Hand","Comic Sans MS",cursive;font-size:21px;line-height:1.15;font-style:italic;font-weight:800;color:#ef58a8;transform:rotate(-1deg);margin-bottom:14px;text-shadow:0 1px 0 #fff,0 4px 10px rgba(239,88,168,.12)}
+#familySocialOverlay .fs-static-compose{min-height:92px;border-radius:19px;border:1px solid #eee2f1;background:#fff;padding:15px;color:#a497a9;box-shadow:inset 0 2px 5px rgba(105,82,121,.04)}
+#familySocialOverlay .fs-static-compose-actions{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+#familySocialOverlay .fs-static-round{width:39px;height:39px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(145deg,#d9c9ff,#bca5ef);color:#fff;font-size:24px;font-weight:900;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 6px 14px rgba(130,104,174,.18)}
+#familySocialOverlay .fs-static-chip{border-radius:13px;padding:9px 12px;background:#f6f0fa;color:#897693;font-size:11px;font-weight:800}
+#familySocialOverlay .fs-static-publish{margin-left:auto;border-radius:14px;padding:10px 15px;background:linear-gradient(145deg,#cdb6ee,#b99fdd);color:white;font-weight:900;font-size:11px;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 6px 14px rgba(132,103,164,.15)}
+#familySocialOverlay .fs-static-feed{padding:18px 20px 22px}
+#familySocialOverlay .fs-static-feed h3{margin:0 0 4px;font-size:16px;color:#66566f}
+#familySocialOverlay .fs-static-feed p{margin:0;color:#98899d;font-size:11px}
+#familySocialOverlay .fs-static-loader{display:grid;place-items:center;text-align:center;min-height:170px;margin-top:14px;border-radius:20px;background:linear-gradient(145deg,rgba(255,245,250,.9),rgba(246,241,255,.9));border:1px dashed #dfcee8;padding:22px;color:#86758f}
+#familySocialOverlay .fs-static-loader-bubble{width:52px;height:52px;border-radius:20px;display:grid;place-items:center;margin:0 auto 10px;background:linear-gradient(145deg,#ffd9eb,#dfd3ff);font-size:27px;animation:fsStaticFloat 1.8s ease-in-out infinite;box-shadow:0 10px 22px rgba(174,132,184,.16)}
+#familySocialOverlay .fs-static-loader strong{display:block;font-size:13px;color:#715f7a}#familySocialOverlay .fs-static-loader small{display:block;margin-top:5px;font-size:10px;line-height:1.4;color:#9a8ca0}
+#familySocialOverlay .fs-static-retry{margin-top:12px;border:0;border-radius:13px;padding:9px 13px;background:#e9dcfa;color:#64536f;font-weight:900;cursor:pointer}
+#familySocialOverlay .fs-static-side{padding:17px;position:sticky;top:78px}
+#familySocialOverlay .fs-static-side h3{margin:0 0 12px;font-size:14px;color:#6a5874}
+#familySocialOverlay .fs-static-person{display:flex;align-items:center;gap:9px;padding:9px 8px;border-radius:15px;background:#fbf8fd;margin-top:8px}
+#familySocialOverlay .fs-static-mini{width:34px;height:34px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(145deg,#f8ddec,#e6dcff)}
+#familySocialOverlay .fs-static-person div:last-child{min-width:0}.fs-static-person strong{display:block;font-size:11px}.fs-static-person small{display:block;font-size:9px;color:#9b8da0;margin-top:2px}
+@keyframes fsStaticFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@media(max-width:880px){#familySocialOverlay .fs-static-wrap{grid-template-columns:1fr;width:min(720px,calc(100% - 18px));margin-top:10px}#familySocialOverlay .fs-static-profile,#familySocialOverlay .fs-static-side{position:static}#familySocialOverlay .fs-static-profile{display:grid;grid-template-columns:auto 1fr;column-gap:12px;align-items:center;padding:13px 15px}#familySocialOverlay .fs-static-logo{grid-column:1/-1;font-size:19px}.fs-static-avatar{grid-row:2/4!important;margin:10px 0 0!important;width:48px!important;height:48px!important;border-radius:18px!important;font-size:24px!important}#familySocialOverlay .fs-static-side{display:none}#familySocialOverlay .fs-static-welcome{padding:16px}#familySocialOverlay .fs-static-feed{padding:16px}}
+@media(max-width:560px){#familySocialOverlay .fs-static-top{padding-top:max(10px,env(safe-area-inset-top));padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}#familySocialOverlay .fs-static-wrap{width:calc(100% - 12px);gap:9px}#familySocialOverlay .fs-static-card{border-radius:20px}#familySocialOverlay .fs-static-handwrite{font-size:18px;max-width:265px}#familySocialOverlay .fs-static-compose{min-height:82px;font-size:12px}#familySocialOverlay .fs-static-compose-actions{gap:6px}.fs-static-chip{display:none}.fs-static-publish{padding:9px 12px}.fs-static-loader{min-height:150px}}
