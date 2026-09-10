@@ -1,13 +1,13 @@
-/* Nuvem tools — mantém somente post-its e emojis nos comentários. */
+/* Nuvem tools — mantém somente post-its, emojis nos comentários e selo dos vídeos. */
 (function(){
-  if(window.__NUVEM_TOOLS_ONLY_V1__)return;
-  window.__NUVEM_TOOLS_ONLY_V1__=true;
+  if(window.__NUVEM_TOOLS_ONLY_V2__)return;
+  window.__NUVEM_TOOLS_ONLY_V2__=true;
   const $=id=>document.getElementById(id),q=(s,r=document)=>r?.querySelector?.(s)||null,qa=(s,r=document)=>[...(r?.querySelectorAll?.(s)||[])];
   const EMOJIS=['🩷','🩵','💜','😂','😍','🌸','🥰','✨','👏'];
   const COLORS=['pink','yellow','blue','mint','lilac'],PINS=['pink','yellow','blue','mint','purple'];
   const TYPES={remember:['Lembrar','💡','pink','pink'],important:['Importante','!','yellow','yellow'],schedule:['Agendar','📅','blue','blue'],idea:['Boa ideia','💡','mint','mint'],research:['Pesquisar','🔎','lilac','purple']};
   let lastConv='',activeInput=null,saveTimer=0,scanTimer=0;
-  function ensureCss(){if($('nuvemToolsOnlyCss'))return;const l=document.createElement('link');l.id='nuvemToolsOnlyCss';l.rel='stylesheet';l.href='./nuvem-tools-only-v1.css?v=1';document.head.appendChild(l)}
+  function ensureCss(){if($('nuvemToolsOnlyCss'))return;const l=document.createElement('link');l.id='nuvemToolsOnlyCss';l.rel='stylesheet';l.href='./nuvem-tools-only-v1.css?v=2';document.head.appendChild(l)}
   function esc(v=''){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
   function profile(){return String($('myName')?.textContent||new URLSearchParams(location.search).get('perfil')||'familia').trim().toLowerCase().replace(/\s+/g,'-')}
   function conv(){const a=q('.chat-item.active[data-conv],.chat-item.selected[data-conv],.chat-item[aria-current="true"][data-conv]');return a?.dataset.conv||lastConv||String($('chatTitle')?.textContent||'conversa').trim().toLowerCase().replace(/\s+/g,'-')}
@@ -32,10 +32,11 @@
   function showEmoji(btn,input){const p=ensureEmojiPicker(),r=btn.getBoundingClientRect();activeInput=input;p.classList.add('show');const w=Math.min(p.offsetWidth||400,innerWidth-16),h=p.offsetHeight||56;let left=clamp(r.right-w,8,innerWidth-w-8),top=r.top-h-8;if(top<8)top=r.bottom+8;p.style.left=`${left}px`;p.style.top=`${clamp(top,8,innerHeight-h-8)}px`}
   document.addEventListener('pointerdown',e=>{const p=$('nr10CommentEmojiPicker');if(p?.classList.contains('show')&&!p.contains(e.target)&&!e.target.closest?.('.nr10-comment-emoji'))hideEmoji()},{capture:true,passive:true})
   function commentForm(f){if(f.dataset.nr10Emoji==='1')return;const input=q('input,textarea',f);if(!input)return;f.dataset.nr10Emoji='1';const b=document.createElement('button');b.type='button';b.className='nr10-comment-emoji';b.textContent='😊';b.title='Emojis no comentário';b.onclick=e=>{e.preventDefault();e.stopPropagation();showEmoji(b,input)};const send=qa('button',f).find(x=>x.type==='submit'||(!x.hasAttribute('type')&&!x.classList.contains('nr8-comment-plus')));send?.insertAdjacentElement('beforebegin',b);if(!b.parentNode)f.appendChild(b)}
-  function scan(){ensureCss();importantButton();ensureEmojiPicker();qa('.social-comment-form,.fs-comment-form').forEach(commentForm)}
+  function videoBadges(){qa('#messages video,#friendMessages video').forEach(v=>{const host=v.closest('.bubble,.friend-bubble')||v.parentElement;if(!host||q('.nuvem-no-ads-badge',host))return;const s=document.createElement('span');s.className='nuvem-no-ads-badge';s.textContent='🛡️ Sem anúncios do Isa Chat';s.title='O Isa Chat não insere anúncios nos vídeos enviados nesta conversa.';host.appendChild(s)})}
+  function scan(){ensureCss();importantButton();ensureEmojiPicker();videoBadges();qa('.social-comment-form,.fs-comment-form').forEach(commentForm)}
   function scheduleScan(){clearTimeout(scanTimer);scanTimer=setTimeout(scan,120)}
-  function observe(id){const el=$(id);if(!el||el.dataset.nuvemToolsObserved==='1')return;el.dataset.nuvemToolsObserved='1';new MutationObserver(scheduleScan).observe(el,{childList:true,subtree:true})}
-  function observeKnown(){['socialFeed','fsFeed','chatPanel'].forEach(observe)}
+  function observe(id){const el=$(id);if(!el||el.dataset.nuvemToolsObserved==='2')return;el.dataset.nuvemToolsObserved='2';new MutationObserver(scheduleScan).observe(el,{childList:true,subtree:true})}
+  function observeKnown(){['socialFeed','fsFeed','chatPanel','messages','friendMessages'].forEach(observe)}
   ensureCss();scan();observeKnown();[500,1200,2400].forEach(ms=>setTimeout(()=>{observeKnown();scan()},ms))
   window.__ISA_NUVEM_UI_IDEAS__={scan,openImportantBoard:openBoard}
 })();
