@@ -1,0 +1,43 @@
+name: Smoke external family access v70
+on:
+  push:
+    paths:
+      - '.github/workflows/smoke-external-access-v70.yml'
+permissions:
+  contents: read
+jobs:
+  live-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verificar HTML publicado
+        shell: bash
+        run: |
+          set -euo pipefail
+          stamp="$(date +%s)"
+          curl -fsSL --max-time 20 "https://mediacaopedagogica.github.io/ISA/acesso-mobile.html?smoke=${stamp}" -o /tmp/mobile.html
+          curl -fsSL --max-time 20 "https://mediacaopedagogica.github.io/ISA/acesso.html?smoke=${stamp}" -o /tmp/desktop.html
+          grep -q 'familia-externa.js?v=70-safe-boot' /tmp/mobile.html
+          grep -q 'external-safe-loader-v70.js?v=1' /tmp/mobile.html
+          grep -q 'familia-externa.js?v=70-safe-boot' /tmp/desktop.html
+          grep -q 'external-safe-loader-v70.js?v=1' /tmp/desktop.html
+      - name: Verificar JS publicado
+        shell: bash
+        run: |
+          set -euo pipefail
+          stamp="$(date +%s)"
+          for f in familia-externa.js external-safe-loader-v70.js external-social-entry-v2.js family-social.js; do
+            curl -fsSL --max-time 20 "https://mediacaopedagogica.github.io/ISA/${f}?smoke=${stamp}" -o "/tmp/${f}"
+            node --check "/tmp/${f}"
+          done
+          grep -q 'A Nossa Rede demorou demais' /tmp/family-social.js
+          grep -q '70-single-social' /tmp/external-safe-loader-v70.js
+      - name: Verificar bootstrap do backend
+        shell: bash
+        run: |
+          set -euo pipefail
+          key=$(sed -n "s/.*SUPABASE_KEY: '\([^']*\)'.*/\1/p" config.js | head -1)
+          url='https://srazofmrxzwqcavnhplq.supabase.co/functions/v1/friend-bootstrap'
+          code=$(curl -sS -o /tmp/edge.json -w '%{http_code}' -X POST --max-time 15 "$url" -H "apikey: $key" -H 'Content-Type: application/json' --data '{"token":"smoke-token-invalido"}')
+          test "$code" = '400' || { cat /tmp/edge.json; exit 1; }
