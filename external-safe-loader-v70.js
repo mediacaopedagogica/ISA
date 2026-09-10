@@ -16,29 +16,32 @@ function ensureHostCss(){
   document.head.appendChild(l)
 }
 
+load('./external-access-controls-v1.js?v=1-enter-exit-stable')
 load('./mobile-conversation-scroll-v2.js?v=1-visible-scroll')
 load('./nossa-rede-ui-fixes-sep10.js?v=1-overlay-birthday-cover')
-// Fixadores precisam existir em TODOS os links, antes mesmo da lista terminar de montar.
 load('./nuvem-pin-picker-v2.js?v=6-all-family-links')
+load('./social-theme-live-rescue-v1.js?v=1-direct-live')
+load('./seasonal-theme-engine-v1.js?v=2-calendar-live')
 ensureHostCss()
-load('./external-enter-rescue-v77.js?v=2-enter-final')
+load('./external-enter-rescue-v77.js?v=3-enter-final')
 load('./collaborative-chat-postits-v2.js?v=3-cancel-reopen-fixers')
 load('./collaborative-postit-quick-actions-v1.js?v=2-tap-edit-cancel')
 load('./conversation-important-v2.js?v=5-collab-chat-v2')
-// O recorte precisa estar preparado antes de o WebRTC criar a câmera da chamada.
 load('./video-call-background-v1.js?v=1-upload-optional')
 
 async function start(){
   if(started)return
   started=true
   ensureHostCss()
-  try{window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__?.();window.__ISA_COLLAB_POSTITS__?.scan?.();window.__ISA_NUVEM_PIN_PICKER__?.scan?.()}catch{}
+  try{window.__ISA_EXTERNAL_ACCESS_CONTROLS__?.scan?.();window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__?.();window.__ISA_COLLAB_POSTITS__?.scan?.();window.__ISA_NUVEM_PIN_PICKER__?.scan?.()}catch{}
   await load('./external-ui-controller.js?v=14-profile-parity')
   await load('./external-profile-parity-v1.js?v=2-keise-profile-parity')
   try{await window.__ISA_EXTERNAL_PROFILE_PARITY__?.start?.()}catch(error){console.warn('[Cantinho externo] perfil completo não terminou de carregar',error)}
-  await load('./social-profile-theme-v2.js?v=2-color-only-video-bg-moved')
+  await load('./social-theme-live-rescue-v1.js?v=1-direct-live')
+  await load('./social-profile-theme-v2.js?v=3-live-visible')
   try{await window.__ISA_PROFILE_THEME_V2__?.loadState?.();window.__ISA_PROFILE_THEME_V2__?.scan?.()}catch{}
-  // Chamadas externas usam o mesmo gerenciador do Cantinho. Fundo continua opcional e só aparece em videochamada.
+  await load('./seasonal-theme-engine-v1.js?v=2-calendar-live')
+  try{window.__ISA_SEASONAL_THEME_ENGINE__?.refresh?.()}catch{}
   await load('./video-call-background-v1.js?v=1-upload-optional')
   await load('./call-manager.js?v=20-video-background')
   await load('./message-reaction-delegate-v2.js?v=4-expanded-emotions')
@@ -58,10 +61,11 @@ async function start(){
     window.__ISA_NUVEM_PIN_PICKER__?.scan?.()
     window.__ISA_PROFILE_THEME_V2__?.scan?.()
     window.__ISA_COLLAB_POSTITS__?.scan?.()
+    window.__ISA_SEASONAL_THEME_ENGINE__?.refresh?.()
   }catch{}
   setTimeout(()=>load('./external-decoration-cleanup-v1.js?v=2-portal-only'),100)
   setTimeout(()=>load('./nossa-rede-header-cleanup-v1.js?v=4-all-family-final'),180)
-  setTimeout(()=>load('./external-progressive-loader.js?v=36-video-bg-postit-v2'),320)
+  setTimeout(()=>load('./external-progressive-loader.js?v=37-shell-theme-seasonal'),320)
 }
 
 document.addEventListener('isa:friend-portal-entered',start,{once:true})
