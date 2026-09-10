@@ -1,3 +1,5 @@
+import './video-call-background-v1.js?v=1-upload-optional'
+
 const $=id=>document.getElementById(id)
 
 function toast(text){
