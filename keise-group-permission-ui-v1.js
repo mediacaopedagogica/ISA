@@ -42,7 +42,7 @@ async function patchPermissionDialog(memberId=targetId){
   save.dataset.kgpBound='1';const original=save.onclick
   save.onclick=async e=>{
     const enabled=$('permGroup')?.checked??true
-    try{save.disabled=true;await familyAdmin(targetId,enabled)}catch(err){save.disabled=false;const msg=$('dialogMsg');if(msg)msg.textContent=err?.message||'Não foi possível salvar a permissão de grupos.';else toast(err?.message||'Não foi possível salvar.');return}
+    try{save.disabled=true;await familyAdmin(targetId,enabled);window.__ISA_GROUP_PERMISSION_CHANGED__?.(enabled)}catch(err){save.disabled=false;const msg=$('dialogMsg');if(msg)msg.textContent=err?.message||'Não foi possível salvar a permissão de grupos.';else toast(err?.message||'Não foi possível salvar.');return}
     save.disabled=false
     if(typeof original==='function')return original.call(save,e)
     dlg.close();toast('Permissões atualizadas')
