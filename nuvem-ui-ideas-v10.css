@@ -1,0 +1,167 @@
+/* Nuvem UI Ideas v10 — camada final pedida para chat + Nossa Rede.
+   Mantém o núcleo existente e adiciona profundidade 3D, nuvens, post-its e emojis. */
+:root{
+  --nv-pink:#f253a9;
+  --nv-pink2:#ff94ca;
+  --nv-blue:#54bff4;
+  --nv-lilac:#aa71ef;
+  --nv-purple:#7d53d7;
+  --nv-mint:#79d7bd;
+  --nv-yellow:#ffd76e;
+  --nv-ink:#31316f;
+  --nv-glass:rgba(255,255,255,.94);
+  --nv-shadow:0 16px 34px rgba(84,61,120,.18),0 5px 12px rgba(231,95,169,.09),inset 0 2px 0 rgba(255,255,255,.95);
+}
+
+/* =========================
+   CHAT — REAÇÕES 3D
+   ========================= */
+#miReactionPicker.mi-picker{
+  padding:8px 9px!important;
+  gap:6px!important;
+  border:1px solid rgba(255,255,255,.98)!important;
+  background:linear-gradient(145deg,rgba(255,255,255,.99),rgba(255,242,250,.97) 46%,rgba(240,236,255,.97))!important;
+  box-shadow:0 18px 40px rgba(70,47,92,.27),inset 0 2px 0 #fff!important;
+  border-radius:999px!important;
+  overflow:visible!important;
+}
+#miReactionPicker.mi-picker button{
+  position:relative!important;
+  width:42px!important;height:42px!important;
+  flex:0 0 42px!important;
+  display:grid!important;place-items:center!important;
+  border:1px solid rgba(255,255,255,.98)!important;
+  border-radius:50%!important;
+  background:linear-gradient(145deg,#fff,#f5eefc)!important;
+  box-shadow:0 7px 13px rgba(75,55,103,.14),inset 0 2px 0 #fff!important;
+  font-family:"Apple Color Emoji","Segoe UI Emoji",sans-serif!important;
+  font-size:25px!important;
+  filter:drop-shadow(0 3px 2px rgba(72,45,83,.16)) saturate(1.18)!important;
+  text-shadow:0 2px 1px rgba(255,255,255,.7)!important;
+  transition:transform .14s ease,box-shadow .14s ease!important;
+}
+#miReactionPicker.mi-picker button:hover,#miReactionPicker.mi-picker button:focus-visible{
+  transform:translateY(-3px) scale(1.13)!important;
+  box-shadow:0 12px 20px rgba(82,56,115,.20),inset 0 2px 0 #fff!important;
+}
+.mi-reaction-summary{right:-8px!important;bottom:-12px!important;overflow:visible!important}
+.mi-reaction-badge{
+  min-width:28px!important;min-height:27px!important;padding:3px 7px!important;
+  border:2px solid #fff!important;
+  background:linear-gradient(145deg,#fff,#fff2fa)!important;
+  box-shadow:0 6px 13px rgba(73,50,96,.20),inset 0 1px 0 #fff!important;
+  font-size:16px!important;
+  filter:saturate(1.12)!important;
+}
+
+/* =========================
+   FIXAR CONVERSA — ESCOLHA 3D
+   ========================= */
+.conversation-pin-action{
+  position:absolute!important;right:10px!important;top:50%!important;transform:translateY(-50%)!important;
+  width:32px!important;height:32px!important;display:grid!important;place-items:center!important;
+  border-radius:50%!important;border:1px solid rgba(255,255,255,.92)!important;
+  background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(244,238,253,.92))!important;
+  box-shadow:0 6px 13px rgba(82,60,107,.13),inset 0 2px 0 #fff!important;
+  cursor:pointer!important;z-index:12!important;user-select:none!important;
+}
+.conversation-pin-action .pin-glyph{font-size:22px;line-height:1;font-weight:1000;filter:drop-shadow(0 4px 4px rgba(68,49,90,.18));-webkit-text-stroke:.25px rgba(255,255,255,.8)}
+.conversation-pin-action .pin-blue,.conversation-marker-option .pin-blue{color:#46baf3!important}
+.conversation-pin-action .pin-pink,.conversation-marker-option .pin-pink{color:#ff5faf!important}
+.conversation-pin-action .pin-purple,.conversation-marker-option .pin-purple{color:#975de6!important}
+.conversation-pin-action .pin-flower,.conversation-marker-option .pin-flower{color:#f568b4!important}
+.conversation-pinned{box-shadow:0 10px 25px rgba(143,94,190,.12)!important}
+#conversationMarkerPicker{
+  position:fixed;z-index:2147483000;display:none;width:min(324px,calc(100vw - 22px));padding:12px;
+  grid-template-columns:repeat(4,1fr);gap:9px;border-radius:26px;
+  border:1px solid rgba(255,255,255,.98);background:linear-gradient(145deg,#fffafd,#f6efff 58%,#eef8ff);
+  box-shadow:0 24px 55px rgba(70,48,95,.28),inset 0 2px 0 #fff;backdrop-filter:blur(24px);
+}
+#conversationMarkerPicker.show{display:grid!important}
+#conversationMarkerPicker .conversation-marker-title{grid-column:1/-1;color:var(--nv-ink);font-weight:950;font-size:13px;padding:1px 4px 3px}
+.conversation-marker-option{
+  min-height:68px;border:1px solid rgba(255,255,255,.98);border-radius:19px;background:linear-gradient(145deg,#fff,#f2edfb);
+  box-shadow:0 8px 15px rgba(79,57,108,.12),inset 0 2px 0 #fff;display:grid;place-items:center;gap:2px;cursor:pointer;color:#61547f;font-size:9px;font-weight:900
+}
+.conversation-marker-option .pin-glyph{font-size:30px;line-height:1;filter:drop-shadow(0 5px 5px rgba(76,48,101,.19))}
+.conversation-marker-option.selected{outline:2px solid rgba(242,83,169,.45);background:linear-gradient(145deg,#fff,#ffe8f5)}
+.conversation-marker-option.unpin{grid-column:1/-1;min-height:40px;display:flex;justify-content:center;font-size:11px;color:#9b5276;background:#fff6fa}
+
+/* =========================
+   QUADRO IMPORTANTE + POST-ITS
+   ========================= */
+.nuvem-important-btn{
+  flex:0 0 auto;border:1px solid rgba(255,255,255,.96);border-radius:999px;padding:8px 12px;
+  background:linear-gradient(145deg,#fff9fd,#f3edff);box-shadow:0 7px 15px rgba(83,59,110,.12),inset 0 2px 0 #fff;
+  color:#574d79;font-weight:900;font-size:12px;cursor:pointer;white-space:nowrap
+}
+.nuvem-important-btn:hover{transform:translateY(-1px)}
+.nuvem-board-backdrop{position:fixed;inset:0;z-index:2147482900;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(48,36,65,.24);backdrop-filter:blur(10px)}
+.nuvem-board-backdrop.show{display:flex}
+.nuvem-postit-board{width:min(900px,96vw);max-height:min(780px,94vh);overflow:hidden;border:1px solid #fff;border-radius:34px;background:linear-gradient(145deg,#fffafd,#f6efff 50%,#eef8ff);box-shadow:0 28px 70px rgba(62,42,84,.30),inset 0 2px 0 #fff;color:var(--nv-ink)}
+.nuvem-board-head{display:flex;align-items:center;gap:12px;padding:16px 18px 10px}.nuvem-board-head>div{min-width:0;flex:1}.nuvem-board-head strong{display:block;font-size:19px}.nuvem-board-head small{display:block;color:#7b7094;font-size:11px;margin-top:2px}.nuvem-board-close{width:39px;height:39px;border:0;border-radius:50%;background:#fff;box-shadow:0 6px 14px rgba(77,55,103,.13);cursor:pointer;color:#725c83;font-size:18px}
+.nuvem-postit-tools{display:flex;gap:8px;overflow-x:auto;padding:4px 18px 13px;scrollbar-width:none}.nuvem-postit-tools::-webkit-scrollbar{display:none}.nuvem-postit-tools button{flex:0 0 auto;min-height:38px;border:1px solid #fff;border-radius:999px;padding:8px 13px;background:#fff;box-shadow:0 6px 13px rgba(77,55,105,.10);font-weight:900;font-size:11px;color:#514b78;cursor:pointer}.nuvem-postit-tools button:nth-child(1){background:#ffd7ea}.nuvem-postit-tools button:nth-child(2){background:#ffe899}.nuvem-postit-tools button:nth-child(3){background:#cfeeff}.nuvem-postit-tools button:nth-child(4){background:#cffff0}.nuvem-postit-tools button:nth-child(5){background:#e7d5ff}
+.nuvem-postit-canvas{position:relative;height:min(570px,66vh);min-height:390px;margin:0 14px 14px;border-radius:27px;overflow:hidden;background:radial-gradient(circle at 14% 14%,rgba(255,204,230,.38),transparent 22%),radial-gradient(circle at 88% 12%,rgba(215,199,255,.45),transparent 25%),linear-gradient(145deg,rgba(255,255,255,.82),rgba(244,239,251,.78));border:1px solid rgba(255,255,255,.98);box-shadow:inset 0 3px 12px rgba(78,57,105,.05)}
+.nuvem-postit-empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:#8c81a1;font-size:12px;padding:30px;pointer-events:none}
+.nuvem-postit{position:absolute;width:184px;min-height:150px;padding:27px 14px 14px;border-radius:5px 5px 12px 7px;color:#4d4770;box-shadow:0 17px 25px rgba(65,50,79,.20),inset 0 2px 0 rgba(255,255,255,.55);transform:rotate(var(--note-rot,0deg));touch-action:none;user-select:none}
+.nuvem-postit[data-color="pink"]{background:linear-gradient(145deg,#ffd8ea,#ffbddd)}.nuvem-postit[data-color="yellow"]{background:linear-gradient(145deg,#fff1ad,#ffe17c)}.nuvem-postit[data-color="blue"]{background:linear-gradient(145deg,#d9f1ff,#a9ddff)}.nuvem-postit[data-color="mint"]{background:linear-gradient(145deg,#d8fff2,#a9efda)}.nuvem-postit[data-color="lilac"]{background:linear-gradient(145deg,#eee0ff,#d4b7ff)}
+.nuvem-postit-pin{position:absolute;left:50%;top:-13px;transform:translateX(-50%);width:26px;height:26px;border-radius:50%;cursor:grab;box-shadow:0 7px 8px rgba(68,50,82,.22),inset -4px -5px 7px rgba(84,42,80,.18),inset 4px 4px 6px rgba(255,255,255,.58);border:1px solid rgba(255,255,255,.8)}
+.nuvem-postit-pin:active{cursor:grabbing}.nuvem-postit[data-pin="pink"] .nuvem-postit-pin{background:radial-gradient(circle at 32% 28%,#ffd7ef,#ed4da8 60%,#b82e80)}.nuvem-postit[data-pin="blue"] .nuvem-postit-pin{background:radial-gradient(circle at 32% 28%,#d9f6ff,#42bcec 60%,#2786c2)}.nuvem-postit[data-pin="purple"] .nuvem-postit-pin{background:radial-gradient(circle at 32% 28%,#ecdfff,#9d60e3 60%,#7140b8)}.nuvem-postit[data-pin="yellow"] .nuvem-postit-pin{background:radial-gradient(circle at 32% 28%,#fff7c8,#ffc447 60%,#dc941d)}.nuvem-postit[data-pin="mint"] .nuvem-postit-pin{background:radial-gradient(circle at 32% 28%,#d9fff3,#4fd2ad 60%,#2c9a7e)}
+.nuvem-postit-label{font-family:"Segoe Print","Bradley Hand","Comic Sans MS",cursive;font-size:18px;font-weight:900;text-align:center;margin-bottom:4px;color:#4f4775}.nuvem-postit-text{min-height:73px;outline:none;white-space:pre-wrap;font-size:12px;line-height:1.35;user-select:text;touch-action:auto}.nuvem-postit-remove,.nuvem-postit-color{position:absolute;top:5px;width:23px;height:23px;border:0;border-radius:50%;background:rgba(255,255,255,.60);color:#6e5c80;font-size:11px;cursor:pointer}.nuvem-postit-remove{right:5px}.nuvem-postit-color{left:5px}
+
+/* =========================
+   NOSSA REDE — LETRA + BOTÕES 3D
+   ========================= */
+#socialPanel .social-composer::before,#familySocialOverlay .social-composer::before{
+  content:'compartilhe nossa história...'!important;
+  font-family:"Segoe Print","Bradley Hand","Comic Sans MS",cursive!important;
+  font-size:25px!important;line-height:1.15!important;font-style:italic!important;font-weight:800!important;
+  letter-spacing:.1px!important;color:#ef58a8!important;text-shadow:0 2px 0 #fff,0 5px 10px rgba(230,75,157,.15)!important;
+}
+#socialPanel .social-composer::after,#familySocialOverlay .social-composer::after{content:'Pequenos momentos, grandes histórias 💕'!important;white-space:normal!important;font-family:"Segoe Print","Bradley Hand","Comic Sans MS",cursive!important;color:#b376bf!important;font-size:11px!important;font-style:italic!important;text-align:right!important}
+#socialPanel .isa-compose-chip,#familySocialOverlay .isa-compose-chip{
+  position:relative!important;min-width:92px!important;min-height:64px!important;padding:10px 13px!important;border-radius:22px!important;
+  font-size:12px!important;font-weight:950!important;color:#313471!important;border:1px solid rgba(255,255,255,.98)!important;
+  box-shadow:0 12px 20px rgba(79,59,110,.15),inset 0 3px 0 rgba(255,255,255,.90),inset 0 -4px 9px rgba(96,67,123,.06)!important;
+  transform:translateZ(0);transition:transform .14s ease,box-shadow .14s ease!important
+}
+#socialPanel .isa-compose-chip:hover,#familySocialOverlay .isa-compose-chip:hover{transform:translateY(-3px) scale(1.03)!important;box-shadow:0 16px 24px rgba(79,59,110,.20),inset 0 3px 0 #fff!important}
+#socialPanel .isa-compose-chip[data-compose="video"],#familySocialOverlay .isa-compose-chip[data-compose="video"]{background:linear-gradient(145deg,#fff,#ffd4e9 55%,#ffb2d6)!important;color:#a52c74!important}
+#socialPanel .isa-compose-chip[data-compose="audio"],#familySocialOverlay .isa-compose-chip[data-compose="audio"]{background:linear-gradient(145deg,#fff,#eadbff 55%,#cfafff)!important;color:#6737ac!important}
+#socialPanel .isa-compose-chip[data-compose="sticker"],#familySocialOverlay .isa-compose-chip[data-compose="sticker"]{background:linear-gradient(145deg,#fff,#fff0b9 58%,#ffdc68)!important;color:#855f00!important}
+#socialPanel .isa-compose-chip[data-compose="mark"],#familySocialOverlay .isa-compose-chip[data-compose="mark"]{background:linear-gradient(145deg,#fff,#d7f2ff 58%,#a9dcff)!important;color:#266ca7!important}
+#socialPanel .isa-compose-chip[data-compose="carousel"],#familySocialOverlay .isa-compose-chip[data-compose="carousel"]{background:linear-gradient(145deg,#fff,#ddedff 45%,#d6c8ff)!important;color:#4f55a8!important}
+#socialPanel .isa-compose-chip[data-compose="photo"],#familySocialOverlay .isa-compose-chip[data-compose="photo"]{background:linear-gradient(145deg,#fff,#dffff0 55%,#ade9d1)!important;color:#327d68!important}
+
+/* Status em nuvem de verdade: base + dois gomos */
+#socialPanel .social-now.nuvem-status-cloud,#familySocialOverlay .social-now.nuvem-status-cloud,
+#socialPanel .social-status-card.nuvem-status-cloud,#familySocialOverlay .social-status-card.nuvem-status-cloud{
+  position:relative!important;overflow:visible!important;isolation:isolate!important;border-radius:54px 54px 48px 48px!important;
+  background:linear-gradient(145deg,rgba(255,241,250,.98),rgba(242,232,255,.97) 52%,rgba(218,240,255,.98))!important;
+  border:2px solid rgba(255,255,255,.96)!important;box-shadow:0 17px 30px rgba(99,75,135,.16),inset 0 3px 0 rgba(255,255,255,.92)!important;
+}
+#socialPanel .nuvem-status-cloud::before,#familySocialOverlay .nuvem-status-cloud::before{content:''!important;position:absolute!important;z-index:-1!important;left:13%!important;top:-22px!important;width:70px!important;height:70px!important;border-radius:50%!important;background:linear-gradient(145deg,#fff5fb,#eadfff)!important;box-shadow:0 8px 17px rgba(104,80,139,.09),inset 0 3px 0 #fff!important}
+#socialPanel .nuvem-status-cloud::after,#familySocialOverlay .nuvem-status-cloud::after{content:''!important;position:absolute!important;z-index:-1!important;right:13%!important;top:-28px!important;width:82px!important;height:82px!important;border-radius:50%!important;background:linear-gradient(145deg,#fff7fc,#e3f2ff)!important;box-shadow:0 8px 17px rgba(104,80,139,.09),inset 0 3px 0 #fff!important}
+#socialPanel .social-status-card.nuvem-status-cloud,#familySocialOverlay .social-status-card.nuvem-status-cloud{margin-top:25px!important;padding:18px 17px 13px!important;min-width:145px!important;text-align:center!important}
+
+/* Emojis nos comentários */
+.social-comment-form,.fs-comment-form{grid-template-columns:40px minmax(0,1fr) 40px 42px!important}
+.social-comment-form .nr10-comment-emoji,.fs-comment-form .nr10-comment-emoji{grid-column:3!important;grid-row:1!important;width:40px!important;height:40px!important;border:1px solid #fff!important;border-radius:50%!important;background:linear-gradient(145deg,#fff,#f3eaff)!important;box-shadow:0 7px 14px rgba(79,59,108,.12),inset 0 2px 0 #fff!important;font-size:20px!important;cursor:pointer!important}
+.social-comment-form>button:not(.nr8-comment-plus):not(.nr10-comment-emoji),.fs-comment-form>button:not(.nr8-comment-plus):not(.nr10-comment-emoji){grid-column:4!important}
+#nr10CommentEmojiPicker{position:fixed;z-index:2147483050;display:none;align-items:center;gap:5px;padding:8px;border-radius:999px;background:linear-gradient(145deg,#fff,#fff1f9 45%,#f0ebff);border:1px solid #fff;box-shadow:0 18px 42px rgba(65,46,88,.24),inset 0 2px 0 #fff;overflow-x:auto;max-width:calc(100vw - 16px)}
+#nr10CommentEmojiPicker.show{display:flex}#nr10CommentEmojiPicker button{width:38px;height:38px;flex:0 0 38px;border:1px solid #fff;border-radius:50%;background:linear-gradient(145deg,#fff,#f5eefc);box-shadow:0 7px 13px rgba(78,58,104,.11),inset 0 2px 0 #fff;font-size:21px;cursor:pointer;filter:drop-shadow(0 3px 2px rgba(72,48,89,.12)) saturate(1.13)}
+#nr10CommentEmojiPicker button:hover{transform:translateY(-2px) scale(1.1)}
+
+/* Vídeo enviado no próprio chat: selo sem publicidade inserida pelo Isa Chat. */
+.bubble,.friend-bubble{overflow:visible!important}.nuvem-no-ads-badge{position:absolute;right:8px;top:8px;z-index:25;display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border:1px solid rgba(255,255,255,.95);border-radius:999px;background:rgba(255,255,255,.92);box-shadow:0 7px 16px rgba(52,71,90,.18),inset 0 1px 0 #fff;color:#38746b;font-size:9px;font-weight:950;backdrop-filter:blur(12px);pointer-events:none}
+
+@media(max-width:760px){
+  #miReactionPicker.mi-picker button{width:39px!important;height:39px!important;flex-basis:39px!important;font-size:23px!important}
+  .nuvem-important-btn{padding:7px 9px;font-size:0}.nuvem-important-btn::after{content:'📌';font-size:17px}
+  .nuvem-board-backdrop{padding:8px}.nuvem-postit-board{width:100%;max-height:96vh;border-radius:27px}.nuvem-postit-canvas{height:62vh;min-height:390px;margin:0 8px 8px}.nuvem-postit{width:142px;min-height:126px;padding:24px 11px 10px}.nuvem-postit-label{font-size:15px}.nuvem-postit-text{min-height:58px;font-size:11px}.nuvem-postit-tools{padding-left:12px;padding-right:12px}
+  #socialPanel .social-composer::before,#familySocialOverlay .social-composer::before{font-size:21px!important;max-width:72%!important}
+  #socialPanel .social-composer::after,#familySocialOverlay .social-composer::after{display:none!important}
+  #socialPanel .isa-compose-tools,#familySocialOverlay .isa-compose-tools{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important}
+  #socialPanel .isa-compose-chip,#familySocialOverlay .isa-compose-chip{min-width:0!important;min-height:60px!important;padding:8px!important}
+  .social-comment-form,.fs-comment-form{grid-template-columns:38px minmax(0,1fr) 38px 40px!important;gap:5px!important}.social-comment-form .nr10-comment-emoji,.fs-comment-form .nr10-comment-emoji{width:38px!important;height:38px!important}
+}
