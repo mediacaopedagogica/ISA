@@ -44,7 +44,7 @@ later(625,'./nossa-rede-birthday-bridge-v1.js?v=1-live-birthdays',()=>window.__I
 later(640,'./family-social-extras-v1.js?v=2-live-social-extras',()=>window.__ISA_FAMILY_SOCIAL_EXTRAS__?.scan?.(true))
 later(650,'./sticker-bg-remover.js?v=2-stable-interactions',()=>window.__ISA_ENSURE_STICKER_BG_REMOVER__?.())
 later(680,'./interaction-recovery-v2.js?v=1-chat-date',()=>window.__ISA_INTERACTION_RECOVERY__?.scan?.())
-later(700,'./conversation-important-v2.js?v=2-share-move-live',()=>window.__ISA_IMPORTANT_BOARD__?.render?.())
+later(700,'./conversation-important-v2.js?v=3-fixadores-todos',()=>window.__ISA_IMPORTANT_BOARD__?.render?.())
 later(720,'./approved-conversation-stability-v1.js?v=1-no-shake',()=>window.__ISA_STABILIZE_APPROVED_CONVERSATIONS__?.())
 if(!approvedDashboardAtBoot)later(760,'./social-nav-guard.js?v=9-stable-interactions',()=>{window.__ISA_ENSURE_SOCIAL_NAV__?.();window.__ISA_ENSURE_PROFILE_MENU__?.();window.__ISA_PERSONAL_NAV_SYNC__?.()})
 later(840,'./nossa-rede-v4.js?v=6-stable-open',()=>{window.__ISA_ENHANCE_NOSSA_REDE__?.();window.__ISA_SOCIAL_PRIVACY__?.apply?.();window.__ISA_FAMILY_SOCIAL_EXTRAS__?.scan?.(true);window.__ISA_NOSSA_REDE_BIRTHDAYS__?.refresh?.();if(!approvedDashboardAtBoot)window.__ISA_PERSONAL_NAV_SYNC__?.()})
