@@ -17,7 +17,7 @@ function start(){
   later(520,'./familia-emoji-completo.js?v=9-controls')
 
   // Mesmo perfil completo do link principal, também como fallback do carregador inicial.
-  later(650,'./external-profile-parity-v1.js?v=1-keise-profile-parity',()=>window.__ISA_EXTERNAL_PROFILE_PARITY__?.start?.())
+  later(650,'./external-profile-parity-v1.js?v=2-keise-profile-parity',()=>window.__ISA_EXTERNAL_PROFILE_PARITY__?.start?.())
   later(720,'./social-profile-pages-v1.js?v=2-all-family-profile-parity',()=>window.__ISA_SOCIAL_PROFILE_PAGES__?.decorate?.())
   later(790,'./social-profile-directory-v1.js?v=2-all-family-profile-parity',()=>window.__ISA_SOCIAL_PROFILE_DIRECTORY__?.patch?.())
   later(860,'./social-reaction-names-v1.js?v=2-all-family-profile-parity',()=>window.__ISA_ENHANCE_REACTION_NAMES__?.())
