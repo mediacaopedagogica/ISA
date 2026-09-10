@@ -73,7 +73,7 @@
   </main>
   <div id="friendToast" class="friend-toast hidden"></div>
 
-  <script type="module" src="./familia-externa.js?v=67-audit-family"></script>
+  <script src="./familia-externa-v2.js?v=1-bootstrap-fix"></script>
   <script type="module" src="./external-social-entry-v1.js?v=15-audit-final"></script>
   <script type="module" src="./external-decoration-cleanup-v1.js?v=1-pastel-clean"></script>
   <script type="module" src="./nossa-rede-header-cleanup-v1.js?v=1-pastel-decor"></script>
@@ -83,15 +83,15 @@
   <script type="module" src="./external-progressive-loader.js?v=21-birthday-social-fix"></script>
   <script>
     setTimeout(()=>{
-      const state=window.__ISA_FRIEND_BOOTSTRAP_STATE__
-      if(state==='ready'||state==='error'||state==='invalid')return
-      const title=document.getElementById('friendGateTitle')
-      const text=document.getElementById('friendGateText')
-      const btn=document.getElementById('friendEnterBtn')
-      if(title)title.textContent='Reconectando seu acesso…'
-      if(text)text.textContent='A conexão está demorando mais que o normal.'
-      if(btn){btn.textContent='Tentar novamente';btn.classList.remove('hidden');btn.disabled=false;btn.onclick=()=>location.reload()}
-    },14000)
+      const state=window.__ISA_FRIEND_BOOTSTRAP_STATE__;
+      if(state==='ready'||state==='error'||state==='invalid')return;
+      const title=document.getElementById('friendGateTitle');
+      const text=document.getElementById('friendGateText');
+      const btn=document.getElementById('friendEnterBtn');
+      if(title)title.textContent='A conexão ainda não respondeu';
+      if(text)text.textContent='Toque abaixo para tentar novamente.';
+      if(btn){btn.textContent='Tentar novamente';btn.classList.remove('hidden');btn.disabled=false;btn.onclick=()=>window.__ISA_FRIEND_BOOTSTRAP__?.()||location.reload()}
+    },9000)
   </script>
 </body>
 </html>
