@@ -73,7 +73,7 @@
   </main>
   <div id="friendToast" class="friend-toast hidden"></div>
 
-  <script type="module" src="./familia-externa.js?v=68-external-bootstrap-restore"></script>
+  <script type="module" src="./familia-externa.js?v=69-edge-bootstrap-root-fix"></script>
   <script type="module" src="./external-social-entry-v1.js?v=15-audit-final"></script>
   <script type="module" src="./external-decoration-cleanup-v1.js?v=1-pastel-clean"></script>
   <script type="module" src="./nossa-rede-header-cleanup-v1.js?v=1-pastel-decor"></script>
@@ -90,7 +90,12 @@
       const btn=document.getElementById('friendEnterBtn');
       if(title)title.textContent='A conexão ainda não respondeu';
       if(text)text.textContent='Toque abaixo para tentar novamente.';
-      if(btn){btn.textContent='Tentar novamente';btn.classList.remove('hidden');btn.disabled=false;btn.onclick=()=>location.reload()}
+      if(btn){
+        btn.textContent='Tentar novamente';
+        btn.classList.remove('hidden');
+        btn.disabled=false;
+        btn.onclick=()=>window.__ISA_FRIEND_BOOTSTRAP__?.();
+      }
     },12000)
   </script>
 </body>
