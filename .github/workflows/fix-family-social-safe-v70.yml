@@ -1,0 +1,91 @@
+name: Fix external family social safe v70
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-family-social-safe-v70.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch family social network handling
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p=Path('family-social.js')
+          s=p.read_text()
+          s=s.replace("import { CONFIG } from './config.js'","import { CONFIG } from './config.js?v=20260910-safe-social'",1)
+
+          api_new=r'''async function api(action,payload={}){
+            if(!accessReady())throw new Error('Este link pessoal não está autorizado.')
+            const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),9000)
+            try{
+              const r=await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/friend-social`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({token,action,...payload}),cache:'no-store',signal:controller.signal})
+              let data={};try{data=await r.json()}catch{}
+              if(!r.ok)throw new Error(data?.error||'Não foi possível abrir a Nossa Rede.')
+              return data
+            }catch(e){
+              if(e?.name==='AbortError')throw new Error('A Nossa Rede demorou demais para responder. Tente novamente.')
+              throw e
+            }finally{clearTimeout(timer)}
+          }'''
+          s,n=re.subn(r"async function api\(action,payload=\{\}\)\{.*?\n\}",api_new,s,count=1,flags=re.S)
+          if n!=1: raise SystemExit(f'api patch failed: {n}')
+
+          upload_new=r'''async function upload(postId,file){
+            if(!accessReady())throw new Error('Este link pessoal não está autorizado.')
+            const form=new FormData();form.append('token',token);form.append('action','upload_media');form.append('postId',postId);form.append('file',file)
+            const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),30000)
+            try{
+              const r=await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/friend-social`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY},body:form,cache:'no-store',signal:controller.signal})
+              let data={};try{data=await r.json()}catch{}
+              if(!r.ok)throw new Error(data?.error||'Não foi possível enviar a mídia.')
+              return data
+            }catch(e){
+              if(e?.name==='AbortError')throw new Error('O envio demorou demais. Tente novamente.')
+              throw e
+            }finally{clearTimeout(timer)}
+          }'''
+          s,n=re.subn(r"async function upload\(postId,file\)\{.*?\n\}",upload_new,s,count=1,flags=re.S)
+          if n!=1: raise SystemExit(f'upload patch failed: {n}')
+
+          open_new="""async function open(){
+            if(!accessReady())return toast('Este link pessoal ainda não foi validado.')
+            build()
+            const o=$('familySocialOverlay');o.classList.remove('hidden');document.documentElement.style.overflow='hidden'
+            $('friendChatsTab')?.classList.remove('active');$('friendSocialBtn')?.classList.add('active')
+            const loading=$('fsLoading'),shell=$('fsShell')
+            loading.textContent='Carregando a Nossa Rede…';loading.classList.remove('hidden');shell.classList.add('hidden')
+            try{
+              await refresh()
+              loading.classList.add('hidden');shell.classList.remove('hidden')
+            }catch(e){
+              loading.innerHTML='<strong>Não foi possível abrir a Nossa Rede agora.</strong><br><button id=\"fsRetryLoad\" type=\"button\" style=\"margin-top:14px;border:0;border-radius:14px;padding:10px 14px;background:#eadfff;color:#5f4d70;font-weight:900\">Tentar novamente</button>'
+              $('fsRetryLoad')?.addEventListener('click',()=>open(),{once:true})
+              toast(e?.message||'Não foi possível abrir a Nossa Rede.')
+            }
+          }"""
+          s,n=re.subn(r"^async function open\(\)\{.*\}$",open_new,s,count=1,flags=re.M)
+          if n!=1: raise SystemExit(f'open patch failed: {n}')
+
+          p.write_text(s)
+          PY
+          node --check family-social.js
+          grep -q "A Nossa Rede demorou demais" family-social.js
+          if grep -Fq 'Authorization:`Bearer ${CONFIG.SUPABASE_KEY}`' family-social.js; then
+            echo 'Bearer publishable ainda presente em family-social.js' >&2
+            exit 1
+          fi
+      - name: Commit patch
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add family-social.js
+          git commit -m 'fix: make external Nossa Rede fail-safe and non-blocking' || exit 0
+          git push
