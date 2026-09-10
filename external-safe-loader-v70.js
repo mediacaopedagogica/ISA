@@ -34,12 +34,15 @@ async function start(){
   await load('./external-profile-parity-v1.js?v=2-keise-profile-parity')
   try{await window.__ISA_EXTERNAL_PROFILE_PARITY__?.start?.()}catch(error){console.warn('[Cantinho externo] perfil completo não terminou de carregar',error)}
 
-  await load('./message-reaction-delegate-v2.js?v=4-portal-only')
+  // Mesmas reações do Isa Chat no chat e na Nossa Rede.
+  await load('./message-reaction-delegate-v2.js?v=4-expanded-emotions')
+  await load('./isa-social-emoji-suite-v1.js?v=1-full-isa-chat-emojis')
+  try{window.__ISA_SOCIAL_EMOJI_SUITE__?.scan?.();window.__ISA_REACTION_DELEGATE_REFRESH__?.()}catch{}
 
   // Aparência e recursos complementares entram depois, sem substituir a Nossa Rede atual.
   setTimeout(()=>load('./external-decoration-cleanup-v1.js?v=2-portal-only'),100)
   setTimeout(()=>load('./nossa-rede-header-cleanup-v1.js?v=4-all-family-final'),180)
-  setTimeout(()=>load('./external-progressive-loader.js?v=27-profile-parity'),320)
+  setTimeout(()=>load('./external-progressive-loader.js?v=28-emoji-suite'),320)
 }
 
 document.addEventListener('isa:friend-portal-entered',start,{once:true})
