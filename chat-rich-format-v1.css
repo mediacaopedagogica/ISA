@@ -1,4 +1,4 @@
-/* Cantinho da Isa — balões por participante + formatação rica */
+/* Cantinho da Isa — balões por participante + formatação contextual por seleção */
 .message-row,.friend-msg{display:flex!important;position:relative!important;width:100%}
 .message-row.mine,.friend-msg.mine{justify-content:flex-end!important}
 .message-row:not(.mine),.friend-msg:not(.mine){justify-content:flex-start!important}
@@ -9,33 +9,29 @@
 .mi-important-message .bubble,.mi-important-message .friend-bubble{border:2px solid #e35d72!important;box-shadow:0 8px 22px rgba(207,72,94,.16)!important}
 .mi-important-flag{display:inline-flex;align-items:center;width:max-content;max-width:100%;margin:0 0 6px;padding:4px 8px;border-radius:999px;background:#ffe4e8;color:#b93049;font-size:10px;font-weight:950;letter-spacing:.05em}
 
-/* Formatação compacta. No chat externo fica fechada e abre pelo + > Aa Formatar texto. */
-.composer.mi-has-format,.friend-composer.mi-has-format{overflow:visible!important}
-.mi-format-toolbar{order:-10;flex:0 0 100%;width:100%;min-width:0;margin:0 0 7px;box-sizing:border-box;position:relative;z-index:210}
-.mi-format-scroll{display:flex;align-items:center;gap:6px;width:100%;overflow-x:auto!important;overflow-y:hidden!important;padding:6px 7px;box-sizing:border-box;border:1px solid rgba(255,255,255,.94);border-radius:15px;background:rgba(255,250,253,.98);box-shadow:0 10px 28px rgba(81,61,95,.12);scrollbar-width:none;white-space:nowrap}
-.mi-format-scroll::-webkit-scrollbar{display:none}
-.mi-fmt-btn,.mi-fmt-select-wrap,.mi-color-wrap{flex:0 0 auto;height:34px;min-height:34px;box-sizing:border-box;border:1px solid rgba(225,211,235,.9);border-radius:11px;background:linear-gradient(145deg,#fffafd,#f3ecfa);box-shadow:0 3px 8px rgba(81,61,95,.07);color:#66506f;font-size:12px;font-weight:850}
-.mi-fmt-btn{min-width:34px;padding:5px 9px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;line-height:1}.mi-fmt-btn:hover,.mi-fmt-btn.active{background:#eee4fb;transform:translateY(-1px)}
-.mi-fmt-btn strong,.mi-fmt-btn em,.mi-fmt-btn u{font-size:14px}
-.mi-important-btn{color:#ad3850;background:linear-gradient(145deg,#fff6f8,#ffeaf0);padding-inline:10px}.mi-important-btn.active{background:#ffd8df;color:#961f37;outline:2px solid rgba(213,65,91,.18)}
+/* A barra não ocupa espaço no chat. Ela aparece somente quando há texto selecionado. */
+.composer.mi-has-format,.friend-composer.mi-has-format{position:relative!important;overflow:visible!important}
+.mi-format-toolbar{display:none!important;position:absolute!important;left:50%!important;bottom:calc(100% + 8px)!important;transform:translateX(-50%)!important;width:max-content!important;max-width:min(720px,calc(100vw - 22px))!important;margin:0!important;z-index:500!important;pointer-events:none!important}
+.mi-format-toolbar.mi-selection-active{display:block!important;pointer-events:auto!important}
+.mi-format-scroll{display:flex;align-items:center;justify-content:center;align-content:center;flex-wrap:wrap;gap:5px;width:max-content;max-width:100%;padding:6px 7px;box-sizing:border-box;border:1px solid rgba(255,255,255,.96);border-radius:16px;background:rgba(255,250,253,.96);box-shadow:0 16px 36px rgba(81,61,95,.18),inset 0 1px 0 rgba(255,255,255,.96);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.mi-format-scroll:after{content:"";position:absolute;left:50%;bottom:-7px;width:14px;height:14px;background:rgba(255,250,253,.96);border-right:1px solid rgba(255,255,255,.96);border-bottom:1px solid rgba(255,255,255,.96);transform:translateX(-50%) rotate(45deg);border-radius:2px}
+.mi-fmt-btn,.mi-fmt-select-wrap,.mi-color-wrap{position:relative;z-index:1;flex:0 0 auto;height:32px;min-height:32px;box-sizing:border-box;border:1px solid rgba(225,211,235,.88);border-radius:10px;background:linear-gradient(145deg,#fffafd,#f3ecfa);box-shadow:0 3px 8px rgba(81,61,95,.07);color:#66506f;font-size:11px;font-weight:850}
+.mi-fmt-btn{min-width:32px;padding:4px 8px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;line-height:1}.mi-fmt-btn:hover,.mi-fmt-btn.active{background:#eee4fb;transform:translateY(-1px)}
+.mi-fmt-btn strong,.mi-fmt-btn em,.mi-fmt-btn u{font-size:13px}
+.mi-important-btn{color:#ad3850;background:linear-gradient(145deg,#fff6f8,#ffeaf0);padding-inline:9px}.mi-important-btn.active{background:#ffd8df;color:#961f37;outline:2px solid rgba(213,65,91,.18)}
 .mi-highlight-btn{background:linear-gradient(145deg,#fffced,#fff5c8)}
-.mi-fmt-select-wrap,.mi-color-wrap{display:flex;align-items:center;gap:5px;padding:3px 7px}
-.mi-fmt-select-wrap>span{font-size:13px;font-weight:950}.mi-fmt-select-wrap select{width:auto;min-width:98px;max-width:122px;border:0;background:transparent;padding:3px 1px;box-shadow:none;font-size:12px;color:#66506f;outline:0}
-.mi-color-wrap>span{font-size:12px;white-space:nowrap}.mi-color-wrap input[type=color]{width:24px;height:24px;border:0;border-radius:8px;padding:0;background:transparent;cursor:pointer}
-
-/* O portal familiar não deixa B/I/U soltos ocupando a tela. */
-.friend-composer.mi-has-format .mi-format-toolbar{display:none!important;position:absolute!important;left:8px!important;right:8px!important;bottom:calc(100% + 8px)!important;width:auto!important;margin:0!important;z-index:450!important}
-.friend-composer.mi-has-format.mi-format-open .mi-format-toolbar{display:block!important}
-.friend-composer.mi-has-format.mi-format-open .mi-format-scroll{max-width:100%!important;border-radius:18px!important;padding:8px!important;background:#fffafd!important}
+.mi-fmt-select-wrap,.mi-color-wrap{display:flex;align-items:center;gap:4px;padding:2px 6px}
+.mi-fmt-select-wrap>span{font-size:12px;font-weight:950}.mi-fmt-select-wrap select{width:auto;min-width:72px;max-width:92px;border:0;background:transparent;padding:2px 0;box-shadow:none;font-size:10px;color:#66506f;outline:0}
+.mi-color-wrap>span{font-size:11px;white-space:nowrap}.mi-color-wrap input[type=color]{width:22px;height:22px;border:0;border-radius:7px;padding:0;background:transparent;cursor:pointer}
 
 @media(max-width:760px){
   .message-row .bubble,.friend-msg .friend-bubble{max-width:84%!important}
-  .mi-format-scroll{gap:5px;padding:6px;border-radius:13px}
-  .mi-fmt-btn,.mi-fmt-select-wrap,.mi-color-wrap{height:36px;min-height:36px;font-size:11px;border-radius:11px}
-  .mi-fmt-btn{min-width:36px;padding:4px 8px}
-  .mi-fmt-btn strong,.mi-fmt-btn em,.mi-fmt-btn u{font-size:14px}
-  .mi-fmt-select-wrap{padding:2px 7px}.mi-fmt-select-wrap select{min-width:84px;max-width:100px;font-size:11px}
-  .mi-color-wrap{padding:2px 6px}.mi-color-wrap>span{display:none}.mi-color-wrap input[type=color]{width:25px;height:25px}
-  .mi-highlight-btn{padding-inline:8px}.mi-important-btn{padding-inline:9px}
-  .friend-composer.mi-format-open .mi-format-toolbar{position:fixed!important;left:8px!important;right:8px!important;bottom:calc(66px + env(safe-area-inset-bottom))!important;width:auto!important}
+  .mi-format-toolbar{position:fixed!important;left:8px!important;right:8px!important;bottom:calc(72px + env(safe-area-inset-bottom))!important;transform:none!important;width:auto!important;max-width:none!important}
+  .mi-format-scroll{width:100%!important;max-width:100%!important;gap:5px;padding:7px;border-radius:17px;justify-content:flex-start}
+  .mi-format-scroll:after{display:none}
+  .mi-fmt-btn,.mi-fmt-select-wrap,.mi-color-wrap{height:34px;min-height:34px;font-size:10px;border-radius:10px}
+  .mi-fmt-btn{min-width:34px;padding:4px 7px}.mi-fmt-btn strong,.mi-fmt-btn em,.mi-fmt-btn u{font-size:13px}
+  .mi-fmt-select-wrap{padding:2px 6px}.mi-fmt-select-wrap select{min-width:68px;max-width:82px;font-size:10px}
+  .mi-color-wrap{padding:2px 5px}.mi-color-wrap>span{display:none}.mi-color-wrap input[type=color]{width:23px;height:23px}
+  .mi-important-btn{padding-inline:8px}
 }
