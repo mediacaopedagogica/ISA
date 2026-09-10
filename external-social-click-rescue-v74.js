@@ -1,10 +1,15 @@
-// Nossa Rede — controlador prioritário dos acessos externos.
-// O acesso externo usa a MESMA estrutura-base da Nossa Rede original do index.html/social-network.js.
+// Nossa Rede — controlador único dos acessos externos.
+// Todos os links familiares usam a MESMA estrutura final aprovada, sem piscar a versão-base antiga.
 (function(){
   'use strict'
+  if(window.__ISA_EXTERNAL_SOCIAL_ALL_LINKS_V76__)return
+  window.__ISA_EXTERNAL_SOCIAL_ALL_LINKS_V76__=true
+
   const $=id=>document.getElementById(id)
   let hydratePromise=null
   let hydrating=false
+  let opening=false
+  let lastTouchOpen=0
   const EMOJIS=['💜','💕','✨','🥰','😂','😍','🌷','🫶','🔥','🎶','📚','☀️','🌙','🏡','🎉','💫']
 
   function ensureCss(){
@@ -19,6 +24,15 @@
       ['externalNossaRedeCompactCurrent','./nuvem-compose-compact-v1.css?v=5-pink-simple']
     ]
     for(const [id,href] of styles){if($(id))continue;const l=document.createElement('link');l.id=id;l.rel='stylesheet';l.href=href;document.head.appendChild(l)}
+    if(!$('externalSocialFinalGate76')){
+      const s=document.createElement('style');s.id='externalSocialFinalGate76';s.textContent=`
+        #familySocialOverlay.external-social-preparing>.social-shell{visibility:hidden!important;opacity:0!important;pointer-events:none!important}
+        #familySocialOverlay .external-social-wait76{display:none}
+        #familySocialOverlay.external-social-preparing>.external-social-wait76{display:grid!important;position:fixed;inset:0;z-index:2147480000;place-items:center;padding:20px;background:radial-gradient(circle at 10% 10%,rgba(255,221,239,.92),transparent 30%),radial-gradient(circle at 90% 12%,rgba(230,219,255,.92),transparent 30%),linear-gradient(145deg,#fffafd,#faf6ff 52%,#eff8ff)}
+        .external-social-wait76-card{width:min(390px,90vw);padding:24px 22px;text-align:center;border-radius:30px;background:rgba(255,255,255,.86);border:1px solid rgba(255,255,255,.98);box-shadow:0 22px 52px rgba(94,71,122,.14);backdrop-filter:blur(22px);color:#5f5272}
+        .external-social-wait76-card b{display:block;font-size:18px;margin-top:7px}.external-social-wait76-card small{display:block;margin-top:5px;color:#8f8298}.external-social-wait76-heart{font-size:40px}.external-social-wait76-spin{width:28px;height:28px;margin:15px auto 0;border:4px solid #eadff3;border-top-color:#ef79b8;border-radius:50%;animation:externalSocialSpin76 .75s linear infinite}@keyframes externalSocialSpin76{to{transform:rotate(360deg)}}
+      `;document.head.appendChild(s)
+    }
   }
 
   function currentMarkup(){
@@ -56,21 +70,38 @@
     ensureCss();const o=overlay();if(!o)return false
     const legacy=!!o.querySelector('.fs-top,.fs-static-head,.fs-static-overlay')
     const incomplete=!$('fsCaption')||!o.querySelector('.social-shell')||!o.querySelector('.social-topbar')
-    if(legacy||incomplete){o.innerHTML=currentMarkup();o.className='social-panel hidden';o.setAttribute('aria-hidden','true');o.dataset.currentSocial='original'}
+    if(legacy||incomplete){o.innerHTML=currentMarkup();o.className='social-panel hidden';o.setAttribute('aria-hidden','true');o.dataset.currentSocial='final-approved'}
     return true
   }
 
+  function ensureWait(){
+    const o=overlay();if(!o)return null
+    let w=o.querySelector(':scope > .external-social-wait76')
+    if(!w){w=document.createElement('div');w.className='external-social-wait76';w.innerHTML='<div class="external-social-wait76-card"><div class="external-social-wait76-heart">💗</div><b>Abrindo a Nossa Rede</b><small>Preparando o visual atual e os momentos da família…</small><div class="external-social-wait76-spin"></div></div>';o.prepend(w)}
+    return w
+  }
+  function preparing(on){const o=overlay();if(!o)return;o.classList.toggle('external-social-preparing',!!on);if(on)ensureWait();else o.querySelector(':scope > .external-social-wait76')?.remove()}
   function show(){if(!ensureCurrentScreen())return false;const o=overlay();o.classList.remove('hidden');o.setAttribute('aria-hidden','false');document.documentElement.style.overflow='hidden';document.body?.classList.add('nossa-rede-open');$('friendChatsTab')?.classList.remove('active');$('friendSocialBtn')?.classList.add('active');return true}
-  function close(){const o=overlay();if(!o)return false;o.classList.add('hidden');o.setAttribute('aria-hidden','true');document.documentElement.style.overflow='';document.body?.classList.remove('nossa-rede-open');$('friendSocialBtn')?.classList.remove('active');$('friendChatsTab')?.classList.add('active');return true}
+  function close(){const o=overlay();if(!o)return false;preparing(false);o.classList.add('hidden');o.setAttribute('aria-hidden','true');document.documentElement.style.overflow='';document.body?.classList.remove('nossa-rede-open');$('friendSocialBtn')?.classList.remove('active');$('friendChatsTab')?.classList.add('active');return true}
   function showDataError(message){const e=$('fsError');if(!e)return;e.innerHTML=`${String(message||'Não foi possível atualizar as publicações agora.')} <button id="fsRetry" type="button">Tentar atualizar</button>`;e.classList.remove('hidden');$('fsRetry')?.addEventListener('click',ev=>{ev.preventDefault();hydrate(true)},{once:true})}
 
   async function ensureVisualCurrent(){
-    await import('./nossa-rede-v4.js?v=11-match-original').catch(()=>null)
-    await import('./nossa-rede-policy-v5-loader.js?v=11-match-original').catch(()=>null)
-    await import('./nuvem-compose-compact-v1.js?v=9-match-original').catch(()=>null)
-    await import('./nossa-rede-header-cleanup-v1.js?v=3-match-original').catch(()=>null)
-    await import('./nuvem-carousel-v1.js?v=5-match-original').catch(()=>null)
-    window.__ISA_ENHANCE_NOSSA_REDE__?.();window.__ISA_NOSSA_REDE_V5__?.patch?.();window.__ISA_NUVEM_COMPACT_COMPOSER__?.scan?.();window.__ISA_NOSSA_REDE_HEADER_CLEANUP__?.();window.__ISA_NUVEM_CAROUSEL__?.scan?.()
+    await Promise.allSettled([
+      import('./nossa-rede-v4.js?v=12-all-family-final'),
+      import('./nossa-rede-policy-v5-loader.js?v=12-all-family-final'),
+      import('./nuvem-compose-compact-v1.js?v=10-all-family-final'),
+      import('./nossa-rede-header-cleanup-v1.js?v=4-all-family-final'),
+      import('./nuvem-carousel-v1.js?v=6-all-family-final'),
+      import('./nossa-rede-comment-menu-v1.js?v=4-all-family-final')
+    ])
+    window.__ISA_ENHANCE_NOSSA_REDE__?.();window.__ISA_NOSSA_REDE_V5__?.patch?.();window.__ISA_NUVEM_COMPACT_COMPOSER__?.scan?.();window.__ISA_NOSSA_REDE_HEADER_CLEANUP__?.();window.__ISA_NUVEM_CAROUSEL__?.scan?.();window.__ISA_COMMENT_MEDIA_MENU__?.scan?.()
+  }
+
+  async function ensureDataCore(){
+    if(typeof window.__ISA_OPEN_EXTERNAL_SOCIAL_V72__==='function')return window.__ISA_OPEN_EXTERNAL_SOCIAL_V72__
+    if(!hydratePromise)hydratePromise=import('./external-family-social-v72.js?v=8-all-family-final').catch(error=>{hydratePromise=null;throw error})
+    await hydratePromise
+    return window.__ISA_OPEN_EXTERNAL_SOCIAL_V72__
   }
 
   async function hydrate(force){
@@ -79,26 +110,49 @@
     hydrating=true
     try{
       await ensureVisualCurrent()
-      if(typeof window.__ISA_OPEN_EXTERNAL_SOCIAL_V72__!=='function'){
-        if(!hydratePromise)hydratePromise=import('./external-family-social-v72.js?v=7-match-original').catch(error=>{hydratePromise=null;throw error})
-        await hydratePromise
-      }
-      const open=window.__ISA_OPEN_EXTERNAL_SOCIAL_V72__;if(typeof open!=='function')throw new Error('A Nossa Rede não terminou de iniciar.')
+      const open=await ensureDataCore();if(typeof open!=='function')throw new Error('A Nossa Rede não terminou de iniciar.')
       const ok=await open();await ensureVisualCurrent();return ok!==false
-    }catch(error){console.warn('[Nossa Rede] dados não atualizaram; tela mantida',error);show();showDataError(error?.message);return false}
-    finally{hydrating=false;$('friendSocialBtn')?.classList.remove('is-loading')}
+    }catch(error){console.warn('[Nossa Rede] dados não atualizaram; tela mantida',error);showDataError(error?.message);return false}
+    finally{hydating=false}
   }
 
-  function open(){if(!show())return false;$('friendSocialBtn')?.classList.add('is-loading');setTimeout(()=>hydrate(false),0);return true}
-  function capture(e){const b=e.target?.closest?.('#friendSocialBtn');if(!b)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();open()}
-  function captureClose(e){const b=e.target?.closest?.('#fsClose,#fsCloseStatic');if(!b)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();close()}
-  document.addEventListener('click',capture,true);document.addEventListener('click',captureClose,true)
+  async function open(){
+    if(opening)return true
+    if(!show())return false
+    opening=true;preparing(true);$('friendSocialBtn')?.classList.add('is-loading')
+    try{
+      if(window.__ISA_FRIEND_ACCESS_VALID__!==true){
+        await ensureVisualCurrent().catch(()=>null)
+        return false
+      }
+      await ensureVisualCurrent()
+      await hydrate(false)
+      return true
+    }catch(error){console.warn('[Nossa Rede] abertura protegida',error);showDataError(error?.message);return false}
+    finally{preparing(false);opening=false;$('friendSocialBtn')?.classList.remove('is-loading')}
+  }
+
+  function stop(e){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation()}
+  function capturePointer(e){const b=e.target?.closest?.('#friendSocialBtn');if(!b||e.pointerType!=='touch')return;lastTouchOpen=Date.now();stop(e);open()}
+  function captureClick(e){const b=e.target?.closest?.('#friendSocialBtn');if(!b)return;stop(e);if(Date.now()-lastTouchOpen<650)return;open()}
+  function captureClose(e){const b=e.target?.closest?.('#fsClose,#fsCloseStatic');if(!b)return;stop(e);close()}
+  document.addEventListener('pointerup',capturePointer,true)
+  document.addEventListener('click',captureClick,true)
+  document.addEventListener('click',captureClose,true)
   document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&document.activeElement?.id==='friendSocialBtn'){e.preventDefault();open()}if(e.key==='Escape'&&!overlay()?.classList.contains('hidden'))close()},true)
 
   function bind(){const b=$('friendSocialBtn');if(!b)return false;b.disabled=false;b.removeAttribute('disabled');b.removeAttribute('aria-disabled');b.classList.remove('hidden','is-locked');b.style.setProperty('pointer-events','auto','important');b.style.setProperty('touch-action','manipulation','important');b.style.setProperty('position','relative','important');b.style.setProperty('z-index','999','important');return true}
-  window.__ISA_OPEN_EXTERNAL_SOCIAL_DIRECT__=open;window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__=bind;window.__ISA_CLOSE_EXTERNAL_SOCIAL_DIRECT__=close;window.__ISA_CLOSE_FAMILY_SOCIAL__=close;window.__ISA_HYDRATE_EXTERNAL_SOCIAL__=hydrate
-  ensureCurrentScreen();bind()
-  document.addEventListener('isa:friend-access-valid',()=>{bind();if(!overlay()?.classList.contains('hidden'))hydrate(true)})
-  document.addEventListener('isa:friend-portal-entered',()=>{bind();setTimeout(bind,60)})
-  new MutationObserver(bind).observe(document.documentElement,{subtree:true,childList:true})
+  function preload(){ensureCurrentScreen();bind();if(window.__ISA_FRIEND_ACCESS_VALID__===true){ensureVisualCurrent().catch(()=>null);ensureDataCore().catch(()=>null)}}
+
+  window.__ISA_OPEN_EXTERNAL_SOCIAL_DIRECT__=open
+  window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__=bind
+  window.__ISA_CLOSE_EXTERNAL_SOCIAL_DIRECT__=close
+  window.__ISA_CLOSE_FAMILY_SOCIAL__=close
+  window.__ISA_HYDRATE_EXTERNAL_SOCIAL__=hydrate
+  window.__ISA_PRELOAD_EXTERNAL_SOCIAL__=preload
+
+  preload()
+  document.addEventListener('isa:friend-access-valid',()=>{preload();if(!overlay()?.classList.contains('hidden'))open()})
+  document.addEventListener('isa:friend-portal-entered',()=>{preload();setTimeout(bind,60)})
+  new MutationObserver(()=>bind()).observe(document.documentElement,{subtree:true,childList:true})
 })();
