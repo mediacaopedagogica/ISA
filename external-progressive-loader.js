@@ -11,12 +11,13 @@ function start(){
   later(60,'./external-social-entry-v1.js?v=6-on-demand',()=>window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__?.())
   later(150,'./external-chat-tools.js?v=6-light-entry')
   later(260,'./message-interactions-v1.js?v=4-bubble-edge',()=>window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.())
-  later(360,'./chat-rich-format-v1.js?v=3-compact-menu',()=>window.__ISA_REFRESH_RICH_CHAT__?.())
+  later(360,'./chat-rich-format-v1.js?v=4-selection-popover',()=>window.__ISA_REFRESH_RICH_CHAT__?.())
   later(430,'./chat-rich-format-guard-v2.js?v=2-no-empty-tags',()=>window.__ISA_CLEAN_EMPTY_CHAT_FORMATS__?.())
   later(520,'./familia-emoji-completo.js?v=9-controls')
 
   // Recursos secundários entram depois que a tela já pintou.
   later(1100,'./profile-status-stickers.js?v=13-click-fix',()=>window.__ISA_ENSURE_EXTERNAL_MENU__?.())
+  later(1230,'./profile-birthday-v1.js?v=1-required',()=>window.__ISA_PROFILE_BIRTHDAY__?.inject?.())
   later(1450,'./social-tag-notifications.js?v=2-live-tags',()=>window.__ISA_SOCIAL_TAG_NOTIFICATIONS__?.poll?.())
   later(1800,'./link-preview.js?v=13-controls')
 
