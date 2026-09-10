@@ -1,24 +1,20 @@
-/* Paleta 3D pedida para reações, sem observer global nem refresh recursivo. */
+/* Paleta visual de reações do Isa Chat — mesma família de emojis da Nossa Rede. */
 (function(){
-  if(window.__NUVEM_REACTIONS_V2__)return;
-  window.__NUVEM_REACTIONS_V2__=true;
-  const palette=['🩷','🩵','💜','😂','😍','🌸','✨'];
+  if(window.__NUVEM_REACTIONS_V3__)return;
+  window.__NUVEM_REACTIONS_V3__=true;
+  const palette=['🩷','🩵','💜','❤️','😂','😍','🌸','🥰','✨','👏','👍','😢','🙏','😡','🤩','😭','🤔','🥳','😱','😮'];
   function apply(){
     const picker=document.getElementById('miReactionPicker');
     if(!picker)return false;
-    const buttons=[...picker.querySelectorAll('button[data-mi-react]')];
-    if(!buttons.length)return false;
-    buttons.forEach((b,i)=>{
-      const emoji=palette[i]||palette[0];
-      if(b.dataset.miReact!==emoji)b.dataset.miReact=emoji;
-      if(b.textContent!==emoji)b.textContent=emoji;
-      b.title=`Reagir com ${emoji}`;
-      b.setAttribute('aria-label',`Reagir com ${emoji}`);
-    });
+    if(picker.dataset.nuvemFullPalette!=='1'){
+      picker.dataset.nuvemFullPalette='1';
+      picker.innerHTML=palette.map(e=>`<button type="button" data-mi-react="${e}" title="Reagir com ${e}" aria-label="Reagir com ${e}">${e}</button>`).join('');
+      picker.querySelectorAll('[data-mi-react]').forEach(b=>b.addEventListener('click',()=>{}, {passive:true}));
+    }
     return true;
   }
   apply();
   [120,350,800,1600,2800].forEach(ms=>setTimeout(apply,ms));
   document.addEventListener('isa:chat-opened',apply,{passive:true});
-  window.__ISA_NUVEM_REACTIONS__={apply};
+  window.__ISA_NUVEM_REACTIONS__={apply,palette};
 })();
