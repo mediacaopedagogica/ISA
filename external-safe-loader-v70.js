@@ -36,16 +36,18 @@ async function start(){
   await load('./family-social-extras-v1.js?v=2-live-social-extras')
   await load('./nossa-rede-birthday-bridge-v1.js?v=1-live-birthdays')
   await load('./nuvem-carousel-v1.js?v=7-edit-delete-api')
-  await load('./nossa-rede-media-workflow-v4.js?v=1-rich-editor-runtime')
+  await load('./nossa-rede-media-workflow-v4.js?v=2-rich-editor-stable')
+  await load('./nossa-rede-editor-make-addon-v1.js?v=1-makeup-tools')
   try{
     window.__ISA_FAMILY_SOCIAL_EXTRAS__?.scan?.(true)
     window.__ISA_NOSSA_REDE_BIRTHDAYS__?.refresh?.()
     window.__ISA_NUVEM_CAROUSEL__?.scan?.()
     window.__ISA_NOSSA_REDE_MEDIA_WORKFLOW__?.scan?.()
+    window.__ISA_PATCH_MEDIA_MAKE__?.()
   }catch{}
   setTimeout(()=>load('./external-decoration-cleanup-v1.js?v=2-portal-only'),100)
   setTimeout(()=>load('./nossa-rede-header-cleanup-v1.js?v=4-all-family-final'),180)
-  setTimeout(()=>load('./external-progressive-loader.js?v=32-media-v4'),320)
+  setTimeout(()=>load('./external-progressive-loader.js?v=33-media-makeup'),320)
 }
 
 document.addEventListener('isa:friend-portal-entered',start,{once:true})
