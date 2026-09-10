@@ -113,7 +113,7 @@
       const open=await ensureDataCore();if(typeof open!=='function')throw new Error('A Nossa Rede não terminou de iniciar.')
       const ok=await open();await ensureVisualCurrent();return ok!==false
     }catch(error){console.warn('[Nossa Rede] dados não atualizaram; tela mantida',error);showDataError(error?.message);return false}
-    finally{hydating=false}
+    finally{hydrating=false}
   }
 
   async function open(){
