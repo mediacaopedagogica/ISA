@@ -1,5 +1,6 @@
 /* Cantinho da Isa — 1 clique copiar/baixar; 2 cliques reagir em mensagem recebida */
 .message-row,.friend-msg{position:relative!important}
+.bubble,.friend-bubble{position:relative!important}
 .mi-received-clickable{cursor:pointer;touch-action:manipulation}
 .mi-image-action{cursor:pointer}
 /* Ferramentas laterais antigas aposentadas: a própria mensagem é o controle. */
