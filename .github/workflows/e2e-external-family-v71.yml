@@ -8,7 +8,7 @@ permissions:
 jobs:
   browser-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 6
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -19,57 +19,51 @@ jobs:
           npm init -y >/dev/null 2>&1
           npm install playwright@1.55.0 --silent
           npx playwright install --with-deps chromium
-      - name: Test real external family flow in Chromium
+      - name: Test all external family flows in parallel
         shell: bash
         run: |
           cat > ./e2e-external.mjs <<'JS'
           import { chromium } from 'playwright';
           const people=['vania','paloma','davi','evalda','elion','silvane'];
           const browser=await chromium.launch({headless:true});
-          let failures=0;
-          for(const person of people){
+          async function test(person){
             const page=await browser.newPage({viewport:{width:390,height:844}});
+            page.setDefaultTimeout(12000);
             const logs=[];
             page.on('console',m=>{if(['error','warning'].includes(m.type()))logs.push(`${m.type()}: ${m.text()}`)});
             page.on('pageerror',e=>logs.push(`pageerror: ${e.message}`));
             page.on('requestfailed',r=>logs.push(`requestfailed: ${r.url()} :: ${r.failure()?.errorText||''}`));
             const file=person==='elion'?'acesso.html':'acesso-mobile.html';
-            const url=`https://mediacaopedagogica.github.io/ISA/${file}?e2e=${Date.now()}#acesso=${person}`;
-            console.log(`\n=== ${person.toUpperCase()} ===`);
+            const url=`https://mediacaopedagogica.github.io/ISA/${file}?e2e=v71-${Date.now()}-${person}#acesso=${person}`;
             try{
-              const resp=await page.goto(url,{waitUntil:'domcontentloaded',timeout:30000});
-              console.log('HTTP',resp?.status());
-              await page.waitForTimeout(1500);
-              console.log('gate@1.5s',await page.locator('#friendGateTitle').textContent().catch(()=>null),'state',await page.evaluate(()=>window.__ISA_FRIEND_BOOTSTRAP_STATE__||null));
-              await page.waitForSelector('#friendEnterBtn:not(.hidden)',{timeout:14000});
-              console.log('gate ready',await page.locator('#friendGateTitle').textContent(),'state',await page.evaluate(()=>window.__ISA_FRIEND_BOOTSTRAP_STATE__||null));
-              await page.locator('#friendEnterBtn').click();
-              await page.waitForSelector('#friendChat:not(.hidden)',{timeout:8000});
-              console.log('portal entered',await page.evaluate(()=>({entered:window.__ISA_FRIEND_PORTAL_ENTERED__===true,name:window.__ISA_FRIEND_PERSON__?.name||null})));
-              await page.waitForTimeout(1200);
-              await page.locator('#friendSocialBtn').click();
-              await page.waitForSelector('#familySocialOverlay:not(.hidden)',{timeout:8000});
-              await page.waitForTimeout(1000);
+              const resp=await page.goto(url,{waitUntil:'domcontentloaded',timeout:16000});
+              const http=resp?.status();
+              await page.waitForSelector('#friendEnterBtn:not(.hidden)',{timeout:12000});
+              const gate=await page.evaluate(()=>({title:document.getElementById('friendGateTitle')?.textContent||'',boot:window.__ISA_FRIEND_BOOTSTRAP_STATE__||null,valid:window.__ISA_FRIEND_ACCESS_VALID__===true,name:window.__ISA_FRIEND_PERSON__?.name||null}));
+              if(!gate.valid||gate.boot!=='ready')throw new Error(`gate not ready: ${JSON.stringify(gate)}`);
+              await page.evaluate(()=>document.getElementById('friendEnterBtn')?.click());
+              await page.waitForSelector('#friendChat:not(.hidden)',{timeout:7000});
+              await page.waitForFunction(()=>window.__ISA_FRIEND_PORTAL_ENTERED__===true,{timeout:7000});
+              await page.waitForFunction(()=>typeof window.__ISA_OPEN_EXTERNAL_SOCIAL_DIRECT__==='function',{timeout:7000});
+              await page.evaluate(()=>document.getElementById('friendSocialBtn')?.click());
+              await page.waitForSelector('#familySocialOverlay:not(.hidden)',{timeout:7000});
+              await page.waitForFunction(()=>{
+                const l=document.getElementById('fsLoading'),s=document.getElementById('fsShell');
+                return !!l&&!!s&&(l.classList.contains('hidden')||String(l.textContent||'').includes('Não foi possível'));
+              },{timeout:12000});
               const social=await page.evaluate(()=>({loading:document.getElementById('fsLoading')?.textContent||'',loadingHidden:document.getElementById('fsLoading')?.classList.contains('hidden'),shellHidden:document.getElementById('fsShell')?.classList.contains('hidden')}));
-              console.log('social',social);
-              if(!social.loadingHidden && social.shellHidden){
-                await page.waitForTimeout(9500);
-                const social2=await page.evaluate(()=>({loading:document.getElementById('fsLoading')?.textContent||'',loadingHidden:document.getElementById('fsLoading')?.classList.contains('hidden'),shellHidden:document.getElementById('fsShell')?.classList.contains('hidden')}));
-                console.log('social@10.5s',social2);
-                if(!social2.loadingHidden || social2.shellHidden)throw new Error('Nossa Rede não terminou de abrir');
-              }
-              console.log('PASS',person);
-            }catch(e){
-              failures++;
-              console.log('FAIL',person,e.message);
-              console.log('state',await page.evaluate(()=>({title:document.getElementById('friendGateTitle')?.textContent||null,text:document.getElementById('friendGateText')?.textContent||null,error:document.getElementById('friendGateError')?.textContent||null,boot:window.__ISA_FRIEND_BOOTSTRAP_STATE__||null,valid:window.__ISA_FRIEND_ACCESS_VALID__??null,entered:window.__ISA_FRIEND_PORTAL_ENTERED__??null,social:document.getElementById('fsLoading')?.textContent||null})).catch(()=>null));
+              if(!social.loadingHidden||social.shellHidden)throw new Error(`social not open: ${JSON.stringify(social)}`);
+              return {person,ok:true,http,gate,social,logs};
+            }catch(error){
+              const state=await page.evaluate(()=>({title:document.getElementById('friendGateTitle')?.textContent||null,text:document.getElementById('friendGateText')?.textContent||null,error:document.getElementById('friendGateError')?.textContent||null,boot:window.__ISA_FRIEND_BOOTSTRAP_STATE__||null,valid:window.__ISA_FRIEND_ACCESS_VALID__??null,entered:window.__ISA_FRIEND_PORTAL_ENTERED__??null,social:document.getElementById('fsLoading')?.textContent||null,href:location.href})).catch(()=>null);
               await page.screenshot({path:`/tmp/${person}.png`,fullPage:true}).catch(()=>{});
-            }
-            if(logs.length)console.log('browser logs\n'+logs.slice(-30).join('\n'));
-            await page.close();
+              return {person,ok:false,error:error.message,state,logs};
+            }finally{await page.close()}
           }
+          const results=await Promise.all(people.map(test));
+          for(const r of results)console.log(JSON.stringify(r,null,2));
           await browser.close();
-          if(failures)process.exit(1);
+          if(results.some(r=>!r.ok))process.exit(1);
           JS
           node ./e2e-external.mjs
       - name: Upload failure screenshots
