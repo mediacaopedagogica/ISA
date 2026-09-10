@@ -1,0 +1,16 @@
+/* Toque único no post-it do chat: abre Editar/Responder ou Cancelar/Reabrir. */
+(function(){
+  if(window.__ISA_COLLAB_POSTIT_QUICK_V1__)return;window.__ISA_COLLAB_POSTIT_QUICK_V1__=true
+  const q=(s,r=document)=>r?.querySelector?.(s)||null
+  let activeCard=null
+  function css(){if(document.getElementById('isaPostitQuickCss'))return;const s=document.createElement('style');s.id='isaPostitQuickCss';s.textContent=`
+  #isaPostitQuickMenu{position:fixed;z-index:2147483200;display:none;min-width:190px;padding:8px;border:1px solid rgba(255,255,255,.96);border-radius:18px;background:linear-gradient(145deg,#fffafd,#f4efff);box-shadow:0 18px 42px rgba(63,45,82,.25);backdrop-filter:blur(18px)}#isaPostitQuickMenu.show{display:grid;gap:6px}#isaPostitQuickMenu button{border:0;border-radius:12px;padding:10px 12px;text-align:left;background:#fff;color:#66516f;font-size:11px;font-weight:900;cursor:pointer}#isaPostitQuickMenu button:hover{background:#f3eafb}#isaPostitQuickMenu .cancel{background:#fff0f3;color:#98546a}#isaPostitQuickMenu .reopen{background:#edf7eb;color:#4e7350}.isa-collab-postit{cursor:pointer}.isa-collab-postit.dragging{cursor:grabbing}
+  `;document.head.appendChild(s)}
+  function payload(card){const row=card?.closest?.('.message-row,.friend-msg');if(!row)return null;try{if(row.dataset.isaPostitPayload)return JSON.parse(decodeURIComponent(row.dataset.isaPostitPayload))}catch{}return null}
+  function menu(){let m=document.getElementById('isaPostitQuickMenu');if(m)return m;m=document.createElement('div');m.id='isaPostitQuickMenu';m.innerHTML='<button type="button" data-postit-quick="edit">✏️ Editar / responder</button><button type="button" class="cancel" data-postit-quick="toggle">✖ Cancelar post-it</button>';document.body.appendChild(m);m.addEventListener('click',e=>{const b=e.target.closest('[data-postit-quick]');if(!b||!activeCard)return;const p=payload(activeCard);hide();if(!p)return;if(b.dataset.postitQuick==='edit')window.__ISA_COLLAB_POSTITS__?.openEditor?.(p);else window.__ISA_COLLAB_POSTITS__?.toggleCancelled?.(p)});return m}
+  function hide(){document.getElementById('isaPostitQuickMenu')?.classList.remove('show');activeCard=null}
+  function open(card){const p=payload(card);if(!p)return;const m=menu(),toggle=q('[data-postit-quick="toggle"]',m),cancelled=p.status==='cancelled';toggle.textContent=cancelled?'↩ Reabrir post-it':'✖ Cancelar post-it';toggle.classList.toggle('reopen',cancelled);toggle.classList.toggle('cancel',!cancelled);activeCard=card;m.classList.add('show');const r=card.getBoundingClientRect(),w=m.offsetWidth||210,h=m.offsetHeight||96;let x=Math.min(innerWidth-w-10,Math.max(10,r.left+r.width/2-w/2)),y=r.bottom+8;if(y+h>innerHeight-10)y=Math.max(10,r.top-h-8);m.style.left=`${x}px`;m.style.top=`${y}px`}
+  document.addEventListener('click',e=>{const card=e.target.closest?.('.isa-collab-postit');if(!card){if(!e.target.closest?.('#isaPostitQuickMenu'))hide();return}if(e.target.closest('button,input,textarea,select,label,[data-collab-drag]'))return;e.preventDefault();e.stopPropagation();open(card)},true)
+  document.addEventListener('pointerdown',e=>{if(!e.target.closest?.('.isa-collab-postit,#isaPostitQuickMenu'))hide()},{capture:true,passive:true})
+  css();menu();window.__ISA_COLLAB_POSTIT_QUICK__={open,hide}
+})();
