@@ -1,8 +1,36 @@
 /* Nossa Rede — reorganiza somente o compositor, preservando a lógica de publicação existente. */
 (function(){
-  if(window.__NUVEM_COMPOSE_COMPACT_V1__)return;
-  window.__NUVEM_COMPOSE_COMPACT_V1__=true;
   const q=(s,r=document)=>r?.querySelector?.(s)||null,qa=(s,r=document)=>[...(r?.querySelectorAll?.(s)||[])];
+
+  // Esta parte roda mesmo se uma versão antiga deste módulo já tiver sido carregada.
+  // Assim o título novo não é bloqueado pelo guard de cache/módulo anterior.
+  function forceTitlePatch(){
+    if(!document.getElementById('nuvemShareTitleInlineCss')){
+      const s=document.createElement('style');s.id='nuvemShareTitleInlineCss';s.textContent=`
+        #socialPanel .social-composer::before,#familySocialOverlay .social-composer::before{content:none!important;display:none!important}
+        #socialPanel .nuvem-share-title,#familySocialOverlay .nuvem-share-title{
+          display:block!important;width:fit-content!important;max-width:330px!important;margin:0 0 12px 2px!important;padding:0!important;
+          font-family:"Segoe Print","Bradley Hand","Comic Sans MS",cursive!important;font-size:22px!important;line-height:1.12!important;
+          font-style:italic!important;font-weight:800!important;letter-spacing:.1px!important;color:#ef58a8!important;
+          text-shadow:0 1px 0 rgba(255,255,255,.98),0 4px 10px rgba(239,88,168,.15)!important;
+          transform:rotate(-1deg)!important;text-align:left!important
+        }
+        @media(max-width:760px){#socialPanel .nuvem-share-title,#familySocialOverlay .nuvem-share-title{font-size:18px!important;max-width:250px!important;line-height:1.16!important}}
+      `;document.head.appendChild(s)
+    }
+    qa('#socialPanel .social-composer,#familySocialOverlay .social-composer').forEach(comp=>{
+      let t=q(':scope > .nuvem-share-title',comp);
+      if(!t){t=document.createElement('div');t.className='nuvem-share-title';const ta=q('textarea',comp);comp.insertBefore(t,ta||comp.firstChild)}
+      t.textContent='Compartilhe bons momentos e recordações 💕'
+    })
+  }
+  forceTitlePatch();
+  if(window.__NUVEM_COMPOSE_COMPACT_V1__){
+    let t=0;const o=new MutationObserver(()=>{clearTimeout(t);t=setTimeout(forceTitlePatch,80)});o.observe(document.documentElement,{childList:true,subtree:true});
+    [250,700,1400,2600].forEach(ms=>setTimeout(forceTitlePatch,ms));
+    return;
+  }
+  window.__NUVEM_COMPOSE_COMPACT_V1__=true;
 
   function css(){
     let l=document.getElementById('nuvemComposeCompactCss');
@@ -10,26 +38,7 @@
     l.href='./nuvem-compose-compact-v1.css?v=4-real-title';
     if(document.head.lastElementChild!==l)document.head.appendChild(l)
   }
-  function titleCss(){
-    if(document.getElementById('nuvemShareTitleInlineCss'))return;
-    const s=document.createElement('style');s.id='nuvemShareTitleInlineCss';s.textContent=`
-      #socialPanel .social-composer::before,#familySocialOverlay .social-composer::before{content:none!important;display:none!important}
-      #socialPanel .nuvem-share-title,#familySocialOverlay .nuvem-share-title{
-        display:block!important;width:fit-content!important;max-width:330px!important;margin:0 0 12px 2px!important;padding:0!important;
-        font-family:"Segoe Print","Bradley Hand","Comic Sans MS",cursive!important;font-size:22px!important;line-height:1.12!important;
-        font-style:italic!important;font-weight:800!important;letter-spacing:.1px!important;color:#ef58a8!important;
-        text-shadow:0 1px 0 rgba(255,255,255,.98),0 4px 10px rgba(239,88,168,.15)!important;
-        transform:rotate(-1deg)!important;text-align:left!important
-      }
-      @media(max-width:760px){#socialPanel .nuvem-share-title,#familySocialOverlay .nuvem-share-title{font-size:18px!important;max-width:250px!important;line-height:1.16!important}}
-    `;document.head.appendChild(s)
-  }
-  function ensureTitle(comp){
-    if(!comp)return null;titleCss();
-    let t=q(':scope > .nuvem-share-title',comp);
-    if(!t){t=document.createElement('div');t.className='nuvem-share-title';const ta=q('textarea',comp);comp.insertBefore(t,ta||comp.firstChild)}
-    t.textContent='Compartilhe bons momentos e recordações 💕';return t
-  }
+  function ensureTitle(comp){forceTitlePatch();return q(':scope > .nuvem-share-title',comp)}
   function ids(root){return root?.id==='familySocialOverlay'?{media:'fsMedia',location:'fsLocation',publish:'fsPublish'}:{media:'socialMediaInput',location:'socialLocation',publish:'socialPublish'}}
   function closeMenus(except=null){qa('.nuvem-compose-menu.show').forEach(m=>{if(m!==except){m.classList.remove('show');const p=m.closest('.nuvem-compose-compact')?.querySelector('.nuvem-compose-plus');p?.setAttribute('aria-expanded','false')}})}
   function clickMark(comp){const b=q('[data-compose="mark"]',comp)||q('.nr5-tag-add',comp);if(b){b.click();return true}return false}
@@ -62,7 +71,7 @@
     emoji.onclick=e=>{e.preventDefault();e.stopPropagation();emojiRow?.classList.toggle('show');if(emojiRow?.classList.contains('show'))emojiRow.scrollIntoView({behavior:'smooth',block:'nearest'})};
     return true;
   }
-  function scan(){css();titleCss();['socialPanel','familySocialOverlay'].forEach(id=>{const root=document.getElementById(id);if(root)decorate(root)})}
+  function scan(){css();forceTitlePatch();['socialPanel','familySocialOverlay'].forEach(id=>{const root=document.getElementById(id);if(root)decorate(root)})}
   document.addEventListener('pointerdown',e=>{if(!e.target.closest?.('.nuvem-compose-compact'))closeMenus()},true);
   const obs=new MutationObserver(()=>{clearTimeout(obs._t);obs._t=setTimeout(scan,80)});obs.observe(document.documentElement,{childList:true,subtree:true});
   scan();[250,700,1400,2600].forEach(ms=>setTimeout(scan,ms));
