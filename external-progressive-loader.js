@@ -6,7 +6,7 @@ function start(){
   if(started)return;started=true
   const name=String(window.__ISA_FRIEND_PERSON__?.name||document.getElementById('friendName')?.textContent||'').trim().toLowerCase()
   later(20,'./external-menu.js?v=5-simplified',()=>window.__ISA_ENSURE_EXTERNAL_MENU__?.())
-  later(35,'./external-social-entry-v1.js?v=1-direct',()=>window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__?.())
+  later(35,'./external-social-entry-v1.js?v=2-capture',()=>window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__?.())
   later(70,'./social-privacy-guard.js?v=1-family-rules',()=>window.__ISA_SOCIAL_PRIVACY__?.apply?.())
   later(100,'./family-settings.js?v=11-click-fix')
   // Núcleo social externo carregado ANTES das camadas visuais: evita botão Nossa Rede sem destino.
