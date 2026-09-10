@@ -16,10 +16,7 @@ function ensureHostCss(){
   document.head.appendChild(l)
 }
 
-// A rolagem das conversas precisa existir antes mesmo de abrir a Nossa Rede.
 load('./mobile-conversation-scroll-v2.js?v=1-visible-scroll')
-
-// Estes recursos precisam existir ANTES do usuário tocar em Acessar/Nossa Rede.
 ensureHostCss()
 load('./external-enter-rescue-v77.js?v=2-enter-final')
 load('./collaborative-chat-postits-v2.js?v=2-cancel-reopen-fixers')
@@ -28,41 +25,29 @@ load('./conversation-important-v2.js?v=4-collab-chat')
 async function start(){
   if(started)return
   started=true
-
   ensureHostCss()
   try{window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__?.();window.__ISA_COLLAB_POSTITS__?.scan?.()}catch{}
-
-  // Navegação base.
   await load('./external-ui-controller.js?v=14-profile-parity')
-
-  // Perfil completo igual ao do link principal: Perfil + Curiosidades + Galeria + foto social independente.
   await load('./external-profile-parity-v1.js?v=2-keise-profile-parity')
   try{await window.__ISA_EXTERNAL_PROFILE_PARITY__?.start?.()}catch(error){console.warn('[Cantinho externo] perfil completo não terminou de carregar',error)}
-
-  // Mesmas reações do Isa Chat no chat e na Nossa Rede.
   await load('./message-reaction-delegate-v2.js?v=4-expanded-emotions')
   await load('./isa-social-emoji-suite-v1.js?v=1-full-isa-chat-emojis')
   try{window.__ISA_SOCIAL_EMOJI_SUITE__?.scan?.();window.__ISA_REACTION_DELEGATE_REFRESH__?.()}catch{}
-
-  // Extras reais da Nossa Rede: stories 24h, capa própria, localização/mapa e aniversários.
   await load('./family-social-extras-v1.js?v=2-live-social-extras')
   await load('./nossa-rede-birthday-bridge-v1.js?v=1-live-birthdays')
   await load('./nuvem-carousel-v1.js?v=7-edit-delete-api')
-  await load('./nossa-rede-media-workflow-v3.js?v=1-rich-editor')
+  await load('./nossa-rede-media-workflow-v4.js?v=1-rich-editor-runtime')
   try{
     window.__ISA_FAMILY_SOCIAL_EXTRAS__?.scan?.(true)
     window.__ISA_NOSSA_REDE_BIRTHDAYS__?.refresh?.()
     window.__ISA_NUVEM_CAROUSEL__?.scan?.()
     window.__ISA_NOSSA_REDE_MEDIA_WORKFLOW__?.scan?.()
   }catch{}
-
-  // Aparência e recursos complementares entram depois, sem substituir a Nossa Rede atual.
   setTimeout(()=>load('./external-decoration-cleanup-v1.js?v=2-portal-only'),100)
   setTimeout(()=>load('./nossa-rede-header-cleanup-v1.js?v=4-all-family-final'),180)
-  setTimeout(()=>load('./external-progressive-loader.js?v=31-media-editor-scroll'),320)
+  setTimeout(()=>load('./external-progressive-loader.js?v=32-media-v4'),320)
 }
 
 document.addEventListener('isa:friend-portal-entered',start,{once:true})
 if(window.__ISA_FRIEND_PORTAL_ENTERED__===true)start()
-
 window.__ISA_START_EXTERNAL_EXTRAS__=start
