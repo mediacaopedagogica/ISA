@@ -2,6 +2,7 @@
 (function(){
   const q=(s,r=document)=>r?.querySelector?.(s)||null,qa=(s,r=document)=>[...(r?.querySelectorAll?.(s)||[])];
   const TITLE='Compartilhe bons momentos e recordações 💕';
+  import('./message-reaction-delegate-v2.js?v=2-all-messages').then(()=>window.__ISA_REACTION_DELEGATE_REFRESH__?.()).catch(()=>null);
 
   function forceTitlePatch(){
     if(!document.getElementById('nuvemShareTitleInlineCss')){
