@@ -3,23 +3,49 @@
   if(window.__NUVEM_COMPOSE_COMPACT_V1__)return;
   window.__NUVEM_COMPOSE_COMPACT_V1__=true;
   const q=(s,r=document)=>r?.querySelector?.(s)||null,qa=(s,r=document)=>[...(r?.querySelectorAll?.(s)||[])];
-  function css(){let l=document.getElementById('nuvemComposeCompactCss');if(!l){l=document.createElement('link');l.id='nuvemComposeCompactCss';l.rel='stylesheet';l.href='./nuvem-compose-compact-v1.css?v=3-momentos';document.head.appendChild(l);return}l.href='./nuvem-compose-compact-v1.css?v=3-momentos';if(document.head.lastElementChild!==l)document.head.appendChild(l)}
+
+  function css(){
+    let l=document.getElementById('nuvemComposeCompactCss');
+    if(!l){l=document.createElement('link');l.id='nuvemComposeCompactCss';l.rel='stylesheet';document.head.appendChild(l)}
+    l.href='./nuvem-compose-compact-v1.css?v=4-real-title';
+    if(document.head.lastElementChild!==l)document.head.appendChild(l)
+  }
+  function titleCss(){
+    if(document.getElementById('nuvemShareTitleInlineCss'))return;
+    const s=document.createElement('style');s.id='nuvemShareTitleInlineCss';s.textContent=`
+      #socialPanel .social-composer::before,#familySocialOverlay .social-composer::before{content:none!important;display:none!important}
+      #socialPanel .nuvem-share-title,#familySocialOverlay .nuvem-share-title{
+        display:block!important;width:fit-content!important;max-width:330px!important;margin:0 0 12px 2px!important;padding:0!important;
+        font-family:"Segoe Print","Bradley Hand","Comic Sans MS",cursive!important;font-size:22px!important;line-height:1.12!important;
+        font-style:italic!important;font-weight:800!important;letter-spacing:.1px!important;color:#ef58a8!important;
+        text-shadow:0 1px 0 rgba(255,255,255,.98),0 4px 10px rgba(239,88,168,.15)!important;
+        transform:rotate(-1deg)!important;text-align:left!important
+      }
+      @media(max-width:760px){#socialPanel .nuvem-share-title,#familySocialOverlay .nuvem-share-title{font-size:18px!important;max-width:250px!important;line-height:1.16!important}}
+    `;document.head.appendChild(s)
+  }
+  function ensureTitle(comp){
+    if(!comp)return null;titleCss();
+    let t=q(':scope > .nuvem-share-title',comp);
+    if(!t){t=document.createElement('div');t.className='nuvem-share-title';const ta=q('textarea',comp);comp.insertBefore(t,ta||comp.firstChild)}
+    t.textContent='Compartilhe bons momentos e recordações 💕';return t
+  }
   function ids(root){return root?.id==='familySocialOverlay'?{media:'fsMedia',location:'fsLocation',publish:'fsPublish'}:{media:'socialMediaInput',location:'socialLocation',publish:'socialPublish'}}
   function closeMenus(except=null){qa('.nuvem-compose-menu.show').forEach(m=>{if(m!==except){m.classList.remove('show');const p=m.closest('.nuvem-compose-compact')?.querySelector('.nuvem-compose-plus');p?.setAttribute('aria-expanded','false')}})}
   function clickMark(comp){const b=q('[data-compose="mark"]',comp)||q('.nr5-tag-add',comp);if(b){b.click();return true}return false}
   function syncSelected(comp,wrap){const tags=q('.nr5-selected-tags',comp);if(tags&&tags.parentElement!==wrap)wrap.appendChild(tags);const has=!!tags&&!!q('.nr5-selected-tag',tags);wrap.classList.toggle('has-tags',has)}
   function decorate(root){
-    const comp=q('.social-composer',root);if(!comp)return false;css();
+    const comp=q('.social-composer',root);if(!comp)return false;css();ensureTitle(comp);
     const map=ids(root),media=document.getElementById(map.media),loc=document.getElementById(map.location),publish=document.getElementById(map.publish);
     if(!media||!publish)return false;
     if(comp.dataset.nuvemCompact==='1'){
-      const sel=q('.nuvem-selected-tags',comp);if(sel)syncSelected(comp,sel);return true;
+      ensureTitle(comp);const sel=q('.nuvem-selected-tags',comp);if(sel)syncSelected(comp,sel);return true;
     }
     comp.dataset.nuvemCompact='1';comp.classList.add('nuvem-compact-ready');
     const emojiRow=q('.social-emoji-row',comp);emojiRow?.classList.remove('show');
     const box=document.createElement('div');box.className='nuvem-compose-compact';
     box.innerHTML=`<div class="nuvem-compose-menu" role="menu">
-      <button type="button" data-nuvem-compose="upload" role="menuitem"><span class="nuvem-icon-3d upload"><span>↑</span></span><b>Upload</b><small>adicionar mídia</small></button>
+      <button type="button" data-nuvem-compose="upload" role="menuitem"><span class="nuvem-icon-3d upload"><span>↑</span></span><b>Upload</b><small>1, 2 ou 3 fotos/vídeos</small></button>
       <button type="button" data-nuvem-compose="mark" role="menuitem"><span class="nuvem-icon-3d mark"><span>@</span></span><b>Marcar</b><small>opcional</small></button>
       <button type="button" data-nuvem-compose="location" role="menuitem"><span class="nuvem-icon-3d location"><span>●</span></span><b>Localização</b><small>opcional</small></button>
     </div><div class="nuvem-location-row"></div><div class="nuvem-selected-tags"></div><div class="nuvem-compose-bar"><button class="nuvem-compose-plus" type="button" aria-label="Adicionar opções" aria-expanded="false">＋</button><span class="nuvem-compose-spacer"></span><button class="nuvem-compose-emoji" type="button" aria-label="Adicionar emoji" title="Emoji">😊</button></div>`;
@@ -36,7 +62,7 @@
     emoji.onclick=e=>{e.preventDefault();e.stopPropagation();emojiRow?.classList.toggle('show');if(emojiRow?.classList.contains('show'))emojiRow.scrollIntoView({behavior:'smooth',block:'nearest'})};
     return true;
   }
-  function scan(){css();['socialPanel','familySocialOverlay'].forEach(id=>{const root=document.getElementById(id);if(root)decorate(root)})}
+  function scan(){css();titleCss();['socialPanel','familySocialOverlay'].forEach(id=>{const root=document.getElementById(id);if(root)decorate(root)})}
   document.addEventListener('pointerdown',e=>{if(!e.target.closest?.('.nuvem-compose-compact'))closeMenus()},true);
   const obs=new MutationObserver(()=>{clearTimeout(obs._t);obs._t=setTimeout(scan,80)});obs.observe(document.documentElement,{childList:true,subtree:true});
   scan();[250,700,1400,2600].forEach(ms=>setTimeout(scan,ms));
