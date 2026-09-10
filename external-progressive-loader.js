@@ -8,7 +8,7 @@ function start(){
 
   // Primeiro apenas o indispensável para o portal responder aos cliques.
   later(25,'./external-menu.js?v=6-light-entry',()=>window.__ISA_ENSURE_EXTERNAL_MENU__?.())
-  later(60,'./external-social-entry-v1.js?v=10-compact-composer',()=>window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__?.())
+  later(60,'./external-social-entry-v1.js?v=11-carousel-three',()=>window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__?.())
   later(150,'./external-chat-tools.js?v=6-light-entry')
   later(260,'./message-interactions-v1.js?v=4-bubble-edge',()=>window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.())
   later(360,'./chat-rich-format-v1.js?v=4-selection-popover',()=>window.__ISA_REFRESH_RICH_CHAT__?.())
@@ -23,6 +23,7 @@ function start(){
   later(1800,'./link-preview.js?v=13-controls')
   later(2050,'./nuvem-ui-ideas-v10.js?v=4-tools-only',()=>window.__ISA_NUVEM_UI_IDEAS__?.scan?.())
   later(2100,'./nuvem-compose-compact-v1.js?v=2-compact-3d',()=>window.__ISA_NUVEM_COMPACT_COMPOSER__?.scan?.())
+  later(2160,'./nuvem-carousel-v1.js?v=1-three-media',()=>window.__ISA_NUVEM_CAROUSEL__?.scan?.())
 
   // Estudos da Paloma continuam exclusivos e também são tardios.
   if(name.includes('paloma')){
