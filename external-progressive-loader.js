@@ -8,7 +8,7 @@ function start(){
 
   // Primeiro apenas o indispensável para o portal responder aos cliques.
   later(25,'./external-menu.js?v=6-light-entry',()=>window.__ISA_ENSURE_EXTERNAL_MENU__?.())
-  later(60,'./external-social-entry-v1.js?v=8-stable-touch',()=>window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__?.())
+  later(60,'./external-social-entry-v1.js?v=9-pink-handwritten',()=>window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__?.())
   later(150,'./external-chat-tools.js?v=6-light-entry')
   later(260,'./message-interactions-v1.js?v=4-bubble-edge',()=>window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.())
   later(360,'./chat-rich-format-v1.js?v=4-selection-popover',()=>window.__ISA_REFRESH_RICH_CHAT__?.())
