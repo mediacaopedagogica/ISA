@@ -1,17 +1,17 @@
-/* Nuvem UI Ideas v11 — mesma camada visual, sem observers globais que travam a interface. */
+/* Nuvem tools — mantém somente post-its e emojis nos comentários. */
 (function(){
-  if(window.__NUVEM_UI_IDEAS_V11__)return;
-  window.__NUVEM_UI_IDEAS_V11__=true;
+  if(window.__NUVEM_TOOLS_ONLY_V1__)return;
+  window.__NUVEM_TOOLS_ONLY_V1__=true;
   const $=id=>document.getElementById(id),q=(s,r=document)=>r?.querySelector?.(s)||null,qa=(s,r=document)=>[...(r?.querySelectorAll?.(s)||[])];
   const EMOJIS=['🩷','🩵','💜','😂','😍','🌸','🥰','✨','👏'];
   const COLORS=['pink','yellow','blue','mint','lilac'],PINS=['pink','yellow','blue','mint','purple'];
   const TYPES={remember:['Lembrar','💡','pink','pink'],important:['Importante','!','yellow','yellow'],schedule:['Agendar','📅','blue','blue'],idea:['Boa ideia','💡','mint','mint'],research:['Pesquisar','🔎','lilac','purple']};
   let lastConv='',activeInput=null,saveTimer=0,scanTimer=0;
-  function ensureCss(){if($('nuvemUiIdeasCss'))return;const l=document.createElement('link');l.id='nuvemUiIdeasCss';l.rel='stylesheet';l.href='./nuvem-ui-ideas-v10.css?v=2-stable';document.head.appendChild(l)}
+  function ensureCss(){if($('nuvemToolsOnlyCss'))return;const l=document.createElement('link');l.id='nuvemToolsOnlyCss';l.rel='stylesheet';l.href='./nuvem-tools-only-v1.css?v=1';document.head.appendChild(l)}
   function esc(v=''){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
   function profile(){return String($('myName')?.textContent||new URLSearchParams(location.search).get('perfil')||'familia').trim().toLowerCase().replace(/\s+/g,'-')}
   function conv(){const a=q('.chat-item.active[data-conv],.chat-item.selected[data-conv],.chat-item[aria-current="true"][data-conv]');return a?.dataset.conv||lastConv||String($('chatTitle')?.textContent||'conversa').trim().toLowerCase().replace(/\s+/g,'-')}
-  document.addEventListener('click',e=>{const c=e.target.closest?.('.chat-item[data-conv]');if(c)lastConv=c.dataset.conv||lastConv},true);
+  document.addEventListener('click',e=>{const c=e.target.closest?.('.chat-item[data-conv]');if(c)lastConv=c.dataset.conv||lastConv},true)
   function key(){return`isa-nuvem-postits-v10:${profile()}:${conv()}`}
   function notes(){try{const d=JSON.parse(localStorage.getItem(key())||'[]');return Array.isArray(d)?d:[]}catch{return[]}}
   function save(v){try{localStorage.setItem(key(),JSON.stringify(v))}catch{}}
@@ -30,14 +30,12 @@
   function ensureEmojiPicker(){let p=$('nr10CommentEmojiPicker');if(p)return p;p=document.createElement('div');p.id='nr10CommentEmojiPicker';p.innerHTML=EMOJIS.map(x=>`<button type="button" data-comment-emoji="${x}">${x}</button>`).join('');document.body.appendChild(p);p.onclick=e=>{const b=e.target.closest('[data-comment-emoji]');if(!b||!activeInput)return;const i=activeInput,start=Number.isInteger(i.selectionStart)?i.selectionStart:i.value.length,end=Number.isInteger(i.selectionEnd)?i.selectionEnd:start;i.value=i.value.slice(0,start)+b.dataset.commentEmoji+i.value.slice(end);const pos=start+b.dataset.commentEmoji.length;try{i.setSelectionRange(pos,pos)}catch{}i.focus();i.dispatchEvent(new Event('input',{bubbles:true}));hideEmoji()};return p}
   function hideEmoji(){$('nr10CommentEmojiPicker')?.classList.remove('show');activeInput=null}
   function showEmoji(btn,input){const p=ensureEmojiPicker(),r=btn.getBoundingClientRect();activeInput=input;p.classList.add('show');const w=Math.min(p.offsetWidth||400,innerWidth-16),h=p.offsetHeight||56;let left=clamp(r.right-w,8,innerWidth-w-8),top=r.top-h-8;if(top<8)top=r.bottom+8;p.style.left=`${left}px`;p.style.top=`${clamp(top,8,innerHeight-h-8)}px`}
-  document.addEventListener('pointerdown',e=>{const p=$('nr10CommentEmojiPicker');if(p?.classList.contains('show')&&!p.contains(e.target)&&!e.target.closest?.('.nr10-comment-emoji'))hideEmoji()},{capture:true,passive:true});
+  document.addEventListener('pointerdown',e=>{const p=$('nr10CommentEmojiPicker');if(p?.classList.contains('show')&&!p.contains(e.target)&&!e.target.closest?.('.nr10-comment-emoji'))hideEmoji()},{capture:true,passive:true})
   function commentForm(f){if(f.dataset.nr10Emoji==='1')return;const input=q('input,textarea',f);if(!input)return;f.dataset.nr10Emoji='1';const b=document.createElement('button');b.type='button';b.className='nr10-comment-emoji';b.textContent='😊';b.title='Emojis no comentário';b.onclick=e=>{e.preventDefault();e.stopPropagation();showEmoji(b,input)};const send=qa('button',f).find(x=>x.type==='submit'||(!x.hasAttribute('type')&&!x.classList.contains('nr8-comment-plus')));send?.insertAdjacentElement('beforebegin',b);if(!b.parentNode)f.appendChild(b)}
-  function clouds(){qa('#socialPanel .social-now,#familySocialOverlay .social-now,#socialPanel .social-status-card,#familySocialOverlay .social-status-card').forEach(e=>{if(!e.classList.contains('nuvem-status-cloud'))e.classList.add('nuvem-status-cloud')})}
-  function videos(){qa('#messages video,#friendMessages video').forEach(v=>{const b=v.closest('.bubble,.friend-bubble')||v.parentElement;if(!b||q('.nuvem-no-ads-badge',b))return;const s=document.createElement('span');s.className='nuvem-no-ads-badge';s.textContent='🛡️ Sem anúncios do Isa Chat';s.title='O Isa Chat não insere anúncios nos vídeos enviados nesta conversa.';b.appendChild(s)})}
-  function scan(){ensureCss();importantButton();ensureEmojiPicker();clouds();videos();qa('.social-comment-form,.fs-comment-form').forEach(commentForm)}
+  function scan(){ensureCss();importantButton();ensureEmojiPicker();qa('.social-comment-form,.fs-comment-form').forEach(commentForm)}
   function scheduleScan(){clearTimeout(scanTimer);scanTimer=setTimeout(scan,120)}
-  function observe(id){const el=$(id);if(!el||el.dataset.nuvemObserved==='1')return;el.dataset.nuvemObserved='1';new MutationObserver(scheduleScan).observe(el,{childList:true,subtree:true})}
-  function observeKnown(){['messages','friendMessages','socialFeed','fsFeed','chatPanel','socialPanel','familySocialOverlay'].forEach(observe)}
-  ensureCss();scan();observeKnown();[500,1200,2400].forEach(ms=>setTimeout(()=>{observeKnown();scan()},ms));setInterval(()=>{if(document.visibilityState==='visible'){observeKnown();scan()}},5000);
-  window.__ISA_NUVEM_UI_IDEAS__={scan,openImportantBoard:openBoard};
+  function observe(id){const el=$(id);if(!el||el.dataset.nuvemToolsObserved==='1')return;el.dataset.nuvemToolsObserved='1';new MutationObserver(scheduleScan).observe(el,{childList:true,subtree:true})}
+  function observeKnown(){['socialFeed','fsFeed','chatPanel'].forEach(observe)}
+  ensureCss();scan();observeKnown();[500,1200,2400].forEach(ms=>setTimeout(()=>{observeKnown();scan()},ms))
+  window.__ISA_NUVEM_UI_IDEAS__={scan,openImportantBoard:openBoard}
 })();
