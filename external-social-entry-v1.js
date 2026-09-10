@@ -13,7 +13,7 @@ function enhanceLater(){
   if(enhanced)return;enhanced=true
   setTimeout(async()=>{
     await safe('./nossa-rede-v4.js?v=6-stable-open');window.__ISA_ENHANCE_NOSSA_REDE__?.()
-    await safe('./nossa-rede-policy-v5-loader.js?v=6-restore-approved');window.__ISA_NOSSA_REDE_V5__?.patch?.()
+    await safe('./nossa-rede-policy-v5-loader.js?v=7-pink-handwritten');window.__ISA_NOSSA_REDE_V5__?.patch?.()
     safe('./nossa-rede-comment-menu-v1.js?v=2-stable-open').then(()=>window.__ISA_COMMENT_MEDIA_MENU__?.scan?.())
     safe('./social-profile-pages-v1.js?v=4-stable-open').then(()=>window.__ISA_SOCIAL_PROFILE_PAGES__?.decorate?.())
     safe('./social-profile-directory-v1.js?v=3-stable-open').then(()=>window.__ISA_SOCIAL_PROFILE_DIRECTORY__?.patch?.())
