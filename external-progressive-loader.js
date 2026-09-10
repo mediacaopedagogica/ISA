@@ -10,7 +10,7 @@ function start(){
   setTimeout(()=>window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__?.(),55)
   later(85,'./external-decoration-cleanup-v1.js?v=2-portal-only',()=>window.__ISA_EXTERNAL_DECOR_CLEANUP__?.())
   later(145,'./external-chat-tools.js?v=6-light-entry')
-  later(190,'./conversation-important-v2.js?v=2-share-move-live',()=>window.__ISA_IMPORTANT_BOARD__?.render?.())
+  later(190,'./conversation-important-v2.js?v=3-fixadores-todos',()=>window.__ISA_IMPORTANT_BOARD__?.render?.())
   later(245,'./message-interactions-v1.js?v=7-full-emotions',()=>window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.())
   later(300,'./message-reaction-delegate-v2.js?v=4-expanded-emotions',()=>window.__ISA_REACTION_DELEGATE_REFRESH__?.())
   later(340,'./isa-social-emoji-suite-v1.js?v=1-full-isa-chat-emojis',()=>window.__ISA_SOCIAL_EMOJI_SUITE__?.scan?.())
