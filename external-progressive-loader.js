@@ -6,18 +6,16 @@ function start(){
   if(started)return;started=true
   const name=String(window.__ISA_FRIEND_PERSON__?.name||document.getElementById('friendName')?.textContent||'').trim().toLowerCase()
 
-  // Núcleo de navegação primeiro.
   later(25,'./external-menu.js?v=7-audit-family',()=>window.__ISA_ENSURE_EXTERNAL_MENU__?.())
   setTimeout(()=>window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__?.(),55)
   later(85,'./external-decoration-cleanup-v1.js?v=1-pastel-clean',()=>window.__ISA_EXTERNAL_DECOR_CLEANUP__?.())
   later(145,'./external-chat-tools.js?v=6-light-entry')
   later(245,'./message-interactions-v1.js?v=6-double-react',()=>window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.())
-  later(310,'./message-reaction-delegate-v2.js?v=2-all-messages',()=>window.__ISA_REACTION_DELEGATE_REFRESH__?.())
+  later(310,'./message-reaction-delegate-v2.js?v=3-pastel-reactions',()=>window.__ISA_REACTION_DELEGATE_REFRESH__?.())
   later(365,'./chat-rich-format-v1.js?v=4-selection-popover',()=>window.__ISA_REFRESH_RICH_CHAT__?.())
   later(430,'./chat-rich-format-guard-v2.js?v=2-no-empty-tags',()=>window.__ISA_CLEAN_EMPTY_CHAT_FORMATS__?.())
   later(520,'./familia-emoji-completo.js?v=9-controls')
 
-  // Recursos secundários entram depois que a tela já respondeu.
   later(1050,'./profile-status-stickers.js?v=13-click-fix',()=>{window.__ISA_ENSURE_EXTERNAL_MENU__?.();window.__ISA_EXTERNAL_DECOR_CLEANUP__?.()})
   later(1220,'./profile-birthday-v1.js?v=1-required',()=>window.__ISA_PROFILE_BIRTHDAY__?.inject?.())
   later(1300,'./interaction-recovery-v2.js?v=1-chat-date',()=>window.__ISA_INTERACTION_RECOVERY__?.scan?.())
