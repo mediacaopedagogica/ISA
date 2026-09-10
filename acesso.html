@@ -18,7 +18,14 @@
   <link rel="stylesheet" href="paloma-studies-advanced.css?v=70-safe-boot">
   <link rel="stylesheet" href="paloma-study-desk.css?v=70-safe-boot">
   <link rel="stylesheet" href="external-approved-layout.css?v=70-safe-boot">
-  <link rel="stylesheet" href="external-social-static-v73.css?v=2-v74-click-fix">
+  <link rel="stylesheet" href="social-network.css?v=4-family-private">
+  <link rel="stylesheet" href="nossa-rede-v4.css?v=1-approved">
+  <link rel="stylesheet" href="nossa-rede-policy-v5.css?v=2-organic-base">
+  <link rel="stylesheet" href="nossa-rede-mobile-fix-v1.css?v=3-interaction-fix">
+  <link rel="stylesheet" href="nossa-rede-organic-v6.css?v=1-approved-image">
+  <link rel="stylesheet" href="nossa-rede-organic-v7-final.css?v=1-exact-approved-details">
+  <link rel="stylesheet" href="nossa-rede-organic-v8-exact.css?v=1-cloud-comment-plus">
+  <link rel="stylesheet" href="nuvem-compose-compact-v1.css?v=5-pink-simple">
 </head>
 <body>
   <main id="friendApp" class="friend-page">
@@ -73,42 +80,34 @@
     </section>
   </main>
 
-  <section id="familySocialOverlay" class="hidden fs-static-overlay" aria-hidden="true" data-static-social="1">
-    <header class="fs-static-top">
-      <div class="fs-static-brand-icon" aria-hidden="true">🌸</div>
-      <div class="fs-static-title"><strong>Nossa Rede</strong><small>Rede social privada da família 💕</small></div>
-      <button id="fsCloseStatic" class="fs-static-close" type="button">✕ Fechar</button>
-    </header>
-    <div class="fs-static-wrap">
-      <aside class="fs-static-card fs-static-profile">
-        <div class="fs-static-logo">Nossa <span>Rede</span> ✨</div>
-        <div class="fs-static-avatar" aria-hidden="true">💜</div>
-        <div><strong id="fsStaticName">Seu perfil</strong><small>Seu espaço na rede da família.</small></div>
+  <!-- Nossa Rede atual: mesma estrutura usada pelo layout aprovado, já existe no HTML. -->
+  <section id="familySocialOverlay" class="hidden social-panel" aria-hidden="true" data-current-social="1">
+    <div class="fs-top"><div aria-hidden="true">🌸</div><div class="grow"><strong>Nossa Rede</strong><small>Rede social privada da família 💕</small></div><button id="fsClose" class="fs-close" type="button">✕ Fechar</button></div>
+    <div id="fsSync" class="fs-sync hidden">Atualizando a Nossa Rede…</div>
+    <div id="fsError" class="fs-error hidden"></div>
+    <div id="fsShell" class="social-shell">
+      <aside class="social-card social-side">
+        <div class="social-brand">Nossa <span>Rede</span> ✨</div>
+        <div id="fsMyProfile"><div class="social-profile-head"><div class="social-avatar">💜</div><div><strong id="fsSkeletonName">Seu perfil</strong><small>Família</small></div></div><div class="social-bio">Seu espaço na Nossa Rede.</div><div class="social-now"><div class="social-pill"><b>💜</b><span>Como estou hoje</span></div><div class="social-pill">✨ Atualizando…</div></div><button id="fsEditProfile" class="social-btn primary fs-profile-button" type="button">Meu perfil</button></div>
       </aside>
-      <main class="fs-static-main">
-        <section class="fs-static-card fs-static-welcome">
-          <div class="fs-static-handwrite">Compartilhe bons momentos e recordações 💕</div>
-          <div class="fs-static-compose">Compartilhe um momento, uma frase, uma foto... ✨</div>
-          <div class="fs-static-compose-actions"><div class="fs-static-round">＋</div><div class="fs-static-chip">😊 Emojis</div><div class="fs-static-chip">📍 Localização</div><div class="fs-static-publish">Publicar</div></div>
-        </section>
-        <section class="fs-static-card fs-static-feed">
-          <h3>Momentos da família 🌷</h3>
-          <p>Publicações, fotos, vídeos, comentários e reações aparecem aqui.</p>
-          <div id="fsStaticLoadState" class="fs-static-loader"><div><div class="fs-static-loader-bubble">🌸</div><strong>Abrindo a Nossa Rede…</strong><small>Carregando perfil, momentos e publicações da família.</small></div></div>
-        </section>
-      </main>
-      <aside class="fs-static-card fs-static-side">
-        <h3>Família agora 💫</h3>
-        <div class="fs-static-person"><div class="fs-static-mini">💕</div><div><strong>Como estou hoje</strong><small>Atualizações da família</small></div></div>
-        <div class="fs-static-person"><div class="fs-static-mini">✨</div><div><strong>Momentos</strong><small>Fotos e recordações</small></div></div>
-      </aside>
+      <section class="social-main">
+        <div id="fsStatusStrip" class="social-status-strip"></div>
+        <div class="social-card social-composer">
+          <textarea id="fsCaption" maxlength="2200" placeholder="Compartilhe um momento, uma frase, uma foto... ✨"></textarea>
+          <div class="social-emoji-row show"><button type="button" data-fs-emoji="🩷">🩷</button><button type="button" data-fs-emoji="🩵">🩵</button><button type="button" data-fs-emoji="💜">💜</button><button type="button" data-fs-emoji="💕">💕</button><button type="button" data-fs-emoji="✨">✨</button><button type="button" data-fs-emoji="🥰">🥰</button><button type="button" data-fs-emoji="😂">😂</button><button type="button" data-fs-emoji="😍">😍</button><button type="button" data-fs-emoji="🌸">🌸</button></div>
+          <div id="fsPreview" class="fs-preview"></div>
+          <div class="social-compose-actions"><label class="social-btn soft">🖼️ Fotos / vídeo<input id="fsMedia" class="social-file-input" type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime" multiple></label><input id="fsLocation" maxlength="80" placeholder="📍 Localização (opcional)" style="flex:1;min-width:140px;border:1px solid #eadff0;border-radius:14px;padding:9px 11px;background:#fff"><button id="fsPublish" class="social-btn primary" type="button">Publicar</button></div>
+        </div>
+        <div id="fsFeed" class="social-feed"><div class="social-card social-empty">Atualizando os momentos da família… 🌷</div></div>
+      </section>
+      <aside class="social-card social-right"><h3>Família agora 💫</h3><div id="fsFamilyList" class="social-family-list"><div class="social-empty">Atualizando…</div></div></aside>
     </div>
+    <div id="fsProfileModal" class="fs-profile-modal"><div class="social-card fs-profile-card"><h3>Personalizar meu perfil ✨</h3><label>Nome na Nossa Rede<input id="fsName" maxlength="50"></label><label>Bio<textarea id="fsBio" maxlength="240" rows="3"></textarea></label><label>Frase do dia<input id="fsStatus" maxlength="120"></label><label>Como estou me sentindo<select id="fsMood"><option>🩷</option><option>🩵</option><option>💜</option><option>🥰</option><option>😊</option><option>😂</option><option>😴</option><option>🤩</option><option>😌</option><option>🥳</option></select></label><label>O que estou fazendo<select id="fsActivity"><option value="">Nada agora</option><option>🏫 Na escola</option><option>💼 No trabalho</option><option>📚 Estudando</option><option>🏡 Em casa</option><option>🎶 Ouvindo música</option><option>🎮 Jogando</option><option>☕ Relaxando</option><option>🛍️ Passeando</option><option>✈️ Viajando</option></select></label><label>Tema<select id="fsTheme"><option value="lilac">Lilás</option><option value="pink">Rosa</option><option value="blue">Azul</option><option value="green">Verde</option><option value="yellow">Amarelo</option></select></label><div class="fs-modal-actions"><button id="fsProfileCancel" class="social-btn soft" type="button">Cancelar</button><button id="fsProfileSave" class="social-btn primary" type="button">Salvar</button></div></div></div>
   </section>
 
   <div id="friendToast" class="friend-toast hidden"></div>
 
-  <!-- Nossa Rede v74: clique prioritário abre a tela já existente; sincronização vem depois. -->
-  <script src="./external-social-click-rescue-v74.js?v=1-priority-click"></script>
+  <script src="./external-social-click-rescue-v74.js?v=2-current-approved-layout"></script>
   <script type="module" src="./familia-externa.js?v=70-safe-boot"></script>
   <script type="module" src="./external-safe-loader-v70.js?v=2-social-fixed"></script>
   <script>
@@ -116,28 +115,13 @@
       const rescue=()=>{
         const state=window.__ISA_FRIEND_BOOTSTRAP_STATE__;
         if(state==='ready'||state==='error'||state==='invalid')return;
-        const title=document.getElementById('friendGateTitle');
-        const text=document.getElementById('friendGateText');
-        const error=document.getElementById('friendGateError');
-        const btn=document.getElementById('friendEnterBtn');
+        const title=document.getElementById('friendGateTitle'),text=document.getElementById('friendGateText'),error=document.getElementById('friendGateError'),btn=document.getElementById('friendEnterBtn');
         if(title)title.textContent='A conexão demorou mais que o esperado';
         if(text)text.textContent='O link continua aqui. Tente novamente sem carregar a tela inteira do Cantinho.';
         if(error)error.textContent='O carregamento foi interrompido para evitar tela branca ou preta.';
-        if(btn){
-          btn.textContent='Tentar novamente';
-          btn.classList.remove('hidden');
-          btn.disabled=false;
-          btn.onclick=()=>{
-            if(typeof window.__ISA_FRIEND_BOOTSTRAP__==='function')window.__ISA_FRIEND_BOOTSTRAP__();
-            else{
-              const u=new URL(location.href);u.searchParams.set('retry',Date.now().toString());location.replace(u.href);
-            }
-          };
-        }
+        if(btn){btn.textContent='Tentar novamente';btn.classList.remove('hidden');btn.disabled=false;btn.onclick=()=>{if(typeof window.__ISA_FRIEND_BOOTSTRAP__==='function')window.__ISA_FRIEND_BOOTSTRAP__();else{const u=new URL(location.href);u.searchParams.set('retry',Date.now().toString());location.replace(u.href)}}}
       };
-      setTimeout(rescue,9000);
-      window.addEventListener('error',()=>setTimeout(rescue,0));
-      window.addEventListener('unhandledrejection',()=>setTimeout(rescue,0));
+      setTimeout(rescue,9000);window.addEventListener('error',()=>setTimeout(rescue,0));window.addEventListener('unhandledrejection',()=>setTimeout(rescue,0));
     })();
   </script>
 </body>
