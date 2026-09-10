@@ -1,0 +1,22 @@
+/* Cantinho da Isa — balões por participante + barra de formatação rica */
+.message-row,.friend-msg{display:flex!important;position:relative!important;width:100%}
+.message-row.mine,.friend-msg.mine{justify-content:flex-end!important}
+.message-row:not(.mine),.friend-msg:not(.mine){justify-content:flex-start!important}
+.message-row .bubble,.friend-msg .friend-bubble{max-width:min(78%,620px)!important;overflow-wrap:anywhere;word-break:break-word}
+.message-row:not(.mine) .bubble,.friend-msg:not(.mine) .friend-bubble{background:var(--mi-sender-bg,#fff)!important;border:1px solid rgba(255,255,255,.92);box-shadow:0 7px 18px rgba(78,59,92,.08)}
+.message-row.mine .bubble,.friend-msg.mine .friend-bubble{background:linear-gradient(145deg,#eadcff,#ffdfea)!important;border:1px solid rgba(255,255,255,.94);box-shadow:0 7px 18px rgba(118,84,132,.10)}
+.mi-rich-text{white-space:normal;line-height:1.48}.mi-rich-text mark{padding:0 .08em;border-radius:.22em;color:inherit}.mi-rich-text strong{font-weight:900}.mi-rich-text u{text-underline-offset:2px}
+.mi-important-message .bubble,.mi-important-message .friend-bubble{border:2px solid #e35d72!important;box-shadow:0 8px 22px rgba(207,72,94,.16)!important}
+.mi-important-flag{display:inline-flex;align-items:center;width:max-content;max-width:100%;margin:0 0 6px;padding:4px 8px;border-radius:999px;background:#ffe4e8;color:#b93049;font-size:10px;font-weight:950;letter-spacing:.05em}
+.composer.mi-has-format,.friend-composer.mi-has-format{flex-wrap:wrap!important}
+.mi-format-toolbar{order:-10;flex:0 0 100%;width:100%;min-width:0;margin:0 0 5px}
+.mi-format-scroll{display:flex;align-items:center;gap:5px;width:100%;overflow-x:auto;overflow-y:hidden;padding:4px 2px 6px;scrollbar-width:thin;overscroll-behavior-x:contain}
+.mi-fmt-btn,.mi-fmt-select-wrap,.mi-color-wrap{flex:0 0 auto;min-height:34px;border:1px solid rgba(255,255,255,.96);border-radius:11px;background:#fff9fd;box-shadow:0 4px 11px rgba(81,61,95,.08);color:#66506f;font-size:12px;font-weight:850}
+.mi-fmt-btn{padding:6px 10px;cursor:pointer}.mi-fmt-btn:hover,.mi-fmt-btn.active{background:#f0e6ff;transform:translateY(-1px)}
+.mi-important-btn{color:#ad3850;background:#fff0f3}.mi-important-btn.active{background:#ffd8df;color:#961f37;outline:2px solid rgba(213,65,91,.18)}
+.mi-highlight-btn{background:#fff8d8}
+.mi-fmt-select-wrap,.mi-color-wrap{display:flex;align-items:center;gap:6px;padding:3px 7px}.mi-fmt-select-wrap select{width:auto;min-width:104px;border:0;background:transparent;padding:4px 2px;box-shadow:none;font-size:12px}.mi-color-wrap input[type=color]{width:25px;height:25px;border:0;border-radius:8px;padding:0;background:transparent;cursor:pointer}
+@media(max-width:760px){
+  .message-row .bubble,.friend-msg .friend-bubble{max-width:84%!important}
+  .mi-format-scroll{padding-bottom:5px}.mi-fmt-btn,.mi-fmt-select-wrap,.mi-color-wrap{min-height:32px;font-size:11px}.mi-fmt-btn{padding:5px 8px}.mi-fmt-select-wrap select{min-width:96px;font-size:11px}
+}
