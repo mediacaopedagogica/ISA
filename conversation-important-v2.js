@@ -1,9 +1,9 @@
-/* Conversa importante v3 — post-its pessoais que podem virar cartões colaborativos dentro do chat. */
+/* Conversa importante v4 — post-its pessoais que viram cartões colaborativos v2 dentro do chat. */
 (function(){
   if(window.__ISA_IMPORTANT_BOARD_V2__)return;window.__ISA_IMPORTANT_BOARD_V2__=true
   const $=id=>document.getElementById(id),q=(s,r=document)=>r?.querySelector?.(s)||null,qa=(s,r=document)=>[...(r?.querySelectorAll?.(s)||[])]
   const CATS={remember:['💡','Lembrar'],important:['❗','Importante'],schedule:['🗓️','Agendar'],idea:['✨','Boa ideia'],research:['🔎','Pesquisar']}
-  const STATUS={starting:['🌱','Iniciando'],progress:['🛠️','Em processo'],done:['✅','Concluído'],paused:['⏸️','Pausado'],help:['🆘','Precisa de ajuda']}
+  const STATUS={starting:['🌱','Iniciando'],progress:['🛠️','Em processo'],done:['✅','Concluído'],paused:['⏸️','Pausado'],help:['🆘','Precisa de ajuda'],cancelled:['✖️','Cancelado']}
   const PINS=[
     {v:'🩷',label:'Rosa',cls:'pink'},{v:'🩵',label:'Azul',cls:'blue'},{v:'💜',label:'Lilás',cls:'lilac'},{v:'🌸',label:'Flor',cls:'flower'},
     {v:'⭐',label:'Estrela',cls:'star'},{v:'📌',label:'Alfinete',cls:'classic'},{v:'🔵',label:'Azul escuro',cls:'deepblue'},{v:'🟣',label:'Roxo',cls:'purple'}
@@ -11,7 +11,7 @@
   let filter='',chosenPin='',editing=null,drag=null,collabPromise=null
   const pinMeta=v=>PINS.find(p=>p.v===v)||PINS[0]
   const pinButtons=(attr,compact=false)=>PINS.map(p=>`<button type="button" ${attr}="${p.v}" class="ib-fixer-choice ib-fixer-${p.cls}${compact?' compact':''}" title="Fixador ${p.label}" aria-label="Fixador ${p.label}"><span>${p.v}</span><small>${p.label}</small></button>`).join('')
-  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]))
 
   function css(){if($('importantBoardCss'))return;const l=document.createElement('link');l.id='importantBoardCss';l.rel='stylesheet';l.href='./conversation-important-v2.css?v=3-collab-chat';document.head.appendChild(l)}
   function external(){return !!$('friendApp')}
@@ -27,10 +27,12 @@
   function defaultPin(){const n=profile().toLowerCase();return /(^|\s)(alan|davi|elion)(\s|$)/i.test(n)?'📌':'🩷'}
 
   async function ensureCollab(){
-    if(window.__ISA_COLLAB_POSTITS__)return window.__ISA_COLLAB_POSTITS__
-    if(!collabPromise)collabPromise=import('./collaborative-chat-postits-v1.js?v=2-board-integration').catch(error=>{collabPromise=null;console.warn('Post-it colaborativo:',error);return null})
+    const current=window.__ISA_COLLAB_POSTITS__
+    if(window.__ISA_COLLAB_POSTITS_V2__&&current?.toggleCancelled&&current?.openEditor)return current
+    if(!collabPromise)collabPromise=import('./collaborative-chat-postits-v2.js?v=4-board-force-v2').catch(error=>{collabPromise=null;console.warn('Post-it colaborativo v2:',error);return null})
     await collabPromise
-    return window.__ISA_COLLAB_POSTITS__||null
+    const ready=window.__ISA_COLLAB_POSTITS__
+    return ready?.toggleCancelled?ready:null
   }
   function collabCandidates(){return window.__ISA_COLLAB_POSTITS__?.candidates?.()||[]}
   function defaultCollaborators(){return window.__ISA_COLLAB_POSTITS__?.defaultCollaborators?.()||[]}
@@ -51,7 +53,7 @@
   function board(){
     let o=$('isaImportantBoard');if(o)return o
     css();o=document.createElement('section');o.id='isaImportantBoard'
-    o.innerHTML=`<div class="ib-shell"><header class="ib-head"><span style="font-size:26px">📌</span><div class="grow"><h2>Conversa importante</h2><small>Seus post-its pessoais desta conversa. Ao compartilhar, eles podem virar cartões colaborativos dentro do chat.</small></div><button class="ib-close" type="button">✕</button></header><div class="ib-tools">${Object.entries(CATS).map(([k,v])=>`<button class="ib-cat" data-ib-filter="${k}" type="button">${v[0]} ${v[1]}</button>`).join('')}<button class="ib-new" type="button">＋ Nova nota</button></div><div class="ib-fixer-toolbar"><div class="ib-fixer-title"><b>📍 Fixadores</b><small>Escolha um para cada post-it</small></div><div class="ib-pin-picker">${pinButtons('data-ib-pin')}</div></div><div class="ib-board"></div><div class="ib-share-hint">💜 <b>Compartilhar</b> mantém o post-it no seu quadro e cria uma versão editável no chat. <b>Mover para chat</b> transforma a nota em um post-it colaborativo no chat e a retira do quadro pessoal.</div></div><div class="ib-editor"><div class="ib-editor-card"><h3>Nova nota ✨</h3><textarea maxlength="600" placeholder="Escreva o que quer lembrar..."></textarea><div class="ib-editor-row">${Object.entries(CATS).map(([k,v])=>`<button type="button" data-ib-cat="${k}">${v[0]} ${v[1]}</button>`).join('')}</div><div class="ib-editor-fixers"><strong>📍 Fixador deste post-it</strong><small>Você pode usar um diferente em cada nota.</small><div class="ib-editor-pins">${pinButtons('data-ib-editor-pin',true)}</div></div><div class="ib-editor-status"><strong>📋 Andamento</strong><small>O status também aparece quando a nota for para o chat.</small><select id="ibEditorStatus">${Object.entries(STATUS).map(([k,v])=>`<option value="${k}">${v[0]} ${v[1]}</option>`).join('')}</select></div><div class="ib-editor-collab-wrap"><strong>🤝 Quem poderá escrever junto</strong><small>Marque outra pessoa. Quando ela visualizar este post-it na conversa, poderá editar, responder e alterar o andamento; cada resposta fica com o nome de quem escreveu.</small><div class="ib-editor-collaborators"></div></div><div class="ib-editor-actions"><button type="button" data-ib-cancel>Cancelar</button><button type="button" class="save" data-ib-save>Salvar</button></div></div></div>`
+    o.innerHTML=`<div class="ib-shell"><header class="ib-head"><span style="font-size:26px">📌</span><div class="grow"><h2>Conversa importante</h2><small>Seus post-its pessoais desta conversa. Ao compartilhar, eles podem virar cartões colaborativos dentro do chat.</small></div><button class="ib-close" type="button">✕</button></header><div class="ib-tools">${Object.entries(CATS).map(([k,v])=>`<button class="ib-cat" data-ib-filter="${k}" type="button">${v[0]} ${v[1]}</button>`).join('')}<button class="ib-new" type="button">＋ Nova nota</button></div><div class="ib-fixer-toolbar"><div class="ib-fixer-title"><b>📍 Fixadores</b><small>Escolha um para cada post-it</small></div><div class="ib-pin-picker">${pinButtons('data-ib-pin')}</div></div><div class="ib-board"></div><div class="ib-share-hint">💜 <b>Compartilhar</b> mantém o post-it no seu quadro e cria uma versão editável no chat. <b>Mover para chat</b> transforma a nota em um post-it colaborativo no chat e a retira do quadro pessoal.</div></div><div class="ib-editor"><div class="ib-editor-card"><h3>Nova nota ✨</h3><textarea maxlength="600" placeholder="Escreva o que quer lembrar..."></textarea><div class="ib-editor-row">${Object.entries(CATS).map(([k,v])=>`<button type="button" data-ib-cat="${k}">${v[0]} ${v[1]}</button>`).join('')}</div><div class="ib-editor-fixers"><strong>📍 Fixador deste post-it</strong><small>Você pode usar um diferente em cada nota.</small><div class="ib-editor-pins">${pinButtons('data-ib-editor-pin',true)}</div></div><div class="ib-editor-status"><strong>📋 Andamento</strong><small>O status também aparece quando a nota for para o chat.</small><select id="ibEditorStatus">${Object.entries(STATUS).filter(([k])=>k!=='cancelled').map(([k,v])=>`<option value="${k}">${v[0]} ${v[1]}</option>`).join('')}</select></div><div class="ib-editor-collab-wrap"><strong>🤝 Quem poderá escrever junto</strong><small>Marque outra pessoa. Quando ela visualizar este post-it na conversa, poderá editar, responder e alterar o andamento; cada resposta fica com o nome de quem escreveu.</small><div class="ib-editor-collaborators"></div></div><div class="ib-editor-actions"><button type="button" data-ib-cancel>Cancelar</button><button type="button" class="save" data-ib-save>Salvar</button></div></div></div>`
     document.body.appendChild(o)
     q('.ib-close',o).onclick=()=>o.classList.remove('show');q('.ib-new',o).onclick=()=>openEditor();q('[data-ib-cancel]',o).onclick=()=>q('.ib-editor',o).classList.remove('show');q('[data-ib-save]',o).onclick=saveEditor
     qa('[data-ib-filter]',o).forEach(b=>b.onclick=()=>{filter=filter===b.dataset.ibFilter?'':b.dataset.ibFilter;qa('[data-ib-filter]',o).forEach(x=>x.classList.toggle('active',x.dataset.ibFilter===filter));render()})
@@ -72,7 +74,7 @@
   async function openEditor(note=null){
     const o=board();await ensureCollab()
     editing=note?{...note,collaborators:[...(note.collaborators||[])]}:{id:crypto.randomUUID(),cat:'remember',text:'',pin:chosenPin||defaultPin(),owner:profile(),collaborators:defaultCollaborators(),status:'starting',responses:[],x:null,y:null,rot:(Math.random()*2-1).toFixed(2)}
-    editing.pin=editing.pin||chosenPin||defaultPin();editing.owner=editing.owner||profile();editing.status=STATUS[editing.status]?editing.status:'starting';editing.collaborators=editing.collaborators||[]
+    editing.pin=editing.pin||chosenPin||defaultPin();editing.owner=editing.owner||profile();editing.status=STATUS[editing.status]&&editing.status!=='cancelled'?editing.status:'starting';editing.collaborators=editing.collaborators||[]
     q('.ib-editor textarea',o).value=editing.text||'';qa('[data-ib-cat]',o).forEach(x=>x.classList.toggle('active',x.dataset.ibCat===editing.cat));q('.ib-editor h3',o).textContent=note?'Editar post-it ✨':'Nova nota ✨';$('ibEditorStatus').value=editing.status
     q('.ib-editor',o).classList.add('show');selectPin(editing.pin,{applyEditor:false});renderCollaboratorChoices();setTimeout(()=>q('.ib-editor textarea',o).focus(),30)
   }
