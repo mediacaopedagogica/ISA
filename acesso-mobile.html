@@ -8,6 +8,16 @@
   <meta name="robots" content="noindex,nofollow">
   <title>Cantinho da Isa • Família</title>
   <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <script>
+    (()=>{
+      const p=new URLSearchParams(location.hash.replace(/^#/,''));
+      const a=String(p.get('acesso')||'').trim().toLowerCase();
+      if(['evalda','paloma','vania','davi','elion'].includes(a)){
+        p.set('acesso','isa-family-alias:'+a);
+        history.replaceState(null,'',location.pathname+location.search+'#'+p.toString());
+      }
+    })();
+  </script>
   <link rel="stylesheet" href="familia-externa.css?v=62-unfreeze">
   <link rel="stylesheet" href="amiga-ui-enhanced.css?v=62-unfreeze">
   <link rel="stylesheet" href="familia-mobile.css?v=62-unfreeze">
@@ -70,10 +80,10 @@
   </main>
   <div id="friendToast" class="friend-toast hidden"></div>
 
-  <script type="module" src="./familia-externa.js?v=62-unfreeze-core"></script>
-  <script type="module" src="./external-social-entry-v1.js?v=2-capture"></script>
+  <script type="module" src="./familia-externa.js?v=63-alias-ready"></script>
+  <script type="module" src="./external-social-entry-v1.js?v=3-alias-ready"></script>
   <script type="module" src="./external-ui-controller.js?v=3-social-direct"></script>
-  <script type="module" src="./external-progressive-loader.js?v=8-social-capture"></script>
+  <script type="module" src="./external-progressive-loader.js?v=9-chat-social-fix"></script>
   <script>
     setTimeout(()=>{
       const state=window.__ISA_FRIEND_BOOTSTRAP_STATE__
