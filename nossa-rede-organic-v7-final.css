@@ -1,0 +1,135 @@
+/* Nossa Rede v7 — acabamento visual FINAL da referência aprovada.
+   SOMENTE CSS: não altera cliques, dados, posts, perfis, permissões ou navegação. */
+
+/* Vidro mais orgânico e suave em todos os cartões da rede */
+#socialPanel .social-card,#familySocialOverlay .social-card,
+#socialPanel .isa-birthday-card,#familySocialOverlay .isa-birthday-card,
+#socialPanel .isa-status-card-wrap,#familySocialOverlay .isa-status-card-wrap{
+  border:1px solid rgba(255,255,255,.96)!important;
+  background:linear-gradient(145deg,rgba(255,255,255,.82),rgba(255,247,252,.70) 46%,rgba(241,239,255,.66))!important;
+  box-shadow:0 22px 52px rgba(97,73,132,.13),0 8px 18px rgba(237,116,185,.08),inset 0 2px 1px rgba(255,255,255,.96)!important;
+  backdrop-filter:blur(26px) saturate(128%)!important;
+  -webkit-backdrop-filter:blur(26px) saturate(128%)!important;
+}
+
+/* Botão Meu perfil exatamente no espírito da referência: cápsula rosa + ícone em bolha */
+#socialPanel #socialEditProfile,#familySocialOverlay #fsEditProfile,
+#socialPanel .social-side .social-btn.primary,#familySocialOverlay .social-side .social-btn.primary{
+  position:relative!important;min-height:52px!important;padding:12px 18px 12px 58px!important;
+  border-radius:999px!important;text-align:left!important;color:#9a2774!important;font-size:14px!important;font-weight:950!important;
+  background:linear-gradient(105deg,rgba(255,192,225,.96),rgba(239,188,247,.92))!important;
+  box-shadow:0 10px 23px rgba(222,85,163,.18),inset 0 2px 0 rgba(255,255,255,.72)!important;
+}
+#socialPanel #socialEditProfile::before,#familySocialOverlay #fsEditProfile::before,
+#socialPanel .social-side .social-btn.primary::before,#familySocialOverlay .social-side .social-btn.primary::before{
+  content:'⌂';position:absolute;left:9px;top:50%;transform:translateY(-50%);display:grid;place-items:center;
+  width:36px;height:36px;border-radius:50%;background:linear-gradient(145deg,#ff8ec5,#f060b6);color:white;font-size:22px;line-height:1;
+  box-shadow:0 7px 14px rgba(230,79,167,.25),inset 0 2px 0 rgba(255,255,255,.5);
+}
+
+/* Nuvem/status mais macia e tridimensional */
+#socialPanel .social-now,#familySocialOverlay .social-now{
+  position:relative!important;border-radius:46px!important;
+  background:linear-gradient(145deg,rgba(255,229,243,.91),rgba(244,235,255,.88) 54%,rgba(224,242,255,.89))!important;
+  box-shadow:0 13px 26px rgba(105,80,141,.12),inset 0 2px 1px rgba(255,255,255,.86)!important;
+}
+#socialPanel .social-now::after,#familySocialOverlay .social-now::after{
+  content:'♡';position:absolute;right:12px;top:7px;color:rgba(96,170,245,.42);font-size:30px;filter:drop-shadow(0 5px 7px rgba(88,162,231,.18));
+}
+
+/* Título do composer e cartões arredondados da imagem aprovada */
+#socialPanel .social-composer,#familySocialOverlay .social-composer{
+  border-radius:30px!important;padding:18px!important;overflow:visible!important;
+}
+#socialPanel .social-composer::before,#familySocialOverlay .social-composer::before{
+  content:'🖊️  Criar publicação'!important;display:block!important;margin:0 0 12px!important;
+  color:#202866!important;font-size:20px!important;font-weight:950!important;letter-spacing:-.02em!important;
+}
+#socialPanel .social-composer textarea,#familySocialOverlay .social-composer textarea{
+  min-height:58px!important;border-radius:20px!important;background:rgba(255,255,255,.61)!important;
+  border:1px solid rgba(192,176,221,.48)!important;font-size:15px!important;padding:15px 18px!important;
+  box-shadow:inset 0 2px 8px rgba(75,58,103,.04)!important;
+}
+
+/* Chips iguais aos da referência: brancos/translúcidos, altos, redondos e com sombra suave */
+#socialPanel .isa-compose-tools,#familySocialOverlay .isa-compose-tools{
+  display:flex!important;flex-wrap:wrap!important;gap:9px!important;margin-top:12px!important;
+}
+#socialPanel .isa-compose-chip,#familySocialOverlay .isa-compose-chip,
+#socialPanel .nr5-emoji-chip,#familySocialOverlay .nr5-emoji-chip{
+  min-height:42px!important;padding:9px 15px!important;border-radius:999px!important;
+  background:linear-gradient(145deg,rgba(255,255,255,.97),rgba(247,242,253,.91))!important;
+  border:1px solid rgba(255,255,255,.98)!important;color:#24306d!important;font-size:12px!important;font-weight:900!important;
+  box-shadow:0 8px 17px rgba(82,61,111,.10),inset 0 2px 0 rgba(255,255,255,.96)!important;
+}
+#socialPanel .isa-compose-chip:hover,#familySocialOverlay .isa-compose-chip:hover,
+#socialPanel .nr5-emoji-chip:hover,#familySocialOverlay .nr5-emoji-chip:hover{transform:translateY(-2px)!important}
+
+/* Marcar @ familiar vira a cápsula rosa separada da referência */
+#socialPanel .nr5-tag-row,#familySocialOverlay .nr5-tag-row{
+  padding:8px!important;border:0!important;background:transparent!important;box-shadow:none!important;
+}
+#socialPanel .nr5-tag-add,#familySocialOverlay .nr5-tag-add{
+  min-height:42px!important;padding:9px 17px!important;border-radius:999px!important;
+  background:linear-gradient(145deg,rgba(255,238,249,.98),rgba(255,220,242,.94))!important;
+  color:#d83d95!important;border:1px solid rgba(255,255,255,.96)!important;font-size:12px!important;font-weight:950!important;
+  box-shadow:0 9px 18px rgba(225,87,164,.14),inset 0 2px 0 rgba(255,255,255,.8)!important;
+}
+#socialPanel .nr5-tag-add::before,#familySocialOverlay .nr5-tag-add::before{content:'👥 ';font-size:15px}
+
+/* Publicações: cartão grande, leve e orgânico */
+#socialPanel .social-post,#familySocialOverlay .social-post{
+  border-radius:32px!important;background:linear-gradient(145deg,rgba(255,255,255,.89),rgba(255,255,255,.73))!important;
+  box-shadow:0 18px 44px rgba(91,69,125,.11),inset 0 2px 0 rgba(255,255,255,.94)!important;
+}
+#socialPanel .social-post-head .social-avatar,#familySocialOverlay .social-post-head .social-avatar{
+  border-radius:50%!important;box-shadow:0 7px 17px rgba(229,111,176,.17),0 0 0 3px rgba(255,157,211,.20)!important;
+}
+#socialPanel .social-react,#familySocialOverlay .social-react,
+#socialPanel .fs-react,#familySocialOverlay .fs-react{font-size:24px!important}
+
+/* O painel Personalize sua experiência NÃO aparece no feed: continua dentro de Configurações. */
+#socialPanel .isa-custom-card,#familySocialOverlay .isa-custom-card{display:none!important}
+
+/* MOBILE: replica a imagem com ações em cartões e + flutuante */
+@media(max-width:760px){
+  #socialPanel .social-shell,#familySocialOverlay .social-shell{padding-left:9px!important;padding-right:9px!important}
+  #socialPanel .social-side,#familySocialOverlay .social-side{border-radius:28px!important;padding:13px!important}
+  #socialPanel .social-composer,#familySocialOverlay .social-composer{border-radius:28px!important;padding:14px!important}
+  #socialPanel .social-composer::before,#familySocialOverlay .social-composer::before{font-size:18px!important;margin-bottom:10px!important}
+  #socialPanel .isa-compose-tools,#familySocialOverlay .isa-compose-tools{
+    display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:8px!important;
+  }
+  #socialPanel .isa-compose-chip,#familySocialOverlay .isa-compose-chip,
+  #socialPanel .nr5-emoji-chip,#familySocialOverlay .nr5-emoji-chip{
+    min-height:48px!important;padding:7px 5px!important;border-radius:18px!important;font-size:10px!important;
+    white-space:normal!important;text-align:center!important;
+  }
+  #socialPanel .nr5-tag-row,#familySocialOverlay .nr5-tag-row{padding:6px 0!important}
+  #socialPanel .nr5-tag-add,#familySocialOverlay .nr5-tag-add{min-height:44px!important;padding:9px 16px!important;font-size:11px!important}
+  .isa-mobile-bottom{
+    min-height:76px!important;border-radius:34px!important;background:rgba(255,252,255,.88)!important;
+    box-shadow:0 18px 40px rgba(77,57,105,.20),inset 0 2px 0 rgba(255,255,255,.95)!important;
+  }
+  .isa-mobile-plus{
+    width:74px!important;height:74px!important;margin-top:-30px!important;border:5px solid rgba(255,255,255,.74)!important;
+    border-radius:50%!important;background:radial-gradient(circle at 35% 25%,#ffb2dc 0 12%,#ff65bd 38%,#e935ad 78%,#cf2fa0 100%)!important;
+    color:white!important;font-size:49px!important;font-weight:300!important;
+    box-shadow:0 14px 28px rgba(231,64,168,.38),0 0 0 5px rgba(255,204,235,.24),inset 0 4px 7px rgba(255,255,255,.52)!important;
+  }
+  /* menu que nasce do +: bloco branco orgânico como na imagem */
+  .isa-mobile-create-menu,.isa-mobile-plus-menu{
+    border-radius:30px!important;padding:14px!important;background:rgba(255,252,255,.94)!important;
+    border:1px solid rgba(255,255,255,.98)!important;box-shadow:0 22px 45px rgba(80,59,109,.22)!important;
+    backdrop-filter:blur(25px)!important;-webkit-backdrop-filter:blur(25px)!important;
+  }
+  .isa-mobile-create-menu button,.isa-mobile-plus-menu button{
+    border-radius:19px!important;background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(245,240,252,.92))!important;
+    box-shadow:0 7px 15px rgba(88,66,116,.09),inset 0 1px 0 rgba(255,255,255,.95)!important;
+  }
+}
+
+@media(max-width:430px){
+  #socialPanel .isa-compose-tools,#familySocialOverlay .isa-compose-tools{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  #socialPanel .isa-compose-chip,#familySocialOverlay .isa-compose-chip{min-height:46px!important;font-size:9.5px!important}
+}
