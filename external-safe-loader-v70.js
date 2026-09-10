@@ -31,15 +31,15 @@ async function start(){
   await load('./external-ui-controller.js?v=14-profile-parity')
 
   // Perfil completo igual ao do link principal: Perfil + Curiosidades + Galeria + foto social independente.
-  await load('./external-profile-parity-v1.js?v=1-keise-profile-parity')
-  try{window.__ISA_EXTERNAL_PROFILE_PARITY__?.start?.()}catch{}
+  await load('./external-profile-parity-v1.js?v=2-keise-profile-parity')
+  try{await window.__ISA_EXTERNAL_PROFILE_PARITY__?.start?.()}catch(error){console.warn('[Cantinho externo] perfil completo não terminou de carregar',error)}
 
   await load('./message-reaction-delegate-v2.js?v=4-portal-only')
 
   // Aparência e recursos complementares entram depois, sem substituir a Nossa Rede atual.
   setTimeout(()=>load('./external-decoration-cleanup-v1.js?v=2-portal-only'),100)
   setTimeout(()=>load('./nossa-rede-header-cleanup-v1.js?v=4-all-family-final'),180)
-  setTimeout(()=>load('./external-progressive-loader.js?v=26-profile-parity'),320)
+  setTimeout(()=>load('./external-progressive-loader.js?v=27-profile-parity'),320)
 }
 
 document.addEventListener('isa:friend-portal-entered',start,{once:true})
