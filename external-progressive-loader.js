@@ -10,11 +10,13 @@ function start(){
   setTimeout(()=>window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__?.(),55)
   later(85,'./external-decoration-cleanup-v1.js?v=2-portal-only',()=>window.__ISA_EXTERNAL_DECOR_CLEANUP__?.())
   later(145,'./external-chat-tools.js?v=6-light-entry')
-  later(245,'./message-interactions-v1.js?v=6-double-react',()=>window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.())
-  later(310,'./message-reaction-delegate-v2.js?v=4-portal-only',()=>window.__ISA_REACTION_DELEGATE_REFRESH__?.())
-  later(365,'./chat-rich-format-v1.js?v=4-selection-popover',()=>window.__ISA_REFRESH_RICH_CHAT__?.())
-  later(430,'./chat-rich-format-guard-v2.js?v=2-no-empty-tags',()=>window.__ISA_CLEAN_EMPTY_CHAT_FORMATS__?.())
-  later(520,'./familia-emoji-completo.js?v=9-controls')
+  later(245,'./message-interactions-v1.js?v=7-full-emotions',()=>window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.())
+  later(300,'./message-reaction-delegate-v2.js?v=4-expanded-emotions',()=>window.__ISA_REACTION_DELEGATE_REFRESH__?.())
+  later(340,'./isa-social-emoji-suite-v1.js?v=1-full-isa-chat-emojis',()=>window.__ISA_SOCIAL_EMOJI_SUITE__?.scan?.())
+  later(380,'./nuvem-reactions-v1.js?v=4-full-emotions',()=>window.__ISA_NUVEM_REACTIONS__?.apply?.())
+  later(420,'./chat-rich-format-v1.js?v=4-selection-popover',()=>window.__ISA_REFRESH_RICH_CHAT__?.())
+  later(470,'./chat-rich-format-guard-v2.js?v=2-no-empty-tags',()=>window.__ISA_CLEAN_EMPTY_CHAT_FORMATS__?.())
+  later(540,'./familia-emoji-completo.js?v=9-controls')
 
   // Mesmo perfil completo do link principal, também como fallback do carregador inicial.
   later(650,'./external-profile-parity-v1.js?v=2-keise-profile-parity',()=>window.__ISA_EXTERNAL_PROFILE_PARITY__?.start?.())
@@ -32,6 +34,7 @@ function start(){
   later(2140,'./nuvem-carousel-v1.js?v=6-all-family-final',()=>window.__ISA_NUVEM_CAROUSEL__?.scan?.())
   later(2200,'./nossa-rede-header-cleanup-v1.js?v=4-all-family-final',()=>window.__ISA_NOSSA_REDE_HEADER_CLEANUP__?.())
   later(2260,'./nossa-rede-comment-menu-v1.js?v=4-all-family-final',()=>window.__ISA_COMMENT_MEDIA_MENU__?.scan?.())
+  setTimeout(()=>window.__ISA_SOCIAL_EMOJI_SUITE__?.scan?.(),2330)
 
   if(name.includes('paloma')){
     later(1120,'./paloma-studies.js?v=9-click-fix',()=>window.__ISA_ENSURE_EXTERNAL_MENU__?.())
