@@ -1,0 +1,60 @@
+/* Host externo da Nossa Rede.
+   O visual interno continua sendo o mesmo da Nossa Rede original; este arquivo só dá ao
+   #familySocialOverlay o comportamento de tela que, no app principal, é fornecido pelo main.content. */
+#familySocialOverlay.social-panel{
+  position:fixed!important;
+  inset:0!important;
+  z-index:2147475000!important;
+  width:100vw!important;
+  height:100dvh!important;
+  min-height:100dvh!important;
+  max-width:none!important;
+  margin:0!important;
+  overflow:auto!important;
+  overscroll-behavior:contain!important;
+  -webkit-overflow-scrolling:touch!important;
+  opacity:1!important;
+  visibility:visible!important;
+  pointer-events:auto!important;
+  isolation:isolate!important;
+  box-sizing:border-box!important;
+}
+#familySocialOverlay.social-panel.hidden{display:none!important}
+body.nossa-rede-open{overflow:hidden!important}
+body.nossa-rede-open #friendApp{pointer-events:none!important}
+body.nossa-rede-open #familySocialOverlay{pointer-events:auto!important}
+#familySocialOverlay>.social-shell{min-height:100dvh!important;box-sizing:border-box!important}
+
+/* O app principal volta ao Chat pelas abas; o link externo precisa de uma saída própria. */
+#familySocialOverlay #fsClose{
+  display:grid!important;
+  place-items:center!important;
+  position:fixed!important;
+  top:max(12px,env(safe-area-inset-top))!important;
+  right:max(12px,env(safe-area-inset-right))!important;
+  z-index:2147479000!important;
+  width:42px!important;
+  height:42px!important;
+  padding:0!important;
+  border:1px solid rgba(255,255,255,.96)!important;
+  border-radius:15px!important;
+  background:rgba(255,251,255,.94)!important;
+  color:#6a5878!important;
+  box-shadow:0 8px 22px rgba(93,72,110,.14)!important;
+  backdrop-filter:blur(16px)!important;
+  -webkit-backdrop-filter:blur(16px)!important;
+  font-size:0!important;
+  cursor:pointer!important;
+  pointer-events:auto!important;
+}
+#familySocialOverlay #fsClose::after{content:'✕';font-size:18px;line-height:1;color:#6a5878}
+
+/* Durante a preparação, nunca deixa aparecer o layout-base antigo por baixo. */
+#familySocialOverlay.external-social-preparing{display:block!important}
+#familySocialOverlay.external-social-preparing>.social-shell{visibility:hidden!important;opacity:0!important;pointer-events:none!important}
+
+@media(max-width:760px){
+  #familySocialOverlay.social-panel{height:100dvh!important;min-height:100dvh!important;padding-bottom:calc(76px + env(safe-area-inset-bottom))!important}
+  #familySocialOverlay>.social-shell{min-height:100dvh!important}
+  #familySocialOverlay #fsClose{top:max(9px,env(safe-area-inset-top))!important;right:max(9px,env(safe-area-inset-right))!important;width:39px!important;height:39px!important;border-radius:13px!important}
+}
