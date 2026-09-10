@@ -19,14 +19,15 @@ function ensureHostCss(){
 // Estes recursos precisam existir ANTES do usuário tocar em Acessar/Nossa Rede.
 ensureHostCss()
 load('./external-enter-rescue-v77.js?v=2-enter-final')
-load('./conversation-important-v2.js?v=2-share-move-live')
+load('./collaborative-chat-postits-v1.js?v=1-edit-drag-status')
+load('./conversation-important-v2.js?v=4-collab-chat')
 
 async function start(){
   if(started)return
   started=true
 
   ensureHostCss()
-  try{window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__?.()}catch{}
+  try{window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__?.();window.__ISA_COLLAB_POSTITS__?.scan?.()}catch{}
 
   // Navegação base.
   await load('./external-ui-controller.js?v=14-profile-parity')
@@ -48,7 +49,7 @@ async function start(){
   // Aparência e recursos complementares entram depois, sem substituir a Nossa Rede atual.
   setTimeout(()=>load('./external-decoration-cleanup-v1.js?v=2-portal-only'),100)
   setTimeout(()=>load('./nossa-rede-header-cleanup-v1.js?v=4-all-family-final'),180)
-  setTimeout(()=>load('./external-progressive-loader.js?v=29-birthdays-social-extras'),320)
+  setTimeout(()=>load('./external-progressive-loader.js?v=30-collab-postits'),320)
 }
 
 document.addEventListener('isa:friend-portal-entered',start,{once:true})
