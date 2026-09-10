@@ -1,0 +1,114 @@
+name: Fix final Cantinho runtime Sep10
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-final-runtime-sep10.yml'
+permissions:
+  contents: write
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Hardwire final UI and refresh family links
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          # MAIN: o núcleo legado continua no DOM, mas o layout final passa a ser carregado diretamente,
+          # sem depender do postboot tardio/cacheado.
+          p=Path('index.html'); s=p.read_text()
+          app_line='<script defer src="./app-v33.js?v=62-unfreeze-core"></script>'
+          direct='''<script defer src="./app-v33.js?v=62-unfreeze-core"></script>\n<script src="./approved-shell-lock-v1.js?v=2-hardwired-final"></script>\n<script type="module" src="./final-shell-bootstrap-v1.js?v=1-hardwired-final"></script>'''
+          if 'final-shell-bootstrap-v1.js' not in s:
+              s=s.replace(app_line,direct)
+          s=re.sub(r'postboot-loader\.js\?v=[^\'\"]+', 'postboot-loader.js?v=71-final-shell-theme-seasonal', s)
+          s=re.sub(r'sw\.js\?v=[^\'\"]+', 'sw.js?v=single-nav-68-final-shell', s)
+          p.write_text(s)
+
+          # O postboot também reaponta para a MESMA instância dos dashboards finais.
+          p=Path('postboot-loader.js'); s=p.read_text()
+          anchor="function later(ms,path,after){setTimeout(async()=>{await load(path);try{after?.()}catch{}},ms)}"
+          early="""\n// Recuperação prioritária: nunca expor a casca legada enquanto os extras carregam.\nlater(1,'./final-shell-bootstrap-v1.js?v=1-hardwired-final',()=>window.__ISA_FINAL_SHELL__?.recover?.())\n"""
+          if 'final-shell-bootstrap-v1.js?v=1-hardwired-final' not in s:
+              s=s.replace(anchor,anchor+early)
+          s=re.sub(r'keise-approved-layout-final\.js\?v=[^\'\"]+', 'keise-approved-layout-final.js?v=7-hardwired-final', s)
+          s=re.sub(r'approved-profile-dashboard\.js\?v=[^\'\"]+', 'approved-profile-dashboard.js?v=7-hardwired-final', s)
+          s=re.sub(r'extras-loader\.js\?v=[^\'\"]+', 'extras-loader.js?v=66-live-theme', s)
+          p.write_text(s)
+
+          # Tema da Nossa Rede: usa a versão que aplica a cor ao vivo.
+          p=Path('extras-loader.js'); s=p.read_text()
+          s=re.sub(r'social-profile-theme-v2\.js\?v=[^\'\"]+', 'social-profile-theme-v2.js?v=3-live-visible', s)
+          if "seasonal-theme-engine-v1.js" not in s:
+              needle="loadOnce('profile-theme-page','./social-profile-theme-page-addon-v1.js?v=1-own-profile-visible-theme'),"
+              s=s.replace(needle,needle+"\n    loadOnce('seasonal-theme','./seasonal-theme-engine-v1.js?v=2-calendar-live'),")
+          p.write_text(s)
+
+          # Links externos: exporta Sair real e remove a duplicação visual da conversa Isa para Silvane.
+          p=Path('familia-externa.js'); s=p.read_text()
+          if 'window.__ISA_FRIEND_EXIT_PORTAL__=exitPortal' not in s:
+              s=s.replace('window.__ISA_FRIEND_ENTER_PORTAL__=enterPortal','window.__ISA_FRIEND_ENTER_PORTAL__=enterPortal\nwindow.__ISA_FRIEND_EXIT_PORTAL__=exitPortal')
+          old="  box.innerHTML=conversations.map(c=>`"
+          if old in s and 'visibleConversations' not in s:
+              new="""  const visibleConversations=(()=>{\n    if(!/silvane/i.test(String(person?.name||'')))return conversations\n    const seen=new Set()\n    return conversations.filter(c=>{\n      if(c.type!=='direct')return true\n      const key=String(c.title||'Isa').trim().toLocaleLowerCase('pt-BR')\n      if(seen.has(key))return false\n      seen.add(key);return true\n    })\n  })()\n  box.innerHTML=visibleConversations.map(c=>`"""
+              s=s.replace(old,new)
+          p.write_text(s)
+
+          for name in ['acesso-mobile.html','acesso.html']:
+              p=Path(name); s=p.read_text()
+              if 'external-access-controls-v1.js' not in s:
+                  marker='<script src="./external-enter-rescue-v77.js'
+                  pos=s.find(marker)
+                  if pos>=0:
+                      s=s[:pos]+'<script src="./external-access-controls-v1.js?v=1-enter-exit-stable"></script>\n  '+s[pos:]
+              s=re.sub(r'external-enter-rescue-v77\.js\?v=[^\'\"]+', 'external-enter-rescue-v77.js?v=3-enter-exit-stable', s)
+              s=re.sub(r'familia-externa\.js\?v=[^\'\"]+', 'familia-externa.js?v=72-enter-exit-dedupe', s)
+              s=re.sub(r'external-safe-loader-v70\.js\?v=[^\'\"]+', 'external-safe-loader-v70.js?v=12-theme-seasonal-stable', s)
+              # Carregamento direto para o tema responder mesmo antes dos extras tardios.
+              if 'social-theme-live-rescue-v1.js' not in s:
+                  marker='<script type="module" src="./external-safe-loader-v70.js'
+                  pos=s.find(marker)
+                  if pos>=0:
+                      block='<script type="module" src="./social-theme-live-rescue-v1.js?v=1-direct-live"></script>\n  <script type="module" src="./seasonal-theme-engine-v1.js?v=2-calendar-live"></script>\n  '
+                      s=s[:pos]+block+s[pos:]
+              p.write_text(s)
+
+          print('Runtime final, cache e acessos familiares atualizados.')
+          PY
+      - name: Validate repaired runtime
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          main=Path('index.html').read_text()
+          assert 'final-shell-bootstrap-v1.js?v=1-hardwired-final' in main
+          assert 'postboot-loader.js?v=71-final-shell-theme-seasonal' in main
+          assert 'approved-shell-lock-v1.js?v=2-hardwired-final' in main
+          post=Path('postboot-loader.js').read_text()
+          assert 'keise-approved-layout-final.js?v=7-hardwired-final' in post
+          assert 'approved-profile-dashboard.js?v=7-hardwired-final' in post
+          fam=Path('familia-externa.js').read_text()
+          assert 'window.__ISA_FRIEND_EXIT_PORTAL__=exitPortal' in fam
+          for name in ['acesso-mobile.html','acesso.html']:
+              s=Path(name).read_text()
+              for x in ['external-access-controls-v1.js?v=1-enter-exit-stable','familia-externa.js?v=72-enter-exit-dedupe','external-safe-loader-v70.js?v=12-theme-seasonal-stable']:
+                  assert x in s,(name,x)
+          print('Validation OK')
+          PY
+          node --check final-shell-bootstrap-v1.js
+          node --check social-theme-live-rescue-v1.js
+          node --check external-access-controls-v1.js
+      - name: Commit repaired runtime
+        shell: bash
+        run: |
+          if git diff --quiet; then echo 'No changes'; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html postboot-loader.js extras-loader.js familia-externa.js acesso-mobile.html acesso.html
+          git commit -m 'fix: restore final dashboards, access buttons and live social themes'
+          git push
