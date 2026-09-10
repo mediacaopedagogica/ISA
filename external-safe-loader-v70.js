@@ -18,6 +18,8 @@ function ensureHostCss(){
 
 load('./mobile-conversation-scroll-v2.js?v=1-visible-scroll')
 load('./nossa-rede-ui-fixes-sep10.js?v=1-overlay-birthday-cover')
+// Fixadores precisam existir em TODOS os links, antes mesmo da lista terminar de montar.
+load('./nuvem-pin-picker-v2.js?v=6-all-family-links')
 ensureHostCss()
 load('./external-enter-rescue-v77.js?v=2-enter-final')
 load('./collaborative-chat-postits-v2.js?v=2-cancel-reopen-fixers')
@@ -27,7 +29,7 @@ async function start(){
   if(started)return
   started=true
   ensureHostCss()
-  try{window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__?.();window.__ISA_COLLAB_POSTITS__?.scan?.()}catch{}
+  try{window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__?.();window.__ISA_COLLAB_POSTITS__?.scan?.();window.__ISA_NUVEM_PIN_PICKER__?.scan?.()}catch{}
   await load('./external-ui-controller.js?v=14-profile-parity')
   await load('./external-profile-parity-v1.js?v=2-keise-profile-parity')
   try{await window.__ISA_EXTERNAL_PROFILE_PARITY__?.start?.()}catch(error){console.warn('[Cantinho externo] perfil completo não terminou de carregar',error)}
@@ -45,10 +47,11 @@ async function start(){
     window.__ISA_NUVEM_CAROUSEL__?.scan?.()
     window.__ISA_NOSSA_REDE_MEDIA_WORKFLOW__?.scan?.()
     window.__ISA_PATCH_MEDIA_MAKE__?.()
+    window.__ISA_NUVEM_PIN_PICKER__?.scan?.()
   }catch{}
   setTimeout(()=>load('./external-decoration-cleanup-v1.js?v=2-portal-only'),100)
   setTimeout(()=>load('./nossa-rede-header-cleanup-v1.js?v=4-all-family-final'),180)
-  setTimeout(()=>load('./external-progressive-loader.js?v=33-media-makeup'),320)
+  setTimeout(()=>load('./external-progressive-loader.js?v=34-all-family-fixers'),320)
 }
 
 document.addEventListener('isa:friend-portal-entered',start,{once:true})
