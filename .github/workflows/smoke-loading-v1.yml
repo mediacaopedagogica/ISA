@@ -1,4 +1,4 @@
-name: Smoke loading v1
+name: Smoke loading v2
 on:
   push:
     paths:
@@ -16,7 +16,7 @@ permissions:
 jobs:
   browser:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 6
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -33,27 +33,30 @@ jobs:
           import { chromium } from 'playwright';
           const browser=await chromium.launch({headless:true});
           const base='https://mediacaopedagogica.github.io/ISA/';
-          async function root(){
+          async function committedPage(url){
             const p=await browser.newPage({viewport:{width:390,height:844}});
             const errors=[];p.on('pageerror',e=>errors.push(e.message));
-            await p.goto(base+'?perfil=keise&smoke='+Date.now(),{waitUntil:'domcontentloaded',timeout:20000});
-            await p.waitForTimeout(11500);
-            const s=await p.evaluate(()=>({guard:!document.getElementById('personalBootGuard')?.classList.contains('hidden'),final:!!document.getElementById('keiseApprovedHome')&&!document.getElementById('keiseApprovedHome').classList.contains('hidden'),main:!!document.getElementById('mainView')&&!document.getElementById('mainView').classList.contains('hidden'),login:!!document.getElementById('loginView')&&!document.getElementById('loginView').classList.contains('hidden'),last:window.__ISA_LAST_RUNTIME_ERROR__||''}));
-            console.log('ROOT',JSON.stringify(s),errors);
-            await p.close();
-            if(s.guard||(!s.final&&!s.main&&!s.login))throw new Error('Root ficou preso no carregamento');
+            await p.goto(url,{waitUntil:'commit',timeout:25000});
+            return {p,errors};
           }
-          async function external(file,name){
-            const p=await browser.newPage({viewport:{width:390,height:844}});
-            await p.goto(base+file+'?smoke='+Date.now()+'#acesso='+name,{waitUntil:'domcontentloaded',timeout:20000});
-            await p.waitForTimeout(12500);
-            const s=await p.evaluate(()=>({state:window.__ISA_FRIEND_BOOTSTRAP_STATE__||'',title:document.getElementById('friendGateTitle')?.textContent||'',button:!!document.querySelector('#friendEnterBtn:not(.hidden)'),chat:!!document.querySelector('#friendChat:not(.hidden)')}));
-            console.log(file,name,JSON.stringify(s));
+          async function root(){
+            const {p,errors}=await committedPage(base+'?perfil=keise&smoke='+Date.now());
+            await p.waitForTimeout(12000);
+            const s=await p.evaluate(()=>({guard:!!document.getElementById('personalBootGuard')&&!document.getElementById('personalBootGuard').classList.contains('hidden'),early:window.__ISA_EARLY_BOOT_RELEASED__||'',final:!!document.getElementById('keiseApprovedHome')&&!document.getElementById('keiseApprovedHome').classList.contains('hidden'),main:!!document.getElementById('mainView')&&!document.getElementById('mainView').classList.contains('hidden'),login:!!document.getElementById('loginView')&&!document.getElementById('loginView').classList.contains('hidden'),last:window.__ISA_LAST_RUNTIME_ERROR__||'',ready:document.readyState}));
+            console.log('ROOT',JSON.stringify(s),'errors=',errors);
             await p.close();
-            if(s.state==='loading'&&!s.button&&!s.chat)throw new Error(file+' ficou preso verificando acesso');
+            if(s.guard||(!s.final&&!s.main&&!s.login))throw new Error('Root ficou preso no carregamento: '+JSON.stringify(s));
+          }
+          async function external(file){
+            const {p,errors}=await committedPage(base+file+'?smoke='+Date.now()+'#acesso=smoke-invalid');
+            await p.waitForTimeout(13500);
+            const s=await p.evaluate(()=>({state:window.__ISA_FRIEND_BOOTSTRAP_STATE__||'',early:window.__ISA_EXTERNAL_EARLY_RELEASED__||false,title:document.getElementById('friendGateTitle')?.textContent||'',button:!!document.querySelector('#friendEnterBtn:not(.hidden)'),chat:!!document.querySelector('#friendChat:not(.hidden)'),ready:document.readyState}));
+            console.log(file,JSON.stringify(s),'errors=',errors);
+            await p.close();
+            if(s.state==='loading'&&!s.button&&!s.chat)throw new Error(file+' ficou preso verificando acesso: '+JSON.stringify(s));
           }
           await root();
-          await Promise.all([external('acesso-mobile.html','smoke-invalid'),external('acesso.html','smoke-invalid')]);
+          await Promise.all([external('acesso-mobile.html'),external('acesso.html')]);
           await browser.close();
           JS
           node smoke.mjs
