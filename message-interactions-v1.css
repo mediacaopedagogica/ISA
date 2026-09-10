@@ -1,20 +1,19 @@
-/* Cantinho da Isa — ações e reações discretas nas mensagens */
+/* Cantinho da Isa — 1 clique copiar/baixar; 2 cliques reagir em mensagem recebida */
 .message-row,.friend-msg{position:relative!important}
-.mi-tools{position:absolute;z-index:8;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:3px;opacity:0;pointer-events:none;transition:opacity .14s ease}
-.message-row.mine .mi-tools{right:calc(100% - 6px)}.message-row:not(.mine) .mi-tools{left:calc(100% - 6px)}
-.friend-msg.mine .mi-tools{right:calc(100% - 6px)}.friend-msg:not(.mine) .mi-tools{left:calc(100% - 6px)}
-.message-row:hover .mi-tools,.friend-msg:hover .mi-tools,.message-row.mi-show-tools .mi-tools,.friend-msg.mi-show-tools .mi-tools{opacity:1;pointer-events:auto}
-.mi-tool{width:28px;height:28px;border:1px solid rgba(255,255,255,.98);border-radius:50%;display:grid;place-items:center;padding:0;background:rgba(255,255,255,.96);box-shadow:0 5px 14px rgba(76,55,91,.14);color:#654b72;font-size:13px;line-height:1;cursor:pointer}
-.mi-tool:hover{transform:translateY(-1px)}
-.mi-reaction-summary{display:flex;gap:3px;flex-wrap:wrap;align-items:center;margin-top:4px;min-height:0}
-.mi-reaction-badge{display:inline-flex;align-items:center;gap:2px;min-height:20px;padding:2px 6px;border:1px solid rgba(255,255,255,.95);border-radius:999px;background:rgba(255,255,255,.92);box-shadow:0 3px 9px rgba(77,57,91,.10);font-size:12px;color:#604d69}
-.mi-reaction-badge.mine{outline:1px solid #d9b5e7;background:#fff5fb}
-.mi-picker{position:fixed;z-index:2147482500;display:none;align-items:center;gap:4px;padding:7px;border-radius:999px;background:rgba(255,255,255,.98);border:1px solid #fff;box-shadow:0 15px 40px rgba(62,42,75,.23);backdrop-filter:blur(12px)}.mi-picker.show{display:flex}.mi-picker button{width:34px;height:34px;border:0;border-radius:50%;background:transparent;font-size:20px;cursor:pointer}.mi-picker button:hover{background:#f7effa;transform:scale(1.08)}
-.mi-menu{position:fixed;z-index:2147482600;display:none;width:min(260px,88vw);padding:8px;border-radius:18px;background:#fffafd;border:1px solid #fff;box-shadow:0 18px 48px rgba(61,42,73,.22)}.mi-menu.show{display:grid;gap:5px}.mi-menu button{border:0;border-radius:12px;padding:10px 12px;background:#f7f1fa;color:#604e69;text-align:left;font-weight:850;cursor:pointer}.mi-menu button:hover{background:#efe5f6}.mi-menu .mi-danger{color:#9c4f68;background:#fff0f3}
+.mi-received-clickable{cursor:pointer;touch-action:manipulation}
 .mi-image-action{cursor:pointer}
+/* Ferramentas laterais antigas aposentadas: a própria mensagem é o controle. */
+.mi-tools{display:none!important}
+.mi-reaction-summary{position:absolute;right:-7px;bottom:-11px;z-index:7;display:flex;gap:3px;flex-wrap:wrap;align-items:center;margin:0;min-height:0;max-width:92%;pointer-events:none}
+.message-row:not(.mine) .mi-reaction-summary,.friend-msg:not(.mine) .mi-reaction-summary{left:auto;right:-7px}
+.mi-reaction-badge{display:inline-flex;align-items:center;gap:2px;min-height:23px;padding:2px 7px;border:2px solid rgba(255,255,255,.98);border-radius:999px;background:#fff;box-shadow:0 4px 12px rgba(77,57,91,.16);font-size:14px;color:#604d69;line-height:1}
+.mi-reaction-badge.mine{outline:1px solid #d9b5e7;background:#fff5fb}
+.mi-picker{position:fixed;z-index:2147482500;display:none;align-items:center;gap:4px;padding:7px;border-radius:999px;background:rgba(255,255,255,.99);border:1px solid #fff;box-shadow:0 15px 40px rgba(62,42,75,.23);backdrop-filter:blur(12px)}
+.mi-picker.show{display:flex}.mi-picker button{width:36px;height:36px;border:0;border-radius:50%;background:transparent;font-size:21px;cursor:pointer}.mi-picker button:hover{background:#f7effa;transform:scale(1.08)}
+.mi-menu{position:fixed;z-index:2147482600;display:none;width:min(240px,88vw);padding:8px;border-radius:18px;background:#fffafd;border:1px solid #fff;box-shadow:0 18px 48px rgba(61,42,73,.22)}
+.mi-menu.show{display:grid;gap:5px}.mi-menu button{border:0;border-radius:12px;padding:11px 12px;background:#f7f1fa;color:#604e69;text-align:left;font-weight:850;cursor:pointer}.mi-menu button:hover{background:#efe5f6}
+.message-row:not(.mine) .bubble,.friend-msg:not(.mine) .friend-bubble{padding-bottom:13px!important}
 @media(max-width:760px){
-  .mi-tools{opacity:0}.message-row.mi-show-tools .mi-tools,.friend-msg.mi-show-tools .mi-tools{opacity:1;pointer-events:auto}
-  .message-row.mine .mi-tools,.friend-msg.mine .mi-tools{right:calc(100% - 18px)}.message-row:not(.mine) .mi-tools,.friend-msg:not(.mine) .mi-tools{left:calc(100% - 18px)}
-  .mi-tool{width:30px;height:30px;font-size:14px}.mi-picker{max-width:94vw;overflow-x:auto}.mi-picker button{width:32px;height:32px;font-size:19px;flex:0 0 32px}
-  .mi-menu{width:min(280px,92vw)}
+  .mi-picker{max-width:94vw;overflow-x:auto}.mi-picker button{width:34px;height:34px;font-size:20px;flex:0 0 34px}.mi-menu{width:min(260px,92vw)}
+  .mi-reaction-summary{right:-5px;bottom:-10px}.mi-reaction-badge{font-size:13px;min-height:22px;padding:2px 6px}
 }
