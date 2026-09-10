@@ -1,4 +1,5 @@
 /* Nossa Rede — compositor compacto: + rosa, menu simples e frase manuscrita. */
+import('./nossa-rede-final-lock-v1.js?v=1-stable-current').catch(()=>null);
 (function(){
   const q=(s,r=document)=>r?.querySelector?.(s)||null,qa=(s,r=document)=>[...(r?.querySelectorAll?.(s)||[])];
   const TITLE='Compartilhe bons momentos e recordações 💕';
