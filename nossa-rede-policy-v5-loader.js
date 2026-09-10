@@ -7,7 +7,7 @@ if(!document.getElementById('nossaRedeOrganicV8Exact')){const l=document.createE
 await import('./nossa-rede-policy-v5.js?v=2-organic-layout');
 await import('./nossa-rede-comment-menu-v1.js?v=3-all-family-social').catch(()=>null);
 await import('./nuvem-compose-compact-v1.js?v=6-pink-simple').catch(()=>null);
-await import('./message-reaction-delegate-v2.js?v=2-all-messages').catch(()=>null);
+await import('./message-reaction-delegate-v2.js?v=3-pastel-reactions').catch(()=>null);
 await import('./nossa-rede-header-cleanup-v1.js?v=1-pastel-decor').catch(()=>null);
 window.__ISA_NOSSA_REDE_V5__?.patch?.();
 window.__ISA_COMMENT_MEDIA_MENU__?.scan?.();
