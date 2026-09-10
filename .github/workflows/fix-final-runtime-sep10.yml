@@ -19,29 +19,28 @@ jobs:
           from pathlib import Path
           import re
 
-          # MAIN: o núcleo legado continua no DOM, mas o layout final passa a ser carregado diretamente,
-          # sem depender do postboot tardio/cacheado.
           p=Path('index.html'); s=p.read_text()
           app_line='<script defer src="./app-v33.js?v=62-unfreeze-core"></script>'
-          direct='''<script defer src="./app-v33.js?v=62-unfreeze-core"></script>\n<script src="./approved-shell-lock-v1.js?v=2-hardwired-final"></script>\n<script type="module" src="./final-shell-bootstrap-v1.js?v=1-hardwired-final"></script>'''
+          direct='''<script defer src="./app-v33.js?v=62-unfreeze-core"></script>\n<script src="./approved-shell-lock-v1.js?v=2-hardwired-final"></script>\n<script type="module" src="./final-shell-bootstrap-v1.js?v=2-hardwired-final"></script>'''
           if 'final-shell-bootstrap-v1.js' not in s:
               s=s.replace(app_line,direct)
-          s=re.sub(r'postboot-loader\.js\?v=[^\'\"]+', 'postboot-loader.js?v=71-final-shell-theme-seasonal', s)
-          s=re.sub(r'sw\.js\?v=[^\'\"]+', 'sw.js?v=single-nav-68-final-shell', s)
+          else:
+              s=re.sub(r'final-shell-bootstrap-v1\.js\?v=[^\'\"]+', 'final-shell-bootstrap-v1.js?v=2-hardwired-final', s)
+          s=re.sub(r'postboot-loader\.js\?v=[^\'\"]+', 'postboot-loader.js?v=72-final-shell-theme-seasonal', s)
+          s=re.sub(r'sw\.js\?v=[^\'\"]+', 'sw.js?v=single-nav-69-final-shell', s)
           p.write_text(s)
 
-          # O postboot também reaponta para a MESMA instância dos dashboards finais.
           p=Path('postboot-loader.js'); s=p.read_text()
           anchor="function later(ms,path,after){setTimeout(async()=>{await load(path);try{after?.()}catch{}},ms)}"
-          early="""\n// Recuperação prioritária: nunca expor a casca legada enquanto os extras carregam.\nlater(1,'./final-shell-bootstrap-v1.js?v=1-hardwired-final',()=>window.__ISA_FINAL_SHELL__?.recover?.())\n"""
-          if 'final-shell-bootstrap-v1.js?v=1-hardwired-final' not in s:
-              s=s.replace(anchor,anchor+early)
+          if 'final-shell-bootstrap-v1.js' not in s:
+              s=s.replace(anchor,anchor+"\n// Recuperação prioritária: nunca expor a casca legada enquanto os extras carregam.\nlater(1,'./final-shell-bootstrap-v1.js?v=2-hardwired-final',()=>window.__ISA_FINAL_SHELL__?.recover?.())\n")
+          else:
+              s=re.sub(r'final-shell-bootstrap-v1\.js\?v=[^\'\"]+', 'final-shell-bootstrap-v1.js?v=2-hardwired-final', s)
           s=re.sub(r'keise-approved-layout-final\.js\?v=[^\'\"]+', 'keise-approved-layout-final.js?v=7-hardwired-final', s)
           s=re.sub(r'approved-profile-dashboard\.js\?v=[^\'\"]+', 'approved-profile-dashboard.js?v=7-hardwired-final', s)
           s=re.sub(r'extras-loader\.js\?v=[^\'\"]+', 'extras-loader.js?v=66-live-theme', s)
           p.write_text(s)
 
-          # Tema da Nossa Rede: usa a versão que aplica a cor ao vivo.
           p=Path('extras-loader.js'); s=p.read_text()
           s=re.sub(r'social-profile-theme-v2\.js\?v=[^\'\"]+', 'social-profile-theme-v2.js?v=3-live-visible', s)
           if "seasonal-theme-engine-v1.js" not in s:
@@ -49,7 +48,6 @@ jobs:
               s=s.replace(needle,needle+"\n    loadOnce('seasonal-theme','./seasonal-theme-engine-v1.js?v=2-calendar-live'),")
           p.write_text(s)
 
-          # Links externos: exporta Sair real e remove a duplicação visual da conversa Isa para Silvane.
           p=Path('familia-externa.js'); s=p.read_text()
           if 'window.__ISA_FRIEND_EXIT_PORTAL__=exitPortal' not in s:
               s=s.replace('window.__ISA_FRIEND_ENTER_PORTAL__=enterPortal','window.__ISA_FRIEND_ENTER_PORTAL__=enterPortal\nwindow.__ISA_FRIEND_EXIT_PORTAL__=exitPortal')
@@ -64,21 +62,15 @@ jobs:
               if 'external-access-controls-v1.js' not in s:
                   marker='<script src="./external-enter-rescue-v77.js'
                   pos=s.find(marker)
-                  if pos>=0:
-                      s=s[:pos]+'<script src="./external-access-controls-v1.js?v=1-enter-exit-stable"></script>\n  '+s[pos:]
+                  if pos>=0:s=s[:pos]+'<script src="./external-access-controls-v1.js?v=1-enter-exit-stable"></script>\n  '+s[pos:]
               s=re.sub(r'external-enter-rescue-v77\.js\?v=[^\'\"]+', 'external-enter-rescue-v77.js?v=3-enter-exit-stable', s)
               s=re.sub(r'familia-externa\.js\?v=[^\'\"]+', 'familia-externa.js?v=72-enter-exit-dedupe', s)
               s=re.sub(r'external-safe-loader-v70\.js\?v=[^\'\"]+', 'external-safe-loader-v70.js?v=12-theme-seasonal-stable', s)
-              # Carregamento direto para o tema responder mesmo antes dos extras tardios.
               if 'social-theme-live-rescue-v1.js' not in s:
-                  marker='<script type="module" src="./external-safe-loader-v70.js'
-                  pos=s.find(marker)
-                  if pos>=0:
-                      block='<script type="module" src="./social-theme-live-rescue-v1.js?v=1-direct-live"></script>\n  <script type="module" src="./seasonal-theme-engine-v1.js?v=2-calendar-live"></script>\n  '
-                      s=s[:pos]+block+s[pos:]
+                  marker='<script type="module" src="./external-safe-loader-v70.js';pos=s.find(marker)
+                  if pos>=0:s=s[:pos]+'<script type="module" src="./social-theme-live-rescue-v1.js?v=1-direct-live"></script>\n  <script type="module" src="./seasonal-theme-engine-v1.js?v=2-calendar-live"></script>\n  '+s[pos:]
               p.write_text(s)
-
-          print('Runtime final, cache e acessos familiares atualizados.')
+          print('Runtime final atualizado.')
           PY
       - name: Validate repaired runtime
         shell: bash
@@ -86,14 +78,14 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           main=Path('index.html').read_text()
-          assert 'final-shell-bootstrap-v1.js?v=1-hardwired-final' in main
-          assert 'postboot-loader.js?v=71-final-shell-theme-seasonal' in main
+          assert 'final-shell-bootstrap-v1.js?v=2-hardwired-final' in main
+          assert 'postboot-loader.js?v=72-final-shell-theme-seasonal' in main
           assert 'approved-shell-lock-v1.js?v=2-hardwired-final' in main
           post=Path('postboot-loader.js').read_text()
+          assert 'final-shell-bootstrap-v1.js?v=2-hardwired-final' in post
           assert 'keise-approved-layout-final.js?v=7-hardwired-final' in post
           assert 'approved-profile-dashboard.js?v=7-hardwired-final' in post
-          fam=Path('familia-externa.js').read_text()
-          assert 'window.__ISA_FRIEND_EXIT_PORTAL__=exitPortal' in fam
+          fam=Path('familia-externa.js').read_text();assert 'window.__ISA_FRIEND_EXIT_PORTAL__=exitPortal' in fam
           for name in ['acesso-mobile.html','acesso.html']:
               s=Path(name).read_text()
               for x in ['external-access-controls-v1.js?v=1-enter-exit-stable','familia-externa.js?v=72-enter-exit-dedupe','external-safe-loader-v70.js?v=12-theme-seasonal-stable']:
@@ -110,5 +102,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html postboot-loader.js extras-loader.js familia-externa.js acesso-mobile.html acesso.html
-          git commit -m 'fix: restore final dashboards, access buttons and live social themes'
+          git commit -m 'fix: refresh final shell after runtime recovery'
           git push
