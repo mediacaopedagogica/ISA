@@ -3,7 +3,7 @@
   if(window.__NUVEM_COMPOSE_COMPACT_V1__)return;
   window.__NUVEM_COMPOSE_COMPACT_V1__=true;
   const q=(s,r=document)=>r?.querySelector?.(s)||null,qa=(s,r=document)=>[...(r?.querySelectorAll?.(s)||[])];
-  function css(){if(document.getElementById('nuvemComposeCompactCss'))return;const l=document.createElement('link');l.id='nuvemComposeCompactCss';l.rel='stylesheet';l.href='./nuvem-compose-compact-v1.css?v=2';document.head.appendChild(l)}
+  function css(){let l=document.getElementById('nuvemComposeCompactCss');if(!l){l=document.createElement('link');l.id='nuvemComposeCompactCss';l.rel='stylesheet';l.href='./nuvem-compose-compact-v1.css?v=2';document.head.appendChild(l);return}if(document.head.lastElementChild!==l)document.head.appendChild(l)}
   function ids(root){return root?.id==='familySocialOverlay'?{media:'fsMedia',location:'fsLocation',publish:'fsPublish'}:{media:'socialMediaInput',location:'socialLocation',publish:'socialPublish'}}
   function closeMenus(except=null){qa('.nuvem-compose-menu.show').forEach(m=>{if(m!==except){m.classList.remove('show');const p=m.closest('.nuvem-compose-compact')?.querySelector('.nuvem-compose-plus');p?.setAttribute('aria-expanded','false')}})}
   function clickMark(comp){const b=q('[data-compose="mark"]',comp)||q('.nr5-tag-add',comp);if(b){b.click();return true}return false}
