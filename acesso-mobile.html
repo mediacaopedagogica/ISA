@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="paloma-studies-advanced.css?v=70-safe-boot">
   <link rel="stylesheet" href="paloma-study-desk.css?v=70-safe-boot">
   <link rel="stylesheet" href="external-approved-layout.css?v=70-safe-boot">
+  <link rel="stylesheet" href="external-social-static-v73.css?v=1-real-screen">
 </head>
 <body>
   <main id="friendApp" class="friend-page">
@@ -71,10 +72,43 @@
       </section>
     </section>
   </main>
+
+  <section id="familySocialOverlay" class="hidden fs-static-overlay" aria-hidden="true" data-static-social="1">
+    <header class="fs-static-top">
+      <div class="fs-static-brand-icon" aria-hidden="true">🌸</div>
+      <div class="fs-static-title"><strong>Nossa Rede</strong><small>Rede social privada da família 💕</small></div>
+      <button id="fsCloseStatic" class="fs-static-close" type="button">✕ Fechar</button>
+    </header>
+    <div class="fs-static-wrap">
+      <aside class="fs-static-card fs-static-profile">
+        <div class="fs-static-logo">Nossa <span>Rede</span> ✨</div>
+        <div class="fs-static-avatar" aria-hidden="true">💜</div>
+        <div><strong id="fsStaticName">Seu perfil</strong><small>Seu espaço na rede da família.</small></div>
+      </aside>
+      <main class="fs-static-main">
+        <section class="fs-static-card fs-static-welcome">
+          <div class="fs-static-handwrite">Compartilhe bons momentos e recordações 💕</div>
+          <div class="fs-static-compose">Compartilhe um momento, uma frase, uma foto... ✨</div>
+          <div class="fs-static-compose-actions"><div class="fs-static-round">＋</div><div class="fs-static-chip">😊 Emojis</div><div class="fs-static-chip">📍 Localização</div><div class="fs-static-publish">Publicar</div></div>
+        </section>
+        <section class="fs-static-card fs-static-feed">
+          <h3>Momentos da família 🌷</h3>
+          <p>Publicações, fotos, vídeos, comentários e reações aparecem aqui.</p>
+          <div id="fsStaticLoadState" class="fs-static-loader"><div><div class="fs-static-loader-bubble">🌸</div><strong>Abrindo a Nossa Rede…</strong><small>Carregando perfil, momentos e publicações da família.</small></div></div>
+        </section>
+      </main>
+      <aside class="fs-static-card fs-static-side">
+        <h3>Família agora 💫</h3>
+        <div class="fs-static-person"><div class="fs-static-mini">💕</div><div><strong>Como estou hoje</strong><small>Atualizações da família</small></div></div>
+        <div class="fs-static-person"><div class="fs-static-mini">✨</div><div><strong>Momentos</strong><small>Fotos e recordações</small></div></div>
+      </aside>
+    </div>
+  </section>
+
   <div id="friendToast" class="friend-toast hidden"></div>
 
-  <!-- Nossa Rede v72: módulo social isolado do chat, com abertura imediata. -->
-  <script type="module" src="./external-social-entry-v2.js?v=72-standalone-social"></script>
+  <!-- Nossa Rede v73: a tela existe no HTML; os dados entram depois. -->
+  <script type="module" src="./external-social-entry-v2.js?v=73-real-screen"></script>
   <script type="module" src="./familia-externa.js?v=70-safe-boot"></script>
   <script type="module" src="./external-safe-loader-v70.js?v=2-social-fixed"></script>
   <script>
