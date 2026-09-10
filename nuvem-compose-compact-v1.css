@@ -1,21 +1,22 @@
 /* Nossa Rede — compositor compacto: + 3D, Upload/Marcar/Localização e emoji ao lado de Publicar. */
 #socialPanel .social-composer::before,
 #familySocialOverlay .social-composer::before{
-  content:'Compartilhe Momentos'!important;
+  content:'Compartilhe bons momentos e recordações 💕'!important;
   display:block!important;
-  margin:0 0 11px!important;
+  width:fit-content!important;
+  max-width:330px!important;
+  margin:0 0 12px 2px!important;
   padding:0!important;
   font-family:"Segoe Print","Bradley Hand","Comic Sans MS",cursive!important;
-  font-size:27px!important;
-  line-height:1.05!important;
+  font-size:22px!important;
+  line-height:1.12!important;
   font-style:italic!important;
-  font-weight:850!important;
+  font-weight:800!important;
   letter-spacing:.1px!important;
   color:#ef58a8!important;
-  text-shadow:0 1px 0 rgba(255,255,255,.95),0 5px 11px rgba(239,88,168,.16)!important;
+  text-shadow:0 1px 0 rgba(255,255,255,.98),0 4px 10px rgba(239,88,168,.15)!important;
   position:static!important;
-  width:auto!important;
-  transform:none!important;
+  transform:rotate(-1deg)!important;
   text-align:left!important;
 }
 #socialPanel .social-composer::after,
@@ -85,7 +86,7 @@
 #familySocialOverlay .social-composer.nuvem-compact-ready .social-emoji-row.show{display:flex!important}
 
 @media(max-width:760px){
-  #socialPanel .social-composer::before,#familySocialOverlay .social-composer::before{font-size:24px!important}
+  #socialPanel .social-composer::before,#familySocialOverlay .social-composer::before{font-size:18px!important;max-width:250px!important;line-height:1.16!important;margin-left:1px!important}
   .nuvem-compose-bar{gap:8px}.nuvem-compose-plus{width:50px;height:50px;flex-basis:50px;font-size:31px}.nuvem-compose-menu{grid-template-columns:repeat(3,minmax(76px,1fr));left:-2px;bottom:61px;padding:11px;gap:7px}.nuvem-compose-menu button{min-height:86px}.nuvem-icon-3d{width:49px;height:49px;font-size:24px}
   .nuvem-compose-bar>.social-btn.primary{padding:10px 17px!important;min-height:44px!important}
 }
