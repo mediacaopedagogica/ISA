@@ -1,35 +1,32 @@
-// Carrega recursos externos sem bloquear o chat e sem duplicar controladores.
+// Carrega recursos externos de forma leve. A Nossa Rede é carregada somente ao toque no botão.
 async function safe(path){try{return await import(path)}catch(e){console.warn('Recurso externo não carregou:',path,e);return null}}
 function later(ms,path,after){setTimeout(async()=>{await safe(path);try{after?.()}catch{}},ms)}
 let started=false
 function start(){
   if(started)return;started=true
   const name=String(window.__ISA_FRIEND_PERSON__?.name||document.getElementById('friendName')?.textContent||'').trim().toLowerCase()
-  later(20,'./external-menu.js?v=5-simplified',()=>window.__ISA_ENSURE_EXTERNAL_MENU__?.())
-  later(35,'./external-social-entry-v1.js?v=5-single-controller',()=>window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__?.())
-  later(70,'./social-privacy-guard.js?v=1-family-rules',()=>window.__ISA_SOCIAL_PRIVACY__?.apply?.())
-  later(100,'./family-settings.js?v=12-single-controller')
-  later(150,'./family-social.js?v=15-single-controller',()=>window.__ISA_ENSURE_FAMILY_SOCIAL__?.())
-  later(250,'./nossa-rede-v4.js?v=3-family-rules',()=>{window.__ISA_ENHANCE_NOSSA_REDE__?.();window.__ISA_SOCIAL_PRIVACY__?.apply?.()})
-  later(340,'./nossa-rede-policy-v5-loader.js?v=2-social-profiles',()=>window.__ISA_NOSSA_REDE_V5__?.patch?.())
-  later(410,'./social-profile-pages-v1.js?v=2-alias-ready',()=>window.__ISA_SOCIAL_PROFILE_PAGES__?.decorate?.())
-  later(455,'./social-profile-directory-v1.js?v=1-visible-only',()=>window.__ISA_SOCIAL_PROFILE_DIRECTORY__?.patch?.())
-  later(510,'./external-chat-tools.js?v=5-controls')
-  later(600,'./social-reaction-names-v1.js?v=1-who-reacted',()=>window.__ISA_ENHANCE_REACTION_NAMES__?.())
-  later(620,'./message-interactions-v1.js?v=4-bubble-edge',()=>window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.())
-  later(670,'./chat-rich-format-v1.js?v=3-compact-menu',()=>window.__ISA_REFRESH_RICH_CHAT__?.())
-  later(705,'./chat-rich-format-guard-v2.js?v=2-no-empty-tags',()=>window.__ISA_CLEAN_EMPTY_CHAT_FORMATS__?.())
-  later(750,'./familia-emoji-completo.js?v=9-controls')
-  later(900,'./social-tag-notifications.js?v=2-live-tags',()=>window.__ISA_SOCIAL_TAG_NOTIFICATIONS__?.poll?.())
-  later(1030,'./profile-status-stickers.js?v=13-click-fix',()=>window.__ISA_ENSURE_EXTERNAL_MENU__?.())
-  later(1160,'./social-profile-chat-bridge.js?v=1-separated-photo-chat-rules',()=>window.__ISA_SOCIAL_PROFILE_CHAT_SYNC__?.())
-  later(1380,'./link-preview.js?v=13-controls')
+
+  // Primeiro apenas o indispensável para o portal responder aos cliques.
+  later(25,'./external-menu.js?v=6-light-entry',()=>window.__ISA_ENSURE_EXTERNAL_MENU__?.())
+  later(60,'./external-social-entry-v1.js?v=6-on-demand',()=>window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__?.())
+  later(150,'./external-chat-tools.js?v=6-light-entry')
+  later(260,'./message-interactions-v1.js?v=4-bubble-edge',()=>window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.())
+  later(360,'./chat-rich-format-v1.js?v=3-compact-menu',()=>window.__ISA_REFRESH_RICH_CHAT__?.())
+  later(430,'./chat-rich-format-guard-v2.js?v=2-no-empty-tags',()=>window.__ISA_CLEAN_EMPTY_CHAT_FORMATS__?.())
+  later(520,'./familia-emoji-completo.js?v=9-controls')
+
+  // Recursos secundários entram depois que a tela já pintou.
+  later(1100,'./profile-status-stickers.js?v=13-click-fix',()=>window.__ISA_ENSURE_EXTERNAL_MENU__?.())
+  later(1450,'./social-tag-notifications.js?v=2-live-tags',()=>window.__ISA_SOCIAL_TAG_NOTIFICATIONS__?.poll?.())
+  later(1800,'./link-preview.js?v=13-controls')
+
+  // Estudos da Paloma continuam exclusivos e também são tardios.
   if(name.includes('paloma')){
-    later(790,'./paloma-studies.js?v=9-click-fix',()=>window.__ISA_ENSURE_EXTERNAL_MENU__?.())
-    later(1720,'./paloma-studies-advanced-mobile.js?v=8-controls')
-    later(2150,'./paloma-study-desk.js?v=8-controls')
+    later(1150,'./paloma-studies.js?v=9-click-fix',()=>window.__ISA_ENSURE_EXTERNAL_MENU__?.())
+    later(2200,'./paloma-studies-advanced-mobile.js?v=8-controls')
+    later(2700,'./paloma-study-desk.js?v=8-controls')
   }
 }
 if(window.__ISA_FRIEND_PORTAL_ENTERED__===true)start()
 else document.addEventListener('isa:friend-portal-entered',start,{once:true})
-setTimeout(()=>{if(window.__ISA_FRIEND_PERSON__||window.__ISA_FRIEND_PORTAL_ENTERED__===true)start()},500)
+setTimeout(()=>{if(window.__ISA_FRIEND_PORTAL_ENTERED__===true)start()},700)
