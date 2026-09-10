@@ -1,0 +1,55 @@
+name: Smoke external family access v69
+on:
+  push:
+    paths:
+      - '.github/workflows/smoke-external-access-v69.yml'
+permissions:
+  contents: read
+jobs:
+  live-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verificar HTML realmente publicado no GitHub Pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          stamp="$(date +%s)"
+          curl -fsSL --max-time 20 "https://mediacaopedagogica.github.io/ISA/acesso-mobile.html?smoke=${stamp}" -o /tmp/mobile.html
+          curl -fsSL --max-time 20 "https://mediacaopedagogica.github.io/ISA/acesso.html?smoke=${stamp}" -o /tmp/desktop.html
+          grep -q 'familia-externa.js?v=69-edge-bootstrap-root-fix' /tmp/mobile.html
+          grep -q 'familia-externa.js?v=69-edge-bootstrap-root-fix' /tmp/desktop.html
+          echo 'GitHub Pages está servindo os dois HTMLs v69.'
+      - name: Verificar núcleo JS realmente publicado
+        shell: bash
+        run: |
+          set -euo pipefail
+          stamp="$(date +%s)"
+          curl -fsSL --max-time 20 "https://mediacaopedagogica.github.io/ISA/familia-externa.js?smoke=${stamp}" -o /tmp/familia-externa.js
+          grep -q '/functions/v1/friend-bootstrap' /tmp/familia-externa.js
+          grep -q 'A validação demorou mais que o esperado' /tmp/familia-externa.js
+          if grep -Fq 'Authorization:`Bearer ${CONFIG.SUPABASE_KEY}`' /tmp/familia-externa.js; then
+            echo 'ERRO: Bearer inválido ainda está na versão publicada.' >&2
+            exit 1
+          fi
+          node --check /tmp/familia-externa.js
+          echo 'Núcleo externo publicado está atualizado e sintaticamente válido.'
+      - name: Verificar Edge Function de bootstrap e CORS
+        shell: bash
+        run: |
+          set -euo pipefail
+          key=$(sed -n "s/.*SUPABASE_KEY: '\([^']*\)'.*/\1/p" config.js | head -1)
+          test -n "$key"
+          url='https://srazofmrxzwqcavnhplq.supabase.co/functions/v1/friend-bootstrap'
+          curl -fsS -X OPTIONS --max-time 15 "$url" \
+            -H 'Origin: https://mediacaopedagogica.github.io' \
+            -H 'Access-Control-Request-Method: POST' \
+            -H 'Access-Control-Request-Headers: apikey,content-type' >/dev/null
+          code=$(curl -sS -o /tmp/edge.json -w '%{http_code}' -X POST --max-time 15 "$url" \
+            -H "apikey: $key" \
+            -H 'Content-Type: application/json' \
+            --data '{"token":"smoke-token-invalido"}')
+          test "$code" = '400' || { echo "Edge retornou HTTP $code"; cat /tmp/edge.json; exit 1; }
+          grep -Eq 'error|Link|Perfil' /tmp/edge.json
+          echo 'Edge Function está alcançável pelo navegador e responde sem travar.'
