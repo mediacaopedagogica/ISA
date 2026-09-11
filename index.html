@@ -29,20 +29,6 @@
 </head>
 <body>
 <div id="personalBootGuard" class="hidden" aria-live="polite"><div class="guard-card"><div class="guard-heart">♥</div><h2 id="personalBootTitle">Abrindo seu Cantinho…</h2><p>Carregando suas conversas com segurança.</p><div class="guard-spinner"></div></div></div>
-<script id="personalBootEarlyWatchdogV2">
-(function(){
-  var params=new URLSearchParams(location.search),personal=String(params.get('perfil')||'').toLowerCase();
-  if(!['keise','isa','alan'].includes(personal))return;
-  var guard=document.getElementById('personalBootGuard');
-  guard?.classList.remove('hidden');
-  var title=document.getElementById('personalBootTitle');if(title)title.textContent='Abrindo seu Cantinho…';
-  setTimeout(function(){
-    if(document.getElementById('keiseApprovedHome')&&!document.getElementById('keiseApprovedHome').classList.contains('hidden')){guard?.classList.add('hidden');return}
-    window.__ISA_FINAL_SHELL__?.recover?.();
-    try{document.dispatchEvent(new CustomEvent('isa:personal-boot-retry',{detail:{reason:'early-watchdog'}}))}catch(e){}
-  },6500);
-})();
-</script>
 <div id="app">
   <section id="loginView" class="screen center-screen hidden">
     <div class="login-card glass">
@@ -83,13 +69,13 @@
 <dialog id="simpleDialog"><form method="dialog" class="dialog-card"><button class="dialog-close" value="cancel">✕</button><div id="dialogContent"></div></form></dialog><div id="toast" class="toast hidden"></div>
 <script>
 (function(){
-  const personal=new URLSearchParams(location.search).get('perfil');
+  const personal=String(new URLSearchParams(location.search).get('perfil')||'').toLowerCase();
   const guard=document.getElementById('personalBootGuard');
-  if(personal){guard?.classList.remove('hidden');const t=document.getElementById('personalBootTitle');if(t)t.textContent='Abrindo seu Cantinho…'}
+  if(['keise','isa','alan'].includes(personal)){guard?.classList.remove('hidden');const t=document.getElementById('personalBootTitle');if(t)t.textContent='Abrindo seu Cantinho…'}
   window.__ISA_HIDE_BOOT_GUARD__=()=>guard?.classList.add('hidden');
   const observe=()=>{
-    const final=document.getElementById('keiseApprovedHome'),login=document.getElementById('loginView');
-    if((final&&!final.classList.contains('hidden'))||(login&&!login.classList.contains('hidden')))window.__ISA_HIDE_BOOT_GUARD__();
+    const finalKeise=document.getElementById('keiseApprovedHome'),finalShared=document.getElementById('approvedProfileHome'),login=document.getElementById('loginView');
+    if((finalKeise&&!finalKeise.classList.contains('hidden'))||(finalShared&&!finalShared.classList.contains('hidden'))||(login&&!login.classList.contains('hidden')))window.__ISA_HIDE_BOOT_GUARD__();
   };
   new MutationObserver(observe).observe(document.getElementById('app'),{subtree:true,attributes:true,attributeFilter:['class']});
   window.addEventListener('error',e=>{window.__ISA_LAST_RUNTIME_ERROR__=String(e?.error?.message||e?.message||'Erro')});
@@ -98,7 +84,7 @@
 </script>
 <script>(function(){const btn=document.getElementById('togglePassword'),input=document.getElementById('loginPassword');if(btn&&input){btn.onclick=()=>{const show=input.type==='password';input.type=show?'text':'password';btn.textContent=show?'🙈':'👁️';btn.setAttribute('aria-label',show?'Ocultar senha':'Mostrar senha');btn.title=show?'Ocultar senha':'Mostrar senha';input.focus()}}})();</script>
 <script>
-if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=single-nav-72-approved-route',{scope:'./'}).then(reg=>reg.update().catch(()=>{})).catch(error=>console.warn('Service Worker:',error));}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=single-nav-73-deterministic-boot',{scope:'./'}).then(reg=>reg.update().catch(()=>{})).catch(error=>console.warn('Service Worker:',error));}
 </script>
 <script>
 (function(){
@@ -110,11 +96,11 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=sin
   new MutationObserver(()=>{if(!main.classList.contains('hidden'))clear()}).observe(main,{attributes:true,attributeFilter:['class']});
 })();
 </script>
-<script defer src="./mobile-interaction-guard.js?v=65-single-navigation"></script>
-<!-- Instala primeiro o controlador do layout aprovado; só depois o núcleo de autenticação pode abrir a sessão. -->
-<script src="./final-shell-bootstrap-v2.js?v=3-root-approved-stable"></script>
-<script async src="./app-v33.js?v=63-auth-timeout"></script>
-<script src="./personal-boot-failopen-v1.js?v=2-no-legacy-fallback"></script>
+<script defer src="./mobile-interaction-guard.js?v=66-deterministic-boot"></script>
+<!-- Ordem única de abertura: controlador aprovado -> núcleo/auth -> watchdog passivo. -->
+<script src="./final-shell-bootstrap-v2.js?v=6-deterministic-boot"></script>
+<script src="./app-v33.js?v=64-deterministic-boot"></script>
+<script src="./personal-boot-failopen-v1.js?v=4-passive-watchdog"></script>
 <script>
 (function(){
   let tries=0,loaded=false;
@@ -123,7 +109,7 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=sin
     const main=document.getElementById('mainView'),name=String(document.getElementById('myName')?.textContent||'').trim();
     if(main&&!main.classList.contains('hidden')&&name&&name!=='Família'){
       loaded=true;
-      const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=75-root-approved-stable';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
+      const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=76-no-shell-restart';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
     }
     if(++tries<140)setTimeout(loadExtras,120);
   };
@@ -132,7 +118,7 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=sin
 </script>
 <script>
 (function(){
-  const KEY='isa-main-chat-recovery-v59';
+  const KEY='isa-main-chat-recovery-v60';
   const stuck=()=>{
     const main=document.getElementById('mainView'),list=document.getElementById('chatList');
     return !!main&&!main.classList.contains('hidden')&&!!list&&/Carregando conversas/i.test(list.textContent||'');
@@ -152,18 +138,6 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=sin
     document.getElementById('mainChatReloadBtn')?.addEventListener('click',()=>{clear();const u=new URL(location.href);u.searchParams.set('_fresh',Date.now().toString());location.replace(u.toString())});
   },9000);
 })();
-</script>
-<script>
-window.addEventListener('load',()=>{
-  setTimeout(()=>{
-    const main=document.getElementById('mainView'),login=document.getElementById('loginView'),final=document.getElementById('keiseApprovedHome'),personal=new URLSearchParams(location.search).get('perfil');
-    if(final&&!final.classList.contains('hidden')){window.__ISA_HIDE_BOOT_GUARD__?.();return}
-    if(login&&!login.classList.contains('hidden')){window.__ISA_HIDE_BOOT_GUARD__?.();return}
-    if(main&&!main.classList.contains('hidden')){window.__ISA_FINAL_SHELL__?.recover?.();return}
-    if(personal){window.__ISA_FINAL_SHELL__?.recover?.();return}
-    login?.classList.remove('hidden');
-  },7000);
-});
 </script>
 <script>
 (function(){
