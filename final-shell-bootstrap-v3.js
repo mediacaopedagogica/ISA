@@ -1,16 +1,15 @@
-// Shell pessoal — V6: dashboard aprovado da Keise sem loop de MutationObserver.
-// O app-v34 continua somente como núcleo funcional invisível.
+// Shell pessoal — V7: o dashboard aprovado da Keise é carregado diretamente depois do núcleo.
+// Este controlador só observa/valida; não injeta uma segunda cópia concorrente do layout.
 (function(){
   'use strict'
-  if(window.__ISA_FINAL_SHELL_BOOTSTRAP_V6__){window.__ISA_FINAL_SHELL__?.scan?.();return}
-  window.__ISA_FINAL_SHELL_BOOTSTRAP_V6__=true
+  if(window.__ISA_FINAL_SHELL_BOOTSTRAP_V7__){window.__ISA_FINAL_SHELL__?.scan?.();return}
+  window.__ISA_FINAL_SHELL_BOOTSTRAP_V7__=true
 
   const $=id=>document.getElementById(id)
   const norm=v=>String(v||'').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
   const APPROVED=new Set(['keise','isa','alan'])
   const OBSOLETE_IDS=['approvedProfileHome','approvedPanelBack','isaFinalShellShield','isaFinalShellShieldV2','isaApprovedShellShield','keiseDesktopTopbar','keiseHomeDashboard']
-  let state='waiting',readySent=false,observer=null,timer=null,poll=null
-  let assetsRequested=false,retryScriptDone=false,cleanupDone=false,activateBusy=false
+  let state='waiting',readySent=false,observer=null,timer=null,poll=null,cleanupDone=false,activateBusy=false
 
   function requested(){const p=norm(new URLSearchParams(location.search).get('perfil'));return APPROVED.has(p)?p:''}
   function identified(){const n=norm($('myName')?.textContent);for(const p of APPROVED)if(n===p||n.startsWith(p+' '))return p;return''}
@@ -30,7 +29,10 @@
     document.body?.classList.remove('isa-current-shell')
     for(const id of OBSOLETE_IDS)$(id)?.remove()
   }
-
+  function ensureCss(){
+    if($('keiseApprovedFinalCssV7'))return
+    const l=document.createElement('link');l.id='keiseApprovedFinalCssV7';l.rel='stylesheet';l.href='./keise-approved-layout-final.css?v=7-direct-after-core';document.head.appendChild(l)
+  }
   function ensurePendingStyle(){
     if($('isaKeiseApprovedPendingStyle'))return
     const s=document.createElement('style');s.id='isaKeiseApprovedPendingStyle';s.textContent=`
@@ -65,24 +67,10 @@
     state='ready';hideGuard();stopWatching()
     if(!readySent){
       readySent=true
-      const detail={profile:'keise',version:'v6-no-deadlock'}
+      const detail={profile:'keise',version:'v7-direct-approved-home'}
       document.dispatchEvent(new CustomEvent('isa:final-shell-ready',{detail}));window.dispatchEvent(new CustomEvent('isa:final-shell-ready',{detail}))
     }
     return true
-  }
-
-  function ensureApprovedAssets(){
-    if(!isKeise()||!mainReady()||assetsRequested)return
-    assetsRequested=true
-    if(!$('keiseApprovedFinalCssV6')){
-      const l=document.createElement('link');l.id='keiseApprovedFinalCssV6';l.rel='stylesheet';l.href='./keise-approved-layout-final.css?v=6-no-deadlock';document.head.appendChild(l)
-    }
-    if(!$('keiseApprovedFinalJsV6')){
-      const s=document.createElement('script');s.id='keiseApprovedFinalJsV6';s.src='./keise-approved-layout-final.js?v=6-no-deadlock';s.async=false
-      s.onload=()=>schedule(80)
-      s.onerror=()=>{assetsRequested=false;s.remove();schedule(500)}
-      document.head.appendChild(s)
-    }
   }
 
   function forceExistingApprovedHome(){
@@ -92,12 +80,10 @@
     home.classList.remove('hidden')
     $('keiseApprovedTopbar')?.classList.remove('hidden')
     $('kaPanelBack')?.classList.add('hidden')
-    const main=$('mainView'),sidebar=main?.querySelector(':scope > .sidebar')||main?.querySelector('.sidebar'),content=main?.querySelector(':scope > .content')||main?.querySelector('.content')
+    const main=$('mainView'),sidebar=main?.querySelector(':scope > .sidebar')||main?.querySelector('.sidebar')
     if(sidebar){sidebar.style.setProperty('display','none','important');sidebar.style.setProperty('visibility','hidden','important');sidebar.style.setProperty('pointer-events','none','important')}
-    if(content){content.style.removeProperty('visibility');content.style.removeProperty('display')}
     return true
   }
-
   function activateApproved(){
     if(state==='ready'||activateBusy||!mainReady())return approvedReady()
     if(approvedReady())return emitReady()
@@ -105,67 +91,43 @@
     try{
       if(typeof window.__ISA_SHOW_KEISE_HOME__==='function')window.__ISA_SHOW_KEISE_HOME__()
       if(!approvedReady())forceExistingApprovedHome()
-    }catch(e){console.warn('[shell v6] abrir home aprovada:',e)}finally{activateBusy=false}
+    }catch(e){console.warn('[shell v7] abrir home aprovada:',e)}finally{activateBusy=false}
     if(approvedReady())return emitReady()
     return false
   }
-
   function scan(){
     if(state==='ready')return true
-    cleanupOldShells()
+    cleanupOldShells();ensureCss()
     if(loginReady()&&!mainReady()){state='login';hideGuard();return false}
     if(!isKeise()){
       if(mainReady()){state='ready';hideGuard();stopWatching();return true}
       state='waiting';return false
     }
     showGuard()
-    // CRÍTICO: verificar se já está pronto ANTES de qualquer nova mutação.
     if(approvedReady())return emitReady()
     if(!mainReady()){state='waiting-core';return false}
-    state='waiting-approved'
-    ensureApprovedAssets()
-    activateApproved()
-    return approvedReady()
+    state='waiting-approved';activateApproved();return approvedReady()
   }
+  function schedule(delay=80){if(state==='ready'||timer)return;timer=setTimeout(()=>{timer=null;scan()},Math.max(0,delay))}
 
-  function schedule(delay=70){
-    if(state==='ready'||timer)return
-    timer=setTimeout(()=>{timer=null;scan()},Math.max(0,delay))
-  }
-
-  cleanupOldShells()
-  if(requested()==='keise')showGuard()
-  const app=$('app')
-  if(app){observer=new MutationObserver(()=>schedule(90));observer.observe(app,{subtree:true,childList:true,attributes:true,attributeFilter:['class']})}
-
+  cleanupOldShells();ensureCss();if(requested()==='keise')showGuard()
+  const app=$('app');if(app){observer=new MutationObserver(()=>schedule(100));observer.observe(app,{subtree:true,childList:true,attributes:true,attributeFilter:['class']})}
   window.addEventListener('pageshow',()=>schedule(20))
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')schedule(40)})
   document.addEventListener('isa:core-ready',()=>schedule(20))
   document.addEventListener('isa:core-boot-complete',()=>schedule(20))
   document.addEventListener('isa:early-boot-release',()=>schedule(20))
+  document.addEventListener('isa:keise-approved-home-built',()=>schedule(0))
   setTimeout(()=>schedule(0),0)
   poll=setInterval(()=>{if(state==='ready'){stopWatching();return}scan()},650)
 
-  // Uma única segunda tentativa, com cache-bust, se o arquivo aprovado não tiver construído o dashboard.
-  setTimeout(()=>{
-    if(state==='ready'||!isKeise()||!mainReady()||$('keiseApprovedHome')||retryScriptDone)return
-    retryScriptDone=true
-    const s=document.createElement('script');s.id='keiseApprovedFinalJsV6Retry';s.src='./keise-approved-layout-final.js?v=6-retry-'+Date.now();s.onload=()=>schedule(80);document.head.appendChild(s)
-  },3600)
-
-  // Fail-open controlado: nunca deixar o spinner eterno; preferir o dashboard aprovado existente.
+  // Nunca deixa o overlay rodar para sempre.
   setTimeout(()=>{
     if(state==='ready'||!isKeise())return
     if(approvedReady()){emitReady();return}
     if(mainReady()&&$('keiseApprovedHome')){forceExistingApprovedHome();if(approvedReady()){emitReady();return}}
-    hideGuard()
-    state='degraded'
+    hideGuard();state='degraded'
   },7500)
 
-  window.__ISA_FINAL_SHELL__={
-    scan,recover:scan,retry:()=>{if(state==='ready')return true;assetsRequested=false;schedule(0);return false},
-    unlock:()=>{if(approvedReady())return emitReady();hideGuard();return mainReady()},
-    getState:()=>state,isReady:()=>state==='ready',
-    get state(){return state}
-  }
+  window.__ISA_FINAL_SHELL__={scan,recover:scan,retry:()=>{schedule(0);return false},unlock:()=>{if(approvedReady())return emitReady();hideGuard();return mainReady()},getState:()=>state,isReady:()=>state==='ready',get state(){return state}}
 })()
