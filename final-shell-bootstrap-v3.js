@@ -26,9 +26,7 @@
     if($('isaCurrentShellLockV4'))return
     const s=document.createElement('style');s.id='isaCurrentShellLockV4';s.textContent=`
       /* O dashboard central antigo nunca volta a ser uma camada visual. */
-      #keiseApprovedTopbar,#approvedProfileHome,#approvedPanelBack,#kaPanelBack,#isaFinalShellShield,#isaFinalShellShieldV2,#isaApprovedShellShield{display:none!important;visibility:hidden!important;pointer-events:none!important}
-      #keiseApprovedHome:not([data-current-shell-marker="1"]){display:none!important;visibility:hidden!important;pointer-events:none!important}
-      #keiseApprovedHome[data-current-shell-marker="1"]{position:fixed!important;left:-9999px!important;top:-9999px!important;width:1px!important;height:1px!important;min-width:1px!important;min-height:1px!important;display:block!important;visibility:visible!important;opacity:0!important;overflow:hidden!important;pointer-events:none!important;padding:0!important;margin:0!important;border:0!important}
+      #keiseApprovedTopbar,#keiseApprovedHome,#approvedProfileHome,#approvedPanelBack,#kaPanelBack,#isaFinalShellShield,#isaFinalShellShieldV2,#isaApprovedShellShield{display:none!important;visibility:hidden!important;pointer-events:none!important}
       body.isa-current-shell #mainView:not(.hidden){visibility:visible!important;opacity:1!important;pointer-events:auto!important}
       body.isa-current-shell #mainView>.sidebar,body.isa-current-shell #mainView>.content{visibility:visible!important;opacity:1!important;pointer-events:auto!important}
       body.isa-current-shell #personalBootGuard{pointer-events:none!important}
@@ -46,14 +44,7 @@
     document.head.appendChild(s)
   }
 
-  function removeLegacyNodes(){
-    for(const id of LEGACY_IDS){
-      const el=$(id)
-      if(!el)continue
-      if(id==='keiseApprovedHome'&&el.dataset.currentShellMarker==='1')continue
-      el.remove()
-    }
-  }
+  function removeLegacyNodes(){for(const id of LEGACY_IDS)$(id)?.remove()}
 
   function clearLegacyClasses(){
     const b=document.body;if(!b)return
@@ -70,15 +61,6 @@
     if(main){main.style.removeProperty('grid-template-columns');main.style.removeProperty('gap')}
   }
 
-  // Compatibilidade temporária com o loader antigo do index: é só um marcador invisível,
-  // não contém dashboard, botões, lista ou layout.
-  function ensureReadyMarker(){
-    let m=$('keiseApprovedHome')
-    if(m&&m.dataset.currentShellMarker!=='1'){m.remove();m=null}
-    if(!m){m=document.createElement('i');m.id='keiseApprovedHome';m.dataset.currentShellMarker='1';m.setAttribute('aria-hidden','true');document.body.appendChild(m)}
-    return m
-  }
-
   function hideGuard(){
     const g=$('personalBootGuard');if(g){g.classList.add('hidden');g.style.pointerEvents='none'}
     try{window.__ISA_HIDE_BOOT_GUARD__?.()}catch{}
@@ -86,7 +68,6 @@
 
   function unlock(){
     installCss();removeLegacyNodes();clearLegacyClasses();resetNativeInlineStyles()
-    for(const id of ['isaFinalShellShield','isaFinalShellShieldV2','isaApprovedShellShield'])$(id)?.remove()
     const main=$('mainView');if(main&&!main.classList.contains('hidden')){
       main.style.setProperty('pointer-events','auto','important')
       main.style.setProperty('visibility','visible','important')
@@ -95,7 +76,7 @@
   }
 
   function markReady(){
-    unlock();ensureReadyMarker();hideGuard();state='ready'
+    unlock();hideGuard();state='ready'
     const p=profile()||'keise'
     if(!readySent){
       readySent=true
@@ -117,15 +98,14 @@
   installCss();clearLegacyClasses();removeLegacyNodes()
   const app=$('app')
   if(app){observer=new MutationObserver(muts=>{
-    // Qualquer tentativa tardia de remontar o dashboard antigo é eliminada imediatamente.
     let legacyAdded=false
     for(const m of muts)for(const n of m.addedNodes||[]){
       if(n.nodeType!==1)continue
-      if(LEGACY_IDS.includes(n.id)||n.querySelector?.('#keiseApprovedTopbar,#approvedProfileHome,#approvedPanelBack,#kaPanelBack')){legacyAdded=true;break}
+      if(LEGACY_IDS.includes(n.id)||n.querySelector?.('#keiseApprovedTopbar,#keiseApprovedHome,#approvedProfileHome,#approvedPanelBack,#kaPanelBack')){legacyAdded=true;break}
     }
     if(legacyAdded)removeLegacyNodes()
     schedule()
-  });observer.observe(app,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style']})}
+  });observer.observe(app,{subtree:true,childList:true,attributes:true,attributeFilter:['class']})}
 
   window.addEventListener('pageshow',schedule)
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')schedule()})
