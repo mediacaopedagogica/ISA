@@ -1,5 +1,5 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
-import { CONFIG } from './config.js?v=20260910-birthday-bridge'
+import { CONFIG } from './config.js?v=20260911-birthday-bridge-all-family'
 
 if(!window.__ISA_NOSSA_REDE_BIRTHDAY_BRIDGE_V1__){
   window.__ISA_NOSSA_REDE_BIRTHDAY_BRIDGE_V1__=true
@@ -12,18 +12,7 @@ if(!window.__ISA_NOSSA_REDE_BIRTHDAY_BRIDGE_V1__){
   const root=()=>external()?$('familySocialOverlay'):$('socialPanel')
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
   const pad=n=>String(n).padStart(2,'0')
-  const norm=v=>String(v||'').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ')
 
-  function hardAllowed(viewer,target){
-    if(!viewer||!target)return true
-    if(viewer.id===target.id)return true
-    const v=norm(viewer.name||viewer.display_name),t=norm(target.name||target.display_name)
-    if(v==='elion')return ['isa','keise','alan','davi'].includes(t)
-    if(v==='evalda')return ['isa','alan','keise','paloma','vania'].includes(t)
-    if(v==='paloma')return ['keise','alan','davi','isa','evalda'].includes(t)
-    if(v==='vania'||v==='silvane')return t!=='elion'
-    return true
-  }
   function birthParts(p){
     const date=String(p?.birthDate||p?.birth_date||'')
     const day=Number(p?.birthDay||p?.birth_day||date.slice(8,10))
@@ -53,14 +42,10 @@ if(!window.__ISA_NOSSA_REDE_BIRTHDAY_BRIDGE_V1__){
   async function mainProfiles(){
     const {data:{user}}=await db.auth.getUser();if(!user)return{viewer:null,profiles:[]}
     const {data:me,error:mErr}=await db.from('family_members').select('id,family_id,display_name,birth_date,birth_day,birth_month,birth_year').eq('auth_user_id',user.id).eq('active',true).maybeSingle();if(mErr||!me)return{viewer:null,profiles:[]}
-    const [{data:members,error},{data:vis}]=await Promise.all([
-      db.from('family_members').select('id,display_name,relationship_label,birth_date,birth_day,birth_month,birth_year,active').eq('family_id',me.family_id).eq('active',true).order('display_name'),
-      db.from('family_chat_visibility').select('allowed_member_ids').eq('viewer_id',me.id).maybeSingle()
-    ])
+    const {data:members,error}=await db.from('family_members').select('id,display_name,relationship_label,birth_date,birth_day,birth_month,birth_year,active').eq('family_id',me.family_id).eq('active',true).order('display_name')
     if(error)throw error
-    const configured=Array.isArray(vis?.allowed_member_ids)?new Set(vis.allowed_member_ids.map(String)):null
     const viewer={id:me.id,name:me.display_name}
-    const profiles=(members||[]).filter(x=>hardAllowed(viewer,{id:x.id,name:x.display_name})&&(x.id===me.id||!configured||configured.has(String(x.id)))).map(x=>({memberId:x.id,name:x.display_name,relationship:x.relationship_label,birthDate:x.birth_date,birthDay:x.birth_day,birthMonth:x.birth_month,birthYear:x.birth_year}))
+    const profiles=(members||[]).map(x=>({memberId:x.id,name:x.display_name,relationship:x.relationship_label,birthDate:x.birth_date,birthDay:x.birth_day,birthMonth:x.birth_month,birthYear:x.birth_year}))
     return{viewer,profiles}
   }
   async function load(force=false){
