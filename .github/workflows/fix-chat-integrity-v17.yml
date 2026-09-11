@@ -1,0 +1,181 @@
+name: Fix conversation integrity v17
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-chat-integrity-v17.yml'
+permissions:
+  contents: write
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch core conversation routing
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('chunk-01.txt')
+          s=p.read_text(encoding='utf-8')
+
+          old="document.querySelectorAll('[data-conv]').forEach(b=>b.addEventListener('click',()=>openChat(b.dataset.conv)))"
+          new="$('chatList').querySelectorAll('.chat-item[data-conv]').forEach(b=>b.addEventListener('click',()=>openChat(b.dataset.conv)))"
+          if old not in s and new not in s: raise SystemExit('chat list click marker not found')
+          s=s.replace(old,new,1)
+
+          old="document.querySelectorAll('[data-conv]').forEach(x=>x.classList.toggle('active',x.dataset.conv===id));"
+          new="$('chatList').querySelectorAll('.chat-item[data-conv]').forEach(x=>x.classList.toggle('active',x.dataset.conv===id));"
+          if old not in s and new not in s: raise SystemExit('active conversation marker not found')
+          s=s.replace(old,new,1)
+
+          old="""async function loadMessages(id){
+  photoObjectUrls.splice(0).forEach(u=>URL.revokeObjectURL(u));const {data,error}=await supabase.from('messages').select('*').eq('conversation_id',id).is('deleted_at',null).order('sent_at',{ascending:true}).limit(600);if(error){console.error(error);return}activeMessages=data||[]
+}
+async function loadPolls(id){const {data,error}=await supabase.from('polls').select('id,conversation_id,created_by,question,multiple_choice,created_at,closes_at,poll_options(id,label,sort_order),poll_votes(option_id,member_id)').eq('conversation_id',id).order('created_at');activePolls=error?[]:data||[]}
+"""
+          new="""async function loadMessages(id){
+  const requestedId=String(id||'')
+  const {data,error}=await supabase.from('messages').select('*').eq('conversation_id',id).is('deleted_at',null).order('sent_at',{ascending:true}).limit(600)
+  if(error){console.error(error);return false}
+  if(String(activeConversation?.id||'')!==requestedId)return false
+  photoObjectUrls.splice(0).forEach(u=>URL.revokeObjectURL(u))
+  activeMessages=data||[]
+  return true
+}
+async function loadPolls(id){
+  const requestedId=String(id||'')
+  const {data,error}=await supabase.from('polls').select('id,conversation_id,created_by,question,multiple_choice,created_at,closes_at,poll_options(id,label,sort_order),poll_votes(option_id,member_id)').eq('conversation_id',id).order('created_at')
+  if(String(activeConversation?.id||'')!==requestedId)return false
+  activePolls=error?[]:data||[]
+  return !error
+}
+"""
+          if old not in s and 'const requestedId=String(id||\'\')' not in s: raise SystemExit('message race marker not found')
+          s=s.replace(old,new,1)
+
+          old="await markRead(id);await Promise.all([loadMessages(id),loadPolls(id)]);renderTimeline();subscribeChat(id);await loadConversations()"
+          new="await markRead(id);await Promise.all([loadMessages(id),loadPolls(id)]);if(String(activeConversation?.id||'')!==String(id))return;renderTimeline();subscribeChat(id);await loadConversations()"
+          if old not in s and new not in s: raise SystemExit('openChat completion marker not found')
+          s=s.replace(old,new,1)
+
+          p.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Patch external family chat
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('familia-externa.js')
+          s=p.read_text(encoding='utf-8')
+
+          old="""  const visibleConversations=(()=>{
+    if(!/silvane/i.test(String(person?.name||'')))return conversations
+    const seen=new Set()
+    return conversations.filter(c=>{
+      if(c.type!=='direct')return true
+      const key=String(c.title||'Isa').trim().toLocaleLowerCase('pt-BR')
+      if(seen.has(key))return false
+      seen.add(key);return true
+    })
+  })()
+"""
+          new="""  const visibleConversations=(()=>{
+    const seen=new Set()
+    return conversations.filter(c=>{
+      if(c.type!=='direct')return true
+      const key=String(c.title||'Conversa').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'')
+      if(seen.has(key))return false
+      seen.add(key);return true
+    })
+  })()
+"""
+          if old not in s and "const key=String(c.title||'Conversa')" not in s: raise SystemExit('external list dedupe marker not found')
+          s=s.replace(old,new,1)
+
+          old="""async function loadMessages(forceScroll=false){
+  if(!activeConversation)return
+  try{
+    const list=await rpc('friend_portal_messages',{p_token:token,p_conversation_id:activeConversation.id},{timeoutMs:7000})
+    const box=$('friendMessages')
+    if(!box)return
+"""
+          new="""async function loadMessages(forceScroll=false){
+  if(!activeConversation)return
+  const requestedId=String(activeConversation.id||'')
+  try{
+    const list=await rpc('friend_portal_messages',{p_token:token,p_conversation_id:requestedId},{timeoutMs:7000})
+    if(String(activeConversation?.id||'')!==requestedId)return
+    const box=$('friendMessages')
+    if(!box)return
+"""
+          if old not in s and "const requestedId=String(activeConversation.id||'')" not in s: raise SystemExit('external message race marker not found')
+          s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8')
+
+          for name in ['acesso.html','acesso-mobile.html']:
+            q=Path(name)
+            h=q.read_text(encoding='utf-8')
+            import re
+            h,n=re.subn(r'familia-externa\\.js\\?v=[^\"<]+','familia-externa.js?v=74-chat-integrity',h,count=1)
+            if n!=1 and 'familia-externa.js?v=74-chat-integrity' not in h: raise SystemExit(f'family module marker not found in {name}')
+            q.write_text(h,encoding='utf-8')
+          PY
+
+      - name: Rebuild active v34 core
+        shell: bash
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install --no-save @supabase/supabase-js@2 esbuild@0.25.9 >/dev/null 2>&1
+          cat > core-v34-entry.js <<'EOF'
+          import { createClient } from '@supabase/supabase-js'
+          import { CONFIG } from './config.js'
+          window.__ISA_SCRIPT_LOADED__ = true;
+          async function __isaCore34(){
+          window.__ISA_CORE_STARTED__ = true;
+          EOF
+          cat chunk-00.txt chunk-01.txt chunk-02.txt chunk-03.txt chunk-04.txt chunk-05.txt chunk-06.txt chunk-07.txt chunk-08.txt chunk-09.txt >> core-v34-entry.js
+          cat >> core-v34-entry.js <<'EOF'
+          }
+          __isaCore34().then(()=>{window.__ISA_APP_READY__=true;}).catch(error=>{
+            console.error('Falha ao iniciar Cantinho da Isa:',error);
+            window.__ISA_APP_ERROR__=String(error?.message||error||'Erro desconhecido');
+            const personal=new URLSearchParams(location.search).get('perfil');
+            const login=document.getElementById('loginView');
+            if(login && !personal) login.classList.remove('hidden');
+            const msg=document.getElementById('loginMsg');
+            if(msg){msg.textContent='O aplicativo não conseguiu iniciar. Atualize a página.';msg.style.color='#a15472';}
+          });
+          EOF
+          npx esbuild core-v34-entry.js --bundle --format=iife --platform=browser --target=es2020 --outfile=app-v34.js >/dev/null
+          node --check app-v34.js
+          node --check familia-externa.js
+          grep -q "chat-item\[data-conv\]" chunk-01.txt
+          grep -q "requestedId" chunk-01.txt
+          grep -q "requestedId" familia-externa.js
+
+      - name: Bust browser cache for repaired chat
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s,n=re.subn(r'app-v34\\.js\\?v=[^\"<]+','app-v34.js?v=20260911-chat-integrity-v17',s,count=1)
+          if n!=1 and 'app-v34.js?v=20260911-chat-integrity-v17' not in s: raise SystemExit('app v34 cache marker not found')
+          p.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Commit repair
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add chunk-01.txt app-v34.js familia-externa.js acesso.html acesso-mobile.html index.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'fix: keep each chat bound to the selected person'
+          git push
