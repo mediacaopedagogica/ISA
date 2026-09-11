@@ -25,14 +25,15 @@ async function start(){
     './message-reaction-delegate-v2.js?v=5-postenter',
     './isa-social-emoji-suite-v1.js?v=2-postenter',
     './family-social-extras-v1.js?v=3-postenter',
+    './family-visibility-guard-v2.js?v=1-exact-external-matrix',
     './nossa-rede-birthday-bridge-v1.js?v=2-postenter',
-    './external-birthday-sidebar-v1.js?v=1-privacy-filtered',
+    './external-birthday-sidebar-v1.js?v=2-privacy-filtered-visible',
     './nuvem-carousel-v1.js?v=8-postenter',
     './nossa-rede-media-workflow-v4.js?v=3-postenter',
+    './nossa-rede-menu-cleanup-v2.js?v=1-no-destination-choices',
     './nossa-rede-editor-make-addon-v1.js?v=2-postenter',
     './nossa-rede-cover-story-lock-v16.js?v=1-canonical-cover-story-order'
   ]
-  // Carrega em pequenos lotes para não congelar o primeiro paint.
   for(let i=0;i<jobs.length;i+=4){await Promise.all(jobs.slice(i,i+4).map(load));await new Promise(r=>setTimeout(r,0))}
   try{
     await window.__ISA_EXTERNAL_PROFILE_PARITY__?.start?.()
@@ -46,10 +47,12 @@ async function start(){
     window.__ISA_SOCIAL_EMOJI_SUITE__?.scan?.()
     window.__ISA_REACTION_DELEGATE_REFRESH__?.()
     window.__ISA_FAMILY_SOCIAL_EXTRAS__?.scan?.(true)
+    window.__ISA_FAMILY_VISIBILITY_V2__?.apply?.()
     window.__ISA_NOSSA_REDE_BIRTHDAYS__?.refresh?.()
     window.__ISA_EXTERNAL_BIRTHDAYS__?.refresh?.()
     window.__ISA_NUVEM_CAROUSEL__?.scan?.()
     window.__ISA_NOSSA_REDE_MEDIA_WORKFLOW__?.scan?.()
+    window.__ISA_NOSSA_REDE_MENU_CLEANUP__?.clean?.()
     window.__ISA_PATCH_MEDIA_MAKE__?.()
     window.__ISA_NOSSA_REDE_COVER_STORY__?.mount?.(true)
   }catch(error){console.warn('[Cantinho externo] extras parciais:',error)}
