@@ -58,7 +58,7 @@ later(690,'./collaborative-chat-postits-v2.js?v=3-cancel-reopen-fixers',()=>wind
 later(700,'./collaborative-postit-quick-actions-v1.js?v=2-tap-edit-cancel')
 later(705,'./keise-conversation-router-v2.js?v=1-final-approved-home')
 later(710,'./conversation-important-v2.js?v=5-collab-chat-v2',()=>window.__ISA_IMPORTANT_BOARD__?.render?.())
-later(730,'./approved-conversation-stability-v1.js?v=4-all-approved-single-owner',()=>window.__ISA_STABILIZE_APPROVED_CONVERSATIONS__?.())
+later(730,'./approved-conversation-stability-v1.js?v=11-canonical-no-polling',()=>window.__ISA_STABILIZE_APPROVED_CONVERSATIONS__?.())
 if(!approvedAtBoot)later(760,'./social-nav-guard.js?v=11-approved-excluded',()=>{window.__ISA_ENSURE_SOCIAL_NAV__?.();window.__ISA_ENSURE_PROFILE_MENU__?.();window.__ISA_PERSONAL_NAV_SYNC__?.()})
 later(840,'./nossa-rede-v4.js?v=7-single-shell-open',()=>{window.__ISA_ENHANCE_NOSSA_REDE__?.();window.__ISA_SOCIAL_PRIVACY__?.apply?.();window.__ISA_FAMILY_SOCIAL_EXTRAS__?.scan?.(true);window.__ISA_NOSSA_REDE_BIRTHDAYS__?.refresh?.();if(!approvedAtBoot)window.__ISA_PERSONAL_NAV_SYNC__?.()})
 later(920,'./nossa-rede-policy-v5-loader.js?v=15-media-v4',()=>{window.__ISA_NOSSA_REDE_V5__?.patch?.();window.__ISA_COMMENT_MEDIA_MENU__?.scan?.();window.__ISA_NUVEM_COMPACT_COMPOSER__?.scan?.();window.__ISA_SOCIAL_EMOJI_SUITE__?.scan?.();window.__ISA_NOSSA_REDE_MEDIA_WORKFLOW__?.scan?.()})
