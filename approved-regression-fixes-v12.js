@@ -13,7 +13,6 @@
     return ['keise','isa','alan'].some(p=>requested===p||current===p||current.startsWith(p+' '))
   }
 
-  // Metadado público para auditorias futuras: esta home é a referência dourada e não pode ser substituída.
   window.__ISA_CANONICAL_GOLDEN_MASTER__={
     version:'2026-09-11-v12',
     reference:'assets/reference/keise-approved-home-final.webp',
@@ -25,13 +24,12 @@
     const s=document.createElement('style')
     s.id='approvedRegressionCssV12'
     s.textContent=`
-      /* O fixador sempre pertence ao card; nunca pode ficar solto na página. */
       #kaConversationList .ka-conv-card[data-source-conv],
       #kaConversationListStable .ka-conv-card[data-source-conv]{position:relative!important;padding-right:58px!important}
       #kaConversationList .ka-conv-card[data-source-conv]>.nuvem-pin-picker-trigger,
       #kaConversationListStable .ka-conv-card[data-source-conv]>.nuvem-pin-picker-trigger{right:10px!important;top:50%!important;transform:translateY(-50%)!important}
-      /* O aniversário nativo continua funcional, mas agora aparece dentro da home canônica. */
-      #keiseApprovedHome>#birthdayHero{width:100%;margin:16px 0 2px!important}
+      /* Aniversários pertencem à Nossa Rede/calendário, nunca à tela inicial do Chat. */
+      #keiseApprovedHome #birthdayHero{display:none!important}
     `
     document.head.appendChild(s)
   }
@@ -46,18 +44,12 @@
   }
 
   function mountBirthdayHero(){
-    if(!approved())return false
+    // Compatibilidade de API: não move mais aniversário para a home do Chat.
     const home=$('keiseApprovedHome'),birthday=$('birthdayHero')
-    if(!home||!birthday)return false
-    if(birthday.parentElement!==home){
-      const hero=home.querySelector('.ka-hero')
-      if(hero)hero.insertAdjacentElement('afterend',birthday)
-      else home.prepend(birthday)
-    }
-    return true
+    if(home&&birthday&&home.contains(birthday))birthday.style.setProperty('display','none','important')
+    return false
   }
 
-  // O controlador aprovado espera esta API. A build do Teste já existia, mas não exportava a função.
   if(typeof window.__ISA_OPEN_KEISE_TEST__!=='function'){
     window.__ISA_OPEN_KEISE_TEST__=async()=>{
       try{
