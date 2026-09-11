@@ -1,10 +1,12 @@
-name: Smoke loading v2
+name: Smoke loading v3
 on:
   push:
     paths:
       - '.github/workflows/smoke-loading-v1.yml'
       - 'index.html'
-      - 'final-shell-bootstrap-v2.js'
+      - 'final-shell-bootstrap-v3.js'
+      - 'keise-approved-layout-final.js'
+      - 'keise-approved-layout-final.css'
       - 'personal-boot-failopen-v1.js'
       - 'acesso.html'
       - 'acesso-mobile.html'
@@ -27,7 +29,7 @@ jobs:
           npm init -y >/dev/null 2>&1
           npm install playwright@1.55.0 --silent
           npx playwright install --with-deps chromium
-      - name: Verify loaders always resolve
+      - name: Verify approved Keise shell and external loaders
         run: |
           cat > smoke.mjs <<'JS'
           import { chromium } from 'playwright';
@@ -41,11 +43,40 @@ jobs:
           }
           async function root(){
             const {p,errors}=await committedPage(base+'?perfil=keise&smoke='+Date.now());
-            await p.waitForTimeout(12000);
-            const s=await p.evaluate(()=>({guard:!!document.getElementById('personalBootGuard')&&!document.getElementById('personalBootGuard').classList.contains('hidden'),early:window.__ISA_EARLY_BOOT_RELEASED__||'',final:!!document.getElementById('keiseApprovedHome')&&!document.getElementById('keiseApprovedHome').classList.contains('hidden'),main:!!document.getElementById('mainView')&&!document.getElementById('mainView').classList.contains('hidden'),login:!!document.getElementById('loginView')&&!document.getElementById('loginView').classList.contains('hidden'),last:window.__ISA_LAST_RUNTIME_ERROR__||'',ready:document.readyState}));
-            console.log('ROOT',JSON.stringify(s),'errors=',errors);
+            await p.waitForTimeout(4500);
+            // O smoke não possui a sessão privada da Keise. Simula somente a passagem
+            // login -> app já autenticado para validar qual shell visual assume a tela.
+            await p.evaluate(()=>{
+              document.getElementById('loginView')?.classList.add('hidden');
+              document.getElementById('mainView')?.classList.remove('hidden');
+              const n=document.getElementById('myName');if(n)n.textContent='Keise';
+              window.__ISA_APP_READY__=true;
+              document.dispatchEvent(new CustomEvent('isa:core-ready'));
+              window.__ISA_FINAL_SHELL__?.scan?.();
+            });
+            await p.waitForTimeout(5000);
+            const s=await p.evaluate(()=>{
+              const guard=document.getElementById('personalBootGuard');
+              const approvedGuard=document.getElementById('isaKeiseApprovedGuard');
+              const home=document.getElementById('keiseApprovedHome');
+              const sidebar=document.querySelector('#mainView>.sidebar');
+              return {
+                guard:!!guard&&!guard.classList.contains('hidden'),
+                approvedGuard:!!approvedGuard,
+                final:!!home&&!home.classList.contains('hidden'),
+                bodyApproved:document.body.classList.contains('keise-approved-layout')&&document.body.classList.contains('keise-home-active'),
+                sidebarDisplay:sidebar?getComputedStyle(sidebar).display:'missing',
+                featureCount:document.querySelectorAll('#keiseApprovedHome [data-ka-action]').length,
+                oldWelcomeVisible:[...document.querySelectorAll('#emptyState')].some(el=>getComputedStyle(el).display!=='none'&&!el.classList.contains('hidden')),
+                last:window.__ISA_LAST_RUNTIME_ERROR__||'',
+                ready:document.readyState
+              };
+            });
+            console.log('KEISE_APPROVED',JSON.stringify(s),'errors=',errors);
             await p.close();
-            if(s.guard||(!s.final&&!s.main&&!s.login))throw new Error('Root ficou preso no carregamento: '+JSON.stringify(s));
+            if(s.guard||s.approvedGuard||!s.final||!s.bodyApproved||s.sidebarDisplay!=='none'||s.featureCount<9||s.oldWelcomeVisible){
+              throw new Error('Layout aprovado da Keise não assumiu sozinho a tela: '+JSON.stringify(s));
+            }
           }
           async function external(file){
             const {p,errors}=await committedPage(base+file+'?smoke='+Date.now()+'#acesso=smoke-invalid');
