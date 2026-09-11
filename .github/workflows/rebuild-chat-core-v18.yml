@@ -1,0 +1,14 @@
+name: Rebuild chat core v18
+on:
+  push:
+    paths:
+      - '.github/workflows/rebuild-chat-core-v18.yml'
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check runner
+        run: echo ready
