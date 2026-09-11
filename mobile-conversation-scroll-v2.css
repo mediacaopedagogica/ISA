@@ -1,4 +1,5 @@
 /* Conversas em telas pequenas: rolagem vertical real e visível em todos os layouts aprovados. */
+#socialPanel .isa-status-card-wrap,#familySocialOverlay .isa-status-card-wrap{display:none!important}
 @media(max-width:850px){
   #chatList,.chat-list,#kaConversationList,#kaConversationListStable,.friend-conversation-list,#friendConversationList{
     min-height:0!important;
