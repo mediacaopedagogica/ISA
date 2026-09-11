@@ -49,11 +49,75 @@ function ensureTouchCss(){
   document.head.appendChild(s)
 }
 
+// Mantém cada card do dashboard aprovado preso ao UUID exato da conversa.
+// Este guard é carregado antes do dashboard e, por isso, elimina roteamento por
+// texto/nome ou cliques concorrentes de camadas antigas.
+let wantedConversationId=''
+let wantedConversationTitle=''
+let conversationRetryTimer=null
+
+function nativeConversationCard(id){
+  return [...document.querySelectorAll('#chatList .chat-item[data-conv]')]
+    .find(el=>String(el.dataset.conv||'')===String(id||''))||null
+}
+
+function openWantedConversation(id,attempt=0){
+  if(!id||String(id)!==wantedConversationId)return false
+  const source=nativeConversationCard(id)
+  const dashboard=window.__ISA_APPROVED_DASHBOARD__
+  if(!source||!dashboard){
+    if(attempt<18)setTimeout(()=>openWantedConversation(id,attempt+1),60)
+    return false
+  }
+  try{dashboard.enterPanel?.()}catch{}
+  try{HTMLElement.prototype.click.call(source)}catch{source.click?.()}
+  clearTimeout(conversationRetryTimer)
+  conversationRetryTimer=setTimeout(()=>{
+    if(String(id)!==wantedConversationId)return
+    const active=[...document.querySelectorAll('#chatList .chat-item.active[data-conv]')][0]
+    const title=norm(document.getElementById('chatTitle')?.textContent)
+    const wanted=norm(wantedConversationTitle)
+    if(String(active?.dataset.conv||'')!==String(id)||(wanted&&title&&title!==wanted)){
+      const exact=nativeConversationCard(id)
+      if(exact){try{HTMLElement.prototype.click.call(exact)}catch{exact.click?.()}}
+    }
+  },360)
+  return true
+}
+
+function bindApprovedConversationIntegrity(){
+  if(window.__ISA_APPROVED_CONVERSATION_ID_GUARD__)return
+  window.__ISA_APPROVED_CONVERSATION_ID_GUARD__=true
+  window.addEventListener('click',e=>{
+    if(!approvedProfile())return
+    const card=e.target?.closest?.('#kaConversationList [data-ka-conv]')
+    if(!card)return
+    const id=String(card.dataset.kaConv||card.dataset.sourceConv||'')
+    if(!id)return
+    e.preventDefault();e.stopImmediatePropagation()
+    wantedConversationId=id
+    wantedConversationTitle=card.querySelector('strong')?.textContent?.replace(/★/g,'').trim()||''
+    openWantedConversation(id)
+  },true)
+  window.addEventListener('keydown',e=>{
+    if(!approvedProfile()||!['Enter',' '].includes(e.key))return
+    const card=e.target?.closest?.('#kaConversationList [data-ka-conv]')
+    if(!card)return
+    e.preventDefault();e.stopImmediatePropagation()
+    const id=String(card.dataset.kaConv||card.dataset.sourceConv||'')
+    if(!id)return
+    wantedConversationId=id
+    wantedConversationTitle=card.querySelector('strong')?.textContent?.replace(/★/g,'').trim()||''
+    openWantedConversation(id)
+  },true)
+}
+
 function start(){
   ensureTouchCss()
+  bindApprovedConversationIntegrity()
   if(!approvedProfile())ensureGlobalSettingsEntry()
   let tries=0
   const timer=setInterval(()=>{if(!approvedProfile())ensureGlobalSettingsEntry();if(++tries>=32)clearInterval(timer)},300)
 }
 start();document.addEventListener('DOMContentLoaded',start,{once:true})
-window.__ISA_MOBILE_GUARD__={singleNavigation:true,approvedProfiles:['keise','isa','alan']}
+window.__ISA_MOBILE_GUARD__={singleNavigation:true,approvedProfiles:['keise','isa','alan'],exactConversationRouting:true}
