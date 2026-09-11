@@ -82,23 +82,6 @@ later(2310,'./nuvem-compose-compact-v1.js?v=11-flat-pink-live',()=>window.__ISA_
 later(2335,'./nossa-rede-media-workflow-v4.js?v=2-rich-editor-stable',()=>window.__ISA_NOSSA_REDE_MEDIA_WORKFLOW__?.scan?.())
 later(2360,'./nuvem-pin-picker-v2.js?v=6-all-family-links',()=>{window.__ISA_NUVEM_PIN_PICKER__?.scan?.();window.__ISA_STABILIZE_APPROVED_CONVERSATIONS__?.()})
 
-let keiseBooted=false
-function bootKeise(){
-  if(keiseBooted||currentProfile()!=='keise')return false
-  keiseBooted=true
-  load('./keise-chat-unified.js?v=5-stable-interactions')
-  later(25,'./keise-approved-layout-final.js?v=9-deterministic-boot',()=>{window.__ISA_SHOW_KEISE_HOME__?.();window.__ISA_STABILIZE_APPROVED_CONVERSATIONS__?.()})
-  later(210,'./keise-game-test.js?v=11-stable-interactions')
-  return true
-}
-bootKeise();let kc=0;const kt=setInterval(()=>{if(bootKeise()||++kc>50)clearInterval(kt)},120)
-
-let sharedBooted=false
-function bootSharedApproved(){
-  const p=currentProfile();if(sharedBooted||!(p==='isa'||p==='alan'))return false
-  sharedBooted=true
-  later(25,'./approved-profile-dashboard.js?v=9-deterministic-boot',()=>{window.__ISA_SHOW_APPROVED_PROFILE_HOME__?.();window.__ISA_STABILIZE_APPROVED_CONVERSATIONS__?.()})
-  return true
-}
-bootSharedApproved();let sc=0;const st=setInterval(()=>{if(bootSharedApproved()||++sc>50)clearInterval(st)},120)
+// O shell aprovado (Keise/Isa/Alan) pertence somente ao final-shell-bootstrap-v2.
+// Este arquivo carrega apenas recursos extras depois que o shell final já existe.
 window.__ISA_EXTRAS_READY__=true
