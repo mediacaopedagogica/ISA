@@ -3,12 +3,12 @@
    As cirurgias V13/V15 preservam o motor e mantêm a interface aprovada estável. */
 (function(){
   'use strict'
-  if(window.__ISA_APPROVED_STABILITY_SHIM_V16__)return
-  window.__ISA_APPROVED_STABILITY_SHIM_V16__=true
+  if(window.__ISA_APPROVED_STABILITY_SHIM_V17__)return
+  window.__ISA_APPROVED_STABILITY_SHIM_V17__=true
 
-  // Primeiro fixa o roteamento por UUID. Ele neutraliza o roteador visual antigo
-  // (data-ka-conv) e usa somente data-source-conv -> #chatList[data-conv].
-  import('./keise-conversation-router-v2.js?v=4-exact-id-lock').then(()=>{
+  // Primeiro fixa o roteamento pelo nome visível + UUID exato.
+  // Se um renderer antigo deixar título e UUID desencontrados, a pessoa escrita no card tem prioridade.
+  import('./keise-conversation-router-v2.js?v=5-title-uuid-exact-lock').then(()=>{
     window.__ISA_CONVERSATION_ROUTER_SAFETY__?.sanitize?.()
   }).catch(error=>console.warn('Roteamento exato das conversas:',error))
 
