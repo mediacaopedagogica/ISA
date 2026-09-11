@@ -10,5 +10,115 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Check runner
-        run: echo ready
+        with:
+          fetch-depth: 0
+      - name: Patch only stale conversation async ownership
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p=Path('chunk-01.txt')
+          s=p.read_text(encoding='utf-8')
+          old="""async function loadMessages(id){
+  photoObjectUrls.splice(0).forEach(u=>URL.revokeObjectURL(u));const {data,error}=await supabase.from('messages').select('*').eq('conversation_id',id).is('deleted_at',null).order('sent_at',{ascending:true}).limit(600);if(error){console.error(error);return}activeMessages=data||[]
+}
+async function loadPolls(id){const {data,error}=await supabase.from('polls').select('id,conversation_id,created_by,question,multiple_choice,created_at,closes_at,poll_options(id,label,sort_order),poll_votes(option_id,member_id)').eq('conversation_id',id).order('created_at');activePolls=error?[]:data||[]}
+"""
+          new="""async function loadMessages(id,openSeq=null){
+  const {data,error}=await supabase.from('messages').select('*').eq('conversation_id',id).is('deleted_at',null).order('sent_at',{ascending:true}).limit(600);if(error){console.error(error);return false}
+  if(openSeq!==null&&(openSeq!==conversationOpenSeq||activeConversation?.id!==id))return false
+  photoObjectUrls.splice(0).forEach(u=>URL.revokeObjectURL(u));activeMessages=data||[];return true
+}
+async function loadPolls(id,openSeq=null){const {data,error}=await supabase.from('polls').select('id,conversation_id,created_by,question,multiple_choice,created_at,closes_at,poll_options(id,label,sort_order),poll_votes(option_id,member_id)').eq('conversation_id',id).order('created_at');if(openSeq!==null&&(openSeq!==conversationOpenSeq||activeConversation?.id!==id))return false;activePolls=error?[]:data||[];return !error}
+"""
+          if old not in s:
+              raise SystemExit('chunk-01 pattern changed; refusing broad change')
+          p.write_text(s.replace(old,new,1),encoding='utf-8')
+
+          p=Path('chunk-08.txt')
+          s=p.read_text(encoding='utf-8')
+          if not s.startswith('let calendarEvents=[]'):
+              raise SystemExit('chunk-08 header changed; refusing broad change')
+          s=s.replace('let calendarEvents=[]','let conversationOpenSeq=0\nlet calendarEvents=[]',1)
+          old="""async function openChat(id,fromSupervision=false){
+  activeConversation=conversations.find(c=>c.id===id);if(!activeConversation)return;activeSupervisionMode=!!fromSupervision
+  document.querySelectorAll('[data-conv]').forEach(x=>x.classList.toggle('active',!activeSupervisionMode&&x.dataset.conv===id));hidePanels();$('emptyState').classList.add('hidden');$('chatPanel').classList.remove('hidden')
+  const supervision=activeSupervisionMode&&isParent()&&conversationHasChild(activeConversation),other=activeConversation.type==='direct'?directOther(activeConversation):null
+  $('chatTitle').textContent=supervision?supervisedTitle(activeConversation):convTitle(activeConversation);$('chatSubtitle').textContent=supervision?'Supervisão da Isa • somente leitura':convSubtitle(activeConversation)
+  const av=$('chatAvatar');if(supervision){av.removeAttribute('data-avatar-id');av.innerHTML='👀'}else if(activeConversation.type==='group'){av.removeAttribute('data-avatar-id');av.innerHTML='👨‍👩‍👧'}else{av.dataset.avatarId=other?.id||'';av.innerHTML=avatarDisplay(other);hydrateAvatarElements()}
+  $('supervisionNotice')?.classList.toggle('hidden',!supervision);$('composer')?.classList.toggle('hidden',supervision)
+  const isGroup=activeConversation.type==='group';$('groupPlusBtn').classList.toggle('hidden',supervision||!isGroup);$('photoBtn').classList.toggle('hidden',supervision||isGroup||!canSendPhoto(activeConversation));$('messageInput').disabled=supervision
+  if(!supervision)await markRead(id);await Promise.all([loadMessages(id),loadPolls(id)]);renderTimeline();subscribeChat(id);await loadConversations()
+}
+"""
+          new="""async function openChat(id,fromSupervision=false){
+  id=String(id||'');const selected=conversations.find(c=>String(c.id)===id);if(!selected)return
+  const openSeq=++conversationOpenSeq;activeConversation=selected;activeSupervisionMode=!!fromSupervision
+  document.querySelectorAll('[data-conv]').forEach(x=>x.classList.toggle('active',!activeSupervisionMode&&String(x.dataset.conv)===id));hidePanels();$('emptyState').classList.add('hidden');$('chatPanel').classList.remove('hidden')
+  const supervision=activeSupervisionMode&&isParent()&&conversationHasChild(selected),other=selected.type==='direct'?directOther(selected):null
+  $('chatTitle').textContent=supervision?supervisedTitle(selected):convTitle(selected);$('chatSubtitle').textContent=supervision?'Supervisão da Isa • somente leitura':convSubtitle(selected)
+  const av=$('chatAvatar');if(supervision){av.removeAttribute('data-avatar-id');av.innerHTML='👀'}else if(selected.type==='group'){av.removeAttribute('data-avatar-id');av.innerHTML='👨‍👩‍👧'}else{av.dataset.avatarId=other?.id||'';av.innerHTML=avatarDisplay(other);hydrateAvatarElements()}
+  $('supervisionNotice')?.classList.toggle('hidden',!supervision);$('composer')?.classList.toggle('hidden',supervision)
+  const isGroup=selected.type==='group';$('groupPlusBtn').classList.toggle('hidden',supervision||!isGroup);$('photoBtn').classList.toggle('hidden',supervision||isGroup||!canSendPhoto(selected));$('messageInput').disabled=supervision
+  if(!supervision)await markRead(id)
+  if(openSeq!==conversationOpenSeq||activeConversation?.id!==id)return
+  await Promise.all([loadMessages(id,openSeq),loadPolls(id,openSeq)])
+  if(openSeq!==conversationOpenSeq||activeConversation?.id!==id)return
+  renderTimeline();subscribeChat(id);await loadConversations()
+  if(openSeq!==conversationOpenSeq||activeConversation?.id!==id)return
+}
+"""
+          if old not in s:
+              raise SystemExit('chunk-08 openChat pattern changed; refusing broad change')
+          p.write_text(s.replace(old,new,1),encoding='utf-8')
+
+          p=Path('chunk-06.txt')
+          s=p.read_text(encoding='utf-8')
+          old="$('mobileBackBtn').onclick=()=>{activeConversation=null;$('chatPanel').classList.add('hidden');$('emptyState').classList.remove('hidden');renderChatList()}"
+          new="$('mobileBackBtn').onclick=()=>{conversationOpenSeq++;activeConversation=null;$('chatPanel').classList.add('hidden');$('emptyState').classList.remove('hidden');renderChatList()}"
+          if old not in s:
+              raise SystemExit('chunk-06 back pattern changed; refusing broad change')
+          p.write_text(s.replace(old,new,1),encoding='utf-8')
+          PY
+      - name: Build only app-v34 from existing chunks
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install --no-save @supabase/supabase-js@2 esbuild@0.25.9 >/dev/null 2>&1
+          cat > core-v34-entry.js <<'EOF'
+          import { createClient } from '@supabase/supabase-js'
+          import { CONFIG } from './config.js'
+          window.__ISA_SCRIPT_LOADED__ = true;
+          async function __isaCore34(){
+          window.__ISA_CORE_STARTED__ = true;
+          EOF
+          cat chunk-00.txt chunk-01.txt chunk-02.txt chunk-03.txt chunk-04.txt chunk-05.txt chunk-06.txt chunk-07.txt chunk-08.txt chunk-09.txt >> core-v34-entry.js
+          cat >> core-v34-entry.js <<'EOF'
+          }
+          __isaCore34().then(()=>{window.__ISA_APP_READY__=true;}).catch(error=>{
+            console.error('Falha ao iniciar Cantinho da Isa:',error);
+            window.__ISA_APP_ERROR__=String(error?.message||error||'Erro desconhecido');
+          });
+          EOF
+          npx esbuild core-v34-entry.js --bundle --format=iife --platform=browser --target=es2020 --outfile=app-v34.js
+          node --check app-v34.js
+          grep -q 'conversationOpenSeq' app-v34.js
+          grep -q 'openSeq !== conversationOpenSeq' app-v34.js
+      - name: Refresh only core cache key
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html');s=p.read_text(encoding='utf-8')
+          old='./app-v34.js?v=20260911-single-core-v1'
+          new='./app-v34.js?v=20260911-chat-owner-v2'
+          if old not in s:
+              raise SystemExit('index core cache key changed; refusing broad change')
+          p.write_text(s.replace(old,new,1),encoding='utf-8')
+          PY
+      - name: Commit only surgical runtime files
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add chunk-01.txt chunk-06.txt chunk-08.txt app-v34.js index.html
+          git diff --cached --stat
+          git commit -m 'fix: keep each conversation bound to its selected id'
+          git push
