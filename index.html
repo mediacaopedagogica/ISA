@@ -29,27 +29,17 @@
 </head>
 <body>
 <div id="personalBootGuard" class="hidden" aria-live="polite"><div class="guard-card"><div class="guard-heart">♥</div><h2 id="personalBootTitle">Abrindo seu Cantinho…</h2><p>Carregando suas conversas com segurança.</p><div class="guard-spinner"></div></div></div>
-<script id="personalBootEarlyWatchdogV1">
+<script id="personalBootEarlyWatchdogV2">
 (function(){
-  var params=new URLSearchParams(location.search), personal=params.get('perfil');
-  if(!personal)return;
-  var released=false;
-  function visible(el){return !!el&&!el.classList.contains('hidden')}
-  function hide(id){var el=document.getElementById(id);if(el)el.classList.add('hidden')}
-  function release(reason){
-    if(released)return;released=true;
-    hide('personalBootGuard');hide('isaApprovedShellShield');hide('isaFinalShellShield');hide('isaFinalShellShieldV2');
-    if(document.body)document.body.classList.remove('isa-final-shell-managed','isa-approved-shell-lock');
-    var final=document.getElementById('keiseApprovedHome'),main=document.getElementById('mainView'),login=document.getElementById('loginView');
-    if(!visible(final)&&!visible(main)&&login)login.classList.remove('hidden');
-    window.__ISA_EARLY_BOOT_RELEASED__=reason||true;
-    try{document.dispatchEvent(new CustomEvent('isa:early-boot-release',{detail:{reason:reason||'watchdog'}}))}catch(e){}
-  }
-  window.__ISA_EARLY_BOOT_RELEASE__=release;
+  var params=new URLSearchParams(location.search),personal=String(params.get('perfil')||'').toLowerCase();
+  if(!['keise','isa','alan'].includes(personal))return;
+  var guard=document.getElementById('personalBootGuard');
+  guard?.classList.remove('hidden');
+  var title=document.getElementById('personalBootTitle');if(title)title.textContent='Abrindo seu Cantinho…';
   setTimeout(function(){
-    var final=document.getElementById('keiseApprovedHome'),main=document.getElementById('mainView'),login=document.getElementById('loginView');
-    if(!visible(final)&&!visible(main)&&!visible(login))release('watchdog-6500');
-    else hide('personalBootGuard');
+    if(document.getElementById('keiseApprovedHome')&&!document.getElementById('keiseApprovedHome').classList.contains('hidden')){guard?.classList.add('hidden');return}
+    window.__ISA_FINAL_SHELL__?.recover?.();
+    try{document.dispatchEvent(new CustomEvent('isa:personal-boot-retry',{detail:{reason:'early-watchdog'}}))}catch(e){}
   },6500);
 })();
 </script>
@@ -95,11 +85,11 @@
 (function(){
   const personal=new URLSearchParams(location.search).get('perfil');
   const guard=document.getElementById('personalBootGuard');
-  if(personal){guard?.classList.remove('hidden');const t=document.getElementById('personalBootTitle');if(t)t.textContent=`Abrindo o Cantinho de ${personal}…`}
+  if(personal){guard?.classList.remove('hidden');const t=document.getElementById('personalBootTitle');if(t)t.textContent='Abrindo seu Cantinho…'}
   window.__ISA_HIDE_BOOT_GUARD__=()=>guard?.classList.add('hidden');
   const observe=()=>{
-    const main=document.getElementById('mainView'),login=document.getElementById('loginView');
-    if((main&&!main.classList.contains('hidden'))||(login&&!login.classList.contains('hidden')))window.__ISA_HIDE_BOOT_GUARD__();
+    const final=document.getElementById('keiseApprovedHome'),login=document.getElementById('loginView');
+    if((final&&!final.classList.contains('hidden'))||(login&&!login.classList.contains('hidden')))window.__ISA_HIDE_BOOT_GUARD__();
   };
   new MutationObserver(observe).observe(document.getElementById('app'),{subtree:true,attributes:true,attributeFilter:['class']});
   window.addEventListener('error',e=>{window.__ISA_LAST_RUNTIME_ERROR__=String(e?.error?.message||e?.message||'Erro')});
@@ -108,7 +98,7 @@
 </script>
 <script>(function(){const btn=document.getElementById('togglePassword'),input=document.getElementById('loginPassword');if(btn&&input){btn.onclick=()=>{const show=input.type==='password';input.type=show?'text':'password';btn.textContent=show?'🙈':'👁️';btn.setAttribute('aria-label',show?'Ocultar senha':'Mostrar senha');btn.title=show?'Ocultar senha':'Mostrar senha';input.focus()}}})();</script>
 <script>
-if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=single-nav-71-auth-timeout',{scope:'./'}).then(reg=>reg.update().catch(()=>{})).catch(error=>console.warn('Service Worker:',error));}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=single-nav-72-approved-route',{scope:'./'}).then(reg=>reg.update().catch(()=>{})).catch(error=>console.warn('Service Worker:',error));}
 </script>
 <script>
 (function(){
@@ -121,9 +111,10 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=sin
 })();
 </script>
 <script defer src="./mobile-interaction-guard.js?v=65-single-navigation"></script>
+<!-- Instala primeiro o controlador do layout aprovado; só depois o núcleo de autenticação pode abrir a sessão. -->
+<script src="./final-shell-bootstrap-v2.js?v=3-root-approved-stable"></script>
 <script async src="./app-v33.js?v=63-auth-timeout"></script>
-<script async src="./final-shell-bootstrap-v2.js?v=2-auth-timeout"></script>
-<script src="./personal-boot-failopen-v1.js?v=1-no-eternal-loader"></script>
+<script src="./personal-boot-failopen-v1.js?v=2-no-legacy-fallback"></script>
 <script>
 (function(){
   let tries=0,loaded=false;
@@ -132,7 +123,7 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=sin
     const main=document.getElementById('mainView'),name=String(document.getElementById('myName')?.textContent||'').trim();
     if(main&&!main.classList.contains('hidden')&&name&&name!=='Família'){
       loaded=true;
-      const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=74-auth-timeout';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
+      const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=75-root-approved-stable';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
     }
     if(++tries<140)setTimeout(loadExtras,120);
   };
@@ -165,16 +156,11 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=sin
 <script>
 window.addEventListener('load',()=>{
   setTimeout(()=>{
-    const main=document.getElementById('mainView'),login=document.getElementById('loginView'),personal=new URLSearchParams(location.search).get('perfil');
-    if(main&&!main.classList.contains('hidden')){window.__ISA_HIDE_BOOT_GUARD__?.();return}
+    const main=document.getElementById('mainView'),login=document.getElementById('loginView'),final=document.getElementById('keiseApprovedHome'),personal=new URLSearchParams(location.search).get('perfil');
+    if(final&&!final.classList.contains('hidden')){window.__ISA_HIDE_BOOT_GUARD__?.();return}
     if(login&&!login.classList.contains('hidden')){window.__ISA_HIDE_BOOT_GUARD__?.();return}
-    if(personal){
-      window.__ISA_HIDE_BOOT_GUARD__?.();
-      login?.classList.remove('hidden');
-      const msg=document.getElementById('loginMsg');
-      if(msg){msg.textContent='A sessão foi reconhecida, mas o aplicativo não terminou de abrir. Recarregue esta página uma vez.';msg.style.color='#a15472'}
-      return;
-    }
+    if(main&&!main.classList.contains('hidden')){window.__ISA_FINAL_SHELL__?.recover?.();return}
+    if(personal){window.__ISA_FINAL_SHELL__?.recover?.();return}
     login?.classList.remove('hidden');
   },7000);
 });
