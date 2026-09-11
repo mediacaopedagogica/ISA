@@ -69,7 +69,7 @@
 <dialog id="simpleDialog"><form method="dialog" class="dialog-card"><button class="dialog-close" value="cancel">✕</button><div id="dialogContent"></div></form></dialog><div id="toast" class="toast hidden"></div>
 <script>
 (function(){
-  window.__ISA_BOOT_BUILD__='20260911-auth-audit-v8';
+  window.__ISA_BOOT_BUILD__='20260911-direct-v34-clickable-v9';
   const personal=String(new URLSearchParams(location.search).get('perfil')||'').toLowerCase();
   const guard=document.getElementById('personalBootGuard');
   if(['keise','isa','alan'].includes(personal)){guard?.classList.remove('hidden');const t=document.getElementById('personalBootTitle');if(t)t.textContent='Abrindo seu Cantinho…'}
@@ -85,7 +85,7 @@
 </script>
 <script>(function(){const btn=document.getElementById('togglePassword'),input=document.getElementById('loginPassword');if(btn&&input){btn.onclick=()=>{const show=input.type==='password';input.type=show?'text':'password';btn.textContent=show?'🙈':'👁️';btn.setAttribute('aria-label',show?'Ocultar senha':'Mostrar senha');btn.title=show?'Ocultar senha':'Mostrar senha';input.focus()}}})();</script>
 <script>
-if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=single-nav-76-auth-audit',{scope:'./'}).then(reg=>reg.update().catch(()=>{})).catch(error=>console.warn('Service Worker:',error));}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=clickable-shell-77',{scope:'./'}).then(reg=>reg.update().catch(()=>{})).catch(error=>console.warn('Service Worker:',error));}
 </script>
 <script>
 (function(){
@@ -98,10 +98,10 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=sin
 })();
 </script>
 <script defer src="./mobile-interaction-guard.js?v=68-core-v2"></script>
-<!-- Ordem única: shell aprovado -> ponte do núcleo único -> watchdog passivo. -->
-<script src="./final-shell-bootstrap-v2.js?v=9-auth-phase-v8"></script>
-<script src="./app-v33.js?v=67-auth-phase-v4"></script>
-<script src="./personal-boot-failopen-v1.js?v=7-auth-audit"></script>
+<!-- Ordem segura: shell fail-open clicável -> núcleo v34 direto -> watchdog passivo. -->
+<script src="./final-shell-bootstrap-v3.js?v=1-clickable-failopen"></script>
+<script src="./app-v33.js?v=68-direct-v34-clickable"></script>
+<script src="./personal-boot-failopen-v1.js?v=8-clickable-failopen"></script>
 <script>
 (function(){
   let tries=0,loaded=false;
@@ -119,7 +119,7 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=sin
     const approvedReady=!approved||visible(approvedHome);
     if(visible(main)&&name&&name!=='família'&&approvedReady&&window.__ISA_APP_READY__===true){
       loaded=true;
-      const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=79-core-v2';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
+      const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=80-clickable-shell';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
     }
     if(++tries<220)setTimeout(loadExtras,120);
   };
