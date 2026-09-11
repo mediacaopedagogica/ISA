@@ -1,0 +1,55 @@
+name: Diagnose Keise freeze
+
+on:
+  push:
+    paths:
+      - '.github/workflows/diag-keise-freeze-v1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm i playwright@1.55.0 >/dev/null 2>&1
+          npx playwright install --with-deps chromium >/dev/null 2>&1
+      - name: Isolate freezing script
+        run: |
+          cat > /tmp/onecase.js <<'JS'
+          const {chromium}=require(process.cwd()+'/node_modules/playwright');
+          const block=process.argv[2]||'none';
+          (async()=>{
+            console.log('CASE_START',block);
+            const browser=await chromium.launch({headless:true});
+            const context=await browser.newContext({serviceWorkers:'block'});
+            if(block!=='none') await context.route('**/*',route=>{
+              const u=route.request().url();
+              if(u.includes(block)){console.log('ABORT',block,u);return route.abort()}
+              return route.continue();
+            });
+            const page=await context.newPage();
+            page.on('pageerror',e=>console.log('PAGEERROR',block,String(e)));
+            page.on('console',m=>{if(m.type()==='error')console.log('CONSOLE_ERROR',block,m.text())});
+            try{
+              await page.goto('https://mediacaopedagogica.github.io/ISA/?perfil=keise&diag='+Date.now(),{waitUntil:'domcontentloaded',timeout:8000});
+              console.log('GOTO_OK',block);
+            }catch(e){console.log('GOTO_FAIL',block,e.name,e.message);process.exit(3)}
+            console.log('EVAL_START',block);
+            const value=await page.evaluate(()=>({build:window.__ISA_BOOT_BUILD__||'',shell:window.__ISA_FINAL_SHELL__?.getState?.()||'',main:document.getElementById('mainView')?.className||'',login:document.getElementById('loginView')?.className||''}));
+            console.log('EVAL_OK',block,JSON.stringify(value));
+            process.exit(0);
+          })().catch(e=>{console.log('CASE_ERR',block,e.stack||String(e));process.exit(2)});
+          JS
+          for block in none final-shell-bootstrap-v3.js app-v33.js keise-approved-layout-final.js personal-boot-failopen-v1.js mobile-interaction-guard.js; do
+            echo "===== $block ====="
+            timeout 14s node /tmp/onecase.js "$block" || echo "CASE_EXIT_$block=$?"
+          done
