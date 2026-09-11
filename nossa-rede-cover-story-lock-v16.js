@@ -12,7 +12,7 @@ if(!window.__ISA_NOSSA_REDE_COVER_STORY_LOCK_V16__){
   const external=()=>!!token&&!!($('familySocialOverlay')||window.__ISA_FRIEND_PERSON__)
   const root=()=>external()?$('familySocialOverlay'):$('socialPanel')
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
-  let me=null,coverUrl='',coverRef='',busy=null,timer=0,observer=null
+  let me=null,coverUrl='',coverRef='',timer=0,observer=null
 
   window.__ISA_NOSSA_REDE_LAYOUT_LOCK__={
     version:'2026-09-11-v16',
@@ -104,6 +104,7 @@ if(!window.__ISA_NOSSA_REDE_COVER_STORY_LOCK_V16__){
     css();const r=root();if(!r||r.classList.contains('hidden'))return false
     applyAccent(r)
     const host=mainHost(r);if(!host)return false
+    const extComposer=$('fs75Composer');if(external()&&extComposer)extComposer.classList.add('social-composer')
     let stories=r.querySelector('.isa-story-strip')
     if(!stories){try{await window.__ISA_FAMILY_SOCIAL_EXTRAS__?.ensureStories?.(r)}catch{};stories=r.querySelector('.isa-story-strip')}
     let slot=r.querySelector('.isa-main-cover-slot')
