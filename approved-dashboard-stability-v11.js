@@ -56,9 +56,7 @@
       body.isa-approved-single-owner.keise-home-active #approvedPanelBack,
       body.isa-approved-single-owner.keise-home-active #kaPanelBack{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important}
       body.isa-approved-single-owner.keise-home-active #keiseApprovedHome,
-      body.isa-approved-single-owner.keise-home-active #keiseApprovedTopbar{display:block;visibility:visible!important;opacity:1!important;pointer-events:auto!important}
-      #kaConversationList{display:flex;flex-direction:column}
-      #kaConversationList>.ka-conv-card{flex:0 0 auto}
+      body.isa-approved-single-owner.keise-home-active #keiseApprovedTopbar{visibility:visible!important;opacity:1!important;pointer-events:auto!important}
       #kaAvatarContent img,#kaTopAvatar img{width:100%;height:100%;object-fit:cover;display:block}
     `;document.head.appendChild(s)
   }
