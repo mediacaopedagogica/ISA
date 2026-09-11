@@ -1,0 +1,41 @@
+name: Direct Keise approved home v7
+
+on:
+  push:
+    paths:
+      - '.github/workflows/direct-keise-approved-home-v7.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Put approved Keise dashboard directly after core
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace("window.__ISA_BOOT_BUILD__='20260911-no-deadlock-v12'","window.__ISA_BOOT_BUILD__='20260911-direct-keise-v13'")
+          s=s.replace('./final-shell-bootstrap-v3.js?v=6-no-deadlock','./final-shell-bootstrap-v3.js?v=7-direct-approved-home')
+          marker='<script src="./app-v33.js?v=69-direct-v34-single-shell"></script>'
+          direct=marker+'\n<script src="./keise-approved-layout-final.js?v=7-direct-after-core"></script>'
+          if 'keise-approved-layout-final.js?v=7-direct-after-core' not in s:
+            if marker not in s: raise SystemExit('core script marker missing')
+            s=s.replace(marker,direct,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit direct load
+        run: |
+          if git diff --quiet -- index.html; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'fix: load approved Keise dashboard directly after core'
+          git push origin HEAD:main
