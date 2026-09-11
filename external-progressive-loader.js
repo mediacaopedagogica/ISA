@@ -22,18 +22,18 @@ function start(){
   later(475,'./chat-rich-format-guard-v2.js?v=2-no-empty-tags',()=>window.__ISA_CLEAN_EMPTY_CHAT_FORMATS__?.())
   later(545,'./familia-emoji-completo.js?v=9-controls')
 
-  later(620,'./profile-photo-unified-sync-v1.js?v=1-chat-social-same-photo',()=>window.__ISA_PROFILE_PHOTO_UNIFIED_SYNC__?.scan?.())
   later(650,'./external-profile-parity-v1.js?v=2-keise-profile-parity',()=>window.__ISA_EXTERNAL_PROFILE_PARITY__?.start?.())
   later(720,'./social-profile-pages-v1.js?v=2-all-family-profile-parity',()=>window.__ISA_SOCIAL_PROFILE_PAGES__?.decorate?.())
   later(790,'./social-profile-directory-v1.js?v=2-all-family-profile-parity',()=>window.__ISA_SOCIAL_PROFILE_DIRECTORY__?.patch?.())
   later(860,'./social-reaction-names-v1.js?v=2-all-family-profile-parity',()=>window.__ISA_ENHANCE_REACTION_NAMES__?.())
 
   later(980,'./family-social-extras-v1.js?v=2-live-social-extras',()=>window.__ISA_FAMILY_SOCIAL_EXTRAS__?.scan?.(true))
-  later(1010,'./nossa-rede-birthday-bridge-v1.js?v=2-all-family-birthdays',()=>window.__ISA_NOSSA_REDE_BIRTHDAYS__?.refresh?.())
+  later(1010,'./nossa-rede-birthday-bridge-v1.js?v=3-all-family-birthdays',()=>window.__ISA_NOSSA_REDE_BIRTHDAYS__?.refresh?.())
   later(1030,'./nuvem-carousel-v1.js?v=7-edit-delete-api',()=>window.__ISA_NUVEM_CAROUSEL__?.scan?.())
   later(1050,'./nossa-rede-media-workflow-v4.js?v=2-rich-editor-stable',()=>window.__ISA_NOSSA_REDE_MEDIA_WORKFLOW__?.scan?.())
   later(1070,'./nossa-rede-editor-make-addon-v1.js?v=1-makeup-tools',()=>window.__ISA_PATCH_MEDIA_MAKE__?.())
   later(1090,'./profile-status-stickers.js?v=13-click-fix',()=>{window.__ISA_ENSURE_EXTERNAL_MENU__?.();window.__ISA_EXTERNAL_DECOR_CLEANUP__?.()})
+  later(1120,'./profile-photo-unified-sync-v1.js?v=2-profile-and-social-one-photo',()=>window.__ISA_PROFILE_PHOTO_UNIFIED_SYNC__?.scan?.())
   later(1220,'./profile-birthday-v1.js?v=4-social-birthday-bridge',()=>window.__ISA_PROFILE_BIRTHDAY__?.inject?.())
   later(1300,'./interaction-recovery-v2.js?v=1-chat-date',()=>window.__ISA_INTERACTION_RECOVERY__?.scan?.())
   later(1440,'./social-tag-notifications.js?v=2-live-tags',()=>window.__ISA_SOCIAL_TAG_NOTIFICATIONS__?.poll?.())
@@ -43,9 +43,9 @@ function start(){
   later(2140,'./nuvem-carousel-v1.js?v=7-edit-delete-api',()=>window.__ISA_NUVEM_CAROUSEL__?.scan?.())
   later(2170,'./nossa-rede-media-workflow-v4.js?v=2-rich-editor-stable',()=>window.__ISA_NOSSA_REDE_MEDIA_WORKFLOW__?.scan?.())
   later(2200,'./nossa-rede-header-cleanup-v1.js?v=4-all-family-final',()=>window.__ISA_NOSSA_REDE_HEADER_CLEANUP__?.())
-  later(2260,'./nossa-rede-comment-menu-v1.js?v=4-all-family-final',()=>window.__ISA_COMMENT_MEDIA_MENU__?.scan?.())
+  later(2260,'./nossa-rede-comment-menu-v1.js?v=5-comment-isolated',()=>window.__ISA_COMMENT_MEDIA_MENU__?.scan?.())
   later(2290,'./nuvem-pin-picker-v2.js?v=6-all-family-links',()=>window.__ISA_NUVEM_PIN_PICKER__?.scan?.())
-  setTimeout(()=>{window.__ISA_COLLAB_POSTITS__?.scan?.();window.__ISA_SOCIAL_EMOJI_SUITE__?.scan?.();window.__ISA_FAMILY_SOCIAL_EXTRAS__?.scan?.(true);window.__ISA_NOSSA_REDE_BIRTHDAYS__?.refresh?.();window.__ISA_NOSSA_REDE_MEDIA_WORKFLOW__?.scan?.();window.__ISA_NUVEM_PIN_PICKER__?.scan?.()},2330)
+  setTimeout(()=>{window.__ISA_COLLAB_POSTITS__?.scan?.();window.__ISA_SOCIAL_EMOJI_SUITE__?.scan?.();window.__ISA_FAMILY_SOCIAL_EXTRAS__?.scan?.(true);window.__ISA_NOSSA_REDE_BIRTHDAYS__?.refresh?.();window.__ISA_NOSSA_REDE_MEDIA_WORKFLOW__?.scan?.();window.__ISA_COMMENT_MEDIA_MENU__?.scan?.();window.__ISA_NUVEM_PIN_PICKER__?.scan?.()},2330)
 
   if(name.includes('paloma')){
     later(1120,'./paloma-studies.js?v=9-click-fix',()=>window.__ISA_ENSURE_EXTERNAL_MENU__?.())
