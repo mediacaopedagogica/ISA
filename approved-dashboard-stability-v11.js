@@ -12,7 +12,7 @@
   import('./approved-ui-surgery-v14.js?v=1-social-birthday-cover-chat-colors').then(()=>{
     window.__ISA_APPROVED_UI_SURGERY__?.scan?.()
   }).catch(error=>console.warn('Cirurgia visual do dashboard aprovado:',error))
-  import('./approved-birthday-calendar-v15.js?v=1-stable-calendar-and-day-art').then(()=>{
+  import('./approved-birthday-calendar-v15.js?v=2-all-family-birthdays').then(()=>{
     window.__ISA_APPROVED_BIRTHDAY_CALENDAR__?.refresh?.(true)
   }).catch(error=>console.warn('Calendário de aniversários aprovado:',error))
 })();
