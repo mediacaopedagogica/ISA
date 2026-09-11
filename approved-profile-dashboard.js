@@ -86,3 +86,5 @@
   installCss();observe();schedule()
   window.__ISA_APPROVED_CANONICAL_LOCK__={enforce,schedule,profile}
 })();
+
+import('./approved-dashboard-stability-v11.js?v=1-stable-order-avatar-social').catch(()=>{})
