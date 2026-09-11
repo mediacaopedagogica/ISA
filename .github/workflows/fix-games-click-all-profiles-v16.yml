@@ -1,0 +1,83 @@
+name: Fix Joguinhos click for all profiles v16
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-games-click-all-profiles-v16.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix profile recognition and bind external Joguinhos
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p=Path('games-menu.js')
+          s=p.read_text()
+
+          old="function currentName(){const main=norm($('myName')?.textContent);if(main&&main!=='família')return main;const external=norm($('friendName')?.textContent);if(external&&external!=='perfil')return external;return''}\nfunction eligible(){const n=currentName();return['isa','keise','alan','paloma','elion','vania','evalda','davi'].includes(n)}"
+          new="function canonicalName(value){const n=norm(value);for(const key of ['isa','keise','alan','paloma','elion','vania','evalda','davi','silvane'])if(n===key||n.startsWith(key+' '))return key;return n}\nfunction currentName(){const main=canonicalName($('myName')?.textContent);if(main&&main!=='familia')return main;const external=canonicalName($('friendName')?.textContent);if(external&&external!=='perfil')return external;return''}\nfunction eligible(){const n=currentName();return['isa','keise','alan','paloma','elion','vania','evalda','davi','silvane'].includes(n)}"
+          if old in s:
+              s=s.replace(old,new,1)
+          elif "function canonicalName(value)" not in s:
+              raise SystemExit('games profile marker not found')
+
+          marker="function wire(){if(!eligible())return;ensureOverlay();wireMain();wirePaloma()}"
+          replacement="function wireExternalNav(){if(!isExternal()||!eligible())return;const btn=$('friendGamesMenuBtn');if(!btn||btn.dataset.cantinhoGamesBound==='1')return;btn.dataset.cantinhoGamesBound='1';btn.disabled=false;btn.removeAttribute('aria-disabled');btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();openGames()},true)}\nfunction wire(){if(!eligible())return;ensureOverlay();wireMain();wireExternalNav()}"
+          if marker in s:
+              s=s.replace(marker,replacement,1)
+          elif "function wireExternalNav()" not in s:
+              raise SystemExit('games wire marker not found')
+          p.write_text(s)
+
+          loader=Path('external-safe-loader-v71.js')
+          h=loader.read_text()
+          needle="    './external-ui-controller.js?v=15-postenter',\n"
+          add="    './external-ui-controller.js?v=15-postenter',\n    './games-menu.js?v=16-all-profiles-click-fix',\n"
+          if add not in h:
+              if needle not in h: raise SystemExit('external safe loader marker not found')
+              h=h.replace(needle,add,1)
+          loader.write_text(h)
+
+          prog=Path('external-progressive-loader.js')
+          g=prog.read_text()
+          needle2="  later(25,'./external-menu.js?v=7-audit-family',()=>window.__ISA_ENSURE_EXTERNAL_MENU__?.())\n"
+          add2="  later(25,'./external-menu.js?v=7-audit-family',()=>window.__ISA_ENSURE_EXTERNAL_MENU__?.())\n  later(40,'./games-menu.js?v=16-all-profiles-click-fix')\n"
+          if add2 not in g:
+              if needle2 not in g: raise SystemExit('external progressive loader marker not found')
+              g=g.replace(needle2,add2,1)
+          prog.write_text(g)
+          PY
+          node --check games-menu.js
+          node --check external-safe-loader-v71.js
+          node --check external-progressive-loader.js
+      - name: Verify all profiles
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('games-menu.js').read_text()
+          for name in ['isa','keise','alan','paloma','elion','vania','evalda','davi','silvane']:
+              if f"'{name}'" not in s: raise SystemExit(f'missing profile {name}')
+          if 'friendGamesMenuBtn' not in s or 'cantinhoGamesBound' not in s:
+              raise SystemExit('external games binding missing')
+          if 'games-menu.js?v=16-all-profiles-click-fix' not in Path('external-safe-loader-v71.js').read_text():
+              raise SystemExit('safe loader games entry missing')
+          print('Joguinhos binding verified for all profiles')
+          PY
+      - name: Commit patch
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo 'No changes needed'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add games-menu.js external-safe-loader-v71.js external-progressive-loader.js
+          git commit -m 'fix: restore Joguinhos for every family profile'
+          git push
