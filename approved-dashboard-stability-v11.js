@@ -35,9 +35,9 @@
         set:function(value){
           const guarded=this?.classList?.contains('isa-story-strip')||this?.classList?.contains('isa-social-cover')
           if(guarded){
-            const sig=clean(value),prev=this.__isaStableHtmlSignature
-            if(prev===sig)return value
-            try{Object.defineProperty(this,'__isaStableHtmlSignature',{value:sig,writable:true,configurable:true})}catch{this.__isaStableHtmlSignature=sig}
+            const sig=clean(value),prev=this.__isaStableHtmlSignature,now=Date.now(),last=Number(this.__isaStableHtmlAt||0)
+            if(prev===sig&&now-last<10000)return value
+            try{Object.defineProperty(this,'__isaStableHtmlSignature',{value:sig,writable:true,configurable:true});Object.defineProperty(this,'__isaStableHtmlAt',{value:now,writable:true,configurable:true})}catch{this.__isaStableHtmlSignature=sig;this.__isaStableHtmlAt=now}
           }
           return desc.set.call(this,value)
         }
