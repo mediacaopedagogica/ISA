@@ -16,6 +16,7 @@ await import('./message-reaction-delegate-v2.js?v=4-expanded-emotions').catch(()
 await import('./isa-social-emoji-suite-v1.js?v=1-full-isa-chat-emojis').catch(()=>null);
 await import('./nossa-rede-single-comment-emoji-lock-v1.js?v=1-one-button-all-links').catch(()=>null);
 await import('./nossa-rede-header-cleanup-v1.js?v=4-all-family-final').catch(()=>null);
+await import('./nossa-rede-theme-story-lock-v1.js?v=1-theme-story-circle-effects').catch(()=>null);
 window.__ISA_NOSSA_REDE_V5__?.patch?.();
 window.__ISA_COMMENT_MEDIA_MENU__?.scan?.();
 window.__ISA_NUVEM_COMPACT_COMPOSER__?.scan?.();
@@ -26,3 +27,4 @@ window.__ISA_REACTION_DELEGATE_REFRESH__?.();
 window.__ISA_SOCIAL_EMOJI_SUITE__?.scan?.();
 window.__ISA_SINGLE_COMMENT_EMOJI_LOCK__?.scan?.();
 window.__ISA_NOSSA_REDE_HEADER_CLEANUP__?.();
+window.__ISA_THEME_STORY_LOCK__?.scan?.();
