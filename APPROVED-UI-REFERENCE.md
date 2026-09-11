@@ -42,6 +42,16 @@ Regras adicionais:
 - mudar tema, capa ou Story nunca pode reordenar publicações, conversas, cards, aniversários ou outros componentes;
 - a composição `capa > Stories 24h > compositor > feed` está protegida por `nossa-rede-cover-story-lock-v16.js` e não pode ser revertida por módulos posteriores.
 
+## Comentários da Nossa Rede — controle único de emojis
+
+Esta regra é **fixa** para Keise, Isa, Alan e todos os links familiares autorizados:
+
+- cada barra **Comentar com carinho...** deve mostrar **um único botão 😊** para abrir a paleta completa de emojis;
+- nunca podem aparecer dois ou três botões de emoji concorrentes no mesmo comentário;
+- o botão **+** de foto/vídeo/áudio/marcar, o campo de comentário e o botão de enviar permanecem exatamente como estão e não podem ser removidos ou deslocados por esta correção;
+- módulos auxiliares podem fornecer a paleta, mas não podem criar um segundo botão visual de emoji;
+- esta regra é protegida por `nossa-rede-single-comment-emoji-lock-v1.js`, que apenas elimina duplicidades conhecidas sem reconstruir o formulário, o post ou o feed.
+
 ## Recursos globais que não podem regredir
 
 Estes recursos são para os perfis autorizados da família, não apenas para um usuário específico:
