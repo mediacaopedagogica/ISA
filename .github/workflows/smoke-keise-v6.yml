@@ -1,0 +1,85 @@
+name: Smoke Keise v6
+
+on:
+  push:
+    paths:
+      - '.github/workflows/smoke-keise-v6.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm i playwright@1.55.0 >/dev/null 2>&1
+          npx playwright install --with-deps chromium >/dev/null 2>&1
+      - name: Verify approved Keise home opens and old shell stays hidden
+        run: |
+          node <<'JS'
+          const {chromium}=require('playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage({viewport:{width:1440,height:900}});
+            const errors=[];
+            page.on('pageerror',e=>errors.push(String(e)));
+            const url='https://mediacaopedagogica.github.io/ISA/?perfil=keise&smokev6='+Date.now();
+
+            let build='';
+            for(let i=0;i<18;i++){
+              await page.goto(url+'&try='+i,{waitUntil:'domcontentloaded',timeout:30000});
+              build=await page.evaluate(()=>window.__ISA_BOOT_BUILD__||'');
+              if(build==='20260911-no-deadlock-v12')break;
+              await page.waitForTimeout(5000);
+            }
+            if(build!=='20260911-no-deadlock-v12')throw new Error('Pages ainda não publicou o build v12: '+build);
+
+            await page.evaluate(()=>{
+              document.getElementById('loginView')?.classList.add('hidden');
+              document.getElementById('mainView')?.classList.remove('hidden');
+              const n=document.getElementById('myName');if(n)n.textContent='Keise';
+              window.__ISA_APP_READY__=true;
+              document.dispatchEvent(new CustomEvent('isa:core-ready'));
+              document.dispatchEvent(new CustomEvent('isa:core-boot-complete'));
+              window.__ISA_FINAL_SHELL__?.scan?.();
+            });
+
+            await page.waitForFunction(()=>{
+              const h=document.getElementById('keiseApprovedHome');
+              return !!h&&!h.classList.contains('hidden')&&document.body.classList.contains('keise-home-active');
+            },null,{timeout:12000});
+
+            const result=await page.evaluate(()=>{
+              const home=document.getElementById('keiseApprovedHome');
+              const main=document.getElementById('mainView');
+              const side=main?.querySelector(':scope > .sidebar')||main?.querySelector('.sidebar');
+              const old=document.getElementById('emptyState');
+              const visible=el=>!!el&&getComputedStyle(el).display!=='none'&&getComputedStyle(el).visibility!=='hidden'&&el.getClientRects().length>0;
+              return {
+                state:window.__ISA_FINAL_SHELL__?.getState?.(),
+                approved:visible(home),
+                actions:home?.querySelectorAll('[data-ka-action]').length||0,
+                sidebarDisplay:side?getComputedStyle(side).display:'missing',
+                oldWelcome:visible(old),
+                guard:visible(document.getElementById('isaKeiseApprovedGuard'))||visible(document.getElementById('personalBootGuard')),
+                body:[...document.body.classList]
+              };
+            });
+            console.log(JSON.stringify({build,result,errors},null,2));
+            if(result.state!=='ready')throw new Error('Shell não ficou ready: '+result.state);
+            if(!result.approved)throw new Error('Dashboard aprovado não está visível');
+            if(result.actions<9)throw new Error('Faltam atalhos no dashboard: '+result.actions);
+            if(result.sidebarDisplay!=='none')throw new Error('Sidebar antiga ainda visível: '+result.sidebarDisplay);
+            if(result.oldWelcome)throw new Error('Bem-vinda antigo ainda está visível');
+            if(result.guard)throw new Error('Tela de carregamento permaneceu visível');
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
