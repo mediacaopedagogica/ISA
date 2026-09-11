@@ -4,6 +4,10 @@
   if(window.__ISA_NOSSA_REDE_PROFILE_SEARCH_V1__)return
   window.__ISA_NOSSA_REDE_PROFILE_SEARCH_V1__=true
   const norm=v=>String(v||'').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ')
+  function style(){
+    if(document.getElementById('nossaRedeProfileSearchCss'))return
+    const s=document.createElement('style');s.id='nossaRedeProfileSearchCss';s.textContent='#socialPanel .isa-status-card-wrap,#familySocialOverlay .isa-status-card-wrap{display:none!important}';document.head.appendChild(s)
+  }
   function toast(text){const t=document.getElementById('friendToast')||document.getElementById('toast');if(!t)return;t.textContent=text;t.classList.remove('hidden');clearTimeout(t._profileSearch);t._profileSearch=setTimeout(()=>t.classList.add('hidden'),2400)}
   async function openByName(value){
     const term=norm(value);if(!term)return
@@ -28,6 +32,7 @@
     fresh.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();openByName(fresh.value)}})
   }
   function scan(){
+    style()
     document.querySelectorAll('#socialPanel .isa-social-search,#familySocialOverlay .isa-social-search').forEach(bind)
   }
   document.addEventListener('isa:social-opened',()=>setTimeout(scan,60));document.addEventListener('isa:friend-portal-entered',()=>setTimeout(scan,120))
