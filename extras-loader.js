@@ -27,6 +27,7 @@ async function loadCoreExtras(){
     loadOnce('links','./link-preview.js?v=6-inline-video'),
     loadOnce('social-network','./social-network-stable-v9.js?v=1-final-only'),
     loadOnce('social-profile-chat-bridge','./social-profile-chat-bridge.js?v=1-separated-photo-chat-rules'),
+    loadOnce('profile-photo-unified-sync','./profile-photo-unified-sync-v1.js?v=1-chat-social-same-photo'),
     loadOnce('profile-theme-v2','./social-profile-theme-v2.js?v=3-live-visible'),
     loadOnce('profile-theme-page','./social-profile-theme-page-addon-v1.js?v=1-own-profile-visible-theme'),
     loadOnce('seasonal-theme','./seasonal-theme-engine-v1.js?v=2-calendar-live'),
@@ -53,6 +54,7 @@ async function loadCoreExtras(){
   result.forEach((r,i)=>{if(r.status==='rejected')console.warn('Módulo extra não carregou',i,r.reason)})
   window.__ISA_SOCIAL_PRIVACY__?.apply?.()
   window.__ISA_SOCIAL_PROFILE_CHAT_SYNC__?.()
+  window.__ISA_PROFILE_PHOTO_UNIFIED_SYNC__?.scan?.()
   window.__ISA_PROFILE_THEME_V2__?.scan?.()
   window.__ISA_PROFILE_THEME_PAGE__?.sync?.()
 }
