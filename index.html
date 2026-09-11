@@ -104,15 +104,25 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=sin
 <script>
 (function(){
   let tries=0,loaded=false;
+  const norm=v=>String(v||'').trim().toLowerCase();
+  const visible=el=>!!el&&!el.classList.contains('hidden')&&getComputedStyle(el).display!=='none'&&getComputedStyle(el).visibility!=='hidden';
   const loadExtras=()=>{
     if(loaded)return;
-    const main=document.getElementById('mainView'),name=String(document.getElementById('myName')?.textContent||'').trim();
-    if(main&&!main.classList.contains('hidden')&&name&&name!=='Família'){
+    const main=document.getElementById('mainView');
+    const name=norm(document.getElementById('myName')?.textContent);
+    const requested=norm(new URLSearchParams(location.search).get('perfil'));
+    const firstName=name.split(/\s+/)[0]||'';
+    const profile=['keise','isa','alan'].includes(requested)?requested:firstName;
+    const approved=['keise','isa','alan'].includes(profile);
+    const approvedHome=document.getElementById('keiseApprovedHome')||document.getElementById('approvedProfileHome');
+    const approvedReady=!approved||visible(approvedHome);
+    if(visible(main)&&name&&name!=='família'&&approvedReady){
       loaded=true;
-      const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=76-no-shell-restart';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
+      const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=77-approved-shell-first';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
     }
-    if(++tries<140)setTimeout(loadExtras,120);
+    if(++tries<180)setTimeout(loadExtras,120);
   };
+  document.addEventListener('isa:final-shell-ready',loadExtras);
   setTimeout(loadExtras,180);
 })();
 </script>
