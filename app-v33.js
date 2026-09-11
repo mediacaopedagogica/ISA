@@ -3,8 +3,8 @@
 (function(){
   'use strict'
   if(window.__ISA_APP_ENTRY_PROMISE__)return
-  window.__ISA_APP_ENTRY_VERSION__='single-core-v3-native-boot'
-  window.__ISA_APP_ENTRY_PROMISE__=import('./app-core-single-v1.js?v=4-native-single-boot')
+  window.__ISA_APP_ENTRY_VERSION__='single-core-v4-authenticated-audit'
+  window.__ISA_APP_ENTRY_PROMISE__=import('./app-core-single-v1.js?v=5-authenticated-boot-audit')
     .then(()=>window.__ISA_CORE_SINGLE_PROMISE__||true)
     .catch(error=>{
       window.__ISA_APP_ERROR__=String(error?.message||error||'Falha ao iniciar o Cantinho')
