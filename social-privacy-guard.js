@@ -2,8 +2,9 @@
 // Aplica a mesma matriz de visibilidade no núcleo autenticado e nos acessos externos.
 Promise.allSettled([
   import('./family-visibility-guard-v1.js?v=1-exact-profile-matrix'),
+  import('./family-visibility-guard-v2.js?v=2-exact-profile-matrix'),
   import('./chat-visibility-filter-v1.js?v=2-exact-profile-matrix')
-]).then(()=>{window.__ISA_FAMILY_VISIBILITY__?.apply?.(document);window.__ISA_REFRESH_CHAT_VISIBILITY__?.()})
+]).then(()=>{window.__ISA_FAMILY_VISIBILITY__?.apply?.(document);window.__ISA_FAMILY_VISIBILITY_V2__?.apply?.(document);window.__ISA_REFRESH_CHAT_VISIBILITY__?.()})
 
 (function(){
   const norm=v=>String(v||'').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ')
@@ -12,25 +13,17 @@ Promise.allSettled([
     evalda:new Set(['evalda','isa','alan','keise','paloma','vania']),
     paloma:new Set(['paloma','keise','alan','davi','isa','evalda','vania']),
     silvane:new Set(['silvane','alan','keise','isa']),
-    vania:null,
+    vania:new Set(['vania','isa','keise','alan','davi','paloma','evalda']),
     davi:null,
     isa:null,
     keise:null,
     alan:null
   }
-  const ALIASES={
-    'tia vania':'vania',
-    'vânia':'vania',
-    'vania':'vania',
-    'mãe':'keise',
-    'mae':'keise',
-    'keise pamela':'keise'
-  }
+  const ALIASES={'tia vania':'vania','vânia':'vania','vania':'vania','mãe':'keise','mae':'keise','keise pamela':'keise'}
   function key(name){const n=norm(name);return ALIASES[n]||n.split(' ')[0]||''}
-  function viewer(){
-    return key(window.__ISA_FRIEND_PERSON__?.name||document.getElementById('friendName')?.textContent||document.getElementById('myName')?.textContent||new URLSearchParams(location.search).get('perfil')||'')
-  }
+  function viewer(){return key(window.__ISA_FRIEND_PERSON__?.name||document.getElementById('friendName')?.textContent||document.getElementById('myName')?.textContent||new URLSearchParams(location.search).get('perfil')||'')}
   function allowed(viewerName,targetName){
+    if(window.__ISA_FAMILY_VISIBILITY_V2__?.allowed)return window.__ISA_FAMILY_VISIBILITY_V2__.allowed(viewerName,targetName)
     if(window.__ISA_FAMILY_VISIBILITY__?.allowed)return window.__ISA_FAMILY_VISIBILITY__.allowed(viewerName,targetName)
     const v=key(viewerName),t=key(targetName)
     if(!v||!t)return true
@@ -52,29 +45,18 @@ Promise.allSettled([
     root.querySelectorAll?.('.social-post').forEach(post=>{const n=authorFromPost(post);if(n&&!allowed(v,n)){removeNode(post);return}
       post.querySelectorAll('.social-comment,.fs-comment').forEach(c=>{const cn=c.querySelector('strong')?.textContent||'';if(cn&&!allowed(v,cn))removeNode(c)})
     })
-    // Menus de marcação criados dinamicamente pelo layout aprovado.
     root.querySelectorAll?.('.isa-create-sheet button[data-name]').forEach(b=>{if(!allowed(v,b.dataset.name||b.textContent))removeNode(b)})
   }
   function stripForbiddenMentions(input){
     const v=viewer();if(!v||!input)return
     let text=input.value||''
     const bad=forbiddenNames(v)
-    bad.forEach(n=>{const names=n==='vania'?['vania','vânia','tia vania']:n==='keise'?['keise','keise pamela']: [n];names.forEach(label=>{const re=new RegExp('(^|\\s)@'+label.replace(/[.*+?^${}()|[\\]\\]/g,'\\$&')+'(?=\\s|$|[.,;:!?])','ig');text=text.replace(re,'$1')})})
+    bad.forEach(n=>{const names=n==='vania'?['vania','vânia','tia vania']:n==='keise'?['keise','keise pamela']:[n];names.forEach(label=>{const re=new RegExp('(^|\\s)@'+label.replace(/[.*+?^${}()|[\\]\\]/g,'\\$&')+'(?=\\s|$|[.,;:!?])','ig');text=text.replace(re,'$1')})})
     if(text!==input.value){input.value=text;input.dispatchEvent(new Event('change',{bubbles:true}));toast('Essa marcação não está disponível neste perfil.')}
   }
-  function toast(text){
-    const t=document.getElementById('friendToast')||document.getElementById('toast');if(!t)return
-    t.textContent=text;t.classList.remove('hidden');clearTimeout(t._privacy);t._privacy=setTimeout(()=>t.classList.add('hidden'),2300)
-  }
-  function wireInputs(){
-    document.querySelectorAll('#fsCaption,#socialCaption').forEach(input=>{
-      if(input.dataset.socialPrivacyBound==='1')return
-      input.dataset.socialPrivacyBound='1'
-      input.addEventListener('input',()=>stripForbiddenMentions(input))
-      input.addEventListener('paste',()=>setTimeout(()=>stripForbiddenMentions(input),0))
-    })
-  }
-  function apply(){sanitizeRoot(document);wireInputs();window.__ISA_FAMILY_VISIBILITY__?.apply?.(document)}
+  function toast(text){const t=document.getElementById('friendToast')||document.getElementById('toast');if(!t)return;t.textContent=text;t.classList.remove('hidden');clearTimeout(t._privacy);t._privacy=setTimeout(()=>t.classList.add('hidden'),2300)}
+  function wireInputs(){document.querySelectorAll('#fsCaption,#socialCaption').forEach(input=>{if(input.dataset.socialPrivacyBound==='1')return;input.dataset.socialPrivacyBound='1';input.addEventListener('input',()=>stripForbiddenMentions(input));input.addEventListener('paste',()=>setTimeout(()=>stripForbiddenMentions(input),0))})}
+  function apply(){sanitizeRoot(document);wireInputs();window.__ISA_FAMILY_VISIBILITY__?.apply?.(document);window.__ISA_FAMILY_VISIBILITY_V2__?.apply?.(document)}
   let queued=false
   const observer=new MutationObserver(()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;apply()})})
   observer.observe(document.documentElement,{childList:true,subtree:true})
