@@ -5,7 +5,10 @@ on:
     branches: [main]
     paths:
       - 'index.html'
-      - 'app-v33.js'
+      - 'app-v34.js'
+      - 'keise-approved-layout-final.js'
+      - 'final-shell-bootstrap-v3.js'
+      - 'personal-boot-failopen-v1.js'
       - 'postboot-loader.js'
       - 'mobile-stability-fix.css'
       - 'extras-loader.js'
@@ -56,7 +59,10 @@ jobs:
 
       - name: Verificar sintaxe JavaScript
         run: |
-          node --check app-v33.js
+          node --check app-v34.js
+          node --check keise-approved-layout-final.js
+          node --check final-shell-bootstrap-v3.js
+          node --check personal-boot-failopen-v1.js
           node --check postboot-loader.js
           node --check extras-loader.js
           node --check mobile-responsive-v2.js
@@ -82,9 +88,15 @@ jobs:
           node --check paloma-studies-advanced-mobile.js
           node --check paloma-study-desk.js
 
-      - name: Proteger recursos aprovados
+      - name: Proteger núcleo único e dashboard aprovado
         run: |
-          grep -q 'app-v33.js' index.html
+          grep -q 'app-v34.js' index.html
+          ! grep -q '<script src="./app-v33.js' index.html
+          grep -q 'keise-approved-layout-final.js?v=8-single-owner' index.html
+          grep -q 'final-shell-bootstrap-v3.js?v=8-passive-single-owner' index.html
+          grep -q '__ISA_APP_READY__' keise-approved-layout-final.js
+          grep -q "window.addEventListener('click',routeGesture,true)" keise-approved-layout-final.js
+          grep -q '__ISA_FINAL_SHELL_BOOTSTRAP_V8__' final-shell-bootstrap-v3.js
           grep -q 'postboot-loader.js' index.html
           grep -q 'mobile-stability-fix.css' index.html
           grep -q 'mobile-responsive-v2.js' postboot-loader.js
