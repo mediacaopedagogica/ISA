@@ -69,7 +69,7 @@
 <dialog id="simpleDialog"><form method="dialog" class="dialog-card"><button class="dialog-close" value="cancel">✕</button><div id="dialogContent"></div></form></dialog><div id="toast" class="toast hidden"></div>
 <script>
 (function(){
-  window.__ISA_BOOT_BUILD__='20260911-single-owner-v14';
+  window.__ISA_BOOT_BUILD__='20260911-single-owner-v15';
   const personal=String(new URLSearchParams(location.search).get('perfil')||'').toLowerCase();
   const isKeise=personal==='keise';
   const guard=document.getElementById('personalBootGuard');
@@ -91,7 +91,7 @@
 </script>
 <script>(function(){const btn=document.getElementById('togglePassword'),input=document.getElementById('loginPassword');if(btn&&input){btn.onclick=()=>{const show=input.type==='password';input.type=show?'text':'password';btn.textContent=show?'🙈':'👁️';btn.setAttribute('aria-label',show?'Ocultar senha':'Mostrar senha');btn.title=show?'Ocultar senha':'Mostrar senha';input.focus()}}})();</script>
 <script>
-if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=approved-shell-80',{scope:'./'}).then(reg=>reg.update().catch(()=>{})).catch(error=>console.warn('Service Worker:',error));}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=approved-shell-81',{scope:'./'}).then(reg=>reg.update().catch(()=>{})).catch(error=>console.warn('Service Worker:',error));}
 </script>
 <script>
 (function(){
@@ -104,9 +104,10 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=app
 })();
 </script>
 <script defer src="./mobile-interaction-guard.js?v=69-single-owner"></script>
-<!-- Sequência única: núcleo v34 -> dashboard aprovado -> observador passivo -> extras. -->
+<!-- Sequência única: núcleo v34 -> dashboard aprovado -> roteador das conversas -> observador passivo -> extras. -->
 <script src="./app-v34.js?v=20260911-single-core-v1"></script>
 <script src="./keise-approved-layout-final.js?v=8-single-owner"></script>
+<script src="./keise-conversation-router-v2.js?v=1-final-approved-home"></script>
 <script src="./final-shell-bootstrap-v3.js?v=8-passive-single-owner"></script>
 <script src="./personal-boot-failopen-v1.js?v=11-single-owner"></script>
 <script>
@@ -121,7 +122,7 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=app
     const shellReady=window.__ISA_FINAL_SHELL__?.getState?.()==='ready';
     if(visible(main)&&name&&name!=='família'&&shellReady&&window.__ISA_APP_READY__===true){
       loaded=true;
-      const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=83-single-owner';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
+      const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=84-conversation-router';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
     }
     if(++tries<360)setTimeout(loadExtras,120);
   };
