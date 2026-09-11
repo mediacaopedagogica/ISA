@@ -16,6 +16,7 @@ async function start(){
     './collaborative-postit-quick-actions-v1.js?v=3-postenter',
     './conversation-important-v2.js?v=6-postenter',
     './external-ui-controller.js?v=15-postenter',
+    './games-menu.js?v=16-all-profiles-click-fix',
     './external-profile-parity-v1.js?v=3-postenter',
     './social-theme-live-rescue-v1.js?v=2-postenter',
     './social-profile-theme-v2.js?v=4-postenter',

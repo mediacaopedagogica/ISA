@@ -9,6 +9,7 @@ function start(){
   later(5,'./mobile-conversation-scroll-v2.js?v=1-visible-scroll')
   later(15,'./nuvem-pin-picker-v2.js?v=6-all-family-links',()=>window.__ISA_NUVEM_PIN_PICKER__?.scan?.())
   later(25,'./external-menu.js?v=7-audit-family',()=>window.__ISA_ENSURE_EXTERNAL_MENU__?.())
+  later(40,'./games-menu.js?v=16-all-profiles-click-fix')
   setTimeout(()=>window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__?.(),55)
   later(85,'./external-decoration-cleanup-v1.js?v=2-portal-only',()=>window.__ISA_EXTERNAL_DECOR_CLEANUP__?.())
   later(135,'./external-chat-tools.js?v=6-light-entry')

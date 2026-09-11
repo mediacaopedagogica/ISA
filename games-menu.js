@@ -6,8 +6,9 @@ const GAMES={
 const $=id=>document.getElementById(id)
 const norm=v=>String(v||'').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
 const mobileContext=new URLSearchParams(location.search).get('mobile')==='1'||/acesso-mobile\.html$/i.test(location.pathname)||matchMedia('(max-width:700px)').matches
-function currentName(){const main=norm($('myName')?.textContent);if(main&&main!=='família')return main;const external=norm($('friendName')?.textContent);if(external&&external!=='perfil')return external;return''}
-function eligible(){const n=currentName();return['isa','keise','alan','paloma','elion','vania','evalda','davi'].includes(n)}
+function canonicalName(value){const n=norm(value);for(const key of ['isa','keise','alan','paloma','elion','vania','evalda','davi','silvane'])if(n===key||n.startsWith(key+' '))return key;return n}
+function currentName(){const main=canonicalName($('myName')?.textContent);if(main&&main!=='familia')return main;const external=canonicalName($('friendName')?.textContent);if(external&&external!=='perfil')return external;return''}
+function eligible(){const n=currentName();return['isa','keise','alan','paloma','elion','vania','evalda','davi','silvane'].includes(n)}
 function isExternal(){return!!$('friendApp')}
 function injectStyles(){
   if($('cantinhoGamesStyles'))return
@@ -63,5 +64,6 @@ function openGames(){if(!eligible())return;ensureOverlay().classList.remove('hid
 window.__CANTINHO_OPEN_GAMES__=openGames
 function wireMain(){if(isExternal()||!eligible())return;const plus=$('groupPlusBtn'),menu=$('groupPlusMenu');if(!plus||!menu)return;plus.classList.remove('hidden');if(menu.querySelector('[data-cantinho-games]'))return;const b=document.createElement('button');b.type='button';b.dataset.cantinhoGames='1';b.textContent='🎮 Joguinhos';b.onclick=()=>{menu.classList.add('hidden');openGames()};menu.appendChild(b)}
 function wirePaloma(){if(!isExternal()||!eligible())return;const composer=document.querySelector('.friend-composer');if(!composer||$('palomaGamesPlus'))return;const wrap=document.createElement('div');wrap.className='cantinho-games-popwrap';wrap.innerHTML='<button id="palomaGamesPlus" class="emoji-btn" type="button" title="Mais opções">＋</button><div id="palomaGamesPop" class="cantinho-games-pop hidden"><button type="button" data-open-games>🎮 Joguinhos</button></div>';composer.insertBefore(wrap,composer.firstChild);const btn=$('palomaGamesPlus'),pop=$('palomaGamesPop');btn.onclick=e=>{e.stopPropagation();pop.classList.toggle('hidden')};pop.querySelector('[data-open-games]').onclick=()=>{pop.classList.add('hidden');openGames()};document.addEventListener('click',e=>{if(!wrap.contains(e.target))pop.classList.add('hidden')})}
-function wire(){if(!eligible())return;ensureOverlay();wireMain();wirePaloma()}
+function wireExternalNav(){if(!isExternal()||!eligible())return;const btn=$('friendGamesMenuBtn');if(!btn||btn.dataset.cantinhoGamesBound==='1')return;btn.dataset.cantinhoGamesBound='1';btn.disabled=false;btn.removeAttribute('aria-disabled');btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();openGames()},true)}
+function wire(){if(!eligible())return;ensureOverlay();wireMain();wireExternalNav()}
 const observer=new MutationObserver(wire);observer.observe(document.body,{childList:true,subtree:true,characterData:true});let tries=0;const timer=setInterval(()=>{wire();if(++tries>120)clearInterval(timer)},500);wire()
