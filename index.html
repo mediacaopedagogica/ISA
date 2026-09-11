@@ -69,7 +69,7 @@
 <dialog id="simpleDialog"><form method="dialog" class="dialog-card"><button class="dialog-close" value="cancel">✕</button><div id="dialogContent"></div></form></dialog><div id="toast" class="toast hidden"></div>
 <script>
 (function(){
-  window.__ISA_BOOT_BUILD__='20260911-approved-home-v11';
+  window.__ISA_BOOT_BUILD__='20260911-no-deadlock-v12';
   const personal=String(new URLSearchParams(location.search).get('perfil')||'').toLowerCase();
   const isKeise=personal==='keise';
   const guard=document.getElementById('personalBootGuard');
@@ -105,7 +105,7 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=app
 </script>
 <script defer src="./mobile-interaction-guard.js?v=68-core-v2"></script>
 <!-- Keise usa somente o dashboard aprovado; o v34 fica como núcleo funcional invisível. -->
-<script src="./final-shell-bootstrap-v3.js?v=5-approved-home"></script>
+<script src="./final-shell-bootstrap-v3.js?v=6-no-deadlock"></script>
 <script src="./app-v33.js?v=69-direct-v34-single-shell"></script>
 <script src="./personal-boot-failopen-v1.js?v=10-approved-home"></script>
 <script>
