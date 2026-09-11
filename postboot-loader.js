@@ -67,7 +67,7 @@ later(965,'./isa-social-emoji-suite-v1.js?v=1-full-isa-chat-emojis',()=>window._
 later(980,'./nuvem-carousel-v1.js?v=7-edit-delete-api',()=>window.__ISA_NUVEM_CAROUSEL__?.scan?.())
 later(995,'./nossa-rede-media-workflow-v4.js?v=2-rich-editor-stable',()=>window.__ISA_NOSSA_REDE_MEDIA_WORKFLOW__?.scan?.())
 later(1002,'./nossa-rede-editor-make-addon-v1.js?v=1-makeup-tools',()=>window.__ISA_PATCH_MEDIA_MAKE__?.())
-later(1010,'./social-profile-pages-v1.js?v=4-stable-open',()=>window.__ISA_SOCIAL_PROFILE_PAGES__?.decorate?.())
+later(1010,'./social-profile-pages-v1.js?v=5-profile-cover',()=>window.__ISA_SOCIAL_PROFILE_PAGES__?.decorate?.())
 later(1060,'./social-profile-directory-v1.js?v=3-stable-open',()=>window.__ISA_SOCIAL_PROFILE_DIRECTORY__?.patch?.())
 later(1090,'./social-reaction-names-v1.js?v=3-stable-open',()=>window.__ISA_ENHANCE_REACTION_NAMES__?.())
 later(1110,'./profile-actions.js?v=9-video-call-background')
