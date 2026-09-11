@@ -3,14 +3,15 @@ const mq=matchMedia('(max-width:850px)')
 let notifyAnchor=null,navSyncQueued=false
 
 function shell(){return $('mainView')}
-function who(){return String($('myName')?.textContent||'').trim().toLowerCase()}
-function isKeise(){const requested=String(new URLSearchParams(location.search).get('perfil')||'').trim().toLowerCase();const current=who();return requested==='keise'||current==='keise'||current.startsWith('keise ')}
+function norm(v){return String(v||'').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
+function who(){return norm($('myName')?.textContent)}
+function requested(){return norm(new URLSearchParams(location.search).get('perfil'))}
+function approvedProfile(){const r=requested(),n=who();return ['keise','isa','alan'].find(p=>r===p||n===p||n.startsWith(p+' '))||''}
 function mainReady(){return !!shell()&&!shell().classList.contains('hidden')&&!!who()}
-function syncProfileSubtitle(){const role=$('myRole');if(!role)return;if(!role.dataset.desktopText)role.dataset.desktopText=role.textContent||'';const next=mq.matches?'Cantinho da Isa 💜':role.dataset.desktopText;if(role.textContent!==next)role.textContent=next}
+function approvedOwnsUi(){return !!approvedProfile()}
+function syncProfileSubtitle(){const role=$('myRole');if(!role||approvedOwnsUi())return;if(!role.dataset.desktopText)role.dataset.desktopText=role.textContent||'';const next=mq.matches?'Cantinho da Isa 💜':role.dataset.desktopText;if(role.textContent!==next)role.textContent=next}
 function ensureProfileNav(){
-  if(!mainReady())return
-  // O dashboard aprovado da Keise é dono da navegação visível. Não reordena nem reescreve sua nav em observadores legados.
-  if(isKeise())return
+  if(!mainReady()||approvedOwnsUi())return
   window.__ISA_ENSURE_SETTINGS_MENU__?.()
   syncProfileSubtitle()
   const study=$('studyNav'),diary=$('diaryNav'),supervision=$('supervisionNav'),parents=$('parentsNav')
@@ -22,6 +23,7 @@ function ensureProfileNav(){
   }
 }
 function backBtn(){
+  if(approvedOwnsUi())return null
   let b=$('mobilePanelBack')
   if(!b){
     b=document.createElement('button');b.id='mobilePanelBack';b.type='button';b.className='hidden';b.textContent='←';b.title='Voltar às conversas';b.setAttribute('aria-label','Voltar às conversas')
@@ -31,94 +33,61 @@ function backBtn(){
   return b
 }
 function placeNotifyBanner(){
+  if(approvedOwnsUi())return
   const banner=$('notifyBanner');if(!banner)return
   if(!notifyAnchor&&banner.parentNode){notifyAnchor=document.createComment('notify-banner-home-v6');banner.parentNode.insertBefore(notifyAnchor,banner)}
-  if(mq.matches){
-    const side=shell()?.querySelector('.sidebar'),head=side?.querySelector('.chat-list-head')
-    if(side&&head&&banner.parentNode!==side)side.insertBefore(banner,head)
-  }else if(notifyAnchor?.parentNode&&banner.parentNode!==notifyAnchor.parentNode){
-    notifyAnchor.parentNode.insertBefore(banner,notifyAnchor.nextSibling)
-  }
+  if(mq.matches){const side=shell()?.querySelector('.sidebar'),head=side?.querySelector('.chat-list-head');if(side&&head&&banner.parentNode!==side)side.insertBefore(banner,head)}
+  else if(notifyAnchor?.parentNode&&banner.parentNode!==notifyAnchor.parentNode)notifyAnchor.parentNode.insertBefore(banner,notifyAnchor.nextSibling)
 }
 function showConversationList(){
+  if(approvedOwnsUi()){window.__ISA_APPROVED_HOME_RETURN__?.();return}
   if(!mq.matches)return
   const s=shell();if(!s)return
   s.classList.remove('mobile-content-open','mobile-chat-open','mobile-panel-open')
   backBtn()?.classList.add('hidden')
   const chats=document.querySelector('.nav-btn[data-tab="chats"]')
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b===chats))
-  if(!isKeise())window.__ISA_ENSURE_SETTINGS_MENU__?.()
-  placeNotifyBanner()
+  window.__ISA_ENSURE_SETTINGS_MENU__?.();placeNotifyBanner()
   requestAnimationFrame(()=>{const list=$('chatList');if(list){list.style.removeProperty('display');list.scrollLeft=0}})
 }
 function showContent(kind='panel'){
+  if(approvedOwnsUi())return
   if(!mq.matches)return
   const s=shell();if(!s)return
-  s.classList.add('mobile-content-open')
-  s.classList.toggle('mobile-chat-open',kind==='chat')
-  s.classList.toggle('mobile-panel-open',kind!=='chat')
-  backBtn()?.classList.toggle('hidden',kind==='chat')
+  s.classList.add('mobile-content-open');s.classList.toggle('mobile-chat-open',kind==='chat');s.classList.toggle('mobile-panel-open',kind!=='chat');backBtn()?.classList.toggle('hidden',kind==='chat')
 }
 function wire(){
+  if(approvedOwnsUi())return
   ensureProfileNav()
   const list=$('chatList')
-  if(list&&!list.dataset.mobileV6Bound){
-    list.dataset.mobileV6Bound='1'
-    list.addEventListener('click',e=>{if(mq.matches&&e.target.closest('.chat-item[data-conv]'))setTimeout(()=>showContent('chat'),70)})
-  }
+  if(list&&!list.dataset.mobileV6Bound){list.dataset.mobileV6Bound='1';list.addEventListener('click',e=>{if(mq.matches&&e.target.closest('.chat-item[data-conv]'))setTimeout(()=>showContent('chat'),70)})}
   const mb=$('mobileBackBtn')
-  if(mb&&!mb.dataset.mobileV6Bound){
-    mb.dataset.mobileV6Bound='1'
-    mb.addEventListener('click',()=>{if(mq.matches)setTimeout(showConversationList,30)})
-  }
-  document.querySelectorAll('.nav-btn[data-tab]').forEach(btn=>{
-    if(btn.dataset.mobileV6Bound)return
-    btn.dataset.mobileV6Bound='1'
-    btn.addEventListener('click',()=>{
-      if(!mq.matches)return
-      const tab=btn.dataset.tab
-      if(tab==='diary'||tab==='study')return
-      setTimeout(()=>tab==='chats'?showConversationList():showContent('panel'),70)
-    })
-  })
+  if(mb&&!mb.dataset.mobileV6Bound){mb.dataset.mobileV6Bound='1';mb.addEventListener('click',()=>{if(mq.matches)setTimeout(showConversationList,30)})}
+  document.querySelectorAll('.nav-btn[data-tab]').forEach(btn=>{if(btn.dataset.mobileV6Bound)return;btn.dataset.mobileV6Bound='1';btn.addEventListener('click',()=>{if(!mq.matches)return;const tab=btn.dataset.tab;if(tab==='diary'||tab==='study')return;setTimeout(()=>tab==='chats'?showConversationList():showContent('panel'),70)})})
   const chat=$('chatPanel')
-  if(chat&&!chat.dataset.mobileStateObserved){
-    chat.dataset.mobileStateObserved='1'
-    const obs=new MutationObserver(()=>{
-      if(!mq.matches||!mainReady())return
-      if(!chat.classList.contains('hidden'))showContent('chat')
-    })
-    obs.observe(chat,{attributes:true,attributeFilter:['class']})
-  }
+  if(chat&&!chat.dataset.mobileStateObserved){chat.dataset.mobileStateObserved='1';const obs=new MutationObserver(()=>{if(!mq.matches||!mainReady()||approvedOwnsUi())return;if(!chat.classList.contains('hidden'))showContent('chat')});obs.observe(chat,{attributes:true,attributeFilter:['class']})}
 }
 function sync(){
-  if(!isKeise())window.__ISA_ENSURE_SETTINGS_MENU__?.()
-  ensureProfileNav();wire();backBtn();placeNotifyBanner();syncProfileSubtitle()
-  if(!mq.matches){
-    shell()?.classList.remove('mobile-content-open','mobile-chat-open','mobile-panel-open')
-    backBtn()?.classList.add('hidden')
+  if(approvedOwnsUi()){
+    $('mobilePanelBack')?.classList.add('hidden')
     return
   }
+  window.__ISA_ENSURE_SETTINGS_MENU__?.();ensureProfileNav();wire();backBtn();placeNotifyBanner();syncProfileSubtitle()
+  if(!mq.matches){shell()?.classList.remove('mobile-content-open','mobile-chat-open','mobile-panel-open');backBtn()?.classList.add('hidden');return}
   if(mainReady()){
     const active=document.querySelector('.nav-btn.active[data-tab]')?.dataset.tab||'chats'
     const chatOpen=$('chatPanel')&&!$('chatPanel').classList.contains('hidden')
-    if(chatOpen)showContent('chat')
-    else if(active==='chats')showConversationList()
-    else if(active!=='study'&&active!=='diary')showContent('panel')
+    if(chatOpen)showContent('chat');else if(active==='chats')showConversationList();else if(active!=='study'&&active!=='diary')showContent('panel')
   }
 }
 function scheduleNavSync(){
-  if(navSyncQueued)return
-  navSyncQueued=true
-  requestAnimationFrame(()=>{navSyncQueued=false;if(!isKeise()){window.__ISA_ENSURE_SETTINGS_MENU__?.();ensureProfileNav()}wire()})
+  if(approvedOwnsUi()||navSyncQueued)return
+  navSyncQueued=true;requestAnimationFrame(()=>{navSyncQueued=false;if(approvedOwnsUi())return;window.__ISA_ENSURE_SETTINGS_MENU__?.();ensureProfileNav();wire()})
 }
 
 sync()
-const main=$('mainView')
-if(main){const obs=new MutationObserver(()=>sync());obs.observe(main,{attributes:true,attributeFilter:['class']})}
-const nav=document.querySelector('.nav-tabs')
-if(nav){const obs=new MutationObserver(scheduleNavSync);obs.observe(nav,{childList:true,subtree:true})}
-window.addEventListener('resize',sync,{passive:true})
-mq.addEventListener?.('change',sync)
+const main=$('mainView');if(main){const obs=new MutationObserver(()=>sync());obs.observe(main,{attributes:true,attributeFilter:['class']})}
+const nav=document.querySelector('.nav-tabs');if(nav){const obs=new MutationObserver(scheduleNavSync);obs.observe(nav,{childList:true,subtree:true})}
+window.addEventListener('resize',sync,{passive:true});mq.addEventListener?.('change',sync)
 window.__ISA_MOBILE_SHOW_CONTENT__=showContent
 window.__ISA_MOBILE_SHOW_CONVERSATIONS__=showConversationList
