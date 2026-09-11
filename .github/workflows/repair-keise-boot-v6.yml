@@ -1,0 +1,42 @@
+name: Repair Keise boot v6
+
+on:
+  push:
+    paths:
+      - '.github/workflows/repair-keise-boot-v6.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Force new Keise bootstrap version
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          replacements={
+            "window.__ISA_BOOT_BUILD__='20260911-approved-home-v11'":"window.__ISA_BOOT_BUILD__='20260911-no-deadlock-v12'",
+            './final-shell-bootstrap-v3.js?v=5-approved-home':'./final-shell-bootstrap-v3.js?v=6-no-deadlock',
+          }
+          for old,new in replacements.items():
+            if old not in s:
+              raise SystemExit(f'Expected text not found: {old}')
+            s=s.replace(old,new)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit cache bust
+        run: |
+          if git diff --quiet -- index.html; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'fix: load Keise shell v6 without deadlock'
+          git push origin HEAD:main
