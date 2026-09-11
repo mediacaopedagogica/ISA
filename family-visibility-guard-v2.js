@@ -18,19 +18,10 @@
     paloma:new Set(['paloma','keise','alan','davi','isa','evalda','vania']),
     silvane:new Set(['silvane','alan','keise','isa'])
   }
-  const BLOCK={
-    davi:new Set(['silvane']),
-    vania:new Set(['elion','silvane'])
-  }
+  const BLOCK={davi:new Set(['silvane']),vania:new Set(['elion','silvane'])}
 
   function viewer(){
-    return key(
-      window.__ISA_FRIEND_PERSON__?.name ||
-      document.getElementById('friendName')?.textContent ||
-      document.getElementById('myName')?.textContent ||
-      new URLSearchParams(location.search).get('perfil') ||
-      document.body?.dataset?.profile || ''
-    )
+    return key(window.__ISA_FRIEND_PERSON__?.name||document.getElementById('friendName')?.textContent||document.getElementById('myName')?.textContent||new URLSearchParams(location.search).get('perfil')||document.body?.dataset?.profile||'')
   }
   function allowed(v,t){
     v=key(v);t=key(t)
@@ -47,10 +38,7 @@
       el.querySelector?.('b,strong')?.textContent].filter(Boolean)
     for(const v of values){const k=key(v);if(KNOWN.includes(k))return k}
     const text=norm(el.textContent||'')
-    for(const n of KNOWN){
-      const labels=n==='vania'?['tia vania','vania']:n==='keise'?['keise pamela','keise']:[n]
-      if(labels.some(x=>text===x||text.startsWith(x+' ')||text.includes(' '+x+' ')))return n
-    }
+    for(const n of KNOWN){const labels=n==='vania'?['tia vania','vania']:n==='keise'?['keise pamela','keise']:[n];if(labels.some(x=>text===x||text.startsWith(x+' ')||text.includes(' '+x+' ')))return n}
     return''
   }
   function hideIfBlocked(el){
@@ -63,7 +51,7 @@
     root.querySelectorAll?.([
       '.social-family-item','.social-status-card','.fs-status-card','.spd-person','.isa-birthday-person',
       '#birthdayStrip .birthday-pill','.external-birthday-person','.chat-item','.friend-conversation',
-      '[data-conv]','[data-friend-conv]','.social-post','.fs-post'
+      '[data-conv]','[data-friend-conv]','.social-post','.fs-post','.social-comment','.fs-comment'
     ].join(',')).forEach(hideIfBlocked)
   }
   if(!document.getElementById('familyVisibilityGuardV2Style')){
