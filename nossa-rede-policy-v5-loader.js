@@ -7,7 +7,7 @@ if(!document.getElementById('nossaRedeOrganicV8Exact')){const l=document.createE
 await import('./nossa-rede-ui-fixes-sep10.js?v=1-overlay-birthday-cover').catch(()=>null);
 await import('./mobile-conversation-scroll-v2.js?v=1-visible-scroll').catch(()=>null);
 await import('./nossa-rede-policy-v5.js?v=2-organic-layout');
-await import('./nossa-rede-comment-menu-v1.js?v=4-all-family-final').catch(()=>null);
+await import('./nossa-rede-comment-menu-v1.js?v=5-comment-isolated').catch(()=>null);
 await import('./nuvem-compose-compact-v1.js?v=11-flat-pink-live').catch(()=>null);
 await import('./nuvem-carousel-v1.js?v=7-edit-delete-api').catch(()=>null);
 await import('./nossa-rede-media-workflow-v4.js?v=2-rich-editor-stable').catch(()=>null);
