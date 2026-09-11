@@ -97,3 +97,4 @@
 })();
 
 import('./approved-dashboard-stability-v11.js?v=1-stable-order-avatar-social').catch(()=>{})
+import('./approved-regression-fixes-v12.js?v=1-golden-master-pins-birthday-test').catch(()=>{})
