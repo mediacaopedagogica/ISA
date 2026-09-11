@@ -1,17 +1,17 @@
 // Bootstrap determinístico dos dashboards pessoais aprovados.
-// V7: o layout legado fica invisível até a identidade ser conhecida e o painel aprovado
+// V8: o layout legado fica invisível até a identidade ser conhecida e o painel aprovado
 // é montado assim que o núcleo libera mainView, sem depender do fim de todos os extras.
 (function(){
   'use strict'
-  if(window.__ISA_FINAL_SHELL_BOOTSTRAP_V7__){window.__ISA_FINAL_SHELL__?.scan?.();return}
-  window.__ISA_FINAL_SHELL_BOOTSTRAP_V7__=true
+  if(window.__ISA_FINAL_SHELL_BOOTSTRAP_V8__){window.__ISA_FINAL_SHELL__?.scan?.();return}
+  window.__ISA_FINAL_SHELL_BOOTSTRAP_V8__=true
 
   const $=id=>document.getElementById(id)
   const norm=v=>String(v||'').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
   const wait=ms=>new Promise(r=>setTimeout(r,ms))
   const APPROVED=new Set(['keise','isa','alan'])
   const DISPLAY={keise:'Keise',isa:'Isa',alan:'Alan'}
-  let state='identity',lastError='',bootPromise=null,modulePromise=null,moduleProfile='',scanQueued=false,identityTimer=0,readyEventSent=false
+  let state='identity',lastError='',failedPhase='',bootPromise=null,modulePromise=null,moduleProfile='',scanQueued=false,identityTimer=0,readyEventSent=false
 
   function requestedProfile(){const p=norm(new URLSearchParams(location.search).get('perfil'));return APPROVED.has(p)?p:''}
   function identityProfile(){
@@ -26,31 +26,31 @@
   const finalReady=()=>!!finalHome()&&!finalHome().classList.contains('hidden')
 
   function installCss(){
-    if($('isaFinalShellBootstrapCssV7'))return
-    const s=document.createElement('style');s.id='isaFinalShellBootstrapCssV7';s.textContent=`
+    if($('isaFinalShellBootstrapCssV8'))return
+    const s=document.createElement('style');s.id='isaFinalShellBootstrapCssV8';s.textContent=`
       body.isa-shell-identity-gate #mainView{visibility:hidden!important;opacity:0!important;pointer-events:none!important}
-      body.isa-approved-route-lock-v7.isa-approved-awaiting #mainView{visibility:hidden!important;opacity:0!important;pointer-events:none!important}
-      body.isa-approved-route-lock-v7.isa-approved-ready #mainView{visibility:visible!important;opacity:1!important;pointer-events:auto!important}
-      body.isa-approved-route-lock-v7 #mainView>.sidebar{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;width:0!important;min-width:0!important;max-width:0!important;padding:0!important;margin:0!important;border:0!important;overflow:hidden!important}
-      body.isa-approved-route-lock-v7 #emptyState{display:none!important;visibility:hidden!important;pointer-events:none!important}
-      body.isa-approved-route-lock-v7:not(.keise-panel-active) #mainView>.content>section:not(#keiseApprovedHome){display:none!important;visibility:hidden!important;pointer-events:none!important}
-      #personalBootRetryV7{margin-top:14px;border:0;border-radius:14px;padding:10px 17px;background:linear-gradient(135deg,#efa8d0,#bda7ef);color:#fff;font:800 12px/1 Inter,"Segoe UI",sans-serif;cursor:pointer;box-shadow:0 8px 18px rgba(126,90,153,.18)}
-      #personalBootRetryV7[hidden]{display:none!important}
-      #personalBootDiagnosticV7{display:none;margin-top:9px;color:#9b879f;font:600 10px/1.35 Inter,"Segoe UI",sans-serif;word-break:break-word}
-      #personalBootGuard.isa-boot-error #personalBootDiagnosticV7{display:block}
+      body.isa-approved-route-lock-v8.isa-approved-awaiting #mainView{visibility:hidden!important;opacity:0!important;pointer-events:none!important}
+      body.isa-approved-route-lock-v8.isa-approved-ready #mainView{visibility:visible!important;opacity:1!important;pointer-events:auto!important}
+      body.isa-approved-route-lock-v8 #mainView>.sidebar{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;width:0!important;min-width:0!important;max-width:0!important;padding:0!important;margin:0!important;border:0!important;overflow:hidden!important}
+      body.isa-approved-route-lock-v8 #emptyState{display:none!important;visibility:hidden!important;pointer-events:none!important}
+      body.isa-approved-route-lock-v8:not(.keise-panel-active) #mainView>.content>section:not(#keiseApprovedHome){display:none!important;visibility:hidden!important;pointer-events:none!important}
+      #personalBootRetryV8{margin-top:14px;border:0;border-radius:14px;padding:10px 17px;background:linear-gradient(135deg,#efa8d0,#bda7ef);color:#fff;font:800 12px/1 Inter,"Segoe UI",sans-serif;cursor:pointer;box-shadow:0 8px 18px rgba(126,90,153,.18)}
+      #personalBootRetryV8[hidden]{display:none!important}
+      #personalBootDiagnosticV8{display:none;margin-top:9px;color:#9b879f;font:600 10px/1.35 Inter,"Segoe UI",sans-serif;word-break:break-word}
+      #personalBootGuard.isa-boot-error #personalBootDiagnosticV8{display:block}
     `
     document.head.appendChild(s)
   }
 
   function cleanupOldLocks(){
-    document.body?.classList.remove('isa-approved-route-lock-v3','isa-approved-route-lock-v4','isa-approved-route-lock-v5','isa-approved-route-lock-v6','isa-final-shell-managed','isa-approved-shell-lock')
+    document.body?.classList.remove('isa-approved-route-lock-v3','isa-approved-route-lock-v4','isa-approved-route-lock-v5','isa-approved-route-lock-v6','isa-approved-route-lock-v7','isa-final-shell-managed','isa-approved-shell-lock')
     $('isaFinalShellShieldV2')?.remove()
   }
   function guard(){return $('personalBootGuard')}
   function ensureGuardControls(){
     const card=guard()?.querySelector('.guard-card');if(!card)return{}
-    let d=$('personalBootDiagnosticV7');if(!d){d=document.createElement('div');d.id='personalBootDiagnosticV7';card.appendChild(d)}
-    let b=$('personalBootRetryV7');if(!b){b=document.createElement('button');b.id='personalBootRetryV7';b.type='button';b.hidden=true;b.textContent='Tentar novamente';b.addEventListener('click',()=>retry());card.appendChild(b)}
+    let d=$('personalBootDiagnosticV8');if(!d){d=document.createElement('div');d.id='personalBootDiagnosticV8';card.appendChild(d)}
+    let b=$('personalBootRetryV8');if(!b){b=document.createElement('button');b.id='personalBootRetryV8';b.type='button';b.hidden=true;b.textContent='Tentar novamente';b.addEventListener('click',()=>retry());card.appendChild(b)}
     return{button:b,diagnostic:d}
   }
   function showGuard(title='Abrindo seu Cantinho…',detail='Carregando suas conversas com segurança.',retryVisible=false){
@@ -61,32 +61,32 @@
     const spin=g.querySelector('.guard-spinner');if(spin)spin.style.display=retryVisible?'none':''
     const {button,diagnostic}=ensureGuardControls();if(button)button.hidden=!retryVisible
     if(diagnostic){
-      const phase=window.__ISA_CORE_PHASE__||'aguardando-núcleo'
+      const phase=failedPhase||window.__ISA_CORE_FAILED_PHASE__||window.__ISA_CORE_PHASE__||'aguardando-núcleo'
       const runtime=window.__ISA_APP_ERROR__||window.__ISA_LAST_RUNTIME_ERROR__||lastError||''
       diagnostic.textContent=retryVisible?`Etapa: ${phase}${runtime?` • ${runtime}`:''}`:''
     }
   }
   function hideGuard(){
     const g=guard();g?.classList.add('hidden');g?.classList.remove('isa-boot-error')
-    const b=$('personalBootRetryV7');if(b)b.hidden=true
+    const b=$('personalBootRetryV8');if(b)b.hidden=true
   }
   function gateIdentity(show=false){
     installCss();cleanupOldLocks();document.body?.classList.add('isa-shell-identity-gate')
     if(show)showGuard('Abrindo seu Cantinho…','Identificando seu perfil com segurança.',false)
   }
   function lockApproved(){
-    installCss();cleanupOldLocks();document.body?.classList.remove('isa-shell-identity-gate');document.body?.classList.add('isa-approved-route-lock-v7','isa-approved-awaiting');document.body?.classList.remove('isa-approved-ready')
+    installCss();cleanupOldLocks();document.body?.classList.remove('isa-shell-identity-gate');document.body?.classList.add('isa-approved-route-lock-v8','isa-approved-awaiting');document.body?.classList.remove('isa-approved-ready')
   }
   function markReady(p){
-    installCss();cleanupOldLocks();document.body?.classList.remove('isa-shell-identity-gate');document.body?.classList.add('isa-approved-route-lock-v7','isa-approved-ready','isa-final-shell-ready');document.body?.classList.remove('isa-approved-awaiting')
-    hideGuard();state='ready';lastError=''
+    installCss();cleanupOldLocks();document.body?.classList.remove('isa-shell-identity-gate');document.body?.classList.add('isa-approved-route-lock-v8','isa-approved-ready','isa-final-shell-ready');document.body?.classList.remove('isa-approved-awaiting')
+    hideGuard();state='ready';lastError='';failedPhase=''
     if(!readyEventSent){readyEventSent=true;document.dispatchEvent(new CustomEvent('isa:final-shell-ready',{detail:{profile:p}}))}
   }
   function unlockLegacy(){
-    cleanupOldLocks();document.body?.classList.remove('isa-shell-identity-gate','isa-approved-route-lock-v7','isa-approved-awaiting','isa-approved-ready','isa-final-shell-ready');hideGuard();state='legacy'
+    cleanupOldLocks();document.body?.classList.remove('isa-shell-identity-gate','isa-approved-route-lock-v8','isa-approved-awaiting','isa-approved-ready','isa-final-shell-ready');hideGuard();state='legacy'
   }
 
-  function modulePath(p){return p==='keise'?'./keise-approved-layout-final.js?v=10-critical-shell':'./approved-profile-dashboard.js?v=10-critical-shell'}
+  function modulePath(p){return p==='keise'?'./keise-approved-layout-final.js?v=11-critical-shell':'./approved-profile-dashboard.js?v=11-critical-shell'}
   function homeFn(p){return p==='keise'?window.__ISA_SHOW_KEISE_HOME__:window.__ISA_SHOW_APPROVED_PROFILE_HOME__}
   async function ensureModule(p){
     if(modulePromise&&moduleProfile===p)return modulePromise
@@ -117,29 +117,27 @@
     if(state==='error'&&!force)return false
     if(bootPromise)return bootPromise
 
-    state='building';lastError='';readyEventSent=false;lockApproved();showGuard(`Abrindo o Cantinho de ${DISPLAY[p]||'você'}…`,'Carregando o layout aprovado.',false)
+    state='building';lastError='';failedPhase='';readyEventSent=false;lockApproved();showGuard(`Abrindo o Cantinho de ${DISPLAY[p]||'você'}…`,'Carregando o layout aprovado.',false)
     bootPromise=(async()=>{
       try{
-        // Pré-carrega a camada visual enquanto o núcleo termina de resolver a sessão.
         const preload=ensureModule(p)
-        const mainDeadline=Date.now()+12000
+        const mainDeadline=Date.now()+14000
         while(!mainReady()&&Date.now()<mainDeadline){
           if(loginReady()){
-            // Sem sessão: login deve ficar acessível e nenhum layout antigo é liberado.
-            cleanupOldLocks();document.body?.classList.remove('isa-shell-identity-gate','isa-approved-route-lock-v7','isa-approved-awaiting','isa-approved-ready');hideGuard();state='login';return false
+            cleanupOldLocks();document.body?.classList.remove('isa-shell-identity-gate','isa-approved-route-lock-v8','isa-approved-awaiting','isa-approved-ready');hideGuard();state='login';return false
           }
           if(window.__ISA_CORE_PHASE__==='error')throw new Error(window.__ISA_APP_ERROR__||'O núcleo não conseguiu iniciar.')
           await wait(70)
         }
-        if(!mainReady())throw new Error(`O núcleo não liberou a área principal. Etapa: ${window.__ISA_CORE_PHASE__||'desconhecida'}.`)
+        if(!mainReady())throw new Error(`O núcleo não liberou a área principal. Etapa: ${window.__ISA_CORE_FAILED_PHASE__||window.__ISA_CORE_PHASE__||'desconhecida'}.`)
         await preload
         const ok=await revealApproved(p)
         if(!ok)throw new Error('O painel final foi carregado, mas não conseguiu montar a tela aprovada.')
         markReady(p);return true
       }catch(err){
-        state='error';lastError=String(err?.message||err||'Falha ao abrir o painel final.');console.error('[layout aprovado v7]',err)
+        state='error';failedPhase=window.__ISA_CORE_FAILED_PHASE__||window.__ISA_CORE_PHASE__||'approved-shell';lastError=String(err?.message||err||'Falha ao abrir o painel final.');console.error('[layout aprovado v8]',err)
         lockApproved();showGuard('A abertura não terminou',`${lastError}`,true)
-        document.dispatchEvent(new CustomEvent('isa:final-shell-error',{detail:{profile:p,error:lastError,phase:window.__ISA_CORE_PHASE__||''}}))
+        document.dispatchEvent(new CustomEvent('isa:final-shell-error',{detail:{profile:p,error:lastError,phase:failedPhase}}))
         return false
       }finally{bootPromise=null}
     })()
@@ -148,7 +146,7 @@
 
   function retry(){
     if(bootPromise)return bootPromise
-    state='identity';lastError='';readyEventSent=false
+    state='identity';lastError='';failedPhase='';readyEventSent=false
     const p=profile()||requestedProfile()
     if(p)return bootApproved(p,{force:true})
     return scan(true)
@@ -157,7 +155,7 @@
   function scan(force=false){
     if(finalReady()){const p=profile()||requestedProfile()||'keise';markReady(p);return true}
     if(loginReady()&&!mainReady()){
-      cleanupOldLocks();document.body?.classList.remove('isa-shell-identity-gate','isa-approved-route-lock-v7','isa-approved-awaiting','isa-approved-ready');hideGuard();state='login';return false
+      cleanupOldLocks();document.body?.classList.remove('isa-shell-identity-gate','isa-approved-route-lock-v8','isa-approved-awaiting','isa-approved-ready');hideGuard();state='login';return false
     }
 
     const rp=requestedProfile(),p=profile()
@@ -170,8 +168,6 @@
     if(p){clearTimeout(identityTimer);if(state!=='error'||force)return bootApproved(p,{force});return false}
 
     if(mainReady()){
-      // A identidade costuma ser preenchida imediatamente após showView(mainView).
-      // Mantém o legado invisível durante essa janela para não haver flash da tela antiga.
       gateIdentity(true);clearTimeout(identityTimer)
       identityTimer=setTimeout(()=>{
         const identified=identityProfile()
@@ -197,16 +193,18 @@
   document.addEventListener('isa:approved-home-ready',scheduleScan)
   document.addEventListener('isa:core-boot-start',scheduleScan)
   document.addEventListener('isa:core-boot-complete',scheduleScan)
+  document.addEventListener('isa:core-phase',scheduleScan)
   document.addEventListener('isa:core-ready',scheduleScan)
   document.addEventListener('isa:core-error',e=>{
-    lastError=String(e?.detail?.message||window.__ISA_APP_ERROR__||'Falha no núcleo.');state='error';showGuard('Não foi possível abrir o Cantinho',lastError,true)
+    failedPhase=String(e?.detail?.phase||window.__ISA_CORE_FAILED_PHASE__||'core-error')
+    lastError=String(e?.detail?.message||window.__ISA_APP_ERROR__||'Falha no núcleo.');state='error';lockApproved();showGuard('Não foi possível abrir o Cantinho',lastError,true)
   })
   setTimeout(scheduleScan,0)
   setTimeout(()=>{
     if(state==='ready'||state==='login'||state==='legacy'||state==='error')return
     const p=profile()||requestedProfile()
-    if(p){state='error';lastError=`A abertura excedeu o tempo esperado. Etapa: ${window.__ISA_CORE_PHASE__||'desconhecida'}.`;lockApproved();showGuard('A abertura está demorando',lastError,true)}
-  },18000)
+    if(p){state='error';failedPhase=window.__ISA_CORE_FAILED_PHASE__||window.__ISA_CORE_PHASE__||'timeout';lastError=`A abertura excedeu o tempo esperado. Etapa: ${failedPhase}.`;lockApproved();showGuard('A abertura está demorando',lastError,true)}
+  },20000)
 
-  window.__ISA_FINAL_SHELL__={scan,recover:retry,retry,ensureDashboard:scan,get state(){return state},get error(){return lastError}}
+  window.__ISA_FINAL_SHELL__={scan,recover:retry,retry,ensureDashboard:scan,get state(){return state},get error(){return lastError},get failedPhase(){return failedPhase}}
 })()
