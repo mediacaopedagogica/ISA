@@ -27,7 +27,7 @@ async function start(){
     './family-social-extras-v1.js?v=3-postenter',
     './family-visibility-guard-v2.js?v=1-exact-external-matrix',
     './nossa-rede-birthday-bridge-v1.js?v=2-postenter',
-    './external-birthday-sidebar-v1.js?v=2-privacy-filtered-visible',
+    './external-birthday-sidebar-v1.js?v=3-chat-cleanup-only',
     './nuvem-carousel-v1.js?v=8-postenter',
     './nossa-rede-media-workflow-v4.js?v=3-postenter',
     './nossa-rede-menu-cleanup-v2.js?v=1-no-destination-choices',
@@ -49,7 +49,7 @@ async function start(){
     window.__ISA_FAMILY_SOCIAL_EXTRAS__?.scan?.(true)
     window.__ISA_FAMILY_VISIBILITY_V2__?.apply?.()
     window.__ISA_NOSSA_REDE_BIRTHDAYS__?.refresh?.()
-    window.__ISA_EXTERNAL_BIRTHDAYS__?.refresh?.()
+    window.__ISA_EXTERNAL_BIRTHDAYS__?.cleanup?.()
     window.__ISA_NUVEM_CAROUSEL__?.scan?.()
     window.__ISA_NOSSA_REDE_MEDIA_WORKFLOW__?.scan?.()
     window.__ISA_NOSSA_REDE_MENU_CLEANUP__?.clean?.()
