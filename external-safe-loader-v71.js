@@ -9,6 +9,7 @@ async function start(){
   if(started)return
   started=true
   const jobs=[
+    './external-conversation-integrity-v18.js?v=1-exact-person-lock',
     './mobile-conversation-scroll-v2.js?v=2-postenter',
     './nossa-rede-ui-fixes-sep10.js?v=2-postenter',
     './nuvem-pin-picker-v2.js?v=7-postenter-all-links',
@@ -37,6 +38,7 @@ async function start(){
   ]
   for(let i=0;i<jobs.length;i+=4){await Promise.all(jobs.slice(i,i+4).map(load));await new Promise(r=>setTimeout(r,0))}
   try{
+    window.__ISA_EXTERNAL_CONVERSATION_INTEGRITY__?.verify?.()
     await window.__ISA_EXTERNAL_PROFILE_PARITY__?.start?.()
     await window.__ISA_PROFILE_THEME_V2__?.loadState?.()
     window.__ISA_EXTERNAL_ACCESS_CONTROLS__?.scan?.()
