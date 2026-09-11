@@ -10,7 +10,7 @@
   const wait=ms=>new Promise(r=>setTimeout(r,ms))
   const timeout=(ms,label='timeout')=>new Promise((_,rej)=>setTimeout(()=>rej(new Error(label)),ms))
   const APPROVED=new Set(['keise','isa','alan'])
-  let bootPromise=null,themePromise=null,state='idle',lastError='',pollTimer=0
+  let bootPromise=null,themePromise=null,state='idle',lastError='',pollTimer=0,routeTimer=0,mainObserver=null,nameObserver=null
 
   function requestedProfile(){const q=norm(new URLSearchParams(location.search).get('perfil'));return APPROVED.has(q)?q:''}
   function identityProfile(){const n=norm($('myName')?.textContent);for(const p of APPROVED)if(n===p||n.startsWith(p+' '))return p;return''}
@@ -35,7 +35,7 @@
   }
 
   function lock(){css();document.body?.classList.add('isa-approved-route-lock-v3')}
-  function unlockForLogin(){document.body?.classList.remove('isa-approved-route-lock-v3','isa-final-shell-managed','isa-final-shell-ready','isa-approved-shell-lock');hideShield();window.__ISA_HIDE_BOOT_GUARD__?.()}
+  function unlock(){document.body?.classList.remove('isa-approved-route-lock-v3','isa-final-shell-managed','isa-final-shell-ready','isa-approved-shell-lock');hideShield();window.__ISA_HIDE_BOOT_GUARD__?.()}
 
   function shield(){
     let el=$('isaFinalShellShieldV2')
@@ -64,24 +64,33 @@
   }
 
   async function buildFinal(p){
+    // Use exatamente a mesma URL do postboot-loader. Isso impede executar o mesmo dashboard duas vezes.
     if(p==='keise'){
-      if(typeof window.__ISA_SHOW_KEISE_HOME__!=='function')await Promise.race([import('./keise-approved-layout-final.js?v=9-approved-route-stable'),timeout(6000,'keise layout não carregou')])
+      if(typeof window.__ISA_SHOW_KEISE_HOME__!=='function')await Promise.race([import('./keise-approved-layout-final.js?v=7-hardwired-final'),timeout(6000,'keise layout não carregou')])
       for(let i=0;i<70;i++){window.__ISA_SHOW_KEISE_HOME__?.();if(finalReady())return true;await wait(90)}
       return finalReady()
     }
-    if(typeof window.__ISA_SHOW_APPROVED_PROFILE_HOME__!=='function')await Promise.race([import('./approved-profile-dashboard.js?v=9-approved-route-stable'),timeout(6000,'layout do perfil não carregou')])
+    if(typeof window.__ISA_SHOW_APPROVED_PROFILE_HOME__!=='function')await Promise.race([import('./approved-profile-dashboard.js?v=7-hardwired-final'),timeout(6000,'layout do perfil não carregou')])
     for(let i=0;i<70;i++){window.__ISA_SHOW_APPROVED_PROFILE_HOME__?.();if(finalReady())return true;await wait(90)}
     return finalReady()
   }
 
   async function ensureDashboard(force=false){
     const p=profile()
-    if(!p){if(loginReady())unlockForLogin();return false}
+    if(!p){
+      // Na raiz, quando o núcleo autenticado surge antes do nome, escondemos o legado só durante a resolução.
+      if(mainReady()&&!loginReady()){
+        lock();showShield('Abrindo seu Cantinho…','Identificando o perfil conectado.',false)
+        clearTimeout(routeTimer);routeTimer=setTimeout(()=>{if(!profile()&&mainReady())unlock()},1800)
+      }else if(loginReady())unlock()
+      return false
+    }
+    clearTimeout(routeTimer)
     if(finalReady()){
       lock();document.body.classList.add('isa-final-shell-ready');hideShield();window.__ISA_HIDE_BOOT_GUARD__?.();state='ready';loadThemeStack();return true
     }
     if(!mainReady()){
-      if(loginReady())unlockForLogin()
+      if(loginReady()&&!requestedProfile())unlock()
       return false
     }
     if(bootPromise&&!force)return bootPromise
@@ -97,7 +106,6 @@
       }catch(err){
         state='error';lastError=String(err?.message||err||'Falha ao abrir o layout')
         console.error('[layout aprovado]',err)
-        // Nunca exponha novamente a interface antiga. O núcleo segue invisível e pode ser reutilizado no retry.
         lock();showShield('Não consegui concluir a abertura',lastError,true)
         document.dispatchEvent(new CustomEvent('isa:final-shell-retry',{detail:{profile:p,error:lastError}}));return false
       }finally{bootPromise=null}
@@ -109,20 +117,20 @@
     if(finalReady()){lock();hideShield();window.__ISA_HIDE_BOOT_GUARD__?.();state='ready';return true}
     ensureDashboard(false);return false
   }
-
-  // Um perfil explícito nunca pode piscar a interface antiga enquanto a sessão termina de abrir.
-  if(requestedProfile())lock()
-  css();shield()
-
-  // Poll direcionado. Não observa o próprio escudo e não entra em loop de MutationObserver.
-  let tries=0
-  const poll=()=>{
-    if(finalReady()){recover();clearInterval(pollTimer);return}
-    if(loginReady()&&!mainReady()&&!requestedProfile()){unlockForLogin();return}
+  function poll(){
+    if(finalReady()){recover();return}
     ensureDashboard(false)
-    if(++tries>600&&state!=='ready')tries=0
   }
-  pollTimer=setInterval(poll,180)
+  function bindTargets(){
+    const main=$('mainView'),name=$('myName')
+    if(main&&!mainObserver){mainObserver=new MutationObserver(poll);mainObserver.observe(main,{attributes:true,attributeFilter:['class']})}
+    if(name&&!nameObserver){nameObserver=new MutationObserver(poll);nameObserver.observe(name,{childList:true,subtree:true,characterData:true})}
+    if((!main||!name)&&state!=='ready')setTimeout(bindTargets,120)
+  }
+
+  if(requestedProfile()){lock();showShield('Abrindo seu Cantinho…','Reconhecendo seu acesso.',false)}
+  css();shield();bindTargets()
+  pollTimer=setInterval(poll,220)
   setTimeout(poll,0)
   window.addEventListener('pageshow',poll)
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')poll()})
