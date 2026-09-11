@@ -1,5 +1,5 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
-import { CONFIG } from './config.js?v=20260911-birthday-calendar-v15'
+import { CONFIG } from './config.js?v=20260911-birthday-calendar-all-family'
 
 // Calendário/aniversários do layout aprovado. Mantém o motor legado, mas o strip visível passa a ter um dono estável.
 if(!window.__ISA_APPROVED_BIRTHDAY_CALENDAR_V15__){
@@ -7,9 +7,6 @@ if(!window.__ISA_APPROVED_BIRTHDAY_CALENDAR_V15__){
   const db=createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true}})
   const $=id=>document.getElementById(id)
   const ASSET={cake:'./assets/seasonal/birthday-cake.webp',confetti:'./assets/seasonal/birthday-confetti.webp'}
-  const norm=v=>String(v||'').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-  const approved=new Set(['keise','isa','alan'])
-  const profile=()=>{const q=norm(new URLSearchParams(location.search).get('perfil')),n=norm($('myName')?.textContent);for(const p of approved)if(q===p||n===p||n.startsWith(p+' '))return p;return''}
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
   const pad=n=>String(n).padStart(2,'0')
   let me=null,people=[],loading=null,timer=0,stripObserver=null
@@ -36,8 +33,7 @@ if(!window.__ISA_APPROVED_BIRTHDAY_CALENDAR_V15__){
     loading=(async()=>{
       const who=await identity();if(!who)return[]
       const {data,error}=await db.from('family_members').select('id,display_name,relationship_label,birth_date').eq('family_id',who.family_id).eq('active',true).order('display_name');if(error)throw error
-      let allowed=null;try{const {data:v}=await db.from('family_chat_visibility').select('allowed_member_ids').eq('viewer_id',who.id).maybeSingle();if(Array.isArray(v?.allowed_member_ids))allowed=new Set(v.allowed_member_ids.map(String))}catch{}
-      people=(data||[]).filter(x=>x.id===who.id||!allowed||allowed.has(String(x.id))).map(x=>({id:x.id,name:x.display_name,relationship:x.relationship_label||'Família',birthDate:x.birth_date}));return people
+      people=(data||[]).map(x=>({id:x.id,name:x.display_name,relationship:x.relationship_label||'Família',birthDate:x.birth_date}));return people
     })().catch(e=>{console.warn('Calendário de aniversários:',e);return people}).finally(()=>loading=null);return loading
   }
 
@@ -54,7 +50,7 @@ if(!window.__ISA_APPROVED_BIRTHDAY_CALENDAR_V15__){
     return true
   }
   function bindStripObserver(){const strip=$('birthdayStrip');if(!strip||stripObserver?._target===strip)return;try{stripObserver?.disconnect()}catch{};stripObserver=new MutationObserver(()=>{if(strip.classList.contains('hidden')||strip.dataset.birthdaySurgery!=='1')schedule(50)});stripObserver._target=strip;stripObserver.observe(strip,{attributes:true,attributeFilter:['class'],childList:true})}
-  async function refresh(force=false){if(!approved.has(profile()))return false;css();await load(force);renderStrip();renderTodayArt();window.__ISA_SEASONAL_THEME_ENGINE__?.refresh?.();return true}
+  async function refresh(force=false){if(!$('birthdayStrip')&&!$('calendarPanel')&&!$('keiseApprovedHome'))return false;css();await load(force);renderStrip();renderTodayArt();window.__ISA_SEASONAL_THEME_ENGINE__?.refresh?.();return true}
   function schedule(delay=80){clearTimeout(timer);timer=setTimeout(()=>refresh(false),delay)}
 
   document.addEventListener('isa:birth-date-updated',()=>refresh(true),{passive:true})
