@@ -17,38 +17,48 @@ function canSee(viewer,target){
   if(v==='davi')return t!=='silvane'
   return only[v]?only[v].has(t):true
 }
-let allowed=null,timer=0
+let allowed=null,timer=0,conversationTypes=new Map()
 async function load(){
   const {data:{user}}=await db.auth.getUser();if(!user)return
   const {data:me}=await db.from('family_members').select('id,family_id,display_name').eq('auth_user_id',user.id).eq('active',true).maybeSingle();if(!me)return
   const cards=[...document.querySelectorAll('#chatList [data-conv]')]
   const convIds=[...new Set(cards.map(x=>x.dataset.conv).filter(Boolean))]
-  if(!convIds.length){allowed=null;apply();return}
+  if(!convIds.length){allowed=null;conversationTypes=new Map();apply();return}
 
-  const [{data:s},{data:members},{data:cms,error}]=await Promise.all([
+  const [{data:s},{data:members},{data:cms,error},{data:convRows,error:convError}]=await Promise.all([
     db.from('family_chat_visibility').select('allowed_member_ids,max_people').eq('viewer_id',me.id).maybeSingle(),
     db.from('family_members').select('id,display_name').eq('family_id',me.family_id).eq('active',true),
-    db.from('conversation_members').select('conversation_id,member_id').in('conversation_id',convIds)
+    db.from('conversation_members').select('conversation_id,member_id').in('conversation_id',convIds),
+    db.from('conversations').select('id,type').in('id',convIds)
   ])
-  if(error)return
+  if(error||convError)return
 
   const names=new Map((members||[]).map(x=>[String(x.id),x.display_name||'']))
   const by=new Map();for(const x of cms||[]){const cid=String(x.conversation_id);if(!by.has(cid))by.set(cid,[]);by.get(cid).push(String(x.member_id))}
+  conversationTypes=new Map((convRows||[]).map(x=>[String(x.id),String(x.type||'direct')]))
   const configured=s?new Set((s.allowed_member_ids||[]).map(String)):null
   const maxPeople=Number(s?.max_people||20)
   const ok=new Set()
 
   for(const [conv,people] of by){
+    const type=conversationTypes.get(conv)||'direct'
     const others=people.filter(id=>id!==String(me.id))
     const hardAllowed=others.every(id=>{const name=names.get(id);return !name||canSee(me.display_name,name)})
-    const configuredAllowed=!configured||others.every(id=>configured.has(id))
-    if(people.length<=maxPeople&&hardAllowed&&configuredAllowed)ok.add(conv)
+    // Super Pais controla quais CONVERSAS DIRETAS aparecem. Um grupo já criado e do qual
+    // a pessoa é membro não pode sumir só porque um dos integrantes não está marcado na
+    // lista de conversas diretas. As regras familiares fixas continuam valendo no grupo.
+    const configuredAllowed=type==='group'?true:(!configured||others.every(id=>configured.has(id)))
+    const sizeAllowed=type==='group'?people.length<=maxPeople:true
+    if(sizeAllowed&&hardAllowed&&configuredAllowed)ok.add(conv)
   }
   allowed=ok;apply()
 }
 function apply(){
   document.querySelectorAll('#chatList [data-conv]').forEach(card=>{
-    const show=!allowed||allowed.has(String(card.dataset.conv));card.classList.toggle('spv-hidden-chat',!show);card.setAttribute('aria-hidden',show?'false':'true')
+    const id=String(card.dataset.conv||'')
+    const type=conversationTypes.get(id)||''
+    if(type)card.dataset.chatVisibilityType=type
+    const show=!allowed||allowed.has(id);card.classList.toggle('spv-hidden-chat',!show);card.setAttribute('aria-hidden',show?'false':'true')
   })
   window.__ISA_FAMILY_VISIBILITY__?.apply?.(document)
 }
