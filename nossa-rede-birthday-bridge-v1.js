@@ -35,9 +35,12 @@ if(!window.__ISA_NOSSA_REDE_BIRTHDAY_BRIDGE_V1__){
   }
 
   async function externalProfiles(){
-    const r=await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/friend-social`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({token,action:'bootstrap'}),cache:'no-store'})
-    const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d?.error||'Não foi possível carregar aniversários.')
-    return {viewer:d.me||null,profiles:d.profiles||[]}
+    const r=await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/family-birthdays`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({token}),cache:'no-store'})
+    const d=await r.json().catch(()=>({}));
+    if(r.ok&&Array.isArray(d.profiles))return{viewer:d.viewer||null,profiles:d.profiles}
+    const fallback=await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/friend-social`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({token,action:'bootstrap'}),cache:'no-store'})
+    const fd=await fallback.json().catch(()=>({}));if(!fallback.ok)throw new Error(fd?.error||d?.error||'Não foi possível carregar aniversários.')
+    return{viewer:fd.me||null,profiles:fd.profiles||[]}
   }
   async function mainProfiles(){
     const {data:{user}}=await db.auth.getUser();if(!user)return{viewer:null,profiles:[]}
@@ -67,9 +70,7 @@ if(!window.__ISA_NOSSA_REDE_BIRTHDAY_BRIDGE_V1__){
     `;document.head.appendChild(s)
   }
 
-  function hostFor(r){
-    return r?.querySelector('[data-social-birthdays],#socialBirthdays,#fsBirthdays,.social-birthdays')||null
-  }
+  function hostFor(r){return r?.querySelector('[data-social-birthdays],#socialBirthdays,#fsBirthdays,.social-birthdays')||null}
   async function render(force=false){
     style();const r=root();if(!r||r.classList.contains('hidden'))return
     const d=await load(force).catch(e=>{console.warn('Aniversários Nossa Rede:',e);return null});if(!d)return
