@@ -22,34 +22,48 @@ jobs:
           npm init -y >/dev/null 2>&1
           npm i playwright@1.55.0 >/dev/null 2>&1
           npx playwright install --with-deps chromium >/dev/null 2>&1
-      - name: Isolate freezing script
+      - name: Simulate authenticated Keise and inspect clicks
         run: |
-          cat > /tmp/onecase.js <<'JS'
+          cat > /tmp/diag.js <<'JS'
           const {chromium}=require(process.cwd()+'/node_modules/playwright');
-          const block=process.argv[2]||'none';
           (async()=>{
-            console.log('CASE_START',block);
             const browser=await chromium.launch({headless:true});
-            const context=await browser.newContext({serviceWorkers:'block'});
-            if(block!=='none') await context.route('**/*',route=>{
-              const u=route.request().url();
-              if(u.includes(block)){console.log('ABORT',block,u);return route.abort()}
-              return route.continue();
-            });
+            const context=await browser.newContext({serviceWorkers:'block',viewport:{width:1440,height:900}});
             const page=await context.newPage();
-            page.on('pageerror',e=>console.log('PAGEERROR',block,String(e)));
-            page.on('console',m=>{if(m.type()==='error')console.log('CONSOLE_ERROR',block,m.text())});
-            try{
-              await page.goto('https://mediacaopedagogica.github.io/ISA/?perfil=keise&diag='+Date.now(),{waitUntil:'domcontentloaded',timeout:8000});
-              console.log('GOTO_OK',block);
-            }catch(e){console.log('GOTO_FAIL',block,e.name,e.message);process.exit(3)}
-            console.log('EVAL_START',block);
-            const value=await page.evaluate(()=>({build:window.__ISA_BOOT_BUILD__||'',shell:window.__ISA_FINAL_SHELL__?.getState?.()||'',main:document.getElementById('mainView')?.className||'',login:document.getElementById('loginView')?.className||''}));
-            console.log('EVAL_OK',block,JSON.stringify(value));
-            process.exit(0);
-          })().catch(e=>{console.log('CASE_ERR',block,e.stack||String(e));process.exit(2)});
+            page.on('pageerror',e=>console.log('PAGEERROR',String(e)));
+            page.on('console',m=>{if(['error','warning'].includes(m.type()))console.log('CONSOLE_'+m.type().toUpperCase(),m.text())});
+            await page.goto('https://mediacaopedagogica.github.io/ISA/?perfil=keise&diag='+Date.now(),{waitUntil:'domcontentloaded',timeout:15000});
+            await page.evaluate(()=>{
+              const login=document.getElementById('loginView'),main=document.getElementById('mainView'),name=document.getElementById('myName'),role=document.getElementById('myRole');
+              login?.classList.add('hidden');main?.classList.remove('hidden');if(name)name.textContent='Keise';if(role)role.textContent='Mãe';
+              window.__ISA_APP_READY__=true;
+              document.dispatchEvent(new CustomEvent('isa:app-ready',{detail:{version:'diag'}}));
+              window.dispatchEvent(new CustomEvent('isa:app-ready',{detail:{version:'diag'}}));
+            });
+            await page.waitForFunction(()=>!!document.getElementById('keiseApprovedHome')&&document.body.classList.contains('keise-home-active'),null,{timeout:10000});
+            const before=await page.evaluate(()=>{
+              const ids=['keiseApprovedHome','keiseApprovedTopbar','mainView','personalBootGuard'];
+              const summary={build:window.__ISA_BOOT_BUILD__,appReady:window.__ISA_APP_READY__,body:[...document.body.classList],shell:window.__ISA_FINAL_SHELL__?.getState?.()||'',hasRunAction:typeof window.__ISA_KEISE_RUN_ACTION__==='function'};
+              for(const id of ids){const e=document.getElementById(id);if(!e){summary[id]=null;continue}const c=getComputedStyle(e);summary[id]={cls:e.className,display:c.display,visibility:c.visibility,opacity:c.opacity,pointerEvents:c.pointerEvents,zIndex:c.zIndex,rect:e.getBoundingClientRect().toJSON()}}
+              const b=document.querySelector('#keiseApprovedHome [data-ka-action="chat"]');if(b){const r=b.getBoundingClientRect();const x=r.left+r.width/2,y=r.top+r.height/2,h=document.elementFromPoint(x,y);const c=getComputedStyle(b);summary.chatButton={pointerEvents:c.pointerEvents,disabled:b.disabled,rect:r.toJSON(),hit:{tag:h?.tagName,id:h?.id,cls:h?.className,text:h?.textContent?.trim().slice(0,80)}}}
+              return summary;
+            });
+            console.log('BEFORE',JSON.stringify(before,null,2));
+            await page.evaluate(()=>{
+              window.__DIAG_ACTIONS__=[];
+              const orig=window.__ISA_KEISE_RUN_ACTION__;
+              window.__ISA_KEISE_RUN_ACTION__=async function(action){window.__DIAG_ACTIONS__.push(action);return orig?orig(action):true};
+            });
+            const chat=page.locator('#keiseApprovedHome [data-ka-action="chat"]');
+            await chat.click({timeout:5000});
+            await page.waitForTimeout(400);
+            const after=await page.evaluate(()=>({actions:window.__DIAG_ACTIONS__||[],body:[...document.body.classList],lastError:window.__ISA_LAST_RUNTIME_ERROR__||'',active:document.activeElement?.outerHTML?.slice(0,180)||''}));
+            console.log('AFTER',JSON.stringify(after,null,2));
+            if(!after.actions.includes('chat'))throw new Error('Approved dashboard click did not reach the Keise router');
+            const logout=page.locator('#kaLogout');
+            const lr=await logout.evaluate(b=>{const r=b.getBoundingClientRect(),h=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2),c=getComputedStyle(b);return{pointerEvents:c.pointerEvents,disabled:b.disabled,hit:{tag:h?.tagName,id:h?.id,cls:h?.className,text:h?.textContent?.trim()}}});
+            console.log('LOGOUT_HIT',JSON.stringify(lr));
+            await browser.close();
+          })().catch(e=>{console.error('DIAG_FAIL',e.stack||String(e));process.exit(1)});
           JS
-          for block in none final-shell-bootstrap-v3.js app-v33.js keise-approved-layout-final.js personal-boot-failopen-v1.js mobile-interaction-guard.js; do
-            echo "===== $block ====="
-            timeout 14s node /tmp/onecase.js "$block" || echo "CASE_EXIT_$block=$?"
-          done
+          node /tmp/diag.js
