@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
 
+# Guardrail: this workflow patches only stale async conversation ownership in the existing core.
 jobs:
   patch-and-build:
     runs-on: ubuntu-latest
