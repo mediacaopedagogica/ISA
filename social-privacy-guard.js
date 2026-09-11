@@ -1,12 +1,13 @@
 // Isa Chat — regras de privacidade da Nossa Rede.
-// Aplica as mesmas regras no núcleo autenticado e nos acessos externos.
+// Aplica a mesma matriz de visibilidade no núcleo autenticado e nos acessos externos.
 (function(){
   const norm=v=>String(v||'').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ')
   const MAP={
-    elion:new Set(['elion','isa','keise','alan','davi']),
+    elion:new Set(['elion','isa','keise','alan','davi','paloma']),
     evalda:new Set(['evalda','isa','alan','keise','paloma','vania']),
-    paloma:new Set(['paloma','keise','alan','davi','isa','evalda']),
-    vania:null, // todos, exceto Elion
+    paloma:new Set(['paloma','keise','alan','davi','isa','evalda','vania']),
+    silvane:new Set(['silvane','alan','keise','isa']),
+    vania:null,
     davi:null,
     isa:null,
     keise:null,
@@ -25,15 +26,16 @@
     return key(window.__ISA_FRIEND_PERSON__?.name||document.getElementById('friendName')?.textContent||document.getElementById('myName')?.textContent||new URLSearchParams(location.search).get('perfil')||'')
   }
   function allowed(viewerName,targetName){
+    if(window.__ISA_FAMILY_VISIBILITY__?.allowed)return window.__ISA_FAMILY_VISIBILITY__.allowed(viewerName,targetName)
     const v=key(viewerName),t=key(targetName)
     if(!v||!t)return true
     if(v===t)return true
-    if(v==='vania')return t!=='elion'
+    if(v==='davi')return t!=='silvane'
     const set=MAP[v]
     return set?set.has(t):true
   }
   function forbiddenNames(v=viewer()){
-    const known=['isa','keise','alan','davi','paloma','vania','evalda','elion']
+    const known=['isa','keise','alan','davi','paloma','vania','evalda','elion','silvane']
     return known.filter(n=>!allowed(v,n))
   }
   function removeNode(node){try{node.remove()}catch{node.style.setProperty('display','none','important')}}
@@ -67,7 +69,7 @@
       input.addEventListener('paste',()=>setTimeout(()=>stripForbiddenMentions(input),0))
     })
   }
-  function apply(){sanitizeRoot(document);wireInputs()}
+  function apply(){sanitizeRoot(document);wireInputs();window.__ISA_FAMILY_VISIBILITY__?.apply?.(document)}
   let queued=false
   const observer=new MutationObserver(()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;apply()})})
   observer.observe(document.documentElement,{childList:true,subtree:true})
