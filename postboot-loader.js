@@ -2,9 +2,6 @@
 const wait=ms=>new Promise(r=>setTimeout(r,ms))
 async function load(path){try{return await import(path)}catch(e){console.warn('Módulo não carregou:',path,e);return null}}
 function later(ms,path,after){setTimeout(async()=>{await load(path);try{after?.()}catch{}},ms)}
-// Recuperação prioritária: nunca expor a casca legada enquanto os extras carregam.
-later(1,'./final-shell-bootstrap-v2.js?v=2-auth-timeout',()=>window.__ISA_FINAL_SHELL__?.recover?.())
-
 
 function currentProfile(){
   const requested=String(new URLSearchParams(location.search).get('perfil')||'').trim().toLowerCase()
@@ -90,7 +87,7 @@ function bootKeise(){
   if(keiseBooted||currentProfile()!=='keise')return false
   keiseBooted=true
   load('./keise-chat-unified.js?v=5-stable-interactions')
-  later(25,'./keise-approved-layout-final.js?v=7-hardwired-final',()=>{window.__ISA_SHOW_KEISE_HOME__?.();window.__ISA_STABILIZE_APPROVED_CONVERSATIONS__?.()})
+  later(25,'./keise-approved-layout-final.js?v=9-deterministic-boot',()=>{window.__ISA_SHOW_KEISE_HOME__?.();window.__ISA_STABILIZE_APPROVED_CONVERSATIONS__?.()})
   later(210,'./keise-game-test.js?v=11-stable-interactions')
   return true
 }
@@ -100,7 +97,7 @@ let sharedBooted=false
 function bootSharedApproved(){
   const p=currentProfile();if(sharedBooted||!(p==='isa'||p==='alan'))return false
   sharedBooted=true
-  later(25,'./approved-profile-dashboard.js?v=7-hardwired-final',()=>{window.__ISA_SHOW_APPROVED_PROFILE_HOME__?.();window.__ISA_STABILIZE_APPROVED_CONVERSATIONS__?.()})
+  later(25,'./approved-profile-dashboard.js?v=9-deterministic-boot',()=>{window.__ISA_SHOW_APPROVED_PROFILE_HOME__?.();window.__ISA_STABILIZE_APPROVED_CONVERSATIONS__?.()})
   return true
 }
 bootSharedApproved();let sc=0;const st=setInterval(()=>{if(bootSharedApproved()||++sc>50)clearInterval(st)},120)
