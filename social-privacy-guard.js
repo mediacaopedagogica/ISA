@@ -1,5 +1,10 @@
 // Isa Chat — regras de privacidade da Nossa Rede.
 // Aplica a mesma matriz de visibilidade no núcleo autenticado e nos acessos externos.
+Promise.allSettled([
+  import('./family-visibility-guard-v1.js?v=1-exact-profile-matrix'),
+  import('./chat-visibility-filter-v1.js?v=2-exact-profile-matrix')
+]).then(()=>{window.__ISA_FAMILY_VISIBILITY__?.apply?.(document);window.__ISA_REFRESH_CHAT_VISIBILITY__?.()})
+
 (function(){
   const norm=v=>String(v||'').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ')
   const MAP={
