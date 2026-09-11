@@ -5,7 +5,6 @@ const $=id=>document.getElementById(id)
 const accessToken=new URLSearchParams(location.hash.replace(/^#/, '')).get('acesso')||''
 let activeForm=null,busy=false,scanTimer=0
 const COMMENT_FORMS='.social-comment-form,.fs-comment-form,.fs75-comment-form'
-const COMMENT_ROWS='.social-comments,.fs-comments,.fs75-comments'
 const isExternal=()=>!!accessToken&&!!$('friendApp')
 function toast(text){const t=$('friendToast')||$('toast');if(!t)return;t.textContent=text;t.classList.remove('hidden');clearTimeout(t._nr8);t._nr8=setTimeout(()=>t.classList.add('hidden'),2600)}
 function rootFor(el){return el?.closest?.('#familySocialOverlay,#socialPanel')||$('familySocialOverlay')||$('socialPanel')}
@@ -47,8 +46,13 @@ function ensureCommentLayout(){
     #familySocialOverlay .fs-comment-form>.nr8-comment-plus,#familySocialOverlay .fs75-comment-form>.nr8-comment-plus{
       flex-basis:40px!important;width:40px!important;min-width:40px!important;max-width:40px!important
     }
-    /* Se algum compositor de publicação tiver sido injetado por engano dentro do comentário, ele nunca fica visível. */
-    #socialPanel ${COMMENT_FORMS} .nuvem-compose-compact,#familySocialOverlay ${COMMENT_FORMS} .nuvem-compose-compact{display:none!important}
+    /* Se algum compositor de publicação tiver sido injetado por engano dentro do comentário, somente ele é escondido. */
+    #socialPanel .social-comment-form>.nuvem-compose-compact,
+    #socialPanel .fs-comment-form>.nuvem-compose-compact,
+    #socialPanel .fs75-comment-form>.nuvem-compose-compact,
+    #familySocialOverlay .social-comment-form>.nuvem-compose-compact,
+    #familySocialOverlay .fs-comment-form>.nuvem-compose-compact,
+    #familySocialOverlay .fs75-comment-form>.nuvem-compose-compact{display:none!important}
     @media(max-width:520px){
       #socialPanel .social-comment-form,#familySocialOverlay .social-comment-form,#familySocialOverlay .fs-comment-form,#familySocialOverlay .fs75-comment-form{gap:5px!important}
       #socialPanel .social-comment-form>button:not(.isa-legacy-emoji-hidden),#familySocialOverlay .social-comment-form>button:not(.isa-legacy-emoji-hidden),#familySocialOverlay .fs-comment-form>button:not(.isa-legacy-emoji-hidden),#familySocialOverlay .fs75-comment-form>button:not(.isa-legacy-emoji-hidden){flex-basis:38px!important;width:38px!important;min-width:38px!important;max-width:38px!important;height:38px!important;min-height:38px!important}
