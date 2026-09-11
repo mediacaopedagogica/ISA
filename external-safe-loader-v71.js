@@ -28,7 +28,8 @@ async function start(){
     './nossa-rede-birthday-bridge-v1.js?v=2-postenter',
     './nuvem-carousel-v1.js?v=8-postenter',
     './nossa-rede-media-workflow-v4.js?v=3-postenter',
-    './nossa-rede-editor-make-addon-v1.js?v=2-postenter'
+    './nossa-rede-editor-make-addon-v1.js?v=2-postenter',
+    './nossa-rede-cover-story-lock-v16.js?v=1-canonical-cover-story-order'
   ]
   // Carrega em pequenos lotes para não congelar o primeiro paint.
   for(let i=0;i<jobs.length;i+=4){await Promise.all(jobs.slice(i,i+4).map(load));await new Promise(r=>setTimeout(r,0))}
@@ -48,6 +49,7 @@ async function start(){
     window.__ISA_NUVEM_CAROUSEL__?.scan?.()
     window.__ISA_NOSSA_REDE_MEDIA_WORKFLOW__?.scan?.()
     window.__ISA_PATCH_MEDIA_MAKE__?.()
+    window.__ISA_NOSSA_REDE_COVER_STORY__?.mount?.(true)
   }catch(error){console.warn('[Cantinho externo] extras parciais:',error)}
   setTimeout(()=>load('./external-decoration-cleanup-v1.js?v=3-postenter'),100)
   setTimeout(()=>load('./nossa-rede-header-cleanup-v1.js?v=5-postenter'),180)
