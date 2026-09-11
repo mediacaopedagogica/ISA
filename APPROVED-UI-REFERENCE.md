@@ -22,6 +22,26 @@ Esta imagem é a referência permanente do layout. A composição visual não po
 - Aniversários já cadastrados continuam visíveis nos espaços aprovados e não podem desaparecer por causa do shell novo.
 - O botão **Teste** da Keise deve abrir a área privada de testes sem depender do menu legado visível.
 
+## Nossa Rede — composição canônica protegida
+
+Esta estrutura passa a ser **fixa** para Keise, Isa, Alan e todos os acessos familiares autorizados. Novas funções não podem alterar a ordem nem substituir estes blocos:
+
+1. barra superior / busca da **Nossa Rede**;
+2. **capa do perfil** no topo da coluna central, ocupando o espaço nobre que anteriormente era usado pelos Stories;
+3. **Stories • 24h** imediatamente abaixo da capa;
+4. compositor de publicação;
+5. feed.
+
+Regras adicionais:
+
+- a capa usa o mesmo `cover_ref` já existente; não criar um segundo sistema de capa;
+- a orientação exibida junto da capa é **Ideal: 1600 × 600 px**, mantendo o conteúdo importante centralizado para o corte responsivo;
+- o upload/edição da capa continua usando o editor de mídia já aprovado;
+- Stories permanecem com expiração real de 24 horas e apenas mudam de posição para abaixo da capa;
+- a escolha de cor/tema deve alterar a **Nossa Rede como conjunto**, incluindo fundo do shell, barra superior, superfícies principais e detalhes, sem deslocar nenhum elemento;
+- mudar tema, capa ou Story nunca pode reordenar publicações, conversas, cards, aniversários ou outros componentes;
+- a composição `capa > Stories 24h > compositor > feed` está protegida por `nossa-rede-cover-story-lock-v16.js` e não pode ser revertida por módulos posteriores.
+
 ## Recursos globais que não podem regredir
 
 Estes recursos são para os perfis autorizados da família, não apenas para um usuário específico:
