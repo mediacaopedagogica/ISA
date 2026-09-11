@@ -25,6 +25,14 @@
   window.__ISA_APPROVED_PROFILE_RUN_ACTION__=run
   window.__ISA_APPROVED_PROFILE_DASHBOARD_V2__=true
 
+  let socialPreloaded=false
+  function preloadSocial(p){
+    if(socialPreloaded||!APPROVED.has(p))return
+    const main=$('mainView');if(!main||main.classList.contains('hidden'))return
+    socialPreloaded=true
+    import('./social-network-stable-v9.js?v=1-final-only').catch(()=>{socialPreloaded=false})
+  }
+
   function installCss(){
     if($('approvedCanonicalEarlyLock'))return
     const s=document.createElement('style')
@@ -60,6 +68,7 @@
     if(p!=='keise')document.body.classList.add('approved-family-dashboard');else document.body.classList.remove('approved-family-dashboard')
     cleanLegacy()
     const main=$('mainView');if(!main||main.classList.contains('hidden'))return false
+    preloadSocial(p)
     const dash=window.__ISA_APPROVED_DASHBOARD__
     const h=$('keiseApprovedHome'),t=$('keiseApprovedTopbar')
     if(!h||!t){try{dash?.tryBuild?.()}catch{};return false}
