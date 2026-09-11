@@ -111,14 +111,22 @@
 
   function openConversation(card){
     if(opening)return;
-    const src=sourceById(card.dataset.sourceConv);if(!src)return;
+    const id=String(card?.dataset?.sourceConv||'');if(!id)return;
+    // Keise tem um roteador dedicado: ele deixa o núcleo abrir a conversa antes de trocar o shell.
+    if(typeof window.__ISA_OPEN_KEISE_STABLE_CONVERSATION__==='function'&&document.body.classList.contains('keise-approved-layout')){
+      opening=true;try{window.__ISA_OPEN_KEISE_STABLE_CONVERSATION__(id)}finally{setTimeout(()=>opening=false,360)};return;
+    }
+    const src=sourceById(id);if(!src)return;
     opening=true;
     try{
-      window.__ISA_KEISE_ENTER_PANEL__?.();
-      window.__ISA_APPROVED_PROFILE_ENTER_PANEL__?.();
-      src.click();
-      document.dispatchEvent(new CustomEvent('isa:chat-opened',{detail:{conversationId:src.dataset.conv||''}}));
-    }finally{setTimeout(()=>opening=false,240)}
+      // Para os demais perfis, também preservamos esta ordem: clique nativo primeiro, layout depois.
+      try{HTMLElement.prototype.click.call(src)}catch{src.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window}))}
+      requestAnimationFrame(()=>{
+        window.__ISA_KEISE_ENTER_PANEL__?.();
+        window.__ISA_APPROVED_PROFILE_ENTER_PANEL__?.();
+        document.dispatchEvent(new CustomEvent('isa:chat-opened',{detail:{conversationId:id}}));
+      });
+    }finally{setTimeout(()=>opening=false,320)}
   }
 
   function bindStable(stable){
