@@ -22,13 +22,14 @@ function start(){
   later(475,'./chat-rich-format-guard-v2.js?v=2-no-empty-tags',()=>window.__ISA_CLEAN_EMPTY_CHAT_FORMATS__?.())
   later(545,'./familia-emoji-completo.js?v=9-controls')
 
+  later(620,'./profile-photo-unified-sync-v1.js?v=1-chat-social-same-photo',()=>window.__ISA_PROFILE_PHOTO_UNIFIED_SYNC__?.scan?.())
   later(650,'./external-profile-parity-v1.js?v=2-keise-profile-parity',()=>window.__ISA_EXTERNAL_PROFILE_PARITY__?.start?.())
   later(720,'./social-profile-pages-v1.js?v=2-all-family-profile-parity',()=>window.__ISA_SOCIAL_PROFILE_PAGES__?.decorate?.())
   later(790,'./social-profile-directory-v1.js?v=2-all-family-profile-parity',()=>window.__ISA_SOCIAL_PROFILE_DIRECTORY__?.patch?.())
   later(860,'./social-reaction-names-v1.js?v=2-all-family-profile-parity',()=>window.__ISA_ENHANCE_REACTION_NAMES__?.())
 
   later(980,'./family-social-extras-v1.js?v=2-live-social-extras',()=>window.__ISA_FAMILY_SOCIAL_EXTRAS__?.scan?.(true))
-  later(1010,'./nossa-rede-birthday-bridge-v1.js?v=1-live-birthdays',()=>window.__ISA_NOSSA_REDE_BIRTHDAYS__?.refresh?.())
+  later(1010,'./nossa-rede-birthday-bridge-v1.js?v=2-all-family-birthdays',()=>window.__ISA_NOSSA_REDE_BIRTHDAYS__?.refresh?.())
   later(1030,'./nuvem-carousel-v1.js?v=7-edit-delete-api',()=>window.__ISA_NUVEM_CAROUSEL__?.scan?.())
   later(1050,'./nossa-rede-media-workflow-v4.js?v=2-rich-editor-stable',()=>window.__ISA_NOSSA_REDE_MEDIA_WORKFLOW__?.scan?.())
   later(1070,'./nossa-rede-editor-make-addon-v1.js?v=1-makeup-tools',()=>window.__ISA_PATCH_MEDIA_MAKE__?.())
