@@ -3,7 +3,14 @@ name: Diagnose Keise freeze
 on:
   push:
     paths:
+      - 'index.html'
+      - 'keise-approved-layout-final.js'
+      - 'final-shell-bootstrap-v3.js'
+      - 'postboot-loader.js'
+      - 'mobile-responsive-v2.js'
+      - 'profile-menu-guard.js'
       - '.github/workflows/diag-keise-freeze-v1.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -22,17 +29,21 @@ jobs:
           npm init -y >/dev/null 2>&1
           npm i playwright@1.55.0 >/dev/null 2>&1
           npx playwright install --with-deps chromium >/dev/null 2>&1
-      - name: Simulate authenticated Keise and inspect clicks
+      - name: Simulate authenticated Keise and verify clicks after extras
         run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 >/tmp/isa-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
           cat > /tmp/diag.js <<'JS'
           const {chromium}=require(process.cwd()+'/node_modules/playwright');
+          const failAfter=(ms,label)=>new Promise((_,rej)=>setTimeout(()=>rej(new Error(label)),ms));
           (async()=>{
             const browser=await chromium.launch({headless:true});
             const context=await browser.newContext({serviceWorkers:'block',viewport:{width:1440,height:900}});
             const page=await context.newPage();
             page.on('pageerror',e=>console.log('PAGEERROR',String(e)));
             page.on('console',m=>{if(['error','warning'].includes(m.type()))console.log('CONSOLE_'+m.type().toUpperCase(),m.text())});
-            await page.goto('https://mediacaopedagogica.github.io/ISA/?perfil=keise&diag='+Date.now(),{waitUntil:'domcontentloaded',timeout:15000});
+            await page.goto('http://127.0.0.1:8000/?perfil=keise&diag='+Date.now(),{waitUntil:'domcontentloaded',timeout:15000});
             await page.evaluate(()=>{
               const login=document.getElementById('loginView'),main=document.getElementById('mainView'),name=document.getElementById('myName'),role=document.getElementById('myRole');
               login?.classList.add('hidden');main?.classList.remove('hidden');if(name)name.textContent='Keise';if(role)role.textContent='Mãe';
@@ -41,12 +52,13 @@ jobs:
               window.dispatchEvent(new CustomEvent('isa:app-ready',{detail:{version:'diag'}}));
             });
             await page.waitForFunction(()=>!!document.getElementById('keiseApprovedHome')&&document.body.classList.contains('keise-home-active'),null,{timeout:10000});
+            // Espera o postboot e os primeiros observadores. O bug antigo travava a thread aqui.
+            await Promise.race([page.waitForTimeout(3300),failAfter(7000,'renderer froze while extras loaded')]);
+            const heartbeat=await Promise.race([page.evaluate(()=>new Promise(r=>setTimeout(()=>r({now:Date.now(),extras:!!window.__ISA_EXTRAS_READY__,postboot:!!window.__ISA_ENSURE_SETTINGS_MENU__}),50))),failAfter(3000,'renderer heartbeat did not return')]);
+            console.log('HEARTBEAT',JSON.stringify(heartbeat));
             const before=await page.evaluate(()=>{
-              const ids=['keiseApprovedHome','keiseApprovedTopbar','mainView','personalBootGuard'];
-              const summary={build:window.__ISA_BOOT_BUILD__,appReady:window.__ISA_APP_READY__,body:[...document.body.classList],shell:window.__ISA_FINAL_SHELL__?.getState?.()||'',hasRunAction:typeof window.__ISA_KEISE_RUN_ACTION__==='function'};
-              for(const id of ids){const e=document.getElementById(id);if(!e){summary[id]=null;continue}const c=getComputedStyle(e);summary[id]={cls:e.className,display:c.display,visibility:c.visibility,opacity:c.opacity,pointerEvents:c.pointerEvents,zIndex:c.zIndex,rect:e.getBoundingClientRect().toJSON()}}
-              const b=document.querySelector('#keiseApprovedHome [data-ka-action="chat"]');if(b){const r=b.getBoundingClientRect();const x=r.left+r.width/2,y=r.top+r.height/2,h=document.elementFromPoint(x,y);const c=getComputedStyle(b);summary.chatButton={pointerEvents:c.pointerEvents,disabled:b.disabled,rect:r.toJSON(),hit:{tag:h?.tagName,id:h?.id,cls:h?.className,text:h?.textContent?.trim().slice(0,80)}}}
-              return summary;
+              const b=document.querySelector('#keiseApprovedHome [data-ka-action="chat"]');const r=b?.getBoundingClientRect();const h=r?document.elementFromPoint(r.left+r.width/2,r.top+r.height/2):null;
+              return {build:window.__ISA_BOOT_BUILD__,appReady:window.__ISA_APP_READY__,body:[...document.body.classList],shell:window.__ISA_FINAL_SHELL__?.getState?.()||'',hasRunAction:typeof window.__ISA_KEISE_RUN_ACTION__==='function',chatHit:h?{tag:h.tagName,id:h.id,cls:h.className,text:h.textContent?.trim().slice(0,80)}:null};
             });
             console.log('BEFORE',JSON.stringify(before,null,2));
             await page.evaluate(()=>{
@@ -54,16 +66,16 @@ jobs:
               const orig=window.__ISA_KEISE_RUN_ACTION__;
               window.__ISA_KEISE_RUN_ACTION__=async function(action){window.__DIAG_ACTIONS__.push(action);return orig?orig(action):true};
             });
-            const chat=page.locator('#keiseApprovedHome [data-ka-action="chat"]');
-            await chat.click({timeout:5000});
-            await page.waitForTimeout(400);
-            const after=await page.evaluate(()=>({actions:window.__DIAG_ACTIONS__||[],body:[...document.body.classList],lastError:window.__ISA_LAST_RUNTIME_ERROR__||'',active:document.activeElement?.outerHTML?.slice(0,180)||''}));
+            await page.locator('#keiseApprovedHome [data-ka-action="chat"]').click({timeout:5000});
+            await page.waitForTimeout(250);
+            const after=await page.evaluate(()=>({actions:window.__DIAG_ACTIONS__||[],lastError:window.__ISA_LAST_RUNTIME_ERROR__||'',body:[...document.body.classList]}));
             console.log('AFTER',JSON.stringify(after,null,2));
-            if(!after.actions.includes('chat'))throw new Error('Approved dashboard click did not reach the Keise router');
-            const logout=page.locator('#kaLogout');
-            const lr=await logout.evaluate(b=>{const r=b.getBoundingClientRect(),h=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2),c=getComputedStyle(b);return{pointerEvents:c.pointerEvents,disabled:b.disabled,hit:{tag:h?.tagName,id:h?.id,cls:h?.className,text:h?.textContent?.trim()}}});
-            console.log('LOGOUT_HIT',JSON.stringify(lr));
+            if(!after.actions.includes('chat'))throw new Error('Chat click did not reach approved router');
+            const settings=page.locator('#keiseApprovedHome [data-ka-action="settings"]');
+            const sr=await settings.evaluate(b=>{const r=b.getBoundingClientRect(),h=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);return{pointer:getComputedStyle(b).pointerEvents,hit:h?.closest?.('[data-ka-action]')?.dataset?.kaAction||h?.id||h?.tagName}});
+            console.log('SETTINGS_HIT',JSON.stringify(sr));
+            if(sr.pointer==='none')throw new Error('Approved settings button has pointer-events none');
             await browser.close();
           })().catch(e=>{console.error('DIAG_FAIL',e.stack||String(e));process.exit(1)});
           JS
-          node /tmp/diag.js
+          timeout 75s node /tmp/diag.js
