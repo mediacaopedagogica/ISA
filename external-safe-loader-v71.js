@@ -26,6 +26,7 @@ async function start(){
     './isa-social-emoji-suite-v1.js?v=2-postenter',
     './family-social-extras-v1.js?v=3-postenter',
     './nossa-rede-birthday-bridge-v1.js?v=2-postenter',
+    './external-birthday-sidebar-v1.js?v=1-privacy-filtered',
     './nuvem-carousel-v1.js?v=8-postenter',
     './nossa-rede-media-workflow-v4.js?v=3-postenter',
     './nossa-rede-editor-make-addon-v1.js?v=2-postenter',
@@ -46,6 +47,7 @@ async function start(){
     window.__ISA_REACTION_DELEGATE_REFRESH__?.()
     window.__ISA_FAMILY_SOCIAL_EXTRAS__?.scan?.(true)
     window.__ISA_NOSSA_REDE_BIRTHDAYS__?.refresh?.()
+    window.__ISA_EXTERNAL_BIRTHDAYS__?.refresh?.()
     window.__ISA_NUVEM_CAROUSEL__?.scan?.()
     window.__ISA_NOSSA_REDE_MEDIA_WORKFLOW__?.scan?.()
     window.__ISA_PATCH_MEDIA_MAKE__?.()
