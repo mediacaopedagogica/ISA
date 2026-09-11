@@ -1,5 +1,5 @@
 // Carregador progressivo: o núcleo do Cantinho nunca espera módulos extras.
-// Keise, Isa e Alan agora usam o MESMO shell nativo; nenhum recurso depende de dashboard paralelo.
+// Keise usa o dashboard aprovado; os extras só acrescentam recursos sem reconstruir o shell.
 const wait=ms=>new Promise(r=>setTimeout(r,ms))
 async function load(path){try{return await import(path)}catch(e){console.warn('Módulo não carregou:',path,e);return null}}
 function later(ms,path,after){setTimeout(async()=>{await load(path);try{after?.()}catch{}},ms)}
@@ -18,25 +18,40 @@ const keiseAtBoot=profileAtBoot==='keise'
 function ensureSettings(){
   const nav=document.querySelector('.nav-tabs');if(!nav)return null
   let btn=document.getElementById('settingsMenuBtn')||document.getElementById('generalSettingsNav')
-  if(!btn){btn=document.createElement('button');btn.id='settingsMenuBtn';btn.type='button';btn.className='nav-btn';const cal=nav.querySelector('[data-tab="calendar"]');cal?.insertAdjacentElement('afterend',btn);if(!btn.parentNode)nav.appendChild(btn)}
-  btn.id='settingsMenuBtn';btn.classList.add('nav-btn');btn.classList.remove('hidden');btn.removeAttribute('data-tab');btn.dataset.settingsMenu='1';btn.innerHTML='⚙️ <span>Configurações</span>';btn.title='Configurações';btn.setAttribute('aria-label','Configurações');btn.style.removeProperty('display');btn.style.removeProperty('visibility');btn.style.removeProperty('opacity')
+  if(!btn){
+    btn=document.createElement('button');btn.id='settingsMenuBtn';btn.type='button';btn.className='nav-btn';
+    const cal=nav.querySelector('[data-tab="calendar"]');cal?.insertAdjacentElement('afterend',btn);if(!btn.parentNode)nav.appendChild(btn)
+  }
+  // IMPORTANTE: tudo abaixo é idempotente. O mobile-responsive observa a nav por childList;
+  // reescrever innerHTML em toda varredura criava um loop infinito MutationObserver -> ensureSettings -> innerHTML -> MutationObserver.
+  if(btn.id!=='settingsMenuBtn')btn.id='settingsMenuBtn'
+  if(!btn.classList.contains('nav-btn'))btn.classList.add('nav-btn')
+  if(btn.classList.contains('hidden'))btn.classList.remove('hidden')
+  if(btn.hasAttribute('data-tab'))btn.removeAttribute('data-tab')
+  if(btn.dataset.settingsMenu!=='1')btn.dataset.settingsMenu='1'
+  const markup='⚙️ <span>Configurações</span>'
+  if(btn.innerHTML!==markup)btn.innerHTML=markup
+  if(btn.title!=='Configurações')btn.title='Configurações'
+  if(btn.getAttribute('aria-label')!=='Configurações')btn.setAttribute('aria-label','Configurações')
+  if(btn.style.display)btn.style.removeProperty('display')
+  if(btn.style.visibility)btn.style.removeProperty('visibility')
+  if(btn.style.opacity)btn.style.removeProperty('opacity')
   if(btn.dataset.stableSettingsBound!=='1'){
     btn.dataset.stableSettingsBound='1';btn.dataset.generalSettingsBound='1'
-    btn.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();if(typeof window.__ISA_OPEN_GENERAL_SETTINGS__!=='function')await load('./general-settings.js?v=17-single-shell');window.__ISA_OPEN_GENERAL_SETTINGS__?.()},true)
+    btn.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();if(typeof window.__ISA_OPEN_GENERAL_SETTINGS__!=='function')await load('./general-settings.js?v=18-no-nav-loop');window.__ISA_OPEN_GENERAL_SETTINGS__?.()},true)
   }
   return btn
 }
 window.__ISA_ENSURE_SETTINGS_MENU__=ensureSettings
 
 later(5,'./mobile-conversation-scroll-v2.js?v=1-visible-scroll')
-later(12,'./mobile-responsive-v2.js?v=62-updated-ui')
+later(12,'./mobile-responsive-v2.js?v=63-no-nav-loop')
 
-// Todos os perfis pessoais usam a mesma navegação funcional.
 ensureSettings();document.addEventListener('DOMContentLoaded',ensureSettings,{once:true})
 let navTick=0;const navTimer=setInterval(()=>{ensureSettings();window.__ISA_ENSURE_PROFILE_MENU__?.();window.__ISA_PERSONAL_NAV_SYNC__?.();if(++navTick>30)clearInterval(navTimer)},350)
-later(20,'./profile-menu-guard.js?v=8-single-shell',()=>window.__ISA_ENSURE_PROFILE_MENU__?.())
-later(80,'./general-settings.js?v=17-single-shell',()=>{ensureSettings();window.__ISA_APPLY_GENERAL_SETTINGS__?.()})
-later(120,'./personal-navigation-core.js?v=4-single-shell',()=>window.__ISA_PERSONAL_NAV_SYNC__?.())
+later(20,'./profile-menu-guard.js?v=9-no-nav-loop',()=>window.__ISA_ENSURE_PROFILE_MENU__?.())
+later(80,'./general-settings.js?v=18-no-nav-loop',()=>{ensureSettings();window.__ISA_APPLY_GENERAL_SETTINGS__?.()})
+later(120,'./personal-navigation-core.js?v=5-no-nav-loop',()=>window.__ISA_PERSONAL_NAV_SYNC__?.())
 
 later(260,'./social-privacy-guard.js?v=2-stable-interactions',()=>window.__ISA_SOCIAL_PRIVACY__?.apply?.())
 later(520,'./profile-status-stickers.js?v=15-stable-interactions')
@@ -60,7 +75,6 @@ later(1010,'./social-profile-pages-v1.js?v=4-stable-open',()=>window.__ISA_SOCIA
 later(1060,'./social-profile-directory-v1.js?v=3-stable-open',()=>window.__ISA_SOCIAL_PROFILE_DIRECTORY__?.patch?.())
 later(1090,'./social-reaction-names-v1.js?v=3-stable-open',()=>window.__ISA_ENHANCE_REACTION_NAMES__?.())
 later(1110,'./profile-actions.js?v=9-video-call-background')
-// Fundo virtual precisa ser carregado antes do gerenciador WebRTC para capturar a câmera desde o início.
 later(1160,'./video-call-background-v1.js?v=1-upload-optional')
 later(1240,'./call-manager.js?v=20-video-background')
 later(1420,'./message-interactions-v1.js?v=7-full-emotions',()=>window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.())
@@ -80,5 +94,4 @@ later(2310,'./nuvem-compose-compact-v1.js?v=11-flat-pink-live',()=>window.__ISA_
 later(2335,'./nossa-rede-media-workflow-v4.js?v=2-rich-editor-stable',()=>window.__ISA_NOSSA_REDE_MEDIA_WORKFLOW__?.scan?.())
 later(2360,'./nuvem-pin-picker-v2.js?v=7-single-shell-all-links',()=>{window.__ISA_NUVEM_PIN_PICKER__?.scan?.();window.__ISA_STABILIZE_APPROVED_CONVERSATIONS__?.()})
 
-// Recursos extras carregados sobre o único shell nativo funcional.
 window.__ISA_EXTRAS_READY__=true
