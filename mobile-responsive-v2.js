@@ -1,13 +1,16 @@
 const $=id=>document.getElementById(id)
 const mq=matchMedia('(max-width:850px)')
-let notifyAnchor=null
+let notifyAnchor=null,navSyncQueued=false
 
 function shell(){return $('mainView')}
 function who(){return String($('myName')?.textContent||'').trim().toLowerCase()}
+function isKeise(){const requested=String(new URLSearchParams(location.search).get('perfil')||'').trim().toLowerCase();const current=who();return requested==='keise'||current==='keise'||current.startsWith('keise ')}
 function mainReady(){return !!shell()&&!shell().classList.contains('hidden')&&!!who()}
 function syncProfileSubtitle(){const role=$('myRole');if(!role)return;if(!role.dataset.desktopText)role.dataset.desktopText=role.textContent||'';const next=mq.matches?'Cantinho da Isa 💜':role.dataset.desktopText;if(role.textContent!==next)role.textContent=next}
 function ensureProfileNav(){
   if(!mainReady())return
+  // O dashboard aprovado da Keise é dono da navegação visível. Não reordena nem reescreve sua nav em observadores legados.
+  if(isKeise())return
   window.__ISA_ENSURE_SETTINGS_MENU__?.()
   syncProfileSubtitle()
   const study=$('studyNav'),diary=$('diaryNav'),supervision=$('supervisionNav'),parents=$('parentsNav')
@@ -15,9 +18,8 @@ function ensureProfileNav(){
     study?.classList.remove('hidden');diary?.classList.remove('hidden');supervision?.classList.add('hidden');parents?.classList.add('hidden')
   }else{
     study?.classList.add('hidden');diary?.classList.add('hidden')
-    if(who()==='keise'||who()==='alan'){supervision?.classList.remove('hidden');parents?.classList.remove('hidden')}
+    if(who()==='alan'){supervision?.classList.remove('hidden');parents?.classList.remove('hidden')}
   }
-  window.__ISA_ENSURE_SETTINGS_MENU__?.()
 }
 function backBtn(){
   let b=$('mobilePanelBack')
@@ -45,7 +47,7 @@ function showConversationList(){
   backBtn()?.classList.add('hidden')
   const chats=document.querySelector('.nav-btn[data-tab="chats"]')
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b===chats))
-  window.__ISA_ENSURE_SETTINGS_MENU__?.()
+  if(!isKeise())window.__ISA_ENSURE_SETTINGS_MENU__?.()
   placeNotifyBanner()
   requestAnimationFrame(()=>{const list=$('chatList');if(list){list.style.removeProperty('display');list.scrollLeft=0}})
 }
@@ -90,12 +92,11 @@ function wire(){
   }
 }
 function sync(){
-  window.__ISA_ENSURE_SETTINGS_MENU__?.()
+  if(!isKeise())window.__ISA_ENSURE_SETTINGS_MENU__?.()
   ensureProfileNav();wire();backBtn();placeNotifyBanner();syncProfileSubtitle()
   if(!mq.matches){
     shell()?.classList.remove('mobile-content-open','mobile-chat-open','mobile-panel-open')
     backBtn()?.classList.add('hidden')
-    window.__ISA_ENSURE_SETTINGS_MENU__?.()
     return
   }
   if(mainReady()){
@@ -105,14 +106,18 @@ function sync(){
     else if(active==='chats')showConversationList()
     else if(active!=='study'&&active!=='diary')showContent('panel')
   }
-  window.__ISA_ENSURE_SETTINGS_MENU__?.()
+}
+function scheduleNavSync(){
+  if(navSyncQueued)return
+  navSyncQueued=true
+  requestAnimationFrame(()=>{navSyncQueued=false;if(!isKeise()){window.__ISA_ENSURE_SETTINGS_MENU__?.();ensureProfileNav()}wire()})
 }
 
 sync()
 const main=$('mainView')
 if(main){const obs=new MutationObserver(()=>sync());obs.observe(main,{attributes:true,attributeFilter:['class']})}
 const nav=document.querySelector('.nav-tabs')
-if(nav){const obs=new MutationObserver(()=>{window.__ISA_ENSURE_SETTINGS_MENU__?.();ensureProfileNav();wire()});obs.observe(nav,{childList:true,subtree:true})}
+if(nav){const obs=new MutationObserver(scheduleNavSync);obs.observe(nav,{childList:true,subtree:true})}
 window.addEventListener('resize',sync,{passive:true})
 mq.addEventListener?.('change',sync)
 window.__ISA_MOBILE_SHOW_CONTENT__=showContent
