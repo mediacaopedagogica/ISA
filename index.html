@@ -69,15 +69,15 @@
 <dialog id="simpleDialog"><form method="dialog" class="dialog-card"><button class="dialog-close" value="cancel">✕</button><div id="dialogContent"></div></form></dialog><div id="toast" class="toast hidden"></div>
 <script>
 (function(){
-  window.__ISA_BOOT_BUILD__='20260911-direct-keise-v13';
+  window.__ISA_BOOT_BUILD__='20260911-single-owner-v14';
   const personal=String(new URLSearchParams(location.search).get('perfil')||'').toLowerCase();
   const isKeise=personal==='keise';
   const guard=document.getElementById('personalBootGuard');
   if(['keise','isa','alan'].includes(personal)){guard?.classList.remove('hidden');const t=document.getElementById('personalBootTitle');if(t)t.textContent=isKeise?'Abrindo o Cantinho de Keise…':'Abrindo seu Cantinho…'}
-  window.__ISA_HIDE_BOOT_GUARD__=()=>guard?.classList.add('hidden');
+  window.__ISA_HIDE_BOOT_GUARD__=()=>{guard?.classList.add('hidden');if(guard)guard.style.pointerEvents='none'};
   const approvedReady=()=>{
     const main=document.getElementById('mainView'),home=document.getElementById('keiseApprovedHome');
-    return !!main&&!main.classList.contains('hidden')&&!!home&&!home.classList.contains('hidden')&&document.body.classList.contains('keise-home-active');
+    return !!main&&!main.classList.contains('hidden')&&!!home&&!home.classList.contains('hidden')&&document.body.classList.contains('keise-home-active')&&window.__ISA_APP_READY__===true;
   };
   const observe=()=>{
     const main=document.getElementById('mainView'),login=document.getElementById('loginView');
@@ -91,7 +91,7 @@
 </script>
 <script>(function(){const btn=document.getElementById('togglePassword'),input=document.getElementById('loginPassword');if(btn&&input){btn.onclick=()=>{const show=input.type==='password';input.type=show?'text':'password';btn.textContent=show?'🙈':'👁️';btn.setAttribute('aria-label',show?'Ocultar senha':'Mostrar senha');btn.title=show?'Ocultar senha':'Mostrar senha';input.focus()}}})();</script>
 <script>
-if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=approved-shell-79',{scope:'./'}).then(reg=>reg.update().catch(()=>{})).catch(error=>console.warn('Service Worker:',error));}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=approved-shell-80',{scope:'./'}).then(reg=>reg.update().catch(()=>{})).catch(error=>console.warn('Service Worker:',error));}
 </script>
 <script>
 (function(){
@@ -103,12 +103,12 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=app
   new MutationObserver(()=>{if(!main.classList.contains('hidden'))clear()}).observe(main,{attributes:true,attributeFilter:['class']});
 })();
 </script>
-<script defer src="./mobile-interaction-guard.js?v=68-core-v2"></script>
-<!-- Keise usa somente o dashboard aprovado; o v34 fica como núcleo funcional invisível. -->
-<script src="./final-shell-bootstrap-v3.js?v=7-direct-approved-home"></script>
-<script src="./app-v33.js?v=69-direct-v34-single-shell"></script>
-<script src="./keise-approved-layout-final.js?v=7-direct-after-core"></script>
-<script src="./personal-boot-failopen-v1.js?v=10-approved-home"></script>
+<script defer src="./mobile-interaction-guard.js?v=69-single-owner"></script>
+<!-- Sequência única: núcleo v34 -> dashboard aprovado -> observador passivo -> extras. -->
+<script src="./app-v34.js?v=20260911-single-core-v1"></script>
+<script src="./keise-approved-layout-final.js?v=8-single-owner"></script>
+<script src="./final-shell-bootstrap-v3.js?v=8-passive-single-owner"></script>
+<script src="./personal-boot-failopen-v1.js?v=11-single-owner"></script>
 <script>
 (function(){
   let tries=0,loaded=false;
@@ -121,18 +121,17 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=app
     const shellReady=window.__ISA_FINAL_SHELL__?.getState?.()==='ready';
     if(visible(main)&&name&&name!=='família'&&shellReady&&window.__ISA_APP_READY__===true){
       loaded=true;
-      const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=82-approved-home';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
+      const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=83-single-owner';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
     }
-    if(++tries<240)setTimeout(loadExtras,120);
+    if(++tries<360)setTimeout(loadExtras,120);
   };
   document.addEventListener('isa:final-shell-ready',loadExtras);
-  document.addEventListener('isa:core-ready',loadExtras);
   setTimeout(loadExtras,160);
 })();
 </script>
 <script>
 (function(){
-  const KEY='isa-main-chat-recovery-v62';
+  const KEY='isa-main-chat-recovery-v63';
   const stuck=()=>{
     const main=document.getElementById('mainView'),list=document.getElementById('chatList');
     return !!main&&!main.classList.contains('hidden')&&!!list&&/Carregando conversas/i.test(list.textContent||'');
@@ -150,7 +149,7 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=app
     const box=document.getElementById('chatList');if(!box)return;
     box.innerHTML='<div class="muted" style="padding:12px;line-height:1.5">As conversas demoraram para carregar, mas o restante do Cantinho continua disponível.<br><button id="mainChatReloadBtn" class="tiny-btn" type="button" style="margin-top:8px">Recarregar conversas</button></div>';
     document.getElementById('mainChatReloadBtn')?.addEventListener('click',()=>{clear();const u=new URL(location.href);u.searchParams.set('_fresh',Date.now().toString());location.replace(u.toString())});
-  },11000);
+  },12000);
 })();
 </script>
 <script>
