@@ -1,7 +1,7 @@
 const CACHE_PREFIX='cantinho-isa-';
 
-// Modo de recuperação: o Service Worker não intercepta navegação nem arquivos.
-// Isso impede versões antigas do app de prenderem a página em cache.
+// V83 — shell aprovado sempre fresco.
+// Navegação, JS e CSS nunca voltam de um cache antigo; isso evita o layout legado reaparecer.
 self.addEventListener('install',event=>{
   self.skipWaiting();
 });
@@ -14,7 +14,17 @@ self.addEventListener('activate',event=>{
   );
 });
 
-// Push permanece disponível; somente o cache/interceptação foi desligado.
+self.addEventListener('fetch',event=>{
+  const req=event.request;
+  if(req.method!=='GET')return;
+  let url;try{url=new URL(req.url)}catch{return}
+  if(url.origin!==self.location.origin)return;
+  const important=req.mode==='navigate'||['document','script','style'].includes(req.destination)||/\.(?:html?|js|css)$/i.test(url.pathname);
+  if(!important)return;
+  event.respondWith(fetch(req,{cache:'no-store'}));
+});
+
+// Push permanece disponível.
 self.addEventListener('push',event=>{
   let data={};
   try{data=event.data?.json()||{}}catch{}
