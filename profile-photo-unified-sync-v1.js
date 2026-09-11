@@ -37,7 +37,7 @@ if(!window.__ISA_PROFILE_PHOTO_UNIFIED_SYNC_V1__){
     if(current?.member_id){
       ;({error}=await db.from('social_profiles').update({social_avatar_ref:path,updated_at:new Date().toISOString()}).eq('member_id',who.id))
     }else{
-      ;({error}=await db.from('social_profiles').insert({member_id:who.id,family_id:who.family_id,display_name:who.display_name,social_avatar_ref:path,updated_at:new Date().toISOString()}))
+      ;({error}=await db.from('social_profiles').insert({member_id:who.id,family_id:who.family_id,display_name:who.display_name,bio:'',status_text:'',mood_emoji:'💜',activity_label:'',theme:'lilac',social_avatar_ref:path,updated_at:new Date().toISOString()}))
     }
     if(error){await db.storage.from('social-media').remove([path]).catch(()=>{});throw error}
     if(old&&old!==path)await db.storage.from('social-media').remove([old]).catch(()=>{})
