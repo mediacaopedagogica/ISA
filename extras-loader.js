@@ -35,6 +35,7 @@ async function loadCoreExtras(){
     loadOnce('games','./games-menu.js?v=15-approved-profiles'),
     loadOnce('snake-game','./games-menu-snake.js?v=3-all-users')
   ]
+  if(approvedDashboard())jobs.push(loadOnce('personal-notes','./personal-notes-chat-v1.js?v=1-private-notes'))
   if(!approvedDashboard())jobs.push(loadOnce('social-network-bridge','./social-network-bridge-v2.js?v=3-touch-open'))
   if(!dedicatedMobile)jobs.push(loadOnce('games-notebook-fit','./games-notebook-fit.js?v=2-all-profiles'))
   if(isKeise()){
@@ -57,6 +58,7 @@ async function loadCoreExtras(){
   window.__ISA_PROFILE_PHOTO_UNIFIED_SYNC__?.scan?.()
   window.__ISA_PROFILE_THEME_V2__?.scan?.()
   window.__ISA_PROFILE_THEME_PAGE__?.sync?.()
+  window.__ISA_PERSONAL_NOTES_CHAT__?.scan?.()
 }
 async function loadSupervisionExtras(){if(!isParent())return;await Promise.allSettled([loadOnce('diary-parent','./diary-parent.js?v=5-stable')])}
 function wire(){
