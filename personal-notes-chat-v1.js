@@ -32,9 +32,9 @@
       body.isa-personal-notes-active #composer{background:rgba(255,255,255,.86)!important;border-top-color:color-mix(in srgb,var(--notes-b) 48%,#eee)!important;backdrop-filter:blur(12px)}
       body.isa-personal-notes-active #groupManageBtn,
       body.isa-personal-notes-active #groupPlusBtn{display:none!important}
-      .isa-notes-postit-btn{border:1px solid color-mix(in srgb,var(--notes-b,#d8c8f3) 55%,#e9dfef)!important;border-radius:13px!important;background:linear-gradient(145deg,#fff,color-mix(in srgb,var(--notes-a,#f6e6ff) 45%,#fff))!important;color:#665270!important;font-weight:900!important;min-width:42px;height:42px;padding:0 10px;cursor:pointer;box-shadow:0 5px 14px rgba(86,65,101,.08)}
+      body.isa-personal-notes-active #isaNotesPostitBtn{display:none!important}
       .isa-notes-private-chip{display:inline-flex;align-items:center;gap:5px;margin-left:7px;padding:5px 8px;border-radius:999px;background:rgba(255,255,255,.74);border:1px solid rgba(255,255,255,.9);font-size:9px;font-weight:900;color:#776681;white-space:nowrap}
-      @media(max-width:650px){.isa-notes-private-chip{display:none}.isa-notes-postit-btn{min-width:40px;width:40px;padding:0;font-size:0}.isa-notes-postit-btn:before{content:'📌';font-size:18px}}
+      @media(max-width:650px){.isa-notes-private-chip{display:none}}
     `;document.head.appendChild(s)
   }
   function setTheme(){
@@ -64,15 +64,17 @@
     const approved=document.querySelector('#kaConversationList .ka-conv-card.active[data-source-conv],#kaConversationList .ka-conv-card.active[data-ka-conv]')
     return String(approved?.dataset.sourceConv||approved?.dataset.kaConv||'')
   }
-  function ensurePostitButton(on){
-    const composer=$('composer');if(!composer)return
-    let b=$('isaNotesPostitBtn')
-    if(!on){b?.remove();return}
-    if(!b){
-      b=document.createElement('button');b.id='isaNotesPostitBtn';b.type='button';b.className='isa-notes-postit-btn';b.textContent='📌 Post-it';b.title='Abrir meus post-its destas Notas';b.setAttribute('aria-label','Abrir post-its das Notas')
-      b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();if(window.__ISA_IMPORTANT_BOARD__?.open)window.__ISA_IMPORTANT_BOARD__.open();else import('./conversation-important-v2.js?v=5-personal-notes').then(()=>window.__ISA_IMPORTANT_BOARD__?.open?.()).catch(()=>{})})
-      const emojiWrap=composer.querySelector('.emoji-wrap');composer.insertBefore(b,emojiWrap||composer.firstChild)
-    }
+  function importantText(btn){
+    return String(btn?.textContent||'').replace(/📌/g,'').replace(/\s+/g,' ').trim().toLocaleLowerCase('pt-BR')
+  }
+  function keepSingleImportantEntry(on){
+    $('isaNotesPostitBtn')?.remove()
+    if(!on)return
+    const head=$('chatPanel')?.querySelector('.chat-header');if(!head)return
+    const buttons=[...head.querySelectorAll('button')].filter(b=>importantText(b)==='importante')
+    if(buttons.length<2)return
+    const canonical=head.querySelector('.isa-important-open')||buttons[0]
+    buttons.forEach(b=>{if(b!==canonical)b.remove()})
   }
   function activeState(){
     const c=cfg(),panel=$('chatPanel');if(!c||!panel)return
@@ -81,8 +83,8 @@
     if(on){
       setTheme();const title=$('chatTitle'),sub=$('chatSubtitle');if(title&&title.textContent!=='Notas')title.textContent='Notas';if(sub&&sub.textContent!=='Suas notas pessoais • só você vê')sub.textContent='Suas notas pessoais • só você vê'
       let chip=$('isaNotesPrivateChip');const head=panel.querySelector('.chat-header .grow');if(!chip&&head){chip=document.createElement('span');chip.id='isaNotesPrivateChip';chip.className='isa-notes-private-chip';chip.textContent='🔒 pessoal';head.appendChild(chip)}
-      ensurePostitButton(true)
-    }else{$('isaNotesPrivateChip')?.remove();ensurePostitButton(false)}
+      keepSingleImportantEntry(true)
+    }else{$('isaNotesPrivateChip')?.remove();keepSingleImportantEntry(false)}
   }
   function scan(){ensureCss();decorateCards();activeState()}
   let queued=false
