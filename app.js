@@ -1,6 +1,21 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 import { CONFIG } from './config.js'
 
+// Captura o prompt de instalação cedo, antes dos módulos do dashboard terminarem de carregar.
+if(!window.__ISA_PWA_EARLY_CAPTURE__){
+  window.__ISA_PWA_EARLY_CAPTURE__=true
+  window.__ISA_PWA_INSTALL_PROMPT__=window.__ISA_PWA_INSTALL_PROMPT__||null
+  window.addEventListener('beforeinstallprompt',event=>{
+    event.preventDefault()
+    window.__ISA_PWA_INSTALL_PROMPT__=event
+    try{window.dispatchEvent(new CustomEvent('isa:pwa-install-ready'))}catch{}
+  })
+  window.addEventListener('appinstalled',()=>{
+    window.__ISA_PWA_INSTALL_PROMPT__=null
+    window.__ISA_PWA_INSTALLED__=true
+  })
+}
+
 window.__ISA_SCRIPT_LOADED__=true;
 
 const files=['chunk-00.txt','chunk-01.txt','chunk-02.txt','chunk-03.txt','chunk-04.txt','chunk-05.txt','chunk-06.txt','chunk-07.txt','chunk-08.txt','chunk-09.txt'];
