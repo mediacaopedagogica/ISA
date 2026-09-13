@@ -33,12 +33,21 @@ async function loadCoreExtras(){
     loadOnce('seasonal-theme','./seasonal-theme-engine-v1.js?v=2-calendar-live'),
     loadOnce('postit-quick-actions','./collaborative-postit-quick-actions-v1.js?v=1-tap-edit-cancel'),
     loadOnce('games','./games-menu.js?v=15-approved-profiles'),
-    loadOnce('snake-game','./games-menu-snake.js?v=3-all-users')
+    loadOnce('snake-game','./games-menu-snake.js?v=3-all-users'),
+    loadOnce('chat-polls-v2','./chat-polls-v2.js?v=1-all-conversations')
   ]
   if(approvedDashboard())jobs.push(loadOnce('personal-notes','./personal-notes-chat-v1.js?v=1-private-notes'))
   if(!approvedDashboard())jobs.push(loadOnce('social-network-bridge','./social-network-bridge-v2.js?v=3-touch-open'))
   if(!dedicatedMobile)jobs.push(loadOnce('games-notebook-fit','./games-notebook-fit.js?v=2-all-profiles'))
-  if(isKeise()||isIsa())jobs.push(loadOnce('daily-task-board','./daily-task-board-v1.js?v=1-ludic-keise-isa'))
+  if(isKeise()||isIsa()){
+    jobs.push(loadOnce('daily-task-board','./daily-task-board-v1.js?v=1-ludic-keise-isa'))
+    jobs.push(loadOnce('daily-task-reminders','./daily-task-reminder-controls-v1.js?v=1-per-task-sound'))
+  }
+  if(isKeise()||isIsa()||isAlan()){
+    jobs.push(loadOnce('urgent-notification-sound','./urgent-notification-sound-v1.js?v=1'))
+    jobs.push(loadOnce('pwa-install','./pwa-install-v1.js?v=2-fixed-install'))
+    jobs.push(loadOnce('shopping-list','./shopping-list-v1.js?v=3-keise-suggestions'))
+  }
   if(isKeise()){
     jobs.push(loadOnce('keise-access-settings','./keise-access-settings.js?v=2-direct-api'))
     jobs.push(loadOnce('keise-alan-studio-control','./keise-alan-studio-control.js?v=1-master-lock'))
@@ -61,6 +70,10 @@ async function loadCoreExtras(){
   window.__ISA_PROFILE_THEME_PAGE__?.sync?.()
   window.__ISA_PERSONAL_NOTES_CHAT__?.scan?.()
   window.__ISA_DAILY_TASK_BOARD__?.ensureTile?.()
+  window.__ISA_DAILY_TASK_REMINDERS__?.scan?.(true)
+  window.__ISA_PWA_INSTALL__?.inject?.()
+  window.__ISA_SHOPPING_LIST__?.scan?.()
+  window.__ISA_CHAT_POLLS_V2__?.scan?.()
 }
 async function loadSupervisionExtras(){if(!isParent())return;await Promise.allSettled([loadOnce('diary-parent','./diary-parent.js?v=5-stable')])}
 function wire(){
