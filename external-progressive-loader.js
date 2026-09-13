@@ -15,7 +15,7 @@ function start(){
   later(135,'./external-chat-tools.js?v=6-light-entry')
   later(165,'./collaborative-chat-postits-v2.js?v=2-cancel-reopen-fixers',()=>window.__ISA_COLLAB_POSTITS__?.scan?.())
   later(205,'./conversation-important-v2.js?v=4-collab-chat',()=>window.__ISA_IMPORTANT_BOARD__?.render?.())
-  later(255,'./message-interactions-v1.js?v=7-full-emotions',()=>window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.())
+  later(255,'./message-interactions-v1.js?v=7-full-emotions',()=>window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.scan?.())
   later(305,'./message-reaction-delegate-v2.js?v=4-expanded-emotions',()=>window.__ISA_REACTION_DELEGATE_REFRESH__?.())
   later(345,'./isa-social-emoji-suite-v1.js?v=1-full-isa-chat-emojis',()=>window.__ISA_SOCIAL_EMOJI_SUITE__?.scan?.())
   later(385,'./nuvem-reactions-v1.js?v=4-full-emotions',()=>window.__ISA_NUVEM_REACTIONS__?.apply?.())
@@ -49,7 +49,12 @@ function start(){
   setTimeout(()=>{window.__ISA_COLLAB_POSTITS__?.scan?.();window.__ISA_SOCIAL_EMOJI_SUITE__?.scan?.();window.__ISA_FAMILY_SOCIAL_EXTRAS__?.scan?.(true);window.__ISA_NOSSA_REDE_BIRTHDAYS__?.refresh?.();window.__ISA_NOSSA_REDE_MEDIA_WORKFLOW__?.scan?.();window.__ISA_COMMENT_MEDIA_MENU__?.scan?.();window.__ISA_NUVEM_PIN_PICKER__?.scan?.()},2330)
 
   if(name.includes('paloma')){
-    later(1120,'./paloma-studies.js?v=9-click-fix',()=>window.__ISA_ENSURE_EXTERNAL_MENU__?.())
+    later(1120,'./paloma-studies.js?v=10-no-duplicate-banner',()=>{
+      window.__ISA_ENSURE_EXTERNAL_MENU__?.()
+      if(!document.getElementById('palomaStudyDuplicateEntryHide')){
+        const s=document.createElement('style');s.id='palomaStudyDuplicateEntryHide';s.textContent='#palomaStudyEntry{display:none!important}';document.head.appendChild(s)
+      }
+    })
     later(2320,'./paloma-studies-advanced-mobile.js?v=8-controls')
     later(2700,'./paloma-study-desk.js?v=8-controls')
   }
