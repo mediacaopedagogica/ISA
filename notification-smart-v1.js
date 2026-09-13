@@ -83,22 +83,34 @@ if(!window.__ISA_SMART_NOTIFICATIONS_V1__){
     const tryOpen=()=>{
       if(deepLinkDone)return
       if(window.__ISA_APP_READY__===true){
-        // Nos dashboards aprovados, usa sempre o card canônico. Assim o próprio
-        // roteador aprovado entra no painel antes de acionar a conversa nativa.
-        const approved=[...document.querySelectorAll('#kaConversationList [data-ka-conv]')].find(x=>String(x.dataset.kaConv||'')===id)
-        if(approved){
-          deepLinkDone=true
-          nativeClick(approved)
-          cleanDeepLink()
-          scheduleBadge(1300)
-          return
-        }
+        const approvedProfile=APPROVED.has(requested)
+        const approvedApi=window.__ISA_APPROVED_DASHBOARD__
 
-        // Perfis fora do shell aprovado continuam usando a conversa nativa.
-        // Para Keise/Isa/Alan, aguarda o clone aprovado em vez de disputar layout.
-        const approvedShell=APPROVED.has(requested)&&document.getElementById('keiseApprovedHome')
-        if(!approvedShell){
-          const card=[...document.querySelectorAll('#chatList .chat-item[data-conv]')].find(x=>String(x.dataset.conv||'')===id)
+        // Caminho principal: a notificação entrega só o UUID e reutiliza o
+        // roteador aprovado já existente. Não cria nem intercepta outro roteador.
+        if(approvedProfile&&typeof approvedApi?.openConversation==='function'){
+          let opened=false
+          try{opened=approvedApi.openConversation(id)===true}catch{}
+          if(opened){
+            deepLinkDone=true
+            cleanDeepLink()
+            scheduleBadge(1300)
+            return
+          }
+        }else if(approvedProfile){
+          // Compatibilidade apenas enquanto o dashboard termina de publicar a API.
+          const approved=[...document.querySelectorAll('#kaConversationList [data-ka-conv]')]
+            .find(x=>String(x.dataset.kaConv||'')===id)
+          if(approved){
+            deepLinkDone=true
+            nativeClick(approved)
+            cleanDeepLink()
+            scheduleBadge(1300)
+            return
+          }
+        }else{
+          const card=[...document.querySelectorAll('#chatList .chat-item[data-conv]')]
+            .find(x=>String(x.dataset.conv||'')===id)
           if(card){
             deepLinkDone=true
             nativeClick(card)
