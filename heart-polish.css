@@ -136,3 +136,10 @@
 .read-receipt{display:block;margin-top:3px;font-size:10px;text-align:right;color:#9b8ca4;font-weight:700}
 .read-receipt.read{color:#7a5fc8}
 @media(max-width:850px){.panel-pad{height:calc(100dvh - 220px)!important;padding-bottom:max(84px,env(safe-area-inset-bottom))!important}}
+
+/* Quadro do Dia — correção isolada de legibilidade dos minutos */
+#dailyTaskBoardModal .dtb-duration-chip{background:rgba(255,255,255,.86)!important;color:#5f4a6b!important}
+#dailyTaskBoardModal .dtb-duration-input{width:54px!important;min-width:54px!important;height:30px!important;padding:0 6px!important;border:1px solid rgba(205,180,215,.92)!important;border-radius:10px!important;background:#fff!important;color:#513d60!important;-webkit-text-fill-color:#513d60!important;caret-color:#513d60!important;opacity:1!important;font-weight:900!important;font-size:13px!important;line-height:30px!important;text-align:center!important}
+#dailyTaskBoardModal .dtb-duration-input:focus{outline:none!important;border-color:#b995c9!important;box-shadow:0 0 0 3px rgba(187,153,204,.18)!important}
+#dailyTaskBoardModal .dtb-duration-input::-webkit-outer-spin-button,#dailyTaskBoardModal .dtb-duration-input::-webkit-inner-spin-button{opacity:1!important;margin:0!important}
+@media(max-width:520px){#dailyTaskBoardModal .dtb-duration-input{width:58px!important;min-width:58px!important;font-size:14px!important}}
