@@ -48,6 +48,7 @@ async function loadCoreExtras(){
     jobs.push(loadOnce('pwa-install','./pwa-install-v1.js?v=3-direct-install'))
     jobs.push(loadOnce('shopping-list','./shopping-list-v1.js?v=4-assignee-only'))
     jobs.push(loadOnce('smart-notifications','./notification-smart-v1.js?v=3-existing-router'))
+    jobs.push(loadOnce('offline-chat-sync','./offline-chat-sync-v1.js?v=1-safe-outbox'))
   }
   if(isKeise()){
     jobs.push(loadOnce('keise-access-settings','./keise-access-settings.js?v=2-direct-api'))
