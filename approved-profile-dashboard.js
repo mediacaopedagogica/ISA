@@ -99,3 +99,4 @@
 import('./approved-dashboard-stability-v11.js?v=1-stable-order-avatar-social').catch(()=>{})
 import('./approved-regression-fixes-v12.js?v=1-golden-master-pins-birthday-test').catch(()=>{})
 import('./nossa-rede-cover-story-lock-v16.js?v=1-canonical-cover-story-order').catch(()=>{})
+import('./shopping-list-v1.js?v=1-shared-pastel-list').catch(()=>{})
