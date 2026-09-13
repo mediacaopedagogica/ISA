@@ -15,7 +15,7 @@ function start(){
   later(135,'./external-chat-tools.js?v=6-light-entry')
   later(165,'./collaborative-chat-postits-v2.js?v=2-cancel-reopen-fixers',()=>window.__ISA_COLLAB_POSTITS__?.scan?.())
   later(205,'./conversation-important-v2.js?v=4-collab-chat',()=>window.__ISA_IMPORTANT_BOARD__?.render?.())
-  later(255,'./message-interactions-v1.js?v=7-full-emotions',()=>window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.scan?.())
+  later(255,'./message-interactions-v1.js?v=7-full-emotions',()=>window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.())
   later(305,'./message-reaction-delegate-v2.js?v=4-expanded-emotions',()=>window.__ISA_REACTION_DELEGATE_REFRESH__?.())
   later(345,'./isa-social-emoji-suite-v1.js?v=1-full-isa-chat-emojis',()=>window.__ISA_SOCIAL_EMOJI_SUITE__?.scan?.())
   later(385,'./nuvem-reactions-v1.js?v=4-full-emotions',()=>window.__ISA_NUVEM_REACTIONS__?.apply?.())
