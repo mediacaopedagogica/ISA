@@ -1,3 +1,21 @@
+// Cantinho da Isa — captura mínima e antecipada do convite de instalação.
+// Não toca no boot, layout, Chat ou demais recursos; apenas preserva o evento do navegador
+// para o botão Instalar que é carregado depois pelo dashboard aprovado.
+(function(){
+  'use strict'
+  if(window.__ISA_PWA_EARLY_CAPTURE_V2__)return
+  window.__ISA_PWA_EARLY_CAPTURE_V2__=true
+  window.addEventListener('beforeinstallprompt',event=>{
+    event.preventDefault?.()
+    window.__ISA_PWA_INSTALL_PROMPT__=event
+    try{window.dispatchEvent(new CustomEvent('isa:pwa-install-ready'))}catch{}
+  })
+  window.addEventListener('appinstalled',()=>{
+    window.__ISA_PWA_INSTALLED__=true
+    window.__ISA_PWA_INSTALL_PROMPT__=null
+  })
+})();
+
 // Cantinho da Isa — compatibilidade + guarda antecipada do dashboard CANÔNICO.
 // Keise, Isa e Alan nunca podem exibir o dashboard legado como interface visível.
 (function(){
@@ -100,4 +118,4 @@ import('./approved-dashboard-stability-v11.js?v=1-stable-order-avatar-social').c
 import('./approved-regression-fixes-v12.js?v=1-golden-master-pins-birthday-test').catch(()=>{})
 import('./nossa-rede-cover-story-lock-v16.js?v=1-canonical-cover-story-order').catch(()=>{})
 import('./shopping-list-v1.js?v=1-shared-pastel-list').catch(()=>{})
-import('./pwa-install-v1.js?v=1-edge-install').catch(()=>{})
+import('./pwa-install-v1.js?v=2-installability-prompt').catch(()=>{})
