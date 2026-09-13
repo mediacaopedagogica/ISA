@@ -47,6 +47,7 @@ async function loadCoreExtras(){
     jobs.push(loadOnce('urgent-notification-sound','./urgent-notification-sound-v1.js?v=1'))
     jobs.push(loadOnce('pwa-install','./pwa-install-v1.js?v=2-fixed-install'))
     jobs.push(loadOnce('shopping-list','./shopping-list-v1.js?v=3-keise-suggestions'))
+    jobs.push(loadOnce('smart-notifications','./notification-smart-v1.js?v=1-badge-deeplink'))
   }
   if(isKeise()){
     jobs.push(loadOnce('keise-access-settings','./keise-access-settings.js?v=2-direct-api'))
@@ -73,6 +74,7 @@ async function loadCoreExtras(){
   window.__ISA_DAILY_TASK_REMINDERS__?.scan?.(true)
   window.__ISA_PWA_INSTALL__?.inject?.()
   window.__ISA_SHOPPING_LIST__?.scan?.()
+  window.__ISA_SMART_NOTIFICATIONS__?.refreshBadge?.()
   window.__ISA_CHAT_POLLS_V2__?.scan?.()
 }
 async function loadSupervisionExtras(){if(!isParent())return;await Promise.allSettled([loadOnce('diary-parent','./diary-parent.js?v=5-stable')])}
