@@ -7,6 +7,7 @@ if(!window.__ISA_SMART_NOTIFICATIONS_V1__){
   window.__ISA_SMART_NOTIFICATIONS_V1__=true
 
   const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  const APPROVED=new Set(['keise','isa','alan'])
   let deepLinkDone=false,badgeTimer=0
 
   function token(){
@@ -64,6 +65,7 @@ if(!window.__ISA_SMART_NOTIFICATIONS_V1__){
       const u=new URL(location.href)
       u.searchParams.delete('abrir')
       u.searchParams.delete('conversation')
+      u.searchParams.delete('conv')
       u.searchParams.delete('marcar')
       history.replaceState(history.state,'',u.pathname+(u.searchParams.toString()?`?${u.searchParams}`:'')+u.hash)
     }catch{}
@@ -72,21 +74,41 @@ if(!window.__ISA_SMART_NOTIFICATIONS_V1__){
   function openDeepLink(){
     if(deepLinkDone)return true
     const q=new URLSearchParams(location.search)
-    const id=String(q.get('conversation')||'').trim()
-    if(q.get('abrir')!=='chat'||!UUID.test(id))return false
+    const id=String(q.get('conversation')||q.get('conv')||'').trim()
+    const requested=String(q.get('perfil')||'').trim().toLowerCase()
+    const wantsChat=q.get('abrir')==='chat'||q.has('conversation')||q.has('conv')
+    if(!wantsChat||!UUID.test(id))return false
 
     let attempts=0
     const tryOpen=()=>{
       if(deepLinkDone)return
-      const card=[...document.querySelectorAll('#chatList .chat-item[data-conv]')].find(x=>String(x.dataset.conv||'')===id)
-      if(card&&window.__ISA_APP_READY__===true){
-        deepLinkDone=true
-        nativeClick(card)
-        cleanDeepLink()
-        scheduleBadge(1300)
-        return
+      if(window.__ISA_APP_READY__===true){
+        // Nos dashboards aprovados, usa sempre o card canônico. Assim o próprio
+        // roteador aprovado entra no painel antes de acionar a conversa nativa.
+        const approved=[...document.querySelectorAll('#kaConversationList [data-ka-conv]')].find(x=>String(x.dataset.kaConv||'')===id)
+        if(approved){
+          deepLinkDone=true
+          nativeClick(approved)
+          cleanDeepLink()
+          scheduleBadge(1300)
+          return
+        }
+
+        // Perfis fora do shell aprovado continuam usando a conversa nativa.
+        // Para Keise/Isa/Alan, aguarda o clone aprovado em vez de disputar layout.
+        const approvedShell=APPROVED.has(requested)&&document.getElementById('keiseApprovedHome')
+        if(!approvedShell){
+          const card=[...document.querySelectorAll('#chatList .chat-item[data-conv]')].find(x=>String(x.dataset.conv||'')===id)
+          if(card){
+            deepLinkDone=true
+            nativeClick(card)
+            cleanDeepLink()
+            scheduleBadge(1300)
+            return
+          }
+        }
       }
-      if(++attempts<50)setTimeout(tryOpen,180)
+      if(++attempts<60)setTimeout(tryOpen,180)
     }
     tryOpen();return true
   }
@@ -104,6 +126,7 @@ if(!window.__ISA_SMART_NOTIFICATIONS_V1__){
     if(e.target?.closest?.('#chatList .chat-item[data-conv],#kaConversationList [data-ka-conv]'))scheduleBadge(1200)
   },true)
   document.addEventListener('isa:approved-home-ready',()=>{openDeepLink();scheduleBadge(700)})
+  document.addEventListener('isa:keise-approved-home-built',()=>{openDeepLink();scheduleBadge(700)})
   document.addEventListener('isa:final-shell-ready',()=>{openDeepLink();scheduleBadge(700)})
   window.addEventListener('focus',()=>scheduleBadge(300))
   window.addEventListener('pageshow',()=>{openDeepLink();scheduleBadge(500)})
