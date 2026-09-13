@@ -47,7 +47,7 @@ async function loadCoreExtras(){
     jobs.push(loadOnce('urgent-notification-sound','./urgent-notification-sound-v1.js?v=2-loud-alert'))
     jobs.push(loadOnce('pwa-install','./pwa-install-v1.js?v=3-direct-install'))
     jobs.push(loadOnce('shopping-list','./shopping-list-v1.js?v=4-assignee-only'))
-    jobs.push(loadOnce('smart-notifications','./notification-smart-v1.js?v=1-badge-deeplink'))
+    jobs.push(loadOnce('smart-notifications','./notification-smart-v1.js?v=3-existing-router'))
   }
   if(isKeise()){
     jobs.push(loadOnce('keise-access-settings','./keise-access-settings.js?v=2-direct-api'))
