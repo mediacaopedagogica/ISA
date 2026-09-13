@@ -1,6 +1,5 @@
 // Cantinho da Isa — som urgente isolado para lembretes.
-// Não altera layout, chat, roteamento ou dados. Som customizado toca somente com o app aberto;
-// em segundo plano o som da notificação é controlado pelo navegador/sistema operacional.
+// O som personalizado toca quando o app está aberto; em segundo plano o volume final é controlado pelo aparelho.
 (function(){
   'use strict'
   if(window.__ISA_URGENT_SOUND_V1__)return
@@ -22,11 +21,11 @@
     try{if(c.state==='suspended')await c.resume();unlocked=c.state==='running';if(unlocked)localStorage.setItem(STORE,'1');return unlocked}catch{return false}
   }
 
-  function tone(c,start,freq,duration,gainValue){
+  function tone(c,start,freq,duration,gainValue,type='triangle'){
     const osc=c.createOscillator(),gain=c.createGain()
-    osc.type='sine';osc.frequency.setValueAtTime(freq,start)
+    osc.type=type;osc.frequency.setValueAtTime(freq,start)
     gain.gain.setValueAtTime(0.0001,start)
-    gain.gain.exponentialRampToValueAtTime(gainValue,start+.018)
+    gain.gain.exponentialRampToValueAtTime(gainValue,start+.012)
     gain.gain.exponentialRampToValueAtTime(0.0001,start+duration)
     osc.connect(gain);gain.connect(c.destination);osc.start(start);osc.stop(start+duration+.03)
   }
@@ -35,11 +34,20 @@
     if(!unlocked&&localStorage.getItem(STORE)==='1')await unlock()
     const c=audioContext();if(!c||c.state!=='running')return false
     const now=c.currentTime+.025
-    // Curto e perceptível, sem volume agressivo.
-    tone(c,now,urgent?784:659,.14,.11)
-    tone(c,now+.19,urgent?988:784,.14,.12)
-    tone(c,now+.38,urgent?1175:880,.22,.13)
-    try{if(urgent&&navigator.vibrate)navigator.vibrate([180,80,180,80,320])}catch{}
+    if(urgent){
+      // Alerta mais forte e mais longo, sem tentar ultrapassar o volume definido no aparelho.
+      const seq=[
+        [0,880,.20,.28,'triangle'],[.23,1175,.20,.30,'triangle'],
+        [.50,880,.20,.28,'triangle'],[.73,1175,.20,.30,'triangle'],
+        [1.00,988,.24,.30,'square'],[1.29,1319,.30,.31,'triangle']
+      ]
+      for(const [offset,freq,dur,gain,type] of seq)tone(c,now+offset,freq,dur,gain,type)
+      try{if(navigator.vibrate)navigator.vibrate([420,120,420,120,700])}catch{}
+    }else{
+      tone(c,now,659,.16,.18)
+      tone(c,now+.21,784,.20,.20)
+      try{if(navigator.vibrate)navigator.vibrate([160,80,160])}catch{}
+    }
     return true
   }
 
