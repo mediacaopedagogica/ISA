@@ -33,20 +33,33 @@
     return true
   }
 
+  async function waitForPrompt(timeout=2200){
+    let promptEvent=deferred||window.__ISA_PWA_INSTALL_PROMPT__||null
+    if(promptEvent)return promptEvent
+    await new Promise(resolve=>{
+      let done=false
+      const finish=()=>{if(done)return;done=true;window.removeEventListener('isa:pwa-install-ready',onReady);clearTimeout(timer);resolve()}
+      const onReady=()=>finish()
+      const timer=setTimeout(finish,timeout)
+      window.addEventListener('isa:pwa-install-ready',onReady,{once:true})
+    })
+    promptEvent=deferred||window.__ISA_PWA_INSTALL_PROMPT__||null
+    return promptEvent
+  }
+
   async function installNow(){
     if(installed()){syncButton();return true}
     if(installing)return false
     let promptEvent=deferred||window.__ISA_PWA_INSTALL_PROMPT__||null
 
     if(!promptEvent&&'serviceWorker'in navigator){
-      try{await Promise.race([navigator.serviceWorker.ready,new Promise(resolve=>setTimeout(resolve,900))])}catch{}
-      await new Promise(resolve=>setTimeout(resolve,180))
-      promptEvent=deferred||window.__ISA_PWA_INSTALL_PROMPT__||null
+      try{await Promise.race([navigator.serviceWorker.ready,new Promise(resolve=>setTimeout(resolve,1200))])}catch{}
+      promptEvent=await waitForPrompt(2200)
     }
 
     if(!promptEvent){
       if(isIOS())toast('No iPhone/iPad: Compartilhar → Adicionar à Tela de Início.')
-      else toast('O navegador ainda não ofereceu a instalação neste modo. Se o menu mostra “Configurações do aplicativo”, o Cantinho já está instalado neste aparelho.')
+      else toast('A instalação ainda não foi liberada pelo navegador. Atualize o Cantinho e toque em Instalar novamente.')
       return false
     }
 
