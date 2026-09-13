@@ -124,3 +124,15 @@ self.addEventListener('notificationclick',event=>{
     return openNotificationUrl(url);
   })());
 });
+
+// Ponte isolada de Background Sync: não envia mensagens sozinha e não altera o Chat.
+// Apenas acorda uma janela aberta do Cantinho para que o módulo offline processe a fila.
+self.addEventListener('sync',event=>{
+  if(event.tag!=='isa-offline-chat-outbox')return;
+  event.waitUntil(
+    clients.matchAll({type:'window',includeUncontrolled:true})
+      .then(list=>Promise.all(list.map(client=>{
+        try{return client.postMessage({type:'isa:background-sync'})}catch{return null}
+      })))
+  );
+});
