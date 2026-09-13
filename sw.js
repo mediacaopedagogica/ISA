@@ -1,6 +1,6 @@
 const CACHE_PREFIX='cantinho-isa-';
 
-// V86 — shell aprovado sempre fresco + notificações inteligentes isoladas.
+// V87 — shell aprovado sempre fresco + lembretes de chat com bipe recorrente.
 // Navegação, JS e CSS nunca voltam de um cache antigo; isso evita o layout legado reaparecer.
 self.addEventListener('install',event=>{
   self.skipWaiting();
@@ -58,14 +58,20 @@ self.addEventListener('push',event=>{
   try{data=event.data?.json()||{}}catch{}
   const extra=data?.data||{};
   const url=extra.url||'./';
-  const urgent=!!data.urgent;
-  const sound=!!data.sound;
+  const tag=String(data.tag||'cantinho-isa');
+  const isChatPush=tag.startsWith('isa-chat-');
+
+  // Todo push de chat, inclusive os lembretes disparados sem mensagem nova,
+  // pede um bipe curto quando houver uma janela do Cantinho aberta.
+  // Em segundo plano, o som final continua sendo controlado pelo sistema/aparelho.
+  const sound=!!data.sound||isChatPush;
+  const urgent=data.urgent===true;
   const badgeCount=Math.max(0,Number(data.badgeCount)||0);
   const options={
     body:data.body||'Chegou uma nova notificação',
     icon:'icon.svg',
     badge:'icon.svg',
-    tag:data.tag||'cantinho-isa',
+    tag,
     renotify:true,
     silent:false,
     data:{
@@ -81,6 +87,7 @@ self.addEventListener('push',event=>{
     }
   };
   if(Array.isArray(data.vibrate))options.vibrate=data.vibrate;
+  else if(sound)options.vibrate=[160,80,160];
   if(data.requireInteraction===true)options.requireInteraction=true;
   if(Array.isArray(data.actions)&&data.actions.length)options.actions=data.actions.slice(0,2);
 
