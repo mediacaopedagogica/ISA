@@ -35,7 +35,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
   function ensureCss(){
     if($('isaShoppingCssLink'))return
-    const l=document.createElement('link');l.id='isaShoppingCssLink';l.rel='stylesheet';l.href='./shopping-list-v1.css?v=1';document.head.appendChild(l)
+    const l=document.createElement('link');l.id='isaShoppingCssLink';l.rel='stylesheet';l.href='./shopping-list-v1.css?v=2-sound-reminders';document.head.appendChild(l)
   }
 
   function ensureModal(){
@@ -50,17 +50,24 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
           <div class="isl-field"><label>Quantidade</label><input id="islQty" maxlength="60" placeholder="Ex.: 2 un."></div>
           <div class="isl-field"><label>Quem vai comprar?</label><select id="islAssigned"><option value="">Sem responsável</option></select></div>
           <div class="isl-field"><label>Até quando?</label><input id="islDue" type="datetime-local"></div>
-          <div class="isl-field"><label>Lembrar</label><select id="islReminder"><option value="15">15 min</option><option value="30">30 min</option><option value="60" selected>1 hora</option><option value="120">2 horas</option><option value="240">4 horas</option><option value="720">12 horas</option><option value="1440">1 dia</option></select></div>
+          <div class="isl-field"><label>Lembrar de quanto em quanto?</label><select id="islReminder"><option value="5">5 min</option><option value="10">10 min</option><option value="15">15 min</option><option value="30">30 min</option><option value="60" selected>1 hora</option><option value="120">2 horas</option><option value="240">4 horas</option><option value="720">12 horas</option><option value="1440">1 dia</option></select></div>
           <button id="islSaveBtn" class="isl-save" type="submit">＋ Adicionar</button>
+          <div class="isl-reminder-row">
+            <label class="isl-switch"><input id="islReminderEnabled" type="checkbox" checked><span>🔔 Lembrar até marcar como comprado</span></label>
+            <label class="isl-switch"><input id="islSoundEnabled" type="checkbox"><span>🔊 Som urgente</span></label>
+            <button id="islTestSound" class="isl-test-sound" type="button">▶ Testar som</button>
+          </div>
         </form>
         <button id="islCancelEdit" class="isl-cancel-edit" type="button">Cancelar edição</button>
         <div id="islError" class="isl-error hidden"></div><div id="islGrid" class="isl-grid"></div>
-        <div class="isl-note">🔔 Quem for marcado como responsável continua recebendo lembretes enquanto o item estiver pendente. As mudanças também chegam pelo Isa Chat.</div>
+        <div class="isl-note">🔔 O responsável continua recebendo lembretes enquanto o item estiver pendente. Com “Som urgente”, o app usa alerta sonoro quando estiver aberto e uma notificação reforçada no celular.</div>
       </div>`
     document.body.appendChild(modal)
     modal.addEventListener('click',onClick)
     $('islForm')?.addEventListener('submit',save)
     $('islCancelEdit')?.addEventListener('click',resetForm)
+    $('islTestSound')?.addEventListener('click',()=>window.__ISA_URGENT_SOUND__?.test?.())
+    $('islSoundEnabled')?.addEventListener('change',async()=>{if($('islSoundEnabled').checked){$('islReminderEnabled').checked=true;await window.__ISA_URGENT_SOUND__?.enable?.();if('Notification'in window&&Notification.permission==='default'){try{await Notification.requestPermission()}catch{}}await window.__ISA_URGENT_SOUND__?.play?.({urgent:true})}})
     return modal
   }
 
@@ -76,11 +83,11 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
     $('islProgress').innerHTML=`<div class="isl-progress-top"><span>${done} de ${total} comprados</span><span>${pct}% ⭐</span></div><div class="isl-track"><div class="isl-fill" style="width:${pct}%"></div></div>`
     const grid=$('islGrid')
     if(!items.length){grid.innerHTML='<div class="isl-empty">🛍️ Sua lista está vazia.<br><small>Adicione o primeiro item acima.</small></div>';return}
-    grid.innerHTML=items.map(item=>{const assigned=member(item.assigned_to),due=localDate(item.due_at);return `
+    grid.innerHTML=items.map(item=>{const assigned=member(item.assigned_to),due=localDate(item.due_at),reminder=item.reminder_enabled!==false;return `
       <article class="isl-card ${item.purchased?'purchased':''}" data-item="${item.id}">
         <button type="button" class="isl-check" data-isl-toggle="${item.id}" aria-label="${item.purchased?'Marcar como pendente':'Marcar como comprado'}">${item.purchased?'✓':''}</button>
         <div class="isl-main"><div class="isl-name">${esc(item.emoji||'🛒')} ${esc(item.item_name)}</div>${item.quantity?`<div class="isl-qty">Quantidade: ${esc(item.quantity)}</div>`:''}
-          <div class="isl-meta">${assigned?`<span class="isl-chip">👤 ${esc(assigned.display_name)}</span>`:'<span class="isl-chip">👤 sem responsável</span>'}${due?`<span class="isl-chip">⏰ ${due}</span>`:''}<span class="isl-chip">🔔 ${Number(item.reminder_minutes)||60} min</span><span class="isl-chip">${item.purchased?'✅ comprado':'🛒 pendente'}</span></div>
+          <div class="isl-meta">${assigned?`<span class="isl-chip">👤 ${esc(assigned.display_name)}</span>`:'<span class="isl-chip">👤 sem responsável</span>'}${due?`<span class="isl-chip">⏰ ${due}</span>`:''}<span class="isl-chip">${reminder?`🔔 ${Number(item.reminder_minutes)||60} min`:'🔕 sem lembrete'}</span>${item.sound_enabled?'<span class="isl-chip isl-sound-chip">🔊 som urgente</span>':''}<span class="isl-chip">${item.purchased?'✅ comprado':'🛒 pendente'}</span></div>
           ${canManage(item)?`<div class="isl-actions"><button class="isl-action" type="button" data-isl-edit="${item.id}">✏️ Editar</button><button class="isl-action danger" type="button" data-isl-delete="${item.id}">🗑️ Excluir</button></div>`:''}
         </div>
       </article>`}).join('')
@@ -90,12 +97,13 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
     if(state.busy)return
     state.busy=true;try{state.data=await api('get');showError();render()}catch(e){if(!silent){showError(e.message);toast(e.message)}}finally{state.busy=false}
   }
-  function resetForm(){state.editing=null;$('islForm')?.reset();if($('islReminder'))$('islReminder').value='60';$('islSaveBtn').textContent='＋ Adicionar';$('islCancelEdit').classList.remove('show');showError()}
-  function editItem(item){state.editing=item.id;$('islName').value=item.item_name||'';$('islQty').value=item.quantity||'';$('islAssigned').value=item.assigned_to||'';$('islDue').value=inputDate(item.due_at);$('islReminder').value=String(item.reminder_minutes||60);$('islSaveBtn').textContent='💾 Salvar alteração';$('islCancelEdit').classList.add('show');$('islName').focus()}
+  function resetForm(){state.editing=null;$('islForm')?.reset();if($('islReminder'))$('islReminder').value='60';if($('islReminderEnabled'))$('islReminderEnabled').checked=true;if($('islSoundEnabled'))$('islSoundEnabled').checked=false;$('islSaveBtn').textContent='＋ Adicionar';$('islCancelEdit').classList.remove('show');showError()}
+  function editItem(item){state.editing=item.id;$('islName').value=item.item_name||'';$('islQty').value=item.quantity||'';$('islAssigned').value=item.assigned_to||'';$('islDue').value=inputDate(item.due_at);$('islReminder').value=String(item.reminder_minutes||60);$('islReminderEnabled').checked=item.reminder_enabled!==false;$('islSoundEnabled').checked=!!item.sound_enabled;$('islSaveBtn').textContent='💾 Salvar alteração';$('islCancelEdit').classList.add('show');$('islName').focus()}
 
   async function save(e){
     e.preventDefault();if(state.busy)return
-    const payload={itemName:$('islName').value,quantity:$('islQty').value,assignedTo:$('islAssigned').value||null,dueAt:$('islDue').value||null,reminderMinutes:Number($('islReminder').value||60)}
+    const payload={itemName:$('islName').value,quantity:$('islQty').value,assignedTo:$('islAssigned').value||null,dueAt:$('islDue').value||null,reminderEnabled:$('islReminderEnabled').checked,reminderMinutes:Number($('islReminder').value||60),soundEnabled:$('islSoundEnabled').checked}
+    if(payload.soundEnabled)payload.reminderEnabled=true
     state.busy=true;$('islSaveBtn').disabled=true
     try{state.editing?await api('edit',{itemId:state.editing,...payload}):await api('add',payload);toast(state.editing?'Item atualizado ✨':'Item adicionado 🛒');resetForm()}
     catch(e){showError(e.message);toast(e.message)}finally{state.busy=false;$('islSaveBtn').disabled=false;await refresh()}
