@@ -77,7 +77,3 @@ function wire(){
 wire()
 const main=$('mainView')
 if(main){const o=new MutationObserver(()=>wire());o.observe(main,{attributes:true,attributeFilter:['class']})}
-
-// Ponte isolada de badge + deep link. O módulo só atua quando existe uma notificação/deep link
-// e não altera o layout ou as permissões de nenhum perfil.
-import('./notification-smart-v1.js?v=2-exact-conversation').catch(e=>console.warn('Notificações inteligentes:',e))
