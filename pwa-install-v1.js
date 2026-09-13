@@ -10,7 +10,11 @@
   let installing=false
 
   function profile(){const q=norm(new URLSearchParams(location.search).get('perfil')),n=norm($('myName')?.textContent).split(/\s+/)[0];return approved.has(q)?q:(approved.has(n)?n:'')}
-  function installed(){return window.__ISA_PWA_INSTALLED__===true||window.matchMedia?.('(display-mode: standalone)')?.matches||window.navigator.standalone===true}
+  function installed(){
+    if(window.__ISA_PWA_INSTALLED__===true||window.navigator.standalone===true)return true
+    if(window.navigator.windowControlsOverlay?.visible===true)return true
+    return ['standalone','window-controls-overlay','minimal-ui','fullscreen'].some(mode=>window.matchMedia?.(`(display-mode: ${mode})`)?.matches===true)
+  }
   function isIOS(){return /iPad|iPhone|iPod/.test(navigator.userAgent)||navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1}
   function toast(text){const t=$('toast');if(!t)return;t.textContent=text;t.classList.remove('hidden');clearTimeout(t._pwa);t._pwa=setTimeout(()=>t.classList.add('hidden'),3300)}
 
@@ -42,7 +46,7 @@
 
     if(!promptEvent){
       if(isIOS())toast('No iPhone/iPad: Compartilhar → Adicionar à Tela de Início.')
-      else toast('A instalação ainda não foi liberada pelo navegador. Atualize a página e toque em Instalar.')
+      else toast('O navegador ainda não ofereceu a instalação neste modo. Se o menu mostra “Configurações do aplicativo”, o Cantinho já está instalado neste aparelho.')
       return false
     }
 
