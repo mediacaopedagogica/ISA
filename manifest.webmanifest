@@ -1,11 +1,22 @@
 {
+  "id":"./",
   "name":"Cantinho da Isa",
-  "short_name":"Cantinho da Isa",
+  "short_name":"Isa Chat",
+  "description":"Cantinho privado da Isa com chat, rede da família, calendário e recursos compartilhados.",
   "start_url":"./",
   "scope":"./",
   "display":"standalone",
+  "display_override":["window-controls-overlay","standalone"],
   "background_color":"#fff7fb",
   "theme_color":"#cdb8ff",
-  "description":"Chat privado da Isa com a família",
-  "icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+  "orientation":"any",
+  "categories":["social","lifestyle","productivity"],
+  "icons":[
+    {"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ],
+  "shortcuts":[
+    {"name":"Abrir Chat","short_name":"Chat","url":"./?abrir=chat","icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml"}]},
+    {"name":"Nossa Rede","short_name":"Nossa Rede","url":"./?abrir=nossa-rede","icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml"}]},
+    {"name":"Lista de Compras","short_name":"Compras","url":"./?abrir=compras","icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml"}]}
+  ]
 }
