@@ -44,9 +44,9 @@ async function loadCoreExtras(){
     jobs.push(loadOnce('daily-task-reminders','./daily-task-reminder-controls-v1.js?v=1-per-task-sound'))
   }
   if(isKeise()||isIsa()||isAlan()){
-    jobs.push(loadOnce('urgent-notification-sound','./urgent-notification-sound-v1.js?v=1'))
-    jobs.push(loadOnce('pwa-install','./pwa-install-v1.js?v=2-fixed-install'))
-    jobs.push(loadOnce('shopping-list','./shopping-list-v1.js?v=3-keise-suggestions'))
+    jobs.push(loadOnce('urgent-notification-sound','./urgent-notification-sound-v1.js?v=2-loud-alert'))
+    jobs.push(loadOnce('pwa-install','./pwa-install-v1.js?v=3-direct-install'))
+    jobs.push(loadOnce('shopping-list','./shopping-list-v1.js?v=4-assignee-only'))
     jobs.push(loadOnce('smart-notifications','./notification-smart-v1.js?v=1-badge-deeplink'))
   }
   if(isKeise()){
