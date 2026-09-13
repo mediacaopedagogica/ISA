@@ -1,6 +1,6 @@
 const CACHE_PREFIX='cantinho-isa-';
 
-// V85 — shell aprovado sempre fresco + notificações inteligentes isoladas.
+// V86 — shell aprovado sempre fresco + notificações inteligentes isoladas.
 // Navegação, JS e CSS nunca voltam de um cache antigo; isso evita o layout legado reaparecer.
 self.addEventListener('install',event=>{
   self.skipWaiting();
@@ -32,6 +32,26 @@ async function applyAppBadge(value){
   }catch{}
 }
 
+async function broadcastBadge(badgeCount,conversationId=''){
+  try{
+    const list=await clients.matchAll({type:'window',includeUncontrolled:true});
+    await Promise.all(list.map(client=>{
+      try{return client.postMessage({type:'isa-push-badge',badgeCount,conversationId})}catch{return null}
+    }));
+  }catch{}
+}
+
+async function openNotificationUrl(url){
+  const list=await clients.matchAll({type:'window',includeUncontrolled:true});
+  for(const client of list){
+    if('focus' in client){
+      try{await client.navigate(url)}catch{}
+      return client.focus();
+    }
+  }
+  return clients.openWindow(url);
+}
+
 // Push: mantém o comportamento aprovado e acrescenta badge/deep-link sem tocar no motor do Chat.
 self.addEventListener('push',event=>{
   let data={};
@@ -48,7 +68,17 @@ self.addEventListener('push',event=>{
     tag:data.tag||'cantinho-isa',
     renotify:true,
     silent:false,
-    data:{url,urgent,sound,conversationId:extra.conversationId||'',messageId:extra.messageId||'',recipientProfile:extra.recipientProfile||'',badgeCount}
+    data:{
+      url,
+      urgent,
+      sound,
+      conversationId:extra.conversationId||'',
+      messageId:extra.messageId||'',
+      recipientProfile:extra.recipientProfile||'',
+      badgeCount,
+      readUrl:extra.readUrl||'',
+      readToken:extra.readToken||''
+    }
   };
   if(Array.isArray(data.vibrate))options.vibrate=data.vibrate;
   if(data.requireInteraction===true)options.requireInteraction=true;
@@ -65,14 +95,32 @@ self.addEventListener('push',event=>{
 
 self.addEventListener('notificationclick',event=>{
   event.notification.close();
-  let url=event.notification.data?.url||'./';
-  if(event.action==='read'){
-    try{const u=new URL(url,self.location.origin);u.searchParams.set('marcar','lida');url=u.href}catch{}
-  }
-  event.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(list=>{
-    for(const client of list){
-      if('focus' in client){client.navigate(url);return client.focus()}
+  const data=event.notification.data||{};
+  let url=data.url||'./';
+
+  event.waitUntil((async()=>{
+    if(event.action==='read'&&data.readUrl&&data.readToken){
+      try{
+        const response=await fetch(data.readUrl,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({token:data.readToken}),
+          cache:'no-store'
+        });
+        if(response.ok){
+          const result=await response.json().catch(()=>({}));
+          const unreadCount=Math.max(0,Number(result?.unreadCount)||0);
+          await applyAppBadge(unreadCount);
+          await broadcastBadge(unreadCount,data.conversationId||'');
+          return;
+        }
+      }catch{}
     }
-    return clients.openWindow(url);
-  }));
+
+    // Fallback seguro para notificações antigas que ainda não possuam token de leitura.
+    if(event.action==='read'){
+      try{const u=new URL(url,self.location.origin);u.searchParams.set('marcar','lida');url=u.href}catch{}
+    }
+    return openNotificationUrl(url);
+  })());
 });
