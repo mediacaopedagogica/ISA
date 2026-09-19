@@ -3,7 +3,7 @@
 Promise.allSettled([
   import('./family-visibility-guard-v1.js?v=1-exact-profile-matrix'),
   import('./family-visibility-guard-v2.js?v=2-exact-profile-matrix'),
-  import('./chat-visibility-filter-v1.js?v=2-exact-profile-matrix')
+  import('./chat-visibility-filter-v1.js?v=3-group-stable-egress')
 ]).then(()=>{window.__ISA_FAMILY_VISIBILITY__?.apply?.(document);window.__ISA_FAMILY_VISIBILITY_V2__?.apply?.(document);window.__ISA_REFRESH_CHAT_VISIBILITY__?.()})
 
 (function(){
