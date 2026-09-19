@@ -84,7 +84,7 @@ later(1090,'./social-reaction-names-v1.js?v=3-stable-open',()=>window.__ISA_ENHA
 later(1110,'./profile-actions.js?v=9-video-call-background')
 later(1160,'./video-call-background-v1.js?v=1-upload-optional')
 later(1240,'./call-manager.js?v=20-video-background')
-later(1420,'./message-interactions-v1.js?v=7-full-emotions',()=>window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.())
+later(1420,'./message-interactions-v1.js?v=8-egress-loop-fix',()=>window.__ISA_REFRESH_MESSAGE_INTERACTIONS__?.())
 later(1450,'./message-reaction-delegate-v2.js?v=4-expanded-emotions',()=>window.__ISA_REACTION_DELEGATE_REFRESH__?.())
 later(1470,'./nuvem-reactions-v1.js?v=4-full-emotions',()=>window.__ISA_NUVEM_REACTIONS__?.apply?.())
 later(1480,'./chat-rich-format-v1.js?v=5-stable-interactions',()=>window.__ISA_REFRESH_RICH_CHAT__?.())
