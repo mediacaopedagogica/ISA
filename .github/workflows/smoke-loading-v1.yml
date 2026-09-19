@@ -66,7 +66,9 @@ jobs:
                 final:!!home&&!home.classList.contains('hidden'),
                 bodyApproved:document.body.classList.contains('keise-approved-layout')&&document.body.classList.contains('keise-home-active'),
                 sidebarDisplay:sidebar?getComputedStyle(sidebar).display:'missing',
-                featureCount:document.querySelectorAll('#keiseApprovedHome [data-ka-action]').length,
+                featureCount:document.querySelectorAll('#keiseApprovedHome [data-approved-action]').length,
+                socialVisible:[...document.querySelectorAll('#keiseApprovedHome [data-approved-action="social"],#socialNav')].some(el=>getComputedStyle(el).display!=='none'),
+                testVisible:[...document.querySelectorAll('#keiseApprovedHome [data-approved-action="test"],#testGameNav')].some(el=>getComputedStyle(el).display!=='none'),
                 oldWelcomeVisible:[...document.querySelectorAll('#emptyState')].some(el=>getComputedStyle(el).display!=='none'&&!el.classList.contains('hidden')),
                 last:window.__ISA_LAST_RUNTIME_ERROR__||'',
                 ready:document.readyState
@@ -74,16 +76,17 @@ jobs:
             });
             console.log('KEISE_APPROVED',JSON.stringify(s),'errors=',errors);
             await p.close();
-            if(s.guard||s.approvedGuard||!s.final||!s.bodyApproved||s.sidebarDisplay!=='none'||s.featureCount<9||s.oldWelcomeVisible){
+            if(s.guard||s.approvedGuard||!s.final||!s.bodyApproved||s.sidebarDisplay!=='none'||s.featureCount<7||s.socialVisible||s.testVisible||s.oldWelcomeVisible){
               throw new Error('Layout aprovado da Keise não assumiu sozinho a tela: '+JSON.stringify(s));
             }
           }
           async function external(file){
             const {p,errors}=await committedPage(base+file+'?smoke='+Date.now()+'#acesso=smoke-invalid');
             await p.waitForTimeout(13500);
-            const s=await p.evaluate(()=>({state:window.__ISA_FRIEND_BOOTSTRAP_STATE__||'',early:window.__ISA_EXTERNAL_EARLY_RELEASED__||false,title:document.getElementById('friendGateTitle')?.textContent||'',button:!!document.querySelector('#friendEnterBtn:not(.hidden)'),chat:!!document.querySelector('#friendChat:not(.hidden)'),ready:document.readyState}));
+            const s=await p.evaluate(()=>({state:window.__ISA_FRIEND_BOOTSTRAP_STATE__||'',early:window.__ISA_EXTERNAL_EARLY_RELEASED__||false,title:document.getElementById('friendGateTitle')?.textContent||'',button:!!document.querySelector('#friendEnterBtn:not(.hidden)'),chat:!!document.querySelector('#friendChat:not(.hidden)'),social:!!document.querySelector('#friendSocialBtn'),studies:!!document.querySelector('#friendStudiesMenuBtn,#palomaStudyEntry,#palomaStudyHeaderBtn'),ready:document.readyState}));
             console.log(file,JSON.stringify(s),'errors=',errors);
             await p.close();
+            if(s.social||s.studies)throw new Error(file+' exibiu recurso pausado: '+JSON.stringify(s));
             if(s.state==='loading'&&!s.button&&!s.chat)throw new Error(file+' ficou preso verificando acesso: '+JSON.stringify(s));
           }
           await root();
