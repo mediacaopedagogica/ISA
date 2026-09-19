@@ -27,7 +27,7 @@ async function start(){
     './call-manager.js?v=21-postenter',
     './message-reaction-delegate-v2.js?v=5-postenter',
     './isa-social-emoji-suite-v1.js?v=2-postenter',
-    './family-social-extras-v1.js?v=3-postenter',
+    './family-social-extras-v1.js?v=4-egress-cache',
     './family-visibility-guard-v2.js?v=1-exact-external-matrix',
     './nossa-rede-birthday-bridge-v1.js?v=2-postenter',
     './external-birthday-sidebar-v1.js?v=3-chat-cleanup-only',
