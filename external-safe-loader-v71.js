@@ -71,7 +71,7 @@ async function start(){
   }catch(error){console.warn('[Cantinho externo] extras parciais:',error)}
   setTimeout(()=>load('./external-decoration-cleanup-v1.js?v=3-postenter'),100)
   setTimeout(()=>load('./nossa-rede-header-cleanup-v1.js?v=5-postenter'),180)
-  setTimeout(()=>load('./external-progressive-loader.js?v=40-social-studies-paused'),320)
+  setTimeout(()=>load('./external-progressive-loader.js?v=41-social-studies-paused'),320)
 }
 
 document.addEventListener('isa:friend-portal-entered',start,{once:true})
