@@ -17,7 +17,7 @@ function explainRule(){return 'Por privacidade familiar, Elion não pode ficar n
 
 async function refreshCreatorPermission(force=false){
   if(!isMainProfile()){creatorPermission=false;applyGroupAccess();return false}
-  if(!force&&Date.now()-creatorCheckAt<5000)return creatorPermission!==false
+  if(!force&&Date.now()-creatorCheckAt<60000)return creatorPermission!==false
   creatorCheckAt=Date.now()
   try{
     const {data:{user}}=await db.auth.getUser();if(!user)return creatorPermission!==false
@@ -95,6 +95,6 @@ function ensureCss(){if($('groupCreationGuardCss'))return;const l=document.creat
 function scan(){ensureCss();applyGroupAccess();patchGroupDialog();refreshCreatorPermission()}
 scan();document.addEventListener('DOMContentLoaded',scan,{once:true})
 const dlg=$('simpleDialog');if(dlg)new MutationObserver(()=>{clearTimeout(dialogTimer);dialogTimer=setTimeout(patchGroupDialog,20)}).observe(dlg,{childList:true,subtree:true})
-setInterval(()=>{if(document.visibilityState==='visible')refreshCreatorPermission()},5000)
+setInterval(()=>{if(document.visibilityState==='visible')refreshCreatorPermission()},60000)
 window.__ISA_GROUP_RULES_REFRESH__=scan
 window.__ISA_GROUP_PERMISSION_CHANGED__=enabled=>{creatorPermission=!!enabled;creatorCheckAt=Date.now();applyGroupAccess()}
