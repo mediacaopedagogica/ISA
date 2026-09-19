@@ -89,7 +89,7 @@ later(1450,'./message-reaction-delegate-v2.js?v=4-expanded-emotions',()=>window.
 later(1470,'./nuvem-reactions-v1.js?v=4-full-emotions',()=>window.__ISA_NUVEM_REACTIONS__?.apply?.())
 later(1480,'./chat-rich-format-v1.js?v=5-stable-interactions',()=>window.__ISA_REFRESH_RICH_CHAT__?.())
 later(1515,'./chat-rich-format-guard-v2.js?v=3-stable-interactions',()=>window.__ISA_CLEAN_EMPTY_CHAT_FORMATS__?.())
-later(1560,'./family-media-menu-v2.js?v=13-stable-interactions')
+later(1560,'./family-media-menu-v2.js?v=14-no-audio-poll-loop')
 later(1620,'./group-creation-guard-v1.js?v=5-egress-safe',()=>window.__ISA_GROUP_RULES_REFRESH__?.())
 if(keiseAtBoot)later(1660,'./keise-group-permission-ui-v1.js?v=2-stable-interactions',()=>window.__ISA_PATCH_KEISE_GROUP_PERMISSION__?.())
 later(1690,'./super-pais-visibility-v1.js?v=3-approved-direct-chats',()=>window.__ISA_SUPER_PAIS_VISIBILITY__?.start?.())
