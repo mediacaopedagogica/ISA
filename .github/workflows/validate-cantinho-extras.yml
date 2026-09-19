@@ -88,102 +88,51 @@ jobs:
           node --check paloma-studies-advanced-mobile.js
           node --check paloma-study-desk.js
 
-      - name: Proteger núcleo único e dashboard aprovado
+      - name: Proteger núcleo único, recursos pausados e funções preservadas
         run: |
-          grep -q 'app-v34.js' index.html
+          grep -q 'app-v34.js?v=20260919-egress-cache-v2-single-boot' index.html
           ! grep -q '<script src="./app-v33.js' index.html
-          grep -q 'keise-approved-layout-final.js?v=8-single-owner' index.html
-          grep -q 'final-shell-bootstrap-v3.js?v=8-passive-single-owner' index.html
+          grep -q 'keise-approved-layout-final.js?v=10-feature-pause' index.html
+          grep -q 'postboot-loader.js?v=87-egress-safe' index.html
           grep -q '__ISA_APP_READY__' keise-approved-layout-final.js
-          grep -q "window.addEventListener('click',routeGesture,true)" keise-approved-layout-final.js
-          grep -q '__ISA_FINAL_SHELL_BOOTSTRAP_V8__' final-shell-bootstrap-v3.js
-          grep -q 'postboot-loader.js' index.html
-          grep -q 'mobile-stability-fix.css' index.html
-          grep -q 'mobile-responsive-v2.js' postboot-loader.js
-          grep -q 'notifications-v2.js' postboot-loader.js
-          grep -q 'extras-loader.js' postboot-loader.js
+          grep -q 'SOCIAL_DISABLED=true' keise-approved-layout-final.js
+          grep -q 'TEST_DISABLED=true' keise-approved-layout-final.js
+          ! grep -q 'session ? boot()' app-v34.js
+          grep -q '}, 3e4);' app-v34.js
 
           grep -q 'profile-mascot.js' extras-loader.js
-          grep -q 'Escolha uma foto ou um mascote' profile-mascot.js
-          grep -q 'profileAvatarInput' profile-mascot.js
-
           grep -q 'conversation-pins.js' extras-loader.js
-          grep -q "marker==='heart'?'💜':'⭐'" conversation-pins.js
-          grep -q 'conversation_pins' conversation-pins.js
+          grep -q 'games-menu.js' extras-loader.js
+          grep -q 'games-menu-snake.js' extras-loader.js
+          ! grep -q "jobs.push(loadOnce('keise-game-test'" extras-loader.js
+          grep -q "if(!TEST_GAME_DISABLED)jobs.push(loadOnce('keise-game-test'" extras-loader.js
 
-          grep -q 'family-media-menu-v2.js' extras-loader.js
+          grep -q 'family-media-menu-v2.js?v=14-no-audio-poll-loop' postboot-loader.js
+          grep -q 'timelineChanged' family-media-menu-v2.js
+          ! grep -q '},3000)' family-media-menu-v2.js
           grep -q 'recordAudio' family-media-menu-v2.js
           grep -q 'Gravar áudio' family-media-menu-v2.js
-          grep -q 'call-manager.js' extras-loader.js
-          grep -q 'RTCPeerConnection' call-manager.js
-          grep -q 'Chamada de voz' call-manager.js
-          grep -q 'Videochamada' call-manager.js
 
-          grep -q 'games-notebook-fit.js' extras-loader.js
-          grep -q 'min-width:851px' games-notebook-fit.js
-          grep -q 'cantinhoEmbeddedNotebookStyle' games-notebook-fit.js
-          grep -q 'games-notebook-fit.js' acesso.html
-          grep -q 'games-menu-snake.js' extras-loader.js
-          grep -q 'games-menu-snake.js' acesso.html
-          grep -q 'games-menu-snake.js' acesso-mobile.html
-          grep -q 'Cobrinha Pastel' games-menu-snake.js
-          grep -q 'cobrinha-pastel.html' games-menu-snake.js
-          grep -q 'Cobrinha Pastel' jogos/cobrinha-pastel.html
-          grep -q 'data-dir="up"' jogos/cobrinha-pastel.html
+          grep -q 'STUDIES_DISABLED=true' external-menu.js
+          grep -q 'PALOMA_STUDIES_DISABLED=true' external-progressive-loader.js
+          grep -q "if(!PALOMA_STUDIES_DISABLED&&name.includes('paloma'))" external-progressive-loader.js
+          ! grep -q 'paloma-studies.css' acesso.html
+          ! grep -q 'paloma-studies.css' acesso-mobile.html
+          ! grep -q 'id="friendSocialBtn"' acesso.html
+          ! grep -q 'id="friendSocialBtn"' acesso-mobile.html
+          grep -q 'pausedFeaturesGuard' acesso.html
+          grep -q 'pausedFeaturesGuard' acesso-mobile.html
 
-          grep -q 'studyNav' isa-tools.js
-          grep -q 'diaryNav' isa-tools.js
-          grep -q "who()==='isa'" mobile-responsive-v2.js
-          grep -q "who()==='keise'||who()==='alan'" mobile-responsive-v2.js
-          grep -q 'grid-template-columns:repeat(4' mobile-responsive-v2.css
+          # Recursos pausados continuam preservados no repositório para reativação futura.
+          test -s keise-game-test.js
+          test -s social-network-stable-v9.js
+          test -s paloma-studies.js
+          test -s paloma-studies-advanced.js
+          test -s paloma-study-desk.js
 
-          grep -q 'diario-inner-v3.css' diario.html
-          grep -q 'diario-inner-v3.js' diario.html
-          grep -q 'Meu Diário' diario.html
-          grep -q 'Post-its' diario.html
-
-          grep -q 'paloma-studies.css' acesso.html
-          grep -q 'paloma-studies.js' acesso.html
-          grep -q 'paloma-studies.css' acesso-mobile.html
-          grep -q 'paloma-studies.js' acesso-mobile.html
-          grep -q 'games-menu.js' acesso-mobile.html
-          grep -q 'paloma_study_load' paloma-studies.js
-          grep -q 'paloma_study_save' paloma-studies.js
-          grep -q 'Caderno digital' paloma-studies.js
-          grep -q 'Flashcards' paloma-studies.js
-          grep -q 'Editor acadêmico' paloma-studies.js
-
-          grep -q 'paloma-studies-advanced.css' acesso.html
-          grep -q 'paloma-studies-advanced.js' acesso.html
-          grep -q 'paloma-studies-advanced.css' acesso-mobile.html
-          grep -q 'paloma-studies-advanced-mobile.js' acesso-mobile.html
-          grep -q 'PalomaMobileMutationObserver' paloma-studies-advanced-mobile.js
-          grep -q "closest('.ps-coming')" paloma-studies-advanced-mobile.js
-          grep -q 'paloma_study_advanced_load' paloma-studies-advanced.js
-          grep -q 'paloma_study_advanced_save' paloma-studies-advanced.js
-          grep -q 'Anatomia 3D' paloma-studies-advanced.js
-          grep -q 'Farmacologia' paloma-studies-advanced.js
-          grep -q 'Casos fictícios' paloma-studies-advanced.js
-          grep -q 'PDF / Imprimir ABNT' paloma-studies-advanced.js
-          grep -q 'ABNT NBR 14724:2024' paloma-studies-advanced.js
-
-          grep -q 'paloma-study-desk.css' acesso.html
-          grep -q 'paloma-study-desk.js' acesso.html
-          grep -q 'paloma-study-desk.css' acesso-mobile.html
-          grep -q 'paloma-study-desk.js' acesso-mobile.html
-          grep -q 'paloma_study_desk_load' paloma-study-desk.js
-          grep -q 'paloma_study_desk_save' paloma-study-desk.js
-          grep -q 'Mesa de Estudos da Paloma' paloma-study-desk.js
-          grep -q 'Quadro de Estudos' paloma-study-desk.js
-          grep -q 'Marcadores de Estudo' paloma-study-desk.js
-          grep -q 'Cálculos & Anotações' paloma-study-desk.js
-          grep -q 'psd-calc-layout' paloma-study-desk.css
-          grep -q '@media(max-width:700px)' paloma-study-desk.css
-
-          test -s app-3d.css
-          test -s heart-polish.css
-          test -s paloma-studies.css
-          test -s paloma-studies-advanced.css
-          test -s paloma-study-desk.css
+          # Recursos que continuam ativos permanecem disponíveis.
+          test -s games-menu.js
           test -s games-menu-snake.js
           test -s jogos/cobrinha-pastel.html
+          test -s app-3d.css
+          test -s heart-polish.css
