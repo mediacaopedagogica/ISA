@@ -7,7 +7,9 @@
 
   const $=id=>document.getElementById(id)
   window.__ISA_NOSSA_REDE_DISABLED__=true
+  window.__ISA_TEST_GAME_DISABLED__=true
   const SOCIAL_DISABLED=true
+  const TEST_DISABLED=true
   const norm=v=>String(v||'').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
   const APPROVED=new Set(['keise','isa','alan'])
   const requested=()=>norm(new URLSearchParams(location.search).get('perfil'))
@@ -129,7 +131,7 @@
         <button type="button" class="ka-status-btn" data-approved-action="status"><span class="cloud">☁️</span><span><b id="kaStatusTitle">Definir meu status</b><small id="kaStatusSub">Como estou hoje • atividade • música</small></span><span class="arrow">›</span></button>
         <button id="kaLogout" type="button" class="ka-logout" data-approved-action="logout">Sair</button>
       </div>
-      <div class="ka-grid">${cfg.features.filter(x=>!(SOCIAL_DISABLED&&x[2]==='social')).map(feature).join('')}</div>
+      <div class="ka-grid">${cfg.features.filter(x=>!((SOCIAL_DISABLED&&x[2]==='social')||(TEST_DISABLED&&x[2]==='test'))).map(feature).join('')}</div>
       <div id="kaConversations" class="ka-conv-head"><h2>Conversas</h2><button type="button" class="ka-group-btn" data-approved-action="group">＋ Grupo</button></div>
       <div id="kaConversationList"></div>
       <div class="ka-heart-deco" aria-hidden="true">💜</div>`
@@ -193,7 +195,7 @@
       if(action==='chat'){enterHome({scroll:true});return true}
       if(action==='calendar'){if(!openCore('calendar'))toast('Calendário ainda está carregando.');return true}
       if(action==='social'){if(SOCIAL_DISABLED){toast('Nossa Rede está temporariamente pausada.');return true}if(!await openSocial())enterHome();return true}
-      if(action==='test'){await openTest();return true}
+      if(action==='test'){if(TEST_DISABLED){toast('Teste Jogo está temporariamente desativado.');return true}await openTest();return true}
       if(action==='supervision'){if(!openCore('supervision'))toast('Supervisão ainda está carregando.');return true}
       if(action==='parents'){if(!openCore('parents'))toast('Super Pais ainda está carregando.');return true}
       if(action==='access'){await openAccess();return true}
