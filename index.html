@@ -111,7 +111,7 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=app
 <script defer src="./mobile-interaction-guard.js?v=69-single-owner"></script>
 <!-- Ordem única: núcleo -> dashboards aprovados -> roteadores -> shell passivo -> extras. -->
 <script src="./app-v34.js?v=20260919-egress-cache-v1"></script>
-<script src="./keise-approved-layout-final.js?v=9-all-approved"></script>
+<script src="./keise-approved-layout-final.js?v=10-feature-pause"></script>
 <script src="./approved-profile-dashboard.js?v=2-single-owner"></script>
 <script src="./keise-conversation-router-v2.js?v=1-final-approved-home"></script>
 <script src="./personal-approved-shell-router-v1.js?v=1-all-approved"></script>
@@ -129,7 +129,7 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=app
     const shellReady=window.__ISA_FINAL_SHELL__?.getState?.()==='ready';
     if(visible(main)&&name&&name!=='família'&&shellReady&&window.__ISA_APP_READY__===true){
       loaded=true;
-      const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=85-all-approved-stable';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
+      const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=86-feature-pause';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
     }
     if(++tries<360)setTimeout(loadExtras,120);
   };
