@@ -1,5 +1,6 @@
 const $=id=>document.getElementById(id)
 const norm=v=>String(v||'').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+const SOCIAL_DISABLED=window.__ISA_NOSSA_REDE_DISABLED__===true
 function currentName(){return norm(window.__ISA_FRIEND_PERSON__?.name||$('friendName')?.textContent)}
 function isPaloma(){return currentName()==='paloma'}
 function addStyle(){if($('externalMenuStyle'))return;const s=document.createElement('style');s.id='externalMenuStyle';s.textContent=`
@@ -9,7 +10,7 @@ function addStyle(){if($('externalMenuStyle'))return;const s=document.createElem
 function setHtml(el,html){if(el&&el.innerHTML!==html)el.innerHTML=html}
 function stableOrder(nav,items){const order=items.filter(Boolean),wanted=new Set(order),current=[...nav.children].filter(el=>wanted.has(el));if(current.length===order.length&&current.every((el,i)=>el===order[i]))return;order.forEach(el=>{if(el.parentNode===nav)nav.appendChild(el)})}
 function ensure(){addStyle();const nav=document.querySelector('.family-primary-nav');if(!nav)return false;const chat=$('friendChatsTab');if(chat){chat.disabled=false;chat.removeAttribute('aria-disabled');chat.classList.remove('is-locked');chat.classList.add('family-primary-tab');setHtml(chat,'💬 <span>Chat</span>')}
-let social=$('friendSocialBtn');if(!social){social=document.createElement('button');social.id='friendSocialBtn';social.type='button';nav.appendChild(social)}social.classList.add('family-primary-tab');social.classList.remove('is-locked');social.disabled=false;social.removeAttribute('aria-disabled');setHtml(social,'🌸 <span>Nossa Rede</span>')
+let social=$('friendSocialBtn');if(SOCIAL_DISABLED){social?.remove();social=null}else{if(!social){social=document.createElement('button');social.id='friendSocialBtn';social.type='button';nav.appendChild(social)}social.classList.add('family-primary-tab');social.classList.remove('is-locked');social.disabled=false;social.removeAttribute('aria-disabled');setHtml(social,'🌸 <span>Nossa Rede</span>')}
 let games=$('friendGamesMenuBtn');if(!games){games=document.createElement('button');games.id='friendGamesMenuBtn';games.type='button';nav.appendChild(games)}games.classList.add('family-primary-tab');setHtml(games,'🎮 <span>Joguinhos</span>')
 let studies=$('friendStudiesMenuBtn');if(isPaloma()){if(!studies){studies=document.createElement('button');studies.id='friendStudiesMenuBtn';studies.type='button';nav.appendChild(studies)}studies.classList.add('family-primary-tab');studies.classList.remove('hidden');studies.style.removeProperty('display');setHtml(studies,'🩺 <span>Estudos</span>')}else if(studies){studies.classList.add('hidden');studies.style.setProperty('display','none','important')}
 let settings=$('friendSettingsBtn');if(!settings){settings=document.createElement('button');settings.id='friendSettingsBtn';settings.type='button';nav.appendChild(settings)}settings.classList.add('family-primary-tab','icon-only','friend-settings-menu');settings.classList.remove('hidden');settings.textContent='⚙️';settings.title='Configurações';settings.setAttribute('aria-label','Configurações');settings.style.removeProperty('display')
