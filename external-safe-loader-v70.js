@@ -47,7 +47,7 @@ async function start(){
   await load('./message-reaction-delegate-v2.js?v=4-expanded-emotions')
   await load('./isa-social-emoji-suite-v1.js?v=1-full-isa-chat-emojis')
   try{window.__ISA_SOCIAL_EMOJI_SUITE__?.scan?.();window.__ISA_REACTION_DELEGATE_REFRESH__?.()}catch{}
-  await load('./family-social-extras-v1.js?v=2-live-social-extras')
+  await load('./family-social-extras-v1.js?v=4-egress-cache')
   await load('./nossa-rede-birthday-bridge-v1.js?v=1-live-birthdays')
   await load('./nuvem-carousel-v1.js?v=7-edit-delete-api')
   await load('./nossa-rede-media-workflow-v4.js?v=4-egress-cache')
