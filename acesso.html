@@ -14,9 +14,6 @@
   <link rel="stylesheet" href="amiga-ui-enhanced.css?v=71-enter-host">
   <link rel="stylesheet" href="familia-mobile.css?v=71-enter-host">
   <link rel="stylesheet" href="nossa-rede-access.css?v=71-enter-host">
-  <link rel="stylesheet" href="paloma-studies.css?v=71-enter-host">
-  <link rel="stylesheet" href="paloma-studies-advanced.css?v=71-enter-host">
-  <link rel="stylesheet" href="paloma-study-desk.css?v=71-enter-host">
   <link rel="stylesheet" href="external-approved-layout.css?v=71-enter-host">
   <link rel="stylesheet" href="social-network.css?v=3-external-final">
   <link rel="stylesheet" href="nossa-rede-v4.css?v=2-external-final">
@@ -27,12 +24,13 @@
   <link rel="stylesheet" href="nossa-rede-organic-v8-exact.css?v=2-external-final">
   <link rel="stylesheet" href="nuvem-compose-compact-v1.css?v=6-external-final">
   <link rel="stylesheet" href="external-social-host-v77.css?v=2-fullscreen-final">
+  <style id="pausedFeaturesGuard">#friendSocialBtn,#familySocialOverlay,#friendStudiesMenuBtn,#palomaStudyEntry,#palomaStudyHeaderBtn,[data-open-studies]{display:none!important}</style>
 </head>
 <body>
   <main id="friendApp" class="friend-page">
     <section id="friendGate" class="friend-gate shell-card"><div class="friend-heart" aria-hidden="true">♥</div><p class="eyebrow">Cantinho da Isa</p><h1 id="friendGateTitle">Verificando seu acesso…</h1><p id="friendGateText" class="muted">Só um instante.</p><button id="friendEnterBtn" class="primary hidden" type="button">Acessar 💜</button><p id="friendGateError" class="error-text"></p></section>
     <section id="friendChat" class="friend-chat hidden">
-      <aside class="friend-sidebar shell-card"><div class="friend-profile"><div class="friend-avatar" aria-hidden="true">💜</div><div><small id="friendRelationship">Família</small><strong id="friendName">Perfil</strong></div></div><nav class="family-primary-nav" aria-label="Menu principal"><button id="friendChatsTab" class="family-primary-tab active" type="button">💬 <span>Chat</span></button><button id="friendSocialBtn" class="family-primary-tab hidden" type="button" disabled aria-disabled="true" title="Nossa Rede temporariamente pausada">🌸 <span>Nossa Rede</span></button><button id="friendGamesMenuBtn" class="family-primary-tab" type="button">🎮 <span>Joguinhos</span></button><button id="friendSettingsBtn" class="family-primary-tab icon-only friend-settings-menu" type="button" title="Configurações" aria-label="Configurações">⚙️</button></nav><div class="friend-side-title"><strong>Conversas</strong><small>Familiares liberados para este perfil</small></div><div id="friendConversationList" class="friend-conversation-list"></div><div class="friend-link-note">🔒 Este acesso é pessoal. As conversas seguem as permissões do Cantinho.</div></aside>
+      <aside class="friend-sidebar shell-card"><div class="friend-profile"><div class="friend-avatar" aria-hidden="true">💜</div><div><small id="friendRelationship">Família</small><strong id="friendName">Perfil</strong></div></div><nav class="family-primary-nav" aria-label="Menu principal"><button id="friendChatsTab" class="family-primary-tab active" type="button">💬 <span>Chat</span></button><button id="friendGamesMenuBtn" class="family-primary-tab" type="button">🎮 <span>Joguinhos</span></button><button id="friendSettingsBtn" class="family-primary-tab icon-only friend-settings-menu" type="button" title="Configurações" aria-label="Configurações">⚙️</button></nav><div class="friend-side-title"><strong>Conversas</strong><small>Familiares liberados para este perfil</small></div><div id="friendConversationList" class="friend-conversation-list"></div><div class="friend-link-note">🔒 Este acesso é pessoal. As conversas seguem as permissões do Cantinho.</div></aside>
       <section class="friend-main shell-card"><div id="friendEmpty" class="friend-empty"><div class="friend-heart" aria-hidden="true">♥</div><h2>Cantinho da Isa 💕</h2><p>Escolha uma conversa disponível para este perfil.</p></div><div id="friendThread" class="friend-thread hidden"><header class="friend-thread-head"><button id="friendBackBtn" class="back-btn" type="button">←</button><div class="thread-avatar">💬</div><div><h2 id="friendThreadTitle">Conversa</h2><small id="friendThreadSubtitle">Família</small></div></header><div id="friendMessages" class="friend-messages"></div><div class="retention-note">Mensagens e imagens ficam disponíveis por até 2 dias. Áudios ficam disponíveis por 1 dia.</div><div class="friend-composer"><button id="friendCameraBtn" class="emoji-btn" type="button" title="Tirar foto" aria-label="Tirar foto">📷</button><button id="friendPhotoBtn" class="emoji-btn" type="button" title="Enviar imagem" aria-label="Enviar imagem">🖼️</button><input id="friendPhotoInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden><button id="friendAudioBtn" class="emoji-btn external-audio-btn" type="button" title="Gravar áudio" aria-label="Gravar áudio">🎙️</button><button id="friendEmojiBtn" class="emoji-btn" type="button" title="Emojis" aria-label="Emojis">😊</button><div id="friendEmojiBar" class="emoji-bar hidden"></div><textarea id="friendMessageInput" rows="1" maxlength="5000" placeholder="Digite uma mensagem…"></textarea><button id="friendSendBtn" class="send-btn" type="button" aria-label="Enviar mensagem">➤</button></div></div></section>
     </section>
   </main>
@@ -60,7 +58,7 @@
   <script defer src="./external-access-controls-v1.js?v=2-boot-priority"></script>
   <script defer src="./external-enter-rescue-v77.js?v=4-boot-priority"></script>
   <script type="module" src="./familia-externa.js?v=74-egress-safe"></script>
-  <script type="module" src="./external-safe-loader-v71.js?v=1-postenter-only"></script>
+  <script type="module" src="./external-safe-loader-v71.js?v=3-social-studies-paused"></script>
   <script>(function(){const rescue=()=>{const state=window.__ISA_FRIEND_BOOTSTRAP_STATE__;if(state==='ready'||state==='error'||state==='invalid')return;const title=document.getElementById('friendGateTitle'),text=document.getElementById('friendGateText'),error=document.getElementById('friendGateError'),btn=document.getElementById('friendEnterBtn');if(title)title.textContent='A conexão demorou mais que o esperado';if(text)text.textContent='O link continua aqui. Tente novamente sem carregar a tela inteira do Cantinho.';if(error)error.textContent='O carregamento foi interrompido para evitar tela branca ou preta.';if(btn){btn.textContent='Tentar novamente';btn.classList.remove('hidden');btn.disabled=false;btn.dataset.mode='retry'}};setTimeout(rescue,9000)})();</script>
 </body>
 </html>
