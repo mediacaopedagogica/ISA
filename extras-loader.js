@@ -2,11 +2,13 @@ const $=id=>document.getElementById(id)
 const loaded=new Map()
 let wired=false
 window.__ISA_NOSSA_REDE_DISABLED__=true
+window.__ISA_TEST_GAME_DISABLED__=true
 const SOCIAL_DISABLED=true
-const SOCIAL_KEYS=new Set(['social-network','social-profile-chat-bridge','profile-theme-v2','profile-theme-page'])
+const TEST_GAME_DISABLED=true
+const SOCIAL_KEYS=new Set(['social-network','social-network-bridge','social-profile-chat-bridge','profile-theme-v2','profile-theme-page'])
 
 function loadOnce(key,path){
-  if(SOCIAL_DISABLED&&SOCIAL_KEYS.has(key))return Promise.resolve(null)
+  if((SOCIAL_DISABLED&&SOCIAL_KEYS.has(key))||(TEST_GAME_DISABLED&&key==='keise-game-test'))return Promise.resolve(null)
   if(loaded.has(key))return loaded.get(key)
   const p=import(path).catch(error=>{loaded.delete(key);console.warn(`Falha ao carregar ${key}:`,error);throw error})
   loaded.set(key,p)
@@ -57,7 +59,7 @@ async function loadCoreExtras(){
   if(isKeise()){
     jobs.push(loadOnce('keise-access-settings','./keise-access-settings.js?v=2-direct-api'))
     jobs.push(loadOnce('keise-alan-studio-control','./keise-alan-studio-control.js?v=1-master-lock'))
-    jobs.push(loadOnce('keise-game-test','./keise-game-test.js?v=10-direct-api'))
+    if(!TEST_GAME_DISABLED)jobs.push(loadOnce('keise-game-test','./keise-game-test.js?v=10-direct-api'))
   }
   if(isAlan()){
     if(!approvedDashboard())jobs.push(loadOnce('alan-supervision-only','./alan-supervision-only.js?v=2-no-global-observer'))
