@@ -13,6 +13,7 @@ let listTimer=null
 let presenceTimer=null
 let bootstrapRun=0
 const mediaCache=new Map()
+const messageSignatureCache=new Map()
 
 function toast(text){
   const el=$('friendToast')
@@ -277,22 +278,22 @@ async function getMediaUrl(messageId){
   const cached=mediaCache.get(messageId)
   if(cached&&cached.until>Date.now())return cached.url
   const data=await mediaJson({action:'signed_url',token,messageId})
-  mediaCache.set(messageId,{url:data.url,until:Date.now()+240000})
+  mediaCache.set(messageId,{url:data.url,until:Date.now()+285000})
   return data.url
 }
 
 async function hydrateMedia(){
   for(const node of document.querySelectorAll('[data-family-photo]')){
     if(node.dataset.loaded==='1')continue
-    try{const url=await getMediaUrl(node.dataset.familyPhoto);node.innerHTML=`<img class="friend-photo" src="${esc(url)}" alt="Imagem enviada">`;node.dataset.loaded='1'}
+    try{const url=await getMediaUrl(node.dataset.familyPhoto);node.innerHTML=`<img class="friend-photo" src="${esc(url)}" alt="Imagem enviada" loading="lazy" decoding="async">`;node.dataset.loaded='1'}
     catch{node.innerHTML='<div class="friend-photo-note">📷 Imagem indisponível.</div>';node.dataset.loaded='1'}
   }
   for(const node of document.querySelectorAll('[data-family-audio]')){
     if(node.dataset.loaded==='1')continue
     try{
       const url=await getMediaUrl(node.dataset.familyAudio)
-      const audio=document.createElement('audio');audio.controls=true;audio.preload='metadata';audio.src=url;audio.className='friend-audio';audio.style.width='min(360px,100%)';audio.style.maxWidth='100%';audio.setAttribute('controlsList','nodownload')
-      node.innerHTML='';node.appendChild(audio);audio.load();node.dataset.loaded='1'
+      const audio=document.createElement('audio');audio.controls=true;audio.preload='none';audio.src=url;audio.className='friend-audio';audio.style.width='min(360px,100%)';audio.style.maxWidth='100%';audio.setAttribute('controlsList','nodownload')
+      node.innerHTML='';node.appendChild(audio);node.dataset.loaded='1'
     }catch{node.innerHTML='<div class="friend-photo-note">🎙️ Áudio indisponível.</div>';node.dataset.loaded='1'}
   }
 }
@@ -303,6 +304,10 @@ async function loadMessages(forceScroll=false){
     const list=await rpc('friend_portal_messages',{p_token:token,p_conversation_id:activeConversation.id},{timeoutMs:7000})
     const box=$('friendMessages')
     if(!box)return
+    const convKey=String(activeConversation.id)
+    const signature=JSON.stringify((list||[]).map(m=>[m.id,m.kind,m.sentAt,m.readCount,m.senderId,m.body]))
+    if(!forceScroll&&messageSignatureCache.get(convKey)===signature)return
+    messageSignatureCache.set(convKey,signature)
     const atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<90
     box.innerHTML=(list||[]).map(m=>{
       const mine=String(m.senderId)===String(person.id)
@@ -357,9 +362,10 @@ async function setPresence(online,keepalive=false){
 function startTimers(){
   stopTimers()
   const mobile=matchMedia('(max-width:780px)').matches
-  messageTimer=setInterval(()=>{if(document.visibilityState==='visible'&&activeConversation)loadMessages(false)},mobile?5000:3200)
-  listTimer=setInterval(()=>{if(document.visibilityState==='visible')refreshConversations()},mobile?12000:7000)
-  presenceTimer=setInterval(()=>{if(document.visibilityState==='visible')setPresence(true)},22000)
+  // Economia de banda: links externos continuam atualizando automaticamente, mas sem consultar o backend a cada poucos segundos.
+  messageTimer=setInterval(()=>{if(document.visibilityState==='visible'&&activeConversation)loadMessages(false)},mobile?20000:15000)
+  listTimer=setInterval(()=>{if(document.visibilityState==='visible')refreshConversations()},mobile?60000:45000)
+  presenceTimer=setInterval(()=>{if(document.visibilityState==='visible')setPresence(true)},45000)
 }
 
 window.__ISA_FRIEND_TOKEN__=token
@@ -380,7 +386,7 @@ $('friendPhotoBtn').onclick=()=>$('friendPhotoInput')?.click()
 $('friendPhotoInput').onchange=e=>{const f=e.target.files?.[0];if(f)sendPhoto(f);e.target.value=''}
 $('friendBackBtn').onclick=()=>{$('friendChat')?.classList.remove('thread-open');if(innerWidth>780){$('friendThread')?.classList.add('hidden');$('friendEmpty')?.classList.remove('hidden')}activeConversation=null;window.__FRIEND_ACTIVE_CONV_TYPE__=null;renderConversationList()}
 document.addEventListener('click',e=>{if(e.target.closest?.('#friendExitBtn')){e.preventDefault();exitPortal();return}if(!e.target.closest?.('#friendEmojiBar')&&!e.target.closest?.('#friendEmojiBtn'))$('friendEmojiBar')?.classList.add('hidden')})
-document.addEventListener('visibilitychange',()=>setPresence(document.visibilityState==='visible'))
+document.addEventListener('visibilitychange',()=>{const visible=document.visibilityState==='visible';setPresence(visible);if(visible){refreshConversations();if(activeConversation)loadMessages(false)}})
 window.addEventListener('pagehide',()=>setPresence(false,true))
 
 buildEmoji()
