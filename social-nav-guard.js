@@ -3,6 +3,7 @@
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 const $=id=>document.getElementById(id);
 let recoveryRunning=false,recoveryDone=false;
+const SOCIAL_DISABLED=window.__ISA_NOSSA_REDE_DISABLED__===true;
 
 function mainProfileReady(){
   const main=$('mainView');
@@ -38,6 +39,7 @@ function bind(btn){
   return btn;
 }
 function ensureButton(){
+  if(SOCIAL_DISABLED){$('socialNav')?.remove();$('socialPanel')?.classList.add('hidden');return null;}
   if(!mainProfileReady())return null;
   const nav=document.querySelector('.nav-tabs');if(!nav)return null;
   const panel=$('socialPanel');
@@ -50,6 +52,7 @@ function ensureButton(){
   return btn?bind(btn):null;
 }
 async function recover(){
+  if(SOCIAL_DISABLED)return;
   if(recoveryRunning)return;recoveryRunning=true;
   try{
     if(!$('socialPanel')){
@@ -61,6 +64,7 @@ async function recover(){
   }finally{recoveryRunning=false}
 }
 async function ensure(){
+  if(SOCIAL_DISABLED){ensureButton();return false;}
   if(!mainProfileReady())return false;
   if(ensureButton())return true;
   if(!recoveryDone)await recover();
