@@ -6,7 +6,7 @@ const SOCIAL_DISABLED=true
 const SOCIAL_ONLY_PARTS=[
   'nossa-rede-ui-fixes','social-theme-live-rescue','social-profile-theme-v2','family-social-extras',
   'nossa-rede-birthday-bridge','nuvem-carousel-v1','nossa-rede-media-workflow','nossa-rede-menu-cleanup',
-  'nossa-rede-editor-make-addon','nossa-rede-cover-story-lock'
+  'nossa-rede-editor-make-addon','nossa-rede-cover-story-lock','external-profile-parity'
 ]
 const socialOnly=path=>SOCIAL_ONLY_PARTS.some(part=>String(path||'').includes(part))
 async function load(path){try{return await import(path)}catch(error){console.warn('[Cantinho externo] módulo não carregou:',path,error);return null}}
@@ -71,7 +71,7 @@ async function start(){
   }catch(error){console.warn('[Cantinho externo] extras parciais:',error)}
   setTimeout(()=>load('./external-decoration-cleanup-v1.js?v=3-postenter'),100)
   setTimeout(()=>load('./nossa-rede-header-cleanup-v1.js?v=5-postenter'),180)
-  setTimeout(()=>load('./external-progressive-loader.js?v=38-postenter'),320)
+  setTimeout(()=>load('./external-progressive-loader.js?v=39-social-paused'),320)
 }
 
 document.addEventListener('isa:friend-portal-entered',start,{once:true})
