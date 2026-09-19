@@ -14,9 +14,6 @@
   <link rel="stylesheet" href="amiga-ui-enhanced.css?v=71-enter-host">
   <link rel="stylesheet" href="familia-mobile.css?v=71-enter-host">
   <link rel="stylesheet" href="nossa-rede-access.css?v=71-enter-host">
-  <link rel="stylesheet" href="paloma-studies.css?v=71-enter-host">
-  <link rel="stylesheet" href="paloma-studies-advanced.css?v=71-enter-host">
-  <link rel="stylesheet" href="paloma-study-desk.css?v=71-enter-host">
   <link rel="stylesheet" href="external-approved-layout.css?v=71-enter-host">
   <link rel="stylesheet" href="social-network.css?v=3-external-final">
   <link rel="stylesheet" href="nossa-rede-v4.css?v=2-external-final">
@@ -27,6 +24,7 @@
   <link rel="stylesheet" href="nossa-rede-organic-v8-exact.css?v=2-external-final">
   <link rel="stylesheet" href="nuvem-compose-compact-v1.css?v=6-external-final">
   <link rel="stylesheet" href="external-social-host-v77.css?v=2-fullscreen-final">
+  <style id="pausedFeaturesGuard">#friendSocialBtn,#familySocialOverlay,#friendStudiesMenuBtn,#palomaStudyEntry,#palomaStudyHeaderBtn,[data-open-studies]{display:none!important}</style>
 </head>
 <body>
   <main id="friendApp" class="friend-page">
@@ -36,7 +34,7 @@
     <section id="friendChat" class="friend-chat hidden">
       <aside class="friend-sidebar shell-card">
         <div class="friend-profile"><div class="friend-avatar" aria-hidden="true">💜</div><div><small id="friendRelationship">Família</small><strong id="friendName">Perfil</strong></div></div>
-        <nav class="family-primary-nav" aria-label="Menu principal"><button id="friendChatsTab" class="family-primary-tab active" type="button">💬 <span>Chat</span></button><button id="friendSocialBtn" class="family-primary-tab hidden" type="button" disabled aria-disabled="true" title="Nossa Rede temporariamente pausada">🌸 <span>Nossa Rede</span></button><button id="friendGamesMenuBtn" class="family-primary-tab" type="button">🎮 <span>Joguinhos</span></button><button id="friendSettingsBtn" class="family-primary-tab icon-only friend-settings-menu" type="button" title="Configurações" aria-label="Configurações">⚙️</button></nav>
+        <nav class="family-primary-nav" aria-label="Menu principal"><button id="friendChatsTab" class="family-primary-tab active" type="button">💬 <span>Chat</span></button><button id="friendGamesMenuBtn" class="family-primary-tab" type="button">🎮 <span>Joguinhos</span></button><button id="friendSettingsBtn" class="family-primary-tab icon-only friend-settings-menu" type="button" title="Configurações" aria-label="Configurações">⚙️</button></nav>
         <div class="friend-side-title"><strong>Conversas</strong><small>Familiares liberados para este perfil</small></div><div id="friendConversationList" class="friend-conversation-list"></div><div class="friend-link-note">🔒 Este acesso é pessoal. As conversas seguem as permissões do Cantinho.</div>
       </aside>
       <section class="friend-main shell-card">
@@ -73,7 +71,7 @@
   <script defer src="./external-access-controls-v1.js?v=2-boot-priority"></script>
   <script defer src="./external-enter-rescue-v77.js?v=4-boot-priority"></script>
   <script type="module" src="./familia-externa.js?v=74-egress-safe"></script>
-  <script type="module" src="./external-safe-loader-v71.js?v=1-postenter-only"></script>
+  <script type="module" src="./external-safe-loader-v71.js?v=3-social-studies-paused"></script>
   <script>(function(){const rescue=()=>{const state=window.__ISA_FRIEND_BOOTSTRAP_STATE__;if(state==='ready'||state==='error'||state==='invalid')return;const title=document.getElementById('friendGateTitle'),text=document.getElementById('friendGateText'),error=document.getElementById('friendGateError'),btn=document.getElementById('friendEnterBtn');if(title)title.textContent='A conexão demorou mais que o esperado';if(text)text.textContent='O link continua aqui. Tente novamente sem carregar a tela inteira do Cantinho.';if(error)error.textContent='O carregamento foi interrompido para evitar tela branca ou preta.';if(btn){btn.textContent='Tentar novamente';btn.classList.remove('hidden');btn.disabled=false;btn.dataset.mode='retry'}};setTimeout(rescue,9000)})();</script>
 </body>
 </html>
