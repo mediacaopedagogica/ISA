@@ -72,7 +72,7 @@
 
   <script defer src="./external-access-controls-v1.js?v=2-boot-priority"></script>
   <script defer src="./external-enter-rescue-v77.js?v=4-boot-priority"></script>
-  <script type="module" src="./familia-externa.js?v=73-boot-priority"></script>
+  <script type="module" src="./familia-externa.js?v=74-egress-safe"></script>
   <script type="module" src="./external-safe-loader-v71.js?v=1-postenter-only"></script>
   <script>(function(){const rescue=()=>{const state=window.__ISA_FRIEND_BOOTSTRAP_STATE__;if(state==='ready'||state==='error'||state==='invalid')return;const title=document.getElementById('friendGateTitle'),text=document.getElementById('friendGateText'),error=document.getElementById('friendGateError'),btn=document.getElementById('friendEnterBtn');if(title)title.textContent='A conexão demorou mais que o esperado';if(text)text.textContent='O link continua aqui. Tente novamente sem carregar a tela inteira do Cantinho.';if(error)error.textContent='O carregamento foi interrompido para evitar tela branca ou preta.';if(btn){btn.textContent='Tentar novamente';btn.classList.remove('hidden');btn.disabled=false;btn.dataset.mode='retry'}};setTimeout(rescue,9000)})();</script>
 </body>
