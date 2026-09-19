@@ -129,7 +129,7 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=app
     const shellReady=window.__ISA_FINAL_SHELL__?.getState?.()==='ready';
     if(visible(main)&&name&&name!=='família'&&shellReady&&window.__ISA_APP_READY__===true){
       loaded=true;
-      const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=86-feature-pause';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
+      const s=document.createElement('script');s.type='module';s.src='./postboot-loader.js?v=87-egress-safe';s.onerror=()=>console.warn('Recursos extras não carregaram; núcleo mantido.');document.body.appendChild(s);return;
     }
     if(++tries<360)setTimeout(loadExtras,120);
   };
