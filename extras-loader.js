@@ -45,7 +45,7 @@ async function loadCoreExtras(){
   if(!dedicatedMobile)jobs.push(loadOnce('games-notebook-fit','./games-notebook-fit.js?v=2-all-profiles'))
   if(isKeise()||isIsa()){
     jobs.push(loadOnce('daily-task-board','./daily-task-board-v1.js?v=1-ludic-keise-isa'))
-    jobs.push(loadOnce('daily-task-reminders','./daily-task-reminder-controls-v1.js?v=1-per-task-sound'))
+    jobs.push(loadOnce('daily-task-reminders','./daily-task-reminder-controls-v1.js?v=2-egress-loop-fix'))
   }
   if(isKeise()||isIsa()||isAlan()){
     jobs.push(loadOnce('urgent-notification-sound','./urgent-notification-sound-v1.js?v=2-loud-alert'))
