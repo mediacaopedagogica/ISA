@@ -12,7 +12,8 @@ if(!window.__ISA_NOSSA_REDE_COVER_STORY_LOCK_V16__){
   const external=()=>!!token&&!!($('familySocialOverlay')||window.__ISA_FRIEND_PERSON__)
   const root=()=>external()?$('familySocialOverlay'):$('socialPanel')
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
-  let me=null,coverUrl='',coverRef='',timer=0,observer=null
+  let me=null,coverUrl='',coverRef='',timer=0,observer=null,externalFetchedAt=0
+  const DATA_TTL=5*60*1000
 
   window.__ISA_NOSSA_REDE_LAYOUT_LOCK__={
     version:'2026-09-11-v16',
@@ -74,14 +75,15 @@ if(!window.__ISA_NOSSA_REDE_COVER_STORY_LOCK_V16__){
     const {data:m}=await db.from('family_members').select('id,family_id').eq('auth_user_id',user.id).eq('active',true).maybeSingle();if(!m)return{coverUrl:'',coverRef:''};me=m
     const {data:p}=await db.from('social_profiles').select('cover_ref').eq('member_id',m.id).maybeSingle();coverRef=p?.cover_ref||'';coverUrl=coverRef?await signed(coverRef):'';return{coverUrl,coverRef}
   }
-  async function externalData(){
+  async function externalData(force=false){
     if(window.__ISA_FRIEND_ACCESS_VALID__!==true)return{coverUrl:'',coverRef:''}
+    if(!force&&externalFetchedAt&&Date.now()-externalFetchedAt<DATA_TTL)return{coverUrl,coverRef}
     const r=await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/friend-social`,{method:'POST',headers:{apikey:CONFIG.SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({token,action:'bootstrap'}),cache:'no-store'})
     const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Não foi possível carregar a capa.')
     const id=d?.me?.id||window.__ISA_FRIEND_PERSON__?.id;const p=(d?.profiles||[]).find(x=>String(x.memberId||x.member_id)===String(id))||d?.me?.profile||{}
-    coverUrl=p.coverUrl||p.cover_url||'';coverRef=p.coverRef||p.cover_ref||'';return{coverUrl,coverRef}
+    coverUrl=p.coverUrl||p.cover_url||'';coverRef=p.coverRef||p.cover_ref||'';externalFetchedAt=Date.now();return{coverUrl,coverRef}
   }
-  async function info(force=false){return external()?externalData():internalData(force)}
+  async function info(force=false){return external()?externalData(force):internalData(force)}
   function mainHost(r){return r?.querySelector?.('.social-main,.fs-static-main')||null}
   function composer(r){return r?.querySelector?.('.social-composer,#fs75Composer,.fs-static-welcome')||null}
 
@@ -128,12 +130,12 @@ if(!window.__ISA_NOSSA_REDE_COVER_STORY_LOCK_V16__){
     });observer._target=host;observer.observe(host,{childList:true,subtree:false})
   }
   function schedule(force=false,delay=90){clearTimeout(timer);timer=setTimeout(()=>mount(force),delay)}
-  async function refresh(force=true){coverUrl='';coverRef='';return mount(force)}
+  async function refresh(force=true){coverUrl='';coverRef='';externalFetchedAt=0;return mount(force)}
 
   for(const ev of ['isa:social-opened','isa:social-rendered','isa:friend-access-valid','isa:friend-portal-entered','isa:profile-updated','isa:theme-applied'])document.addEventListener(ev,()=>schedule(ev==='isa:profile-updated',70),{passive:true})
   document.addEventListener('click',e=>{if(e.target.closest?.('#socialNav,#friendSocialBtn,[data-social-open]'))schedule(false,120)},true)
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')schedule(false,120)})
-  window.addEventListener('pageshow',()=>schedule(true,250),{once:true})
+  window.addEventListener('pageshow',()=>schedule(false,250),{once:true})
   window.__ISA_NOSSA_REDE_COVER_STORY__={mount,refresh,get lock(){return{...window.__ISA_NOSSA_REDE_LAYOUT_LOCK__}}}
   css();setTimeout(()=>mount(true),760)
 }
