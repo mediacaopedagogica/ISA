@@ -1,6 +1,14 @@
 // Loader externo v71: zero extras pesados antes da entrada no portal.
 // A validação do link e o botão Acessar têm prioridade absoluta.
 let started=false
+window.__ISA_NOSSA_REDE_DISABLED__=true
+const SOCIAL_DISABLED=true
+const SOCIAL_ONLY_PARTS=[
+  'nossa-rede-ui-fixes','social-theme-live-rescue','social-profile-theme-v2','family-social-extras',
+  'nossa-rede-birthday-bridge','nuvem-carousel-v1','nossa-rede-media-workflow','nossa-rede-menu-cleanup',
+  'nossa-rede-editor-make-addon','nossa-rede-cover-story-lock'
+]
+const socialOnly=path=>SOCIAL_ONLY_PARTS.some(part=>String(path||'').includes(part))
 async function load(path){try{return await import(path)}catch(error){console.warn('[Cantinho externo] módulo não carregou:',path,error);return null}}
 function ensureHostCss(){if(document.getElementById('externalSocialHostV77'))return;const l=document.createElement('link');l.id='externalSocialHostV77';l.rel='stylesheet';l.href='./external-social-host-v77.css?v=3-postenter';document.head.appendChild(l)}
 ensureHostCss()
@@ -37,28 +45,29 @@ async function start(){
     './nossa-rede-editor-make-addon-v1.js?v=2-postenter',
     './nossa-rede-cover-story-lock-v16.js?v=2-egress-cache'
   ]
-  for(let i=0;i<jobs.length;i+=4){await Promise.all(jobs.slice(i,i+4).map(load));await new Promise(r=>setTimeout(r,0))}
+  const activeJobs=SOCIAL_DISABLED?jobs.filter(path=>!socialOnly(path)):jobs
+  for(let i=0;i<activeJobs.length;i+=4){await Promise.all(activeJobs.slice(i,i+4).map(load));await new Promise(r=>setTimeout(r,0))}
   try{
     window.__ISA_EXTERNAL_CONVERSATION_INTEGRITY__?.verify?.()
     await window.__ISA_EXTERNAL_PROFILE_PARITY__?.start?.()
-    await window.__ISA_PROFILE_THEME_V2__?.loadState?.()
+    if(!SOCIAL_DISABLED)await window.__ISA_PROFILE_THEME_V2__?.loadState?.()
     window.__ISA_EXTERNAL_ACCESS_CONTROLS__?.scan?.()
-    window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__?.()
+    if(!SOCIAL_DISABLED)window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__?.()
     window.__ISA_COLLAB_POSTITS__?.scan?.()
     window.__ISA_NUVEM_PIN_PICKER__?.scan?.()
-    window.__ISA_PROFILE_THEME_V2__?.scan?.()
+    if(!SOCIAL_DISABLED)window.__ISA_PROFILE_THEME_V2__?.scan?.()
     window.__ISA_SEASONAL_THEME_ENGINE__?.refresh?.()
     window.__ISA_SOCIAL_EMOJI_SUITE__?.scan?.()
     window.__ISA_REACTION_DELEGATE_REFRESH__?.()
-    window.__ISA_FAMILY_SOCIAL_EXTRAS__?.scan?.(true)
+    if(!SOCIAL_DISABLED)window.__ISA_FAMILY_SOCIAL_EXTRAS__?.scan?.(true)
     window.__ISA_FAMILY_VISIBILITY_V2__?.apply?.()
-    window.__ISA_NOSSA_REDE_BIRTHDAYS__?.refresh?.()
+    if(!SOCIAL_DISABLED)window.__ISA_NOSSA_REDE_BIRTHDAYS__?.refresh?.()
     window.__ISA_EXTERNAL_BIRTHDAYS__?.cleanup?.()
-    window.__ISA_NUVEM_CAROUSEL__?.scan?.()
-    window.__ISA_NOSSA_REDE_MEDIA_WORKFLOW__?.scan?.()
-    window.__ISA_NOSSA_REDE_MENU_CLEANUP__?.clean?.()
-    window.__ISA_PATCH_MEDIA_MAKE__?.()
-    window.__ISA_NOSSA_REDE_COVER_STORY__?.mount?.(true)
+    if(!SOCIAL_DISABLED)window.__ISA_NUVEM_CAROUSEL__?.scan?.()
+    if(!SOCIAL_DISABLED)window.__ISA_NOSSA_REDE_MEDIA_WORKFLOW__?.scan?.()
+    if(!SOCIAL_DISABLED)window.__ISA_NOSSA_REDE_MENU_CLEANUP__?.clean?.()
+    if(!SOCIAL_DISABLED)window.__ISA_PATCH_MEDIA_MAKE__?.()
+    if(!SOCIAL_DISABLED)window.__ISA_NOSSA_REDE_COVER_STORY__?.mount?.(true)
   }catch(error){console.warn('[Cantinho externo] extras parciais:',error)}
   setTimeout(()=>load('./external-decoration-cleanup-v1.js?v=3-postenter'),100)
   setTimeout(()=>load('./nossa-rede-header-cleanup-v1.js?v=5-postenter'),180)
