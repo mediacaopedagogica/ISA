@@ -55,7 +55,7 @@ if(!approvedAtBoot){
 }
 later(80,'./general-settings.js?v=18-no-nav-loop',()=>{if(!approvedAtBoot)ensureSettings();window.__ISA_APPLY_GENERAL_SETTINGS__?.()})
 
-later(260,'./social-privacy-guard.js?v=2-stable-interactions',()=>window.__ISA_SOCIAL_PRIVACY__?.apply?.())
+later(260,'./social-privacy-guard.js?v=3-group-stable-egress',()=>window.__ISA_SOCIAL_PRIVACY__?.apply?.())
 later(520,'./profile-status-stickers.js?v=15-stable-interactions')
 later(600,'./profile-birthday-v1.js?v=4-social-birthday-bridge',()=>window.__ISA_PROFILE_BIRTHDAY__?.inject?.())
 later(610,'./profile-photo-unified-sync-v1.js?v=3-egress-cache',()=>window.__ISA_PROFILE_PHOTO_UNIFIED_SYNC__?.scan?.())
