@@ -21069,7 +21069,7 @@ ${suffix}`;
       heartbeat = setInterval(() => {
         if (document.visibilityState === "visible") upsertPresence(true);
         refreshPresenceUI();
-      }, 15e3);
+      }, 3e4);
       document.addEventListener("visibilitychange", () => upsertPresence(document.visibilityState === "visible"));
       window.addEventListener("pagehide", () => upsertPresence(false));
     }
@@ -21321,8 +21321,7 @@ ${suffix}`;
     }
     buildSetup();
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(console.warn);
-    const { data: { session } } = await supabase.auth.getSession();
-    session ? boot() : showView("loginView");
+    // O boot canônico ocorre uma única vez ao final, depois de todos os handlers estarem prontos.
     var activeSupervisionMode = false;
     function conversationHasChild(conv) {
       const child = family.find((x) => x.role === "child");
