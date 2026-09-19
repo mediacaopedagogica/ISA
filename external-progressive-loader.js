@@ -4,7 +4,7 @@ const SOCIAL_DISABLED=true
 const SOCIAL_ONLY_PARTS=[
   'social-profile-pages','social-profile-directory','social-reaction-names','family-social-extras',
   'nossa-rede-birthday-bridge','nuvem-carousel-v1','nossa-rede-media-workflow','nossa-rede-editor-make-addon',
-  'social-tag-notifications','nuvem-ui-ideas-v10','nuvem-compose-compact-v1','nossa-rede-header-cleanup','nossa-rede-comment-menu'
+  'social-tag-notifications','nuvem-ui-ideas-v10','nuvem-compose-compact-v1','nossa-rede-header-cleanup','nossa-rede-comment-menu','external-profile-parity'
 ]
 const socialOnly=path=>SOCIAL_ONLY_PARTS.some(part=>String(path||'').includes(part))
 async function safe(path){try{return await import(path)}catch(e){console.warn('Recurso externo não carregou:',path,e);return null}}
@@ -16,7 +16,7 @@ function start(){
 
   later(5,'./mobile-conversation-scroll-v2.js?v=1-visible-scroll')
   later(15,'./nuvem-pin-picker-v2.js?v=6-all-family-links',()=>window.__ISA_NUVEM_PIN_PICKER__?.scan?.())
-  later(25,'./external-menu.js?v=7-audit-family',()=>window.__ISA_ENSURE_EXTERNAL_MENU__?.())
+  later(25,'./external-menu.js?v=8-social-paused',()=>window.__ISA_ENSURE_EXTERNAL_MENU__?.())
   later(40,'./games-menu.js?v=16-all-profiles-click-fix')
   if(!SOCIAL_DISABLED)setTimeout(()=>window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__?.(),55)
   later(85,'./external-decoration-cleanup-v1.js?v=2-portal-only',()=>window.__ISA_EXTERNAL_DECOR_CLEANUP__?.())
