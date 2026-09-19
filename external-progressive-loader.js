@@ -28,7 +28,7 @@ function start(){
   later(790,'./social-profile-directory-v1.js?v=4-egress-cache',()=>window.__ISA_SOCIAL_PROFILE_DIRECTORY__?.patch?.())
   later(860,'./social-reaction-names-v1.js?v=2-all-family-profile-parity',()=>window.__ISA_ENHANCE_REACTION_NAMES__?.())
 
-  later(980,'./family-social-extras-v1.js?v=2-live-social-extras',()=>window.__ISA_FAMILY_SOCIAL_EXTRAS__?.scan?.(true))
+  later(980,'./family-social-extras-v1.js?v=4-egress-cache',()=>window.__ISA_FAMILY_SOCIAL_EXTRAS__?.scan?.(true))
   later(1010,'./nossa-rede-birthday-bridge-v1.js?v=3-all-family-birthdays',()=>window.__ISA_NOSSA_REDE_BIRTHDAYS__?.refresh?.())
   later(1030,'./nuvem-carousel-v1.js?v=7-edit-delete-api',()=>window.__ISA_NUVEM_CAROUSEL__?.scan?.())
   later(1050,'./nossa-rede-media-workflow-v4.js?v=4-egress-cache',()=>window.__ISA_NOSSA_REDE_MEDIA_WORKFLOW__?.scan?.())
