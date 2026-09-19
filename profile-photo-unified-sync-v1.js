@@ -32,7 +32,7 @@ if(!window.__ISA_PROFILE_PHOTO_UNIFIED_SYNC_V1__){
     const {data:current}=await db.from('social_profiles').select('member_id,social_avatar_ref').eq('member_id',who.id).maybeSingle()
     const old=current?.social_avatar_ref||''
     const path=`${who.family_id}/${who.id}/profile/${crypto.randomUUID()}.${extension(file)}`
-    const {error:up}=await db.storage.from('social-media').upload(path,file,{contentType:file.type,upsert:false});if(up)throw up
+    const {error:up}=await db.storage.from('social-media').upload(path,file,{contentType:file.type,cacheControl:'31536000',upsert:false});if(up)throw up
     let error=null
     if(current?.member_id){
       ;({error}=await db.from('social_profiles').update({social_avatar_ref:path,updated_at:new Date().toISOString()}).eq('member_id',who.id))
@@ -47,7 +47,7 @@ if(!window.__ISA_PROFILE_PHOTO_UNIFIED_SYNC_V1__){
   async function syncMainChat(file){
     const who=await identity()
     const path=`${who.family_id}/${who.id}/avatar-${crypto.randomUUID()}.${extension(file)}`
-    const {error:up}=await db.storage.from('profile-avatars').upload(path,file,{contentType:file.type,upsert:false});if(up)throw up
+    const {error:up}=await db.storage.from('profile-avatars').upload(path,file,{contentType:file.type,cacheControl:'31536000',upsert:false});if(up)throw up
     const {data,error}=await db.functions.invoke('profile-actions',{body:{action:'set_avatar',avatarRef:path}})
     if(error||data?.error){await db.storage.from('profile-avatars').remove([path]).catch(()=>{});throw new Error(data?.error||error?.message||'Não foi possível sincronizar a foto do Chat.')}
     if(data?.oldRef&&data.oldRef!==path)await db.storage.from('profile-avatars').remove([data.oldRef]).catch(()=>{})
