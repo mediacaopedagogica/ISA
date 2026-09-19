@@ -66,7 +66,7 @@ async function loadCoreExtras(){
     if(studioEnabled)jobs.push(loadOnce('alan-studio-launcher','./alan-studio-launcher.js?v=2-approved-dashboard'))
   }
   if(isIsa())jobs.push(loadOnce('isa-tools','./isa-tools.js?v=9-study-fix'))
-  jobs.push(loadOnce('social-privacy','./social-privacy-guard.js?v=1-family-rules'))
+  jobs.push(loadOnce('social-privacy','./social-privacy-guard.js?v=3-group-stable-egress'))
   const result=await Promise.allSettled(jobs)
   result.forEach((r,i)=>{if(r.status==='rejected')console.warn('Módulo extra não carregou',i,r.reason)})
   window.__ISA_SOCIAL_PRIVACY__?.apply?.()
