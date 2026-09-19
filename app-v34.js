@@ -20452,6 +20452,34 @@ ${suffix}`;
     const views = ["loginView", "setupView", "mainView"];
     let me = null, family = [], contactPermissions = [], conversations = [], activeConversation = null, activeMessages = [], activePolls = [], presenceMap = {}, globalChannel = null, chatChannel = null, typingTimer = null, typingMembers = /* @__PURE__ */ new Map(), heartbeat = null;
     const photoObjectUrls = [];
+    const storageSignedUrlCache = /* @__PURE__ */ new Map();
+    const STORAGE_SIGNED_URL_TTL = 50 * 60 * 1e3;
+    async function cachedStorageUrl(bucket, path) {
+      if (!path) return null;
+      const cacheKey = `${bucket}:${path}`, now = Date.now(), storeKey = `isa:signed:${cacheKey}`;
+      const mem = storageSignedUrlCache.get(cacheKey);
+      if (mem?.url && Number(mem.expiresAt) > now + 6e4) return mem.url;
+      try {
+        const raw = sessionStorage.getItem(storeKey);
+        if (raw) {
+          const saved = JSON.parse(raw);
+          if (saved?.url && Number(saved.expiresAt) > now + 6e4) {
+            storageSignedUrlCache.set(cacheKey, saved);
+            return saved.url;
+          }
+        }
+      } catch {
+      }
+      const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 3600);
+      if (error || !data?.signedUrl) return null;
+      const entry = { url: data.signedUrl, expiresAt: now + STORAGE_SIGNED_URL_TTL };
+      storageSignedUrlCache.set(cacheKey, entry);
+      try {
+        sessionStorage.setItem(storeKey, JSON.stringify(entry));
+      } catch {
+      }
+      return entry.url;
+    }
     const EMOJIS = {
       "Recentes": [],
       "Carinhas": ["\u{1F600}", "\u{1F603}", "\u{1F604}", "\u{1F601}", "\u{1F606}", "\u{1F605}", "\u{1F602}", "\u{1F923}", "\u{1F60A}", "\u{1F607}", "\u{1F642}", "\u{1F643}", "\u{1F609}", "\u{1F60D}", "\u{1F970}", "\u{1F618}", "\u{1F60B}", "\u{1F60E}", "\u{1F913}", "\u{1F973}", "\u{1F917}", "\u{1F914}", "\u{1FAE1}", "\u{1F634}", "\u{1F622}", "\u{1F62D}", "\u{1F624}", "\u{1F621}", "\u{1F631}", "\u{1F92F}", "\u{1F979}", "\u{1F60C}"],
@@ -20693,11 +20721,9 @@ ${suffix}`;
       for (const el of document.querySelectorAll("[data-photo-path]")) {
         const path = el.dataset.photoPath;
         try {
-          const { data, error } = await supabase.storage.from("chat-temp").download(path);
-          if (error) throw error;
-          const url = URL.createObjectURL(data);
-          photoObjectUrls.push(url);
-          el.outerHTML = `<img class="chat-photo" src="${url}" alt="Foto enviada no chat">`;
+          const url = await cachedStorageUrl("chat-temp", path);
+          if (!url) throw new Error("Foto indisponível");
+          el.outerHTML = `<img class="chat-photo" src="${url}" loading="lazy" decoding="async" alt="Foto enviada no chat">`;
         } catch {
           el.outerHTML = '<div class="photo-expired">\u{1F4F7} Foto indispon\xEDvel ou expirada.</div>';
         }
@@ -20735,7 +20761,7 @@ ${suffix}`;
       const ext = (file.name.split(".").pop() || "jpg").replace(/[^a-z0-9]/gi, "").toLowerCase();
       const path = `${me.family_id}/${activeConversation.id}/${me.id}/${crypto.randomUUID()}.${ext}`;
       toast("Enviando foto\u2026");
-      const { error: upErr } = await supabase.storage.from("chat-temp").upload(path, file, { contentType: file.type, upsert: false });
+      const { error: upErr } = await supabase.storage.from("chat-temp").upload(path, file, { contentType: file.type, cacheControl: "604800", upsert: false });
       if (upErr) return toast("N\xE3o foi poss\xEDvel enviar a foto.");
       const expires = new Date(Date.now() + 7 * 864e5).toISOString();
       const { error } = await supabase.from("messages").insert({ conversation_id: activeConversation.id, sender_id: me.id, kind: "photo", media_provider: "supabase-storage", media_ref: path, media_mime: file.type, media_expires_at: expires });
@@ -21474,13 +21500,13 @@ ${suffix}`;
     }
     async function avatarUrl(member) {
       if (!member?.avatar_ref) return null;
+      const now = Date.now();
       const cached = avatarUrlCache.get(member.id);
-      if (cached?.ref === member.avatar_ref) return cached.url;
-      if (cached?.url) URL.revokeObjectURL(cached.url);
-      const { data, error } = await supabase.storage.from("profile-avatars").download(member.avatar_ref);
-      if (error) return null;
-      const url = URL.createObjectURL(data);
-      avatarUrlCache.set(member.id, { ref: member.avatar_ref, url });
+      if (cached?.ref === member.avatar_ref && cached?.url && Number(cached.expiresAt) > now + 6e4) return cached.url;
+      if (cached?.url?.startsWith?.("blob:")) URL.revokeObjectURL(cached.url);
+      const url = await cachedStorageUrl("profile-avatars", member.avatar_ref);
+      if (!url) return null;
+      avatarUrlCache.set(member.id, { ref: member.avatar_ref, url, expiresAt: now + STORAGE_SIGNED_URL_TTL });
       return url;
     }
     async function hydrateAvatarElements() {
@@ -21506,7 +21532,7 @@ ${suffix}`;
       const ext = (file.name.split(".").pop() || "jpg").replace(/[^a-z0-9]/gi, "").toLowerCase();
       const path = `${me.family_id}/${me.id}/avatar-${crypto.randomUUID()}.${ext}`;
       toast("Salvando sua foto\u2026");
-      const { error: upErr } = await supabase.storage.from("profile-avatars").upload(path, file, { contentType: file.type, upsert: false });
+      const { error: upErr } = await supabase.storage.from("profile-avatars").upload(path, file, { contentType: file.type, cacheControl: "31536000", upsert: false });
       if (upErr) return toast("N\xE3o foi poss\xEDvel salvar a foto.");
       const { data, error } = await supabase.functions.invoke("profile-actions", { body: { action: "set_avatar", avatarRef: path } });
       if (error || data?.error) {
@@ -21519,7 +21545,7 @@ ${suffix}`;
       const f = family.find((x) => x.id === me.id);
       if (f) f.avatar_ref = path;
       const cached = avatarUrlCache.get(me.id);
-      if (cached?.url) URL.revokeObjectURL(cached.url);
+      if (cached?.url?.startsWith?.("blob:")) URL.revokeObjectURL(cached.url);
       avatarUrlCache.delete(me.id);
       await hydrateAvatarElements();
       renderChatList();
