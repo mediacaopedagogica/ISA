@@ -1,6 +1,7 @@
 // Carrega recursos externos de forma leve. A Nossa Rede usa um único controlador, já presente no HTML.
 window.__ISA_NOSSA_REDE_DISABLED__=true
 const SOCIAL_DISABLED=true
+const PALOMA_STUDIES_DISABLED=true
 const SOCIAL_ONLY_PARTS=[
   'social-profile-pages','social-profile-directory','social-reaction-names','family-social-extras',
   'nossa-rede-birthday-bridge','nuvem-carousel-v1','nossa-rede-media-workflow','nossa-rede-editor-make-addon',
@@ -56,7 +57,7 @@ function start(){
   later(2290,'./nuvem-pin-picker-v2.js?v=6-all-family-links',()=>window.__ISA_NUVEM_PIN_PICKER__?.scan?.())
   setTimeout(()=>{window.__ISA_COLLAB_POSTITS__?.scan?.();window.__ISA_SOCIAL_EMOJI_SUITE__?.scan?.();if(!SOCIAL_DISABLED){window.__ISA_FAMILY_SOCIAL_EXTRAS__?.scan?.(true);window.__ISA_NOSSA_REDE_BIRTHDAYS__?.refresh?.();window.__ISA_NOSSA_REDE_MEDIA_WORKFLOW__?.scan?.();window.__ISA_COMMENT_MEDIA_MENU__?.scan?.()}window.__ISA_NUVEM_PIN_PICKER__?.scan?.()},2330)
 
-  if(name.includes('paloma')){
+  if(!PALOMA_STUDIES_DISABLED&&name.includes('paloma')){
     later(1120,'./paloma-studies.js?v=10-no-duplicate-banner',()=>{
       window.__ISA_ENSURE_EXTERNAL_MENU__?.()
       if(!document.getElementById('palomaStudyDuplicateEntryHide')){
