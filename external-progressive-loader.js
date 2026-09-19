@@ -1,6 +1,14 @@
 // Carrega recursos externos de forma leve. A Nossa Rede usa um único controlador, já presente no HTML.
+window.__ISA_NOSSA_REDE_DISABLED__=true
+const SOCIAL_DISABLED=true
+const SOCIAL_ONLY_PARTS=[
+  'social-profile-pages','social-profile-directory','social-reaction-names','family-social-extras',
+  'nossa-rede-birthday-bridge','nuvem-carousel-v1','nossa-rede-media-workflow','nossa-rede-editor-make-addon',
+  'social-tag-notifications','nuvem-ui-ideas-v10','nuvem-compose-compact-v1','nossa-rede-header-cleanup','nossa-rede-comment-menu'
+]
+const socialOnly=path=>SOCIAL_ONLY_PARTS.some(part=>String(path||'').includes(part))
 async function safe(path){try{return await import(path)}catch(e){console.warn('Recurso externo não carregou:',path,e);return null}}
-function later(ms,path,after){setTimeout(async()=>{await safe(path);try{after?.()}catch{}},ms)}
+function later(ms,path,after){if(SOCIAL_DISABLED&&socialOnly(path))return;setTimeout(async()=>{await safe(path);try{after?.()}catch{}},ms)}
 let started=false
 function start(){
   if(started)return;started=true
@@ -10,7 +18,7 @@ function start(){
   later(15,'./nuvem-pin-picker-v2.js?v=6-all-family-links',()=>window.__ISA_NUVEM_PIN_PICKER__?.scan?.())
   later(25,'./external-menu.js?v=7-audit-family',()=>window.__ISA_ENSURE_EXTERNAL_MENU__?.())
   later(40,'./games-menu.js?v=16-all-profiles-click-fix')
-  setTimeout(()=>window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__?.(),55)
+  if(!SOCIAL_DISABLED)setTimeout(()=>window.__ISA_BIND_EXTERNAL_SOCIAL_DIRECT__?.(),55)
   later(85,'./external-decoration-cleanup-v1.js?v=2-portal-only',()=>window.__ISA_EXTERNAL_DECOR_CLEANUP__?.())
   later(135,'./external-chat-tools.js?v=6-light-entry')
   later(165,'./collaborative-chat-postits-v2.js?v=2-cancel-reopen-fixers',()=>window.__ISA_COLLAB_POSTITS__?.scan?.())
@@ -46,7 +54,7 @@ function start(){
   later(2200,'./nossa-rede-header-cleanup-v1.js?v=4-all-family-final',()=>window.__ISA_NOSSA_REDE_HEADER_CLEANUP__?.())
   later(2260,'./nossa-rede-comment-menu-v1.js?v=5-comment-isolated',()=>window.__ISA_COMMENT_MEDIA_MENU__?.scan?.())
   later(2290,'./nuvem-pin-picker-v2.js?v=6-all-family-links',()=>window.__ISA_NUVEM_PIN_PICKER__?.scan?.())
-  setTimeout(()=>{window.__ISA_COLLAB_POSTITS__?.scan?.();window.__ISA_SOCIAL_EMOJI_SUITE__?.scan?.();window.__ISA_FAMILY_SOCIAL_EXTRAS__?.scan?.(true);window.__ISA_NOSSA_REDE_BIRTHDAYS__?.refresh?.();window.__ISA_NOSSA_REDE_MEDIA_WORKFLOW__?.scan?.();window.__ISA_COMMENT_MEDIA_MENU__?.scan?.();window.__ISA_NUVEM_PIN_PICKER__?.scan?.()},2330)
+  setTimeout(()=>{window.__ISA_COLLAB_POSTITS__?.scan?.();window.__ISA_SOCIAL_EMOJI_SUITE__?.scan?.();if(!SOCIAL_DISABLED){window.__ISA_FAMILY_SOCIAL_EXTRAS__?.scan?.(true);window.__ISA_NOSSA_REDE_BIRTHDAYS__?.refresh?.();window.__ISA_NOSSA_REDE_MEDIA_WORKFLOW__?.scan?.();window.__ISA_COMMENT_MEDIA_MENU__?.scan?.()}window.__ISA_NUVEM_PIN_PICKER__?.scan?.()},2330)
 
   if(name.includes('paloma')){
     later(1120,'./paloma-studies.js?v=10-no-duplicate-banner',()=>{
