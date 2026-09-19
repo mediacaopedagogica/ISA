@@ -56,6 +56,9 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
     if(!(card instanceof HTMLElement))return
     const id=card.dataset.task,conf=cache.get(id);if(!id||!conf)return
     const creator=!!card.querySelector('[data-edit],[data-duration],[data-time]')
+    const renderSignature=[creator?'1':'0',conf.reminder_enabled?'1':'0',Number(conf.reminder_minutes)||30,conf.sound_enabled?'1':'0'].join('|')
+    if(card.dataset.dtrRenderSignature===renderSignature&&card.querySelector(':scope > .dtr-panel,:scope > .dtr-readonly'))return
+    card.dataset.dtrRenderSignature=renderSignature
     card.querySelectorAll(':scope > .dtr-panel,:scope > .dtr-readonly').forEach(el=>el.remove())
 
     if(!creator){
@@ -85,7 +88,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
     const signature=ids.join('|')
     if(force||signature!==lastSignature||ids.some(id=>!cache.has(id))){lastSignature=signature;await load(ids)}
     cards.forEach(decorate)
-    if(!bodyObserver&&body){bodyObserver=new MutationObserver(()=>{clearTimeout(body._dtrTimer);body._dtrTimer=setTimeout(()=>scan(true),80)});bodyObserver.observe(body,{childList:true,subtree:true})}
+    if(!bodyObserver&&body){bodyObserver=new MutationObserver(()=>{clearTimeout(body._dtrTimer);body._dtrTimer=setTimeout(()=>scan(false),80)});bodyObserver.observe(body,{childList:true,subtree:true})}
   }
 
   let waitingObserver=null
@@ -95,7 +98,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
     waitingObserver.observe(document.body,{childList:true,subtree:true})
   }
 
-  document.addEventListener('click',e=>{if(e.target.closest('#dailyTaskTile,#dailyTaskBoardModal'))setTimeout(()=>scan(true),100)},true)
+  document.addEventListener('click',e=>{if(e.target.closest('#dailyTaskTile'))setTimeout(()=>scan(true),100)},true)
   document.addEventListener('isa:approved-home-ready',()=>setTimeout(()=>scan(true),180))
   window.__ISA_DAILY_TASK_REMINDERS__={scan,refresh:()=>scan(true)}
   setTimeout(()=>scan(true),900)
