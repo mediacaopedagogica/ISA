@@ -1,7 +1,15 @@
 // Carregador progressivo: o núcleo nunca espera módulos extras.
 // Nos dashboards aprovados (Keise, Isa e Alan), módulos de navegação legado NÃO podem disputar o shell.
 const wait=ms=>new Promise(r=>setTimeout(r,ms))
-async function load(path){try{return await import(path)}catch(e){console.warn('Módulo não carregou:',path,e);return null}}
+window.__ISA_NOSSA_REDE_DISABLED__=true
+const SOCIAL_DISABLED=true
+const SOCIAL_ONLY_PATHS=[
+  'nossa-rede-birthday-bridge','family-social-extras','nossa-rede-v4','nossa-rede-policy-v5-loader',
+  'nossa-rede-media-workflow','nossa-rede-editor-make-addon','social-profile-pages','social-profile-directory',
+  'social-reaction-names','social-tag-notifications','nuvem-carousel-v1','nuvem-compose-compact-v1','nuvem-ui-ideas-v10'
+]
+const isSocialOnlyPath=path=>SOCIAL_ONLY_PATHS.some(part=>String(path||'').includes(part))
+async function load(path){if(SOCIAL_DISABLED&&isSocialOnlyPath(path))return null;try{return await import(path)}catch(e){console.warn('Módulo não carregou:',path,e);return null}}
 function later(ms,path,after){setTimeout(async()=>{await load(path);try{after?.()}catch{}},ms)}
 
 function currentProfile(){
