@@ -10,7 +10,7 @@ await import('./nossa-rede-policy-v5.js?v=2-organic-layout');
 await import('./nossa-rede-comment-menu-v1.js?v=5-comment-isolated').catch(()=>null);
 await import('./nuvem-compose-compact-v1.js?v=11-flat-pink-live').catch(()=>null);
 await import('./nuvem-carousel-v1.js?v=7-edit-delete-api').catch(()=>null);
-await import('./nossa-rede-media-workflow-v4.js?v=2-rich-editor-stable').catch(()=>null);
+await import('./nossa-rede-media-workflow-v4.js?v=4-egress-cache').catch(()=>null);
 await import('./nossa-rede-menu-cleanup-v2.js?v=1-no-destination-choices').catch(()=>null);
 await import('./nossa-rede-editor-make-addon-v1.js?v=1-makeup-tools').catch(()=>null);
 await import('./message-reaction-delegate-v2.js?v=4-expanded-emotions').catch(()=>null);
