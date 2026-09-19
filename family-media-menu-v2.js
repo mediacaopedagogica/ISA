@@ -167,9 +167,9 @@ function ensureMenu(){
 }
 function bindLifecycle(){
   ensureMenu()
-  const messages=$('messages');if(messages&&!messages.dataset.audioHydrateObservedV2){messages.dataset.audioHydrateObservedV2='1';const obs=new MutationObserver(()=>scheduleHydrate());obs.observe(messages,{childList:true,subtree:true})}
+  const messages=$('messages');if(messages&&!messages.dataset.audioHydrateObservedV2){messages.dataset.audioHydrateObservedV2='1';const obs=new MutationObserver(mutations=>{const timelineChanged=mutations.some(m=>[...m.addedNodes,...m.removedNodes].some(n=>n?.nodeType===1&&(n.matches?.('.message-row')||n.querySelector?.('.message-row'))));if(timelineChanged)scheduleHydrate(120)});obs.observe(messages,{childList:true,subtree:true})}
   const list=$('chatList');if(list&&!list.dataset.familyMediaV2Bound){list.dataset.familyMediaV2Bound='1';list.addEventListener('click',e=>{if(e.target.closest('.chat-item[data-conv]'))setTimeout(()=>{ensureMenu();scheduleHydrate()},140)})}
   document.querySelector('[data-tab="chats"]')?.addEventListener('click',()=>setTimeout(ensureMenu,80))
-  setInterval(()=>{if(document.visibilityState==='visible'&&isChatOpen()){ensureMenu();scheduleHydrate(0)}},3000)
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&isChatOpen()){ensureMenu();scheduleHydrate(120)}})
 }
 bindLifecycle()
