@@ -32,10 +32,10 @@ async function start(){
     './nossa-rede-birthday-bridge-v1.js?v=2-postenter',
     './external-birthday-sidebar-v1.js?v=3-chat-cleanup-only',
     './nuvem-carousel-v1.js?v=8-postenter',
-    './nossa-rede-media-workflow-v4.js?v=3-postenter',
+    './nossa-rede-media-workflow-v4.js?v=4-egress-cache',
     './nossa-rede-menu-cleanup-v2.js?v=1-no-destination-choices',
     './nossa-rede-editor-make-addon-v1.js?v=2-postenter',
-    './nossa-rede-cover-story-lock-v16.js?v=1-canonical-cover-story-order'
+    './nossa-rede-cover-story-lock-v16.js?v=2-egress-cache'
   ]
   for(let i=0;i<jobs.length;i+=4){await Promise.all(jobs.slice(i,i+4).map(load));await new Promise(r=>setTimeout(r,0))}
   try{
