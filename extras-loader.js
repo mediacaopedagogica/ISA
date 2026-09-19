@@ -1,8 +1,12 @@
 const $=id=>document.getElementById(id)
 const loaded=new Map()
 let wired=false
+window.__ISA_NOSSA_REDE_DISABLED__=true
+const SOCIAL_DISABLED=true
+const SOCIAL_KEYS=new Set(['social-network','social-profile-chat-bridge','profile-theme-v2','profile-theme-page'])
 
 function loadOnce(key,path){
+  if(SOCIAL_DISABLED&&SOCIAL_KEYS.has(key))return Promise.resolve(null)
   if(loaded.has(key))return loaded.get(key)
   const p=import(path).catch(error=>{loaded.delete(key);console.warn(`Falha ao carregar ${key}:`,error);throw error})
   loaded.set(key,p)
