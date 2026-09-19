@@ -6,6 +6,7 @@ const $=id=>document.getElementById(id)
 let me=null,profile=null,familyProfiles=[],posts=[],selectedFiles=[],activeTheme='lilac',booted=false,loadPromise=null,lastLoadAt=0,realtimeBound=false
 let sigProfile='',sigStatus='',sigFamily='',sigFeed=''
 const mediaUrlCache=new Map(),avatarUrlCache=new Map()
+const MEDIA_URL_TTL=50*60*1000
 const reactions=['💜','❤️','🥰','😂','👏','😮']
 const quickEmoji=['💜','💕','✨','🥰','😂','😍','🌷','🫶','🔥','🎶','📚','☀️','🌙','🏡','🎉','💫']
 const themes={pink:'#f4b6cf',lilac:'#c7b5ee',green:'#b8deb9',yellow:'#f5df92',blue:'#b9d9ef'}
@@ -127,8 +128,8 @@ async function saveProfile(){
   profile=data;closeProfileModal();toast('Perfil atualizado ✨');document.dispatchEvent(new CustomEvent('isa:profile-updated'));await loadAll(true)
 }
 
-async function mediaUrl(path,bucket='social-media'){const key=bucket+':'+path;if(mediaUrlCache.has(key))return mediaUrlCache.get(key);const {data,error}=await db.storage.from(bucket).createSignedUrl(path,3600);const url=error?'':data?.signedUrl||'';mediaUrlCache.set(key,url);return url}
-async function uploadFile(file,postId,idx){if(file.size>50*1024*1024)throw new Error('Cada arquivo pode ter até 50 MB.');const ext=(file.name.split('.').pop()||(file.type.startsWith('video/')?'mp4':'jpg')).replace(/[^a-z0-9]/gi,'').toLowerCase(),path=`${me.family_id}/${me.id}/${postId}/${String(idx).padStart(2,'0')}-${crypto.randomUUID()}.${ext}`;const {error}=await db.storage.from('social-media').upload(path,file,{contentType:file.type||undefined,upsert:false});if(error)throw error;return path}
+async function mediaUrl(path,bucket='social-media'){if(!path)return'';const key=bucket+':'+path,storeKey='isa:signed:'+key,now=Date.now();const mem=mediaUrlCache.get(key);if(mem?.url&&Number(mem.expiresAt)>now+60000)return mem.url;try{const raw=sessionStorage.getItem(storeKey);if(raw){const saved=JSON.parse(raw);if(saved?.url&&Number(saved.expiresAt)>now+60000){mediaUrlCache.set(key,saved);return saved.url}}}catch{}const {data,error}=await db.storage.from(bucket).createSignedUrl(path,3600),url=error?'':data?.signedUrl||'';if(url){const entry={url,expiresAt:now+MEDIA_URL_TTL};mediaUrlCache.set(key,entry);try{sessionStorage.setItem(storeKey,JSON.stringify(entry))}catch{}}return url}
+async function uploadFile(file,postId,idx){if(file.size>50*1024*1024)throw new Error('Cada arquivo pode ter até 50 MB.');const ext=(file.name.split('.').pop()||(file.type.startsWith('video/')?'mp4':'jpg')).replace(/[^a-z0-9]/gi,'').toLowerCase(),path=`${me.family_id}/${me.id}/${postId}/${String(idx).padStart(2,'0')}-${crypto.randomUUID()}.${ext}`;const {error}=await db.storage.from('social-media').upload(path,file,{contentType:file.type||undefined,cacheControl:'31536000',upsert:false});if(error)throw error;return path}
 async function publishPost(){
   const caption=$('socialCaption').value.trim(),location=$('socialLocation').value.trim();if(!caption&&!selectedFiles.length)return toast('Escreva algo ou escolha uma foto/vídeo.')
   const btn=$('socialPublish');btn.disabled=true;btn.textContent='Publicando…';let post=null
