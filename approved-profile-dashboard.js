@@ -24,6 +24,8 @@
   window.__ISA_APPROVED_PROFILE_DASHBOARD_COMPAT_V11__=true
 
   const $=id=>document.getElementById(id)
+  window.__ISA_NOSSA_REDE_DISABLED__=true
+  const SOCIAL_DISABLED=true
   const norm=v=>String(v||'').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
   const APPROVED=new Set(['keise','isa','alan'])
   const requested=()=>norm(new URLSearchParams(location.search).get('perfil'))
@@ -45,7 +47,7 @@
 
   let socialPreloaded=false
   function preloadSocial(p){
-    if(socialPreloaded||!APPROVED.has(p))return
+    if(SOCIAL_DISABLED||socialPreloaded||!APPROVED.has(p))return
     const main=$('mainView');if(!main||main.classList.contains('hidden'))return
     socialPreloaded=true
     import('./social-network-stable-v9.js?v=1-final-only').catch(()=>{socialPreloaded=false})
@@ -116,6 +118,6 @@
 
 import('./approved-dashboard-stability-v11.js?v=1-stable-order-avatar-social').catch(()=>{})
 import('./approved-regression-fixes-v12.js?v=1-golden-master-pins-birthday-test').catch(()=>{})
-import('./nossa-rede-cover-story-lock-v16.js?v=1-canonical-cover-story-order').catch(()=>{})
+if(!window.__ISA_NOSSA_REDE_DISABLED__)import('./nossa-rede-cover-story-lock-v16.js?v=1-canonical-cover-story-order').catch(()=>{})
 import('./shopping-list-v1.js?v=1-shared-pastel-list').catch(()=>{})
 import('./pwa-install-v1.js?v=2-installability-prompt').catch(()=>{})
