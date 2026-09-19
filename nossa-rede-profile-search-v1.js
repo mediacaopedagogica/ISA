@@ -12,7 +12,7 @@
   async function openByName(value){
     const term=norm(value);if(!term)return
     try{
-      if(!window.__ISA_SOCIAL_PROFILE_DIRECTORY__)await import('./social-profile-directory-v1.js?v=4-header-search')
+      if(!window.__ISA_SOCIAL_PROFILE_DIRECTORY__)await import('./social-profile-directory-v1.js?v=4-egress-cache')
       window.__ISA_SOCIAL_PROFILE_DIRECTORY__?.open?.()
       let tries=0
       const timer=setInterval(()=>{
