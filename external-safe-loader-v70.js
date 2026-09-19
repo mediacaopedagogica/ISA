@@ -50,7 +50,7 @@ async function start(){
   await load('./family-social-extras-v1.js?v=2-live-social-extras')
   await load('./nossa-rede-birthday-bridge-v1.js?v=1-live-birthdays')
   await load('./nuvem-carousel-v1.js?v=7-edit-delete-api')
-  await load('./nossa-rede-media-workflow-v4.js?v=2-rich-editor-stable')
+  await load('./nossa-rede-media-workflow-v4.js?v=4-egress-cache')
   await load('./nossa-rede-editor-make-addon-v1.js?v=1-makeup-tools')
   try{
     window.__ISA_FAMILY_SOCIAL_EXTRAS__?.scan?.(true)
