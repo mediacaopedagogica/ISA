@@ -20450,7 +20450,7 @@ ${suffix}`;
     const $ = (id) => document.getElementById(id);
     const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
     const views = ["loginView", "setupView", "mainView"];
-    let me = null, family = [], contactPermissions = [], conversations = [], activeConversation = null, activeMessages = [], activePolls = [], presenceMap = {}, globalChannel = null, chatChannel = null, typingTimer = null, typingMembers = /* @__PURE__ */ new Map(), heartbeat = null;
+    let me = null, family = [], contactPermissions = [], conversations = [], activeConversation = null, activeMessages = [], activePolls = [], presenceMap = {}, globalChannel = null, chatChannel = null, presenceChannel = null, presenceOnlineSet = /* @__PURE__ */ new Set(), presenceReady = false, typingTimer = null, typingMembers = /* @__PURE__ */ new Map(), heartbeat = null;
     const photoObjectUrls = [];
     const storageSignedUrlCache = /* @__PURE__ */ new Map();
     const STORAGE_SIGNED_URL_TTL = 50 * 60 * 1e3;
@@ -20531,6 +20531,7 @@ ${suffix}`;
       return family.find((x) => x.id === id);
     }
     function isOnline(memberId) {
+      if (presenceReady) return presenceOnlineSet.has(memberId);
       const p = presenceMap[memberId];
       return !!(p?.online && Date.now() - new Date(p.last_seen_at).getTime() < 5e4);
     }
@@ -21066,12 +21067,34 @@ ${suffix}`;
     }
     function startHeartbeat() {
       clearInterval(heartbeat);
-      heartbeat = setInterval(() => {
-        if (document.visibilityState === "visible") upsertPresence(true);
-        refreshPresenceUI();
-      }, 3e4);
-      document.addEventListener("visibilitychange", () => upsertPresence(document.visibilityState === "visible"));
-      window.addEventListener("pagehide", () => upsertPresence(false));
+      heartbeat = null;
+      if (presenceChannel) supabase.removeChannel(presenceChannel);
+      presenceReady = false;
+      presenceOnlineSet = /* @__PURE__ */ new Set();
+      const topic = `family-presence-${me?.family_id || "default"}`;
+      presenceChannel = supabase.channel(topic, { config: { presence: { key: me.id } } })
+        .on("presence", { event: "sync" }, () => {
+          const state = presenceChannel.presenceState();
+          presenceOnlineSet = new Set(Object.keys(state || {}));
+          presenceReady = true;
+          refreshPresenceUI();
+        })
+        .on("presence", { event: "join" }, () => refreshPresenceUI())
+        .on("presence", { event: "leave" }, () => refreshPresenceUI())
+        .subscribe(async (status) => {
+          if (status === "SUBSCRIBED" && document.visibilityState === "visible") {
+            await presenceChannel.track({ member_id: me.id, online: true, device_label: navigator.userAgent.includes("Mobile") ? "Celular" : "Computador", last_seen_at: (/* @__PURE__ */ new Date()).toISOString() });
+          }
+        });
+      document.addEventListener("visibilitychange", async () => {
+        if (!presenceChannel) return;
+        if (document.visibilityState === "visible") {
+          await presenceChannel.track({ member_id: me.id, online: true, device_label: navigator.userAgent.includes("Mobile") ? "Celular" : "Computador", last_seen_at: (/* @__PURE__ */ new Date()).toISOString() });
+        } else {
+          await presenceChannel.untrack();
+        }
+      });
+      window.addEventListener("pagehide", () => { try { presenceChannel?.untrack(); } catch {} });
     }
     function bindGlobalRealtime() {
       if (globalChannel) supabase.removeChannel(globalChannel);
